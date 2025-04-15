@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -10,6 +11,7 @@ import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import CourseForm, { CourseFormValues } from './CourseForm';
+import { DurationMetric } from '@/types/course';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -23,9 +25,19 @@ const courseSchema = z.object({
   instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   level: z.string().min(1, { message: "Level is required" }),
   category: z.string().min(1, { message: "Category is required" }),
-  duration: z.string().min(1, { message: "Duration is required" }),
   durationType: z.enum(["fixed", "recurring"]),
+  durationValue: z.string().optional(),
+  durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
+}).refine((data) => {
+  // If durationType is fixed, require durationValue and durationMetric
+  if (data.durationType === 'fixed') {
+    return !!data.durationValue && !!data.durationMetric;
+  }
+  return true;
+}, {
+  message: "Duration value and metric are required for fixed duration courses",
+  path: ["durationValue"]
 });
 
 const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenChange, onSuccess }) => {
@@ -41,7 +53,8 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       instructors: [],
       level: 'Beginner',
       category: '',
-      duration: '',
+      durationValue: '0',
+      durationMetric: 'weeks',
       durationType: 'fixed',
       image: '',
     }
@@ -55,7 +68,8 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         instructors: [],
         level: 'Beginner',
         category: '',
-        duration: '',
+        durationValue: '0',
+        durationMetric: 'weeks',
         durationType: 'fixed',
         image: '',
       });
@@ -65,6 +79,15 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
   const handleCreateCourse = async (data: CourseFormValues) => {
     try {
       console.log('Creating course with data:', data);
+      
+      // Format the duration string based on the type and values
+      let duration = '';
+      if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
+        duration = `${data.durationValue} ${data.durationMetric}`;
+      } else {
+        duration = 'Recurring';
+      }
+      
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
         .insert([
@@ -73,7 +96,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             description: data.description,
             level: data.level,
             category: data.category,
-            duration: data.duration,
+            duration: duration,
             duration_type: data.durationType,
             image: data.image,
             status: 'Active',

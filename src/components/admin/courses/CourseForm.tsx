@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from '@/components/ui/checkbox';
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Teacher } from '@/types/course';
+import { Teacher, DurationMetric } from '@/types/course';
 import { Skill } from '@/hooks/useSkills';
 
 export interface CourseFormValues {
@@ -25,7 +25,8 @@ export interface CourseFormValues {
   instructors: string[];
   level: string;
   category: string;
-  duration: string;
+  durationValue: string;
+  durationMetric: DurationMetric;
   durationType: string;
   image: string;
 }
@@ -62,6 +63,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
       form.setValue('instructors', []);
     }
   }, [form]);
+
+  const durationType = form.watch('durationType');
 
   // Helper to get teacher name by ID
   const getTeacherName = (id: string) => {
@@ -218,57 +221,96 @@ const CourseForm: React.FC<CourseFormProps> = ({
           />
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="duration"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duration</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., 8 weeks, 3 months, etc." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="durationType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duration Type</FormLabel>
-                <FormControl>
-                  <RadioGroup 
+        <FormField
+          control={form.control}
+          name="durationType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Duration Type</FormLabel>
+              <FormControl>
+                <RadioGroup 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value} 
+                  className="flex space-x-4"
+                  value={field.value}
+                >
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="fixed" />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">
+                      Fixed
+                    </FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="recurring" />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">
+                      Recurring
+                    </FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        {durationType === "fixed" && (
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="durationValue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration Value</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 8, 12, etc." 
+                      {...field} 
+                      onChange={(e) => {
+                        // Ensure only positive numbers
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="durationMetric"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration Unit</FormLabel>
+                  <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value} 
-                    className="flex space-x-4"
+                    defaultValue={field.value}
                     value={field.value}
                   >
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="fixed" />
-                      </FormControl>
-                      <FormLabel className="font-normal cursor-pointer">
-                        Fixed
-                      </FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="recurring" />
-                      </FormControl>
-                      <FormLabel className="font-normal cursor-pointer">
-                        Recurring
-                      </FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="days">Days</SelectItem>
+                      <SelectItem value="weeks">Weeks</SelectItem>
+                      <SelectItem value="months">Months</SelectItem>
+                      <SelectItem value="years">Years</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
         
         <FormField
           control={form.control}

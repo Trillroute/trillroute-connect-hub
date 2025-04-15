@@ -28,3 +28,7 @@ export interface CourseInstructor {
   instructor_id: string;
   created_at: string;
 }
+
+// New interface for duration metrics
+export type DurationMetric = 'days' | 'weeks' | 'months' | 'years';
+
