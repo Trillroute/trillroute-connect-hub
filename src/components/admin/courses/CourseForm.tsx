@@ -47,6 +47,18 @@ interface CourseFormProps {
   cancelAction: () => void;
 }
 
+// Predefined skill levels array
+const skillLevels = [
+  "For Anyone",
+  "Early Beginner",
+  "Beginner",
+  "Late Beginner",
+  "Early Intermediate",
+  "Intermediate",
+  "Late Intermediate",
+  "Advanced"
+];
+
 const CourseForm: React.FC<CourseFormProps> = ({
   form,
   onSubmit,
@@ -219,9 +231,24 @@ const CourseForm: React.FC<CourseFormProps> = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Level</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Beginner, Advanced, etc." {...field} />
-                </FormControl>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {skillLevels.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

@@ -57,7 +57,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       title: '',
       description: '',
       instructors: [],
-      level: 'Beginner',
+      level: 'Beginner', // Default to Beginner level
       category: '',
       durationValue: '0',
       durationMetric: 'weeks',
@@ -79,7 +79,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         title: '',
         description: '',
         instructors: [],
-        level: 'Beginner',
+        level: 'Beginner', // Default to Beginner level
         category: '',
         durationValue: '0',
         durationMetric: 'weeks',
