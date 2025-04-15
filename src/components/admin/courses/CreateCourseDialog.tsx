@@ -48,7 +48,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -97,16 +97,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
     try {
       console.log('Creating course with data:', data);
       
-      // Check if user is admin
-      if (user && !isAdmin()) {
-        toast({
-          title: 'Permission Denied',
-          description: 'Only administrators can create courses.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
       let duration = '';
       if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
         duration = `${data.durationValue} ${data.durationMetric}`;
@@ -141,19 +131,11 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         
       if (courseError) {
         console.error('Error creating course:', courseError);
-        if (courseError.message.includes('row-level security policy')) {
-          toast({
-            title: 'Access Denied',
-            description: 'You do not have permission to create courses. Make sure you are logged in with admin privileges.',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Error',
-            description: 'Failed to create course. Please try again.',
-            variant: 'destructive',
-          });
-        }
+        toast({
+          title: 'Error',
+          description: 'Failed to create course. Please try again.',
+          variant: 'destructive',
+        });
         return;
       }
       

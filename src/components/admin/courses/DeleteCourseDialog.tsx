@@ -16,20 +16,10 @@ interface DeleteCourseDialogProps {
 
 const DeleteCourseDialog: React.FC<DeleteCourseDialogProps> = ({ open, onOpenChange, course, onSuccess }) => {
   const { toast } = useToast();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
 
   const handleDeleteCourse = async () => {
     try {
-      // Check if user is admin
-      if (!isAdmin()) {
-        toast({
-          title: 'Permission Denied',
-          description: 'Only administrators can delete courses.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
       const { error } = await supabase
         .from('courses')
         .delete()

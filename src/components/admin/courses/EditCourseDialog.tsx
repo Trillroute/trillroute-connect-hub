@@ -55,7 +55,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
 
@@ -129,16 +129,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const handleUpdateCourse = async (data: CourseFormValues) => {
     try {
       setIsLoading(true);
-      
-      if (!isAdmin()) {
-        toast({
-          title: 'Permission Denied',
-          description: 'Only administrators can update courses.',
-          variant: 'destructive',
-        });
-        setIsLoading(false);
-        return;
-      }
       
       let duration = '';
       if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
