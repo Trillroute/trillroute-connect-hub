@@ -9,117 +9,8 @@ import { Search, Filter, Star, Users, Clock, BookOpen } from 'lucide-react';
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Mocked course data
-  const allCourses = [
-    {
-      id: 1,
-      title: 'Piano Fundamentals',
-      description: 'Learn the basics of piano playing with proper technique and music reading skills.',
-      instructor: 'Emily Johnson',
-      category: 'Piano',
-      level: 'Beginner',
-      duration: '8 weeks',
-      students: 245,
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBpYW5vfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 2,
-      title: 'Advanced Piano Techniques',
-      description: 'Take your piano skills to the next level with advanced techniques and repertoire.',
-      instructor: 'Michael Brown',
-      category: 'Piano',
-      level: 'Advanced',
-      duration: '10 weeks',
-      students: 178,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1552422535-c45813c61732?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8cGlhbm98ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 3,
-      title: 'Guitar for Beginners',
-      description: 'Start your guitar journey with fundamental chords, strumming patterns, and easy songs.',
-      instructor: 'David Smith',
-      category: 'Guitar',
-      level: 'Beginner',
-      duration: '6 weeks',
-      students: 312,
-      rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3VpdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 4,
-      title: 'Intermediate Guitar',
-      description: 'Build upon your guitar basics with more complex chords, scales, and song arrangements.',
-      instructor: 'James Wilson',
-      category: 'Guitar',
-      level: 'Intermediate',
-      duration: '8 weeks',
-      students: 245,
-      rating: 4.6,
-      image: 'https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGd1aXRhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 5,
-      title: 'Violin Essentials',
-      description: 'Learn proper violin technique, posture, and basic repertoire for beginners.',
-      instructor: 'Sarah Thompson',
-      category: 'Strings',
-      level: 'Beginner',
-      duration: '10 weeks',
-      students: 167,
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1465821185615-20b3c2fbf41b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dmlvbGlufGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 6,
-      title: 'Vocal Training Essentials',
-      description: 'Develop your singing voice with proper breathing techniques, vocal exercises, and performance skills.',
-      instructor: 'Maria Garcia',
-      category: 'Voice',
-      level: 'All Levels',
-      duration: '8 weeks',
-      students: 289,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c2luZ2luZ3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 7,
-      title: 'Music Theory 101',
-      description: 'Understand the fundamental concepts of music theory including notation, scales, intervals, and chords.',
-      instructor: 'Robert Chen',
-      category: 'Theory',
-      level: 'Beginner',
-      duration: '6 weeks',
-      students: 354,
-      rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8bXVzaWMlMjB0aGVvcnl8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 8,
-      title: 'Drum Basics',
-      description: 'Master the fundamentals of drumming with proper technique and rhythm exercises.',
-      instructor: 'Jason Miller',
-      category: 'Percussion',
-      level: 'Beginner',
-      duration: '8 weeks',
-      students: 198,
-      rating: 4.6,
-      image: 'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZHJ1bXN8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 9,
-      title: 'Jazz Improvisation',
-      description: 'Learn the art of jazz improvisation with scales, patterns, and stylistic elements.',
-      instructor: 'Thomas Rodriguez',
-      category: 'Jazz',
-      level: 'Intermediate',
-      duration: '10 weeks',
-      students: 143,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8amF6eiUyMG11c2ljfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-  ];
+  // Empty courses array - removed all dummy data
+  const allCourses = [];
   
   // Filter courses based on search term
   const filteredCourses = allCourses.filter(course => 
@@ -192,57 +83,15 @@ const Courses = () => {
         
         {Object.entries(coursesByCategory).map(([category, courses]) => (
           <TabsContent key={category} value={category}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {courses.map((course) => (
-                <Card key={course.id} className="overflow-hidden music-card-hover">
-                  <div className="h-48 overflow-hidden">
-                    <img 
-                      src={course.image} 
-                      alt={course.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                    />
-                  </div>
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium bg-music-100 text-music-700 px-2 py-1 rounded-full">
-                        {course.level}
-                      </span>
-                      <div className="flex items-center text-amber-500">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="ml-1 text-sm">{course.rating}</span>
-                      </div>
-                    </div>
-                    <CardTitle>{course.title}</CardTitle>
-                    <CardDescription>{course.instructor}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {course.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        <span>{course.students} students</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1" />
-                        <span>{course.duration}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full bg-music-500 hover:bg-music-600">View Course</Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-            
-            {courses.length === 0 && (
+            {courses.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Course cards would be mapped here if there were any courses */}
+              </div>
+            ) : (
               <div className="text-center py-12">
                 <BookOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                 <h3 className="text-xl font-medium text-gray-900 mb-2">No courses found</h3>
-                <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+                <p className="text-gray-600">No courses are currently available. Check back soon!</p>
               </div>
             )}
           </TabsContent>

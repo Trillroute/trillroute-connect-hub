@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookOpen } from 'lucide-react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,50 +33,8 @@ const CourseManagement = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   
-  // Sample data - in a real app, this would come from Supabase
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: 1,
-      title: 'Piano Fundamentals',
-      description: 'Learn the basics of piano playing with proper technique and music reading skills.',
-      instructor: 'Emily Johnson',
-      category: 'Piano',
-      level: 'Beginner',
-      duration: '8 weeks',
-      students: 245,
-      status: 'Active',
-      created: '2023-09-05',
-      image: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBpYW5vfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 2,
-      title: 'Advanced Piano Techniques',
-      description: 'Take your piano skills to the next level with advanced techniques and repertoire.',
-      instructor: 'Michael Brown',
-      category: 'Piano',
-      level: 'Advanced',
-      duration: '10 weeks',
-      students: 178,
-      status: 'Active',
-      created: '2023-09-04',
-      image: 'https://images.unsplash.com/photo-1552422535-c45813c61732?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8cGlhbm98ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 3,
-      title: 'Guitar for Beginners',
-      description: 'Start your guitar journey with fundamental chords, strumming patterns, and easy songs.',
-      instructor: 'David Smith',
-      category: 'Guitar',
-      level: 'Beginner',
-      duration: '6 weeks',
-      students: 312,
-      status: 'Active',
-      created: '2023-09-03',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3VpdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    }
-  ]);
+  const [courses, setCourses] = useState<Course[]>([]);
 
-  // Create course form schema
   const courseSchema = z.object({
     title: z.string().min(3, { message: "Title must be at least 3 characters" }),
     description: z.string().min(10, { message: "Description must be at least 10 characters" }),
@@ -91,7 +48,6 @@ const CourseManagement = () => {
   
   type CourseFormValues = z.infer<typeof courseSchema>;
 
-  // Create course form
   const createForm = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -106,7 +62,6 @@ const CourseManagement = () => {
     }
   });
 
-  // Edit course form
   const editForm = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -121,7 +76,6 @@ const CourseManagement = () => {
     }
   });
 
-  // Handle create course - Fixed TypeScript error by explicitly typing all required properties
   const handleCreateCourse = (data: CourseFormValues) => {
     const newCourse: Course = {
       id: Math.max(0, ...courses.map(c => c.id)) + 1,
@@ -148,7 +102,6 @@ const CourseManagement = () => {
     });
   };
 
-  // Handle edit course
   const handleEditCourse = (data: CourseFormValues) => {
     if (!selectedCourse) return;
     
@@ -180,7 +133,6 @@ const CourseManagement = () => {
     });
   };
 
-  // Handle delete course
   const handleDeleteCourse = () => {
     if (!selectedCourse) return;
     
@@ -198,7 +150,6 @@ const CourseManagement = () => {
     setSelectedCourse(null);
   };
 
-  // Open edit dialog and populate form
   const openEditDialog = (course: Course) => {
     setSelectedCourse(course);
     editForm.reset({
@@ -214,7 +165,6 @@ const CourseManagement = () => {
     setIsEditDialogOpen(true);
   };
 
-  // Open delete dialog
   const openDeleteDialog = (course: Course) => {
     setSelectedCourse(course);
     setIsDeleteDialogOpen(true);
@@ -233,68 +183,77 @@ const CourseManagement = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Instructor</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Students</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {courses.map((course) => (
-                <TableRow key={course.id}>
-                  <TableCell className="font-medium">{course.title}</TableCell>
-                  <TableCell>{course.instructor}</TableCell>
-                  <TableCell>{course.category}</TableCell>
-                  <TableCell>{course.level}</TableCell>
-                  <TableCell>{course.duration}</TableCell>
-                  <TableCell>{course.students}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      course.status === 'Active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {course.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
-                        onClick={() => openEditDialog(course)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit course</span>
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50"
-                        onClick={() => openDeleteDialog(course)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete course</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+        {courses.length > 0 ? (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Instructor</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Students</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {courses.map((course) => (
+                  <TableRow key={course.id}>
+                    <TableCell className="font-medium">{course.title}</TableCell>
+                    <TableCell>{course.instructor}</TableCell>
+                    <TableCell>{course.category}</TableCell>
+                    <TableCell>{course.level}</TableCell>
+                    <TableCell>{course.duration}</TableCell>
+                    <TableCell>{course.students}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        course.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {course.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => openEditDialog(course)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit course</span>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50"
+                          onClick={() => openDeleteDialog(course)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete course</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-md">
+            <BookOpen className="h-12 w-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No courses yet</h3>
+            <p className="text-gray-500 max-w-sm mb-4">
+              Add your first course by clicking the "Add New Course" button.
+            </p>
+          </div>
+        )}
       </CardContent>
 
-      {/* Create Course Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -439,7 +398,6 @@ const CourseManagement = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Course Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -584,7 +542,6 @@ const CourseManagement = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Course Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

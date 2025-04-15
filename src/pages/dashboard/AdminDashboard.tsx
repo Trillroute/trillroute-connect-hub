@@ -32,23 +32,23 @@ const AdminDashboard = () => {
   ];
 
   const enrollmentData = [
-    { name: 'Piano', Students: 125 },
-    { name: 'Guitar', Students: 98 },
-    { name: 'Vocals', Students: 64 },
-    { name: 'Violin', Students: 47 },
-    { name: 'Theory', Students: 38 },
-    { name: 'Drums', Students: 43 },
-    { name: 'Saxophone', Students: 29 },
+    { name: 'Piano', Students: 0 },
+    { name: 'Guitar', Students: 0 },
+    { name: 'Vocals', Students: 0 },
+    { name: 'Violin', Students: 0 },
+    { name: 'Theory', Students: 0 },
+    { name: 'Drums', Students: 0 },
+    { name: 'Saxophone', Students: 0 },
   ];
 
   const revenueData = [
-    { name: 'Jan', Revenue: 12500 },
-    { name: 'Feb', Revenue: 14200 },
-    { name: 'Mar', Revenue: 15800 },
-    { name: 'Apr', Revenue: 16900 },
-    { name: 'May', Revenue: 19500 },
-    { name: 'Jun', Revenue: 21200 },
-    { name: 'Jul', Revenue: 22800 },
+    { name: 'Jan', Revenue: 0 },
+    { name: 'Feb', Revenue: 0 },
+    { name: 'Mar', Revenue: 0 },
+    { name: 'Apr', Revenue: 0 },
+    { name: 'May', Revenue: 0 },
+    { name: 'Jun', Revenue: 0 },
+    { name: 'Jul', Revenue: 0 },
   ];
 
   return (
@@ -77,8 +77,8 @@ const AdminDashboard = () => {
             <CardDescription>Enrolled students</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">347</div>
-            <p className="text-sm text-green-500 mt-1">+12% from last month</p>
+            <div className="text-3xl font-bold text-music-500">0</div>
+            <p className="text-sm text-gray-500 mt-1">No students enrolled yet</p>
           </CardContent>
         </Card>
         
@@ -88,8 +88,8 @@ const AdminDashboard = () => {
             <CardDescription>Active instructors</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">18</div>
-            <p className="text-sm text-green-500 mt-1">+2 from last month</p>
+            <div className="text-3xl font-bold text-music-500">0</div>
+            <p className="text-sm text-gray-500 mt-1">No teachers registered yet</p>
           </CardContent>
         </Card>
         
@@ -99,8 +99,8 @@ const AdminDashboard = () => {
             <CardDescription>Currently running</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">24</div>
-            <p className="text-sm text-green-500 mt-1">+3 from last month</p>
+            <div className="text-3xl font-bold text-music-500">0</div>
+            <p className="text-sm text-gray-500 mt-1">No active courses</p>
           </CardContent>
         </Card>
         
@@ -110,8 +110,8 @@ const AdminDashboard = () => {
             <CardDescription>Current month</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">$22,800</div>
-            <p className="text-sm text-green-500 mt-1">+7.5% from last month</p>
+            <div className="text-3xl font-bold text-music-500">$0</div>
+            <p className="text-sm text-gray-500 mt-1">No revenue generated yet</p>
           </CardContent>
         </Card>
       </div>
