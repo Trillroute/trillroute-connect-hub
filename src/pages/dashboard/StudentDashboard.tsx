@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 const StudentDashboard = () => {
   const { user } = useAuth();
 
-  // Empty data arrays - removed all mock data
+  // Completely empty arrays
   const enrolledCourses: {
     id: number;
     title: string;
@@ -240,3 +240,4 @@ const StudentDashboard = () => {
 };
 
 export default StudentDashboard;
+
