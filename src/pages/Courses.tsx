@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +7,6 @@ import { Search, Filter, Users, Clock, BookOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSkills } from '@/hooks/useSkills';
-import { useCourseInstructors } from '@/hooks/useCourseInstructors';
 import { useTeachers } from '@/hooks/useTeachers';
 import { Course } from '@/types/course';
 
@@ -19,10 +17,6 @@ const Courses = () => {
   const { toast } = useToast();
   const { skills = [] } = useSkills();
   const { teachers = [] } = useTeachers();
-  
-  // Only pass course IDs if courses array is not empty
-  const courseIds = Array.isArray(courses) ? courses.map(course => course.id) : [];
-  const { courseInstructorsMap } = useCourseInstructors(courseIds);
   
   // Fetch courses from Supabase
   useEffect(() => {
@@ -46,11 +40,11 @@ const Courses = () => {
         }
         
         console.log('Courses data fetched:', data);
-        // Process all courses and add instructor_ids as an empty array
+        // Process all courses and handle instructor_ids
         const typedCourses = (data || []).map(course => {
           return {
             ...course,
-            instructor_ids: [] // Add empty instructor_ids array
+            instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
           } as Course;
         });
         
@@ -84,12 +78,12 @@ const Courses = () => {
   }, [toast]);
 
   // Get instructor names for a course
-  const getInstructorNames = (courseId: string) => {
-    if (!courseInstructorsMap[courseId] || !Array.isArray(courseInstructorsMap[courseId]) || !courseInstructorsMap[courseId].length) {
+  const getInstructorNames = (course: Course) => {
+    if (!course.instructor_ids || !Array.isArray(course.instructor_ids) || !course.instructor_ids.length) {
       return 'No instructors';
     }
     
-    return courseInstructorsMap[courseId].map(instructorId => {
+    return course.instructor_ids.map(instructorId => {
       const teacher = teachers.find(t => t.id === instructorId);
       return teacher ? `${teacher.first_name} ${teacher.last_name}` : 'Unknown';
     }).join(', ');
@@ -99,7 +93,7 @@ const Courses = () => {
   const filteredCourses = (courses || []).filter(course => 
     course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (courseInstructorsMap[course.id] && getInstructorNames(course.id).toLowerCase().includes(searchTerm.toLowerCase()))
+    getInstructorNames(course).toLowerCase().includes(searchTerm.toLowerCase())
   );
   
   // Get all unique categories from courses
@@ -135,7 +129,7 @@ const Courses = () => {
       <CardHeader>
         <CardTitle className="text-xl">{course.title}</CardTitle>
         <CardDescription className="flex items-center text-sm">
-          <span className="mr-2">{getInstructorNames(course.id)}</span> • 
+          <span className="mr-2">{getInstructorNames(course)}</span> • 
           <span className="mx-2">{course.level}</span>
         </CardDescription>
       </CardHeader>

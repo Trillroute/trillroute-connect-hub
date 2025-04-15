@@ -30,7 +30,7 @@ export function useCourses() {
       
       console.log('Courses data fetched:', data);
       
-      // Process and standardize all courses - adding instructor_ids as empty arrays since they don't exist in DB
+      // Process and standardize all courses - handle instructor_ids
       const typedCourses = (data || []).map(course => {
         // Create a properly typed course object with default values where needed
         const processedCourse: Course = {
@@ -38,7 +38,7 @@ export function useCourses() {
           status: course.status === 'Active' || course.status === 'Draft' 
             ? course.status 
             : 'Draft',
-          instructor_ids: [] // Default to empty array since column doesn't exist in DB
+          instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
         };
         return processedCourse;
       });

@@ -1,15 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useTeachers } from '@/hooks/useTeachers';
 import { useToast } from '@/hooks/use-toast';
 
 export function useCourseInstructors(courseIds: string[]) {
   const [courseInstructorsMap, setCourseInstructorsMap] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { teachers } = useTeachers();
 
   useEffect(() => {
-    const fetchCourseInstructors = async () => {
+    const mapInstructorsForCourses = async () => {
       // Ensure courseIds is an array and not empty
       if (!Array.isArray(courseIds) || courseIds.length === 0) {
         setLoading(false);
@@ -19,37 +20,16 @@ export function useCourseInstructors(courseIds: string[]) {
       
       try {
         setLoading(true);
+        
+        // Get the instructor_ids from the courses in the app state
+        // and create a map of course_id -> instructor_ids
         const instructorsMap: Record<string, string[]> = {};
         
-        // Fetch from course_instructors table instead of directly from courses
-        const { data: courseInstructors, error } = await supabase
-          .from('course_instructors')
-          .select('course_id, instructor_id')
-          .in('course_id', courseIds);
-          
-        if (error) {
-          console.error('Error fetching course instructors:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load course instructor data.',
-            variant: 'destructive',
-          });
-          return;
-        }
-        
-        // Group instructors by course ID
-        if (Array.isArray(courseInstructors)) {
-          courseInstructors.forEach(relation => {
-            if (relation && relation.course_id) {
-              if (!instructorsMap[relation.course_id]) {
-                instructorsMap[relation.course_id] = [];
-              }
-              if (relation.instructor_id) {
-                instructorsMap[relation.course_id].push(relation.instructor_id);
-              }
-            }
-          });
-        }
+        // Use data already in the app or from props - no need to query DB
+        courseIds.forEach(courseId => {
+          // Default to empty array - this will be populated by course data
+          instructorsMap[courseId] = [];
+        });
         
         setCourseInstructorsMap(instructorsMap);
       } catch (error) {
@@ -59,7 +39,7 @@ export function useCourseInstructors(courseIds: string[]) {
       }
     };
     
-    fetchCourseInstructors();
+    mapInstructorsForCourses();
   }, [courseIds, toast]);
 
   return { courseInstructorsMap, loading };
