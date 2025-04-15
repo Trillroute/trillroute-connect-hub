@@ -2,31 +2,20 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AreaChart, BarChart, LineChart } from '@/components/ui/charts';
-import { Calendar, CheckCircle, Download, FileText, PlusCircle, Settings, User, Users } from 'lucide-react';
+import { AreaChart, LineChart } from '@/components/ui/charts';
+import { Calendar, CheckCircle, Download, FileText, Settings, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CourseManagement from '@/components/admin/CourseManagement';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const [recentUsers, setRecentUsers] = useState<Array<{
-    id: number;
-    name: string;
-    role: string;
-    email: string;
-    joinDate: string;
-    status: string;
-  }>>([]);
   const [coursesCount, setCoursesCount] = useState(0);
   const [activeCoursesCount, setActiveCoursesCount] = useState(0);
   const [studentsCount, setStudentsCount] = useState(0);
   const [teachersCount, setTeachersCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number }[]>([]);
-  const [enrollmentData, setEnrollmentData] = useState<{ name: string; Students: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   
   // Fetch dashboard data
@@ -66,33 +55,6 @@ const AdminDashboard = () => {
         // In a real implementation, you would fetch from the users table with role filter
         setTeachersCount(0);
         
-        // Fetch course enrollment data by category
-        const { data: courses, error: coursesListError } = await supabase
-          .from('courses')
-          .select('category, students');
-          
-        if (coursesListError) {
-          console.error('Error fetching courses for enrollment data:', coursesListError);
-        } else {
-          // Group courses by category and sum up student counts
-          const enrollmentByCategory = courses.reduce((acc: Record<string, number>, course: any) => {
-            const category = course.category;
-            if (!acc[category]) {
-              acc[category] = 0;
-            }
-            acc[category] += course.students || 0;
-            return acc;
-          }, {});
-          
-          // Convert to chart data format
-          const formattedEnrollmentData = Object.entries(enrollmentByCategory).map(([name, students]) => ({
-            name,
-            Students: students
-          }));
-          
-          setEnrollmentData(formattedEnrollmentData);
-        }
-
         // Create empty chart data for user activity and revenue (no actual data available)
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
         setUserActivityData(months.map(month => ({ name: month, Students: 0, Teachers: 0 })));
@@ -244,99 +206,9 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-      
-      {/* Recent Users (Empty State) */}
-      <div className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Users</CardTitle>
-            <CardDescription>New user registrations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recentUsers.length > 0 ? (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Join Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'Teacher' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                            {user.role}
-                          </span>
-                        </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                            {user.status}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <User className="h-4 w-4" />
-                            <span className="sr-only">View user</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                <Users className="h-12 w-12 text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">No users yet</h3>
-                <p className="text-gray-500 max-w-sm mb-4">
-                  When new users register, they will appear here.
-                </p>
-              </div>
-            )}
-            <div className="flex justify-end mt-4">
-              <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-                View All Users
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Enrollment by Course</CardTitle>
-            <CardDescription>Student distribution</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-            {enrollmentData.length > 0 ? (
-              <BarChart
-                data={enrollmentData}
-                index="name"
-                categories={["Students"]}
-                colors={["music.500"]}
-                layout="vertical"
-                valueFormatter={(value: number) => `${value} students`}
-                className="h-full"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <p>No enrollment data available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
