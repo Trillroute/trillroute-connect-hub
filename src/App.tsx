@@ -10,7 +10,6 @@ import Layout from "@/components/Layout";
 
 // Pages
 import Index from "./pages/Index";
-import About from "./pages/About";
 import Courses from "./pages/Courses";
 import Contact from "./pages/Contact";
 
@@ -40,7 +39,6 @@ const App = () => (
             <Routes>
               {/* Main Pages */}
               <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/contact" element={<Contact />} />
               
