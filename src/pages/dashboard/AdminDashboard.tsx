@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart, LineChart } from '@/components/ui/charts';
-import { Calendar, CheckCircle, Download, FileText, Settings, Users } from 'lucide-react';
+import { Download, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
 import { supabase } from '@/integrations/supabase/client';
@@ -203,32 +202,6 @@ const AdminDashboard = () => {
                 <p>No revenue data available</p>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button className="justify-start bg-music-500 hover:bg-music-600">
-              <Users className="h-4 w-4 mr-2" />
-              Manage Users
-            </Button>
-            <Button className="justify-start bg-music-500 hover:bg-music-600">
-              <FileText className="h-4 w-4 mr-2" />
-              Manage Courses
-            </Button>
-            <Button className="justify-start bg-music-500 hover:bg-music-600">
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule Management
-            </Button>
-            <Button className="justify-start bg-music-500 hover:bg-music-600">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Review Applications
-            </Button>
           </CardContent>
         </Card>
       </div>
