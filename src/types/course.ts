@@ -11,7 +11,7 @@ export interface Course {
   duration_type: string;
   status: string;
   created_at: string;
-  instructor_ids: string[]; // Making this required, not optional
+  instructor_ids: string[];
 }
 
 export interface Teacher {

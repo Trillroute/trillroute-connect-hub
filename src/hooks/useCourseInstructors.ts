@@ -19,14 +19,16 @@ export function useCourseInstructors(courseIds: string[]) {
       
       try {
         setLoading(true);
-        // First check if we need to fetch from course_instructors table or use instructor_ids from courses table
-        const { data: coursesWithInstructors, error: coursesError } = await supabase
+        const instructorsMap: Record<string, string[]> = {};
+        
+        // Fetch courses to get their instructor_ids
+        const { data: courses, error } = await supabase
           .from('courses')
           .select('id, instructor_ids')
           .in('id', courseIds);
           
-        if (coursesError) {
-          console.error('Error fetching courses with instructor_ids:', coursesError);
+        if (error) {
+          console.error('Error fetching courses with instructor_ids:', error);
           toast({
             title: 'Error',
             description: 'Failed to load course instructor data.',
@@ -36,12 +38,15 @@ export function useCourseInstructors(courseIds: string[]) {
         }
         
         // Build instructor map from courses data
-        const instructorsMap: Record<string, string[]> = {};
-        coursesWithInstructors?.forEach(course => {
-          if (course.id) {
-            instructorsMap[course.id] = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
-          }
-        });
+        if (Array.isArray(courses)) {
+          courses.forEach(course => {
+            if (course && course.id) {
+              // Ensure instructor_ids is always treated as an array
+              const instructorIds = course.instructor_ids || [];
+              instructorsMap[course.id] = Array.isArray(instructorIds) ? instructorIds : [];
+            }
+          });
+        }
         
         setCourseInstructorsMap(instructorsMap);
       } catch (error) {

@@ -45,11 +45,13 @@ const Courses = () => {
         }
         
         console.log('Courses data fetched:', data);
-        // Ensure each course has instructor_ids as an array
-        const typedCourses = data?.map(course => ({
-          ...course,
-          instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
-        })) as Course[] || [];
+        // Process all courses with proper types
+        const typedCourses = (data || []).map(course => {
+          return {
+            ...course,
+            instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
+          } as Course;
+        });
         
         setCourses(typedCourses);
       } catch (error) {
@@ -93,14 +95,14 @@ const Courses = () => {
   };
   
   // Filter courses based on search term
-  const filteredCourses = courses.filter(course => 
+  const filteredCourses = (courses || []).filter(course => 
     course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (courseInstructorsMap[course.id] && getInstructorNames(course.id).toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
   // Get all unique categories from courses
-  const uniqueCategories = [...new Set(courses.map(course => course.category))];
+  const uniqueCategories = [...new Set((courses || []).map(course => course.category))];
   
   // Group courses by category for the tabs
   const coursesByCategory = {

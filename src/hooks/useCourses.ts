@@ -30,14 +30,18 @@ export function useCourses() {
       
       console.log('Courses data fetched:', data);
       
-      // Ensure that all courses have proper types and default values
-      const typedCourses = data?.map(course => ({
-        ...course,
-        status: course.status === 'Active' || course.status === 'Draft' 
-          ? course.status 
-          : 'Draft',
-        instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
-      })) as Course[] || [];
+      // Process and standardize all courses
+      const typedCourses = (data || []).map(course => {
+        // Create a properly typed course object with default values where needed
+        const processedCourse: Course = {
+          ...course,
+          status: course.status === 'Active' || course.status === 'Draft' 
+            ? course.status 
+            : 'Draft',
+          instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
+        };
+        return processedCourse;
+      });
       
       setCourses(typedCourses);
     } catch (error) {
