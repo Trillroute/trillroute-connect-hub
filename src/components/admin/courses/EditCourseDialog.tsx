@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -30,7 +29,6 @@ const courseSchema = z.object({
   category: z.string().min(1, { message: "Category is required" }),
   duration: z.string().min(1, { message: "Duration is required" }),
   image: z.string().url({ message: "Must be a valid URL" }),
-  status: z.string()
 });
 
 type CourseFormValues = z.infer<typeof courseSchema>;
@@ -49,7 +47,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ open, onOpenChange,
       category: course.category,
       duration: course.duration,
       image: course.image,
-      status: course.status
     }
   });
 
@@ -64,7 +61,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ open, onOpenChange,
         category: course.category,
         duration: course.duration,
         image: course.image,
-        status: course.status
       });
     }
   }, [course, form]);
@@ -81,7 +77,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ open, onOpenChange,
           category: data.category,
           duration: data.duration,
           image: data.image,
-          status: data.status
+          status: 'Active',
         })
         .eq('id', course.id);
         
@@ -230,32 +226,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ open, onOpenChange,
                       <FormLabel>Duration</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., 8 weeks, 3 months, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <FormControl>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                          value={field.value}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Draft">Draft</SelectItem>
-                            <SelectItem value="Active">Active</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
