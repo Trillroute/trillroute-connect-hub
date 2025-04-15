@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AreaChart, LineChart } from '@/components/ui/charts';
+import { AreaChart } from '@/components/ui/charts';
 import { Download, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
@@ -17,13 +16,11 @@ const AdminDashboard = () => {
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   
-  // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         
-        // Get all courses count
         const { count: totalCourses, error: coursesError } = await supabase
           .from('courses')
           .select('*', { count: 'exact', head: true });
@@ -34,7 +31,6 @@ const AdminDashboard = () => {
           setCoursesCount(totalCourses || 0);
         }
         
-        // Get students count - fetch from users table with role='student'
         const { count: totalStudents, error: studentsError } = await supabase
           .from('custom_users')
           .select('*', { count: 'exact', head: true })
@@ -46,7 +42,6 @@ const AdminDashboard = () => {
           setStudentsCount(totalStudents || 0);
         }
         
-        // Get teachers count - fetch from users table with role='teacher'
         const { count: totalTeachers, error: teachersError } = await supabase
           .from('custom_users')
           .select('*', { count: 'exact', head: true })
@@ -58,7 +53,6 @@ const AdminDashboard = () => {
           setTeachersCount(totalTeachers || 0);
         }
         
-        // Create empty chart data for user activity and revenue (no actual data available)
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
         setUserActivityData(months.map(month => ({ name: month, Students: 0, Teachers: 0 })));
         setRevenueData(months.map(month => ({ name: month, Revenue: 0 })));
@@ -71,7 +65,6 @@ const AdminDashboard = () => {
     
     fetchDashboardData();
     
-    // Set up realtime subscription
     const subscription = supabase
       .channel('public:courses')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, () => {
@@ -144,12 +137,11 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Course Management Section */}
       <div className="mb-8">
         <CourseManagement />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
         <Card>
           <CardHeader>
             <CardTitle>User Growth</CardTitle>
@@ -168,29 +160,6 @@ const AdminDashboard = () => {
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
                 <p>No user activity data available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Revenue</CardTitle>
-            <CardDescription>Financial performance</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-            {revenueData.length > 0 ? (
-              <LineChart
-                data={revenueData}
-                index="name"
-                categories={["Revenue"]}
-                colors={["music.500"]}
-                valueFormatter={(value: number) => `$${value.toLocaleString()}`}
-                className="h-full"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <p>No revenue data available</p>
               </div>
             )}
           </CardContent>
