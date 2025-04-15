@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -58,12 +57,29 @@ const CourseForm: React.FC<CourseFormProps> = ({
   submitButtonText,
   cancelAction
 }) => {
-  // Ensure teachers is always an array
+  // Ensure teachers and skills are always arrays
   const safeTeachers = Array.isArray(teachers) ? teachers : [];
   const safeSkills = Array.isArray(skills) ? skills : [];
 
-  // Log teachers to help with debugging
+  // Log data for debugging
   console.log('Teachers received in CourseForm:', safeTeachers);
+  console.log('Teacher count:', safeTeachers.length);
+  
+  // Validate teachers have required properties
+  const validTeachers = safeTeachers.filter(teacher => 
+    teacher && typeof teacher === 'object' && teacher.id && 
+    teacher.first_name && teacher.last_name
+  );
+  
+  console.log('Valid teachers for rendering:', validTeachers.length);
+
+  // Ensure form instructors field is an array
+  useEffect(() => {
+    const currentInstructors = form.getValues('instructors');
+    if (!Array.isArray(currentInstructors)) {
+      form.setValue('instructors', []);
+    }
+  }, [form]);
 
   return (
     <Form {...form}>
@@ -97,7 +113,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <div className="flex min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                         <div className="flex flex-wrap gap-1">
                           {Array.isArray(field.value) ? field.value.map((instructorId) => {
-                            const teacher = safeTeachers.find((t) => t.id === instructorId);
+                            const teacher = validTeachers.find((t) => t.id === instructorId);
                             return teacher ? (
                               <Badge 
                                 key={teacher.id}
@@ -136,8 +152,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <CommandInput placeholder="Search instructors..." />
                       <CommandEmpty>No instructors found.</CommandEmpty>
                       <CommandGroup className="max-h-64 overflow-auto">
-                        {safeTeachers.length > 0 ? (
-                          safeTeachers.map((teacher) => {
+                        {validTeachers.length > 0 ? (
+                          validTeachers.map((teacher) => {
                             const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
                             return (
                               <CommandItem

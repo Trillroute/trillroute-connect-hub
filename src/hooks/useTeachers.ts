@@ -28,10 +28,20 @@ export function useTeachers() {
         return;
       }
       
-      // Ensure we have a valid array of teachers
+      // Ensure we have a valid array of teachers and log to understand the structure
       const validTeachers = Array.isArray(data) ? data : [];
       console.log('Teachers data fetched:', validTeachers);
-      setTeachers(validTeachers);
+      console.log('Teacher data structure example:', validTeachers.length > 0 ? validTeachers[0] : 'No teachers found');
+      
+      // Make sure all required fields exist on each teacher
+      const processedTeachers = validTeachers.map(teacher => ({
+        id: teacher.id || '',
+        first_name: teacher.first_name || '',
+        last_name: teacher.last_name || '',
+        email: teacher.email || ''
+      }));
+      
+      setTeachers(processedTeachers);
     } catch (error) {
       console.error('Unexpected error fetching teachers:', error);
       toast({
@@ -46,7 +56,20 @@ export function useTeachers() {
 
   useEffect(() => {
     fetchTeachers();
+    
+    // Add subscription to refresh when teacher data changes
+    const subscription = supabase
+      .channel('custom_users_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_users' }, () => {
+        fetchTeachers();
+      })
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
+  // Always ensure we return a valid array even if teachers is somehow nullish
   return { teachers: teachers || [], loading };
 }
