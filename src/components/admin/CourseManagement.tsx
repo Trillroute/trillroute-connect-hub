@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +13,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { Database } from '@/integrations/supabase/types';
 
 interface Course {
   id: string;
@@ -25,7 +25,7 @@ interface Course {
   image: string;
   category: string;
   duration: string;
-  status: 'Active' | 'Draft';
+  status: string;
   created_at: string;
 }
 
@@ -80,7 +80,6 @@ const CourseManagement = () => {
     }
   });
 
-  // Fetch courses from Supabase
   const fetchCourses = async () => {
     try {
       setLoading(true);
@@ -101,7 +100,15 @@ const CourseManagement = () => {
       }
       
       console.log('Courses data fetched:', data);
-      setCourses(data || []);
+      
+      const typedCourses = data?.map(course => ({
+        ...course,
+        status: course.status === 'Active' || course.status === 'Draft' 
+          ? course.status 
+          : 'Draft'
+      })) as Course[] || [];
+      
+      setCourses(typedCourses);
     } catch (error) {
       console.error('Unexpected error:', error);
       toast({
@@ -117,7 +124,6 @@ const CourseManagement = () => {
   useEffect(() => {
     fetchCourses();
     
-    // Set up realtime subscription
     const subscription = supabase
       .channel('public:courses')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
