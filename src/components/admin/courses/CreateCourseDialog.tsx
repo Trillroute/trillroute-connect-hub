@@ -1,17 +1,15 @@
+
 import React from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeachers } from '@/hooks/useTeachers';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import CourseForm, { CourseFormValues } from './CourseForm';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -28,8 +26,6 @@ const courseSchema = z.object({
   duration: z.string().min(1, { message: "Duration is required" }),
   image: z.string().url({ message: "Must be a valid URL" }),
 });
-
-type CourseFormValues = z.infer<typeof courseSchema>;
 
 const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
@@ -106,138 +102,24 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             </DialogDescription>
           </DialogHeader>
           
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleCreateCourse)} className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Course Title" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="instructor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Instructor</FormLabel>
-                      <FormControl>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select instructor" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {teachers.length > 0 ? (
-                              teachers.map((teacher) => (
-                                <SelectItem key={teacher.id} value={teacher.id}>
-                                  {teacher.first_name} {teacher.last_name}
-                                </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="no-teachers" disabled>
-                                No teachers available
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Course description..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Piano, Guitar, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="level"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Level</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Beginner, Advanced, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duration</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 8 weeks, 3 months, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="URL to course image" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button type="submit" className="bg-music-500 hover:bg-music-600">Create Course</Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <CourseForm 
+            form={form} 
+            onSubmit={handleCreateCourse} 
+            teachers={teachers} 
+            submitButtonText="Create Course"
+            cancelAction={() => onOpenChange(false)}
+          />
+          
+          <DialogFooter className="pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button 
+              type="submit" 
+              className="bg-music-500 hover:bg-music-600"
+              onClick={form.handleSubmit(handleCreateCourse)}
+            >
+              Create Course
+            </Button>
+          </DialogFooter>
         </ScrollArea>
       </DialogContent>
     </Dialog>
