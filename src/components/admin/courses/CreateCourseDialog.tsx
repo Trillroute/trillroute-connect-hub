@@ -1,15 +1,13 @@
-
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { DurationMetric } from '@/types/course';
 
@@ -138,35 +136,33 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <ScrollArea className="max-h-[80vh] overflow-y-auto pr-4">
-          <DialogHeader>
-            <DialogTitle>Add New Course</DialogTitle>
-            <DialogDescription>
-              Create a new course by filling out the information below.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <CourseForm 
-            form={form} 
-            onSubmit={handleCreateCourse} 
-            teachers={teachers} 
-            skills={skills}
-            submitButtonText="Create Course"
-            cancelAction={() => onOpenChange(false)}
-          />
-          
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button 
-              type="submit" 
-              className="bg-music-500 hover:bg-music-600"
-              onClick={form.handleSubmit(handleCreateCourse)}
-            >
-              Create Course
-            </Button>
-          </DialogFooter>
-        </ScrollArea>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Course</DialogTitle>
+          <DialogDescription>
+            Create a new course by filling out the information below.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <CourseForm 
+          form={form} 
+          onSubmit={handleCreateCourse} 
+          teachers={teachers} 
+          skills={skills}
+          submitButtonText="Create Course"
+          cancelAction={() => onOpenChange(false)}
+        />
+        
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button 
+            type="submit" 
+            className="bg-music-500 hover:bg-music-600"
+            onClick={form.handleSubmit(handleCreateCourse)}
+          >
+            Create Course
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
