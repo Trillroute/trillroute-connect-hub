@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +23,33 @@ interface AuthContextType {
   isAdmin: () => boolean;
 }
 
+const validUsers = [
+  {
+    id: "user_1",
+    email: "student@example.com",
+    password: "password",
+    firstName: "Student",
+    lastName: "User",
+    role: "student" as UserRole
+  },
+  {
+    id: "user_2",
+    email: "teacher@example.com",
+    password: "password",
+    firstName: "Teacher",
+    lastName: "User",
+    role: "teacher" as UserRole
+  },
+  {
+    id: "user_3",
+    email: "admin@example.com",
+    password: "password",
+    firstName: "Admin",
+    lastName: "User",
+    role: "admin" as UserRole
+  }
+];
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -46,43 +72,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  // In a real app, this would communicate with Supabase
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulating authentication - in a real app, this would call Supabase auth
-      // For demo purposes, we'll simulate different roles based on email
-      let role: UserRole = 'student';
-      if (email.includes('teacher')) {
-        role = 'teacher';
-      } else if (email.includes('admin')) {
-        role = 'admin';
+      // Check if the email and password match a valid user
+      const foundUser = validUsers.find(
+        (u) => u.email === email && u.password === password
+      );
+      
+      if (!foundUser) {
+        throw new Error("Invalid email or password");
       }
       
-      const mockUser: User = {
-        id: `user_${Date.now()}`,
-        email,
-        firstName: 'Demo',
-        lastName: 'User',
-        role,
+      const authenticatedUser: User = {
+        id: foundUser.id,
+        email: foundUser.email,
+        firstName: foundUser.firstName,
+        lastName: foundUser.lastName,
+        role: foundUser.role,
       };
       
-      setUser(mockUser);
-      localStorage.setItem('trillroute_user', JSON.stringify(mockUser));
+      setUser(authenticatedUser);
+      localStorage.setItem('trillroute_user', JSON.stringify(authenticatedUser));
       
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${mockUser.firstName}!`,
+        description: `Welcome back, ${authenticatedUser.firstName}!`,
         duration: 3000,
       });
       
       // Redirect based on role
-      navigate(`/dashboard/${role}`);
+      navigate(`/dashboard/${authenticatedUser.role}`);
     } catch (error) {
       console.error('Login error:', error);
       toast({
         title: "Login Failed",
-        description: "Please check your credentials and try again.",
+        description: "Invalid email or password. Please try again.",
         variant: "destructive",
         duration: 3000,
       });
@@ -91,12 +116,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // In a real app, this would communicate with Supabase
   const register = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
     setLoading(true);
     try {
-      // Simulating registration - in a real app, this would call Supabase auth
-      const mockUser: User = {
+      // Check if user with this email already exists
+      if (validUsers.some(u => u.email === email)) {
+        throw new Error("User with this email already exists");
+      }
+      
+      // In a real app, we'd add the user to the database
+      // For now, we'll just simulate successful registration
+      const newUser: User = {
         id: `user_${Date.now()}`,
         email,
         firstName,
@@ -104,8 +134,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role,
       };
       
-      setUser(mockUser);
-      localStorage.setItem('trillroute_user', JSON.stringify(mockUser));
+      setUser(newUser);
+      localStorage.setItem('trillroute_user', JSON.stringify(newUser));
       
       toast({
         title: "Registration Successful",
@@ -119,7 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Registration error:', error);
       toast({
         title: "Registration Failed",
-        description: "Please check your information and try again.",
+        description: error instanceof Error ? error.message : "Please check your information and try again.",
         variant: "destructive",
         duration: 3000,
       });
