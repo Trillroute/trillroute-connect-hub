@@ -9,59 +9,34 @@ import { Progress } from '@/components/ui/progress';
 const StudentDashboard = () => {
   const { user } = useAuth();
 
-  // Mock data for the UI
-  const enrolledCourses = [
-    { 
-      id: 1, 
-      title: 'Piano Fundamentals', 
-      instructor: 'Emily Johnson', 
-      progress: 45,
-      nextLesson: 'Understanding Chord Progressions',
-      imageUrl: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBpYW5vfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    { 
-      id: 2, 
-      title: 'Guitar for Beginners', 
-      instructor: 'David Smith', 
-      progress: 70,
-      nextLesson: 'Basic Strumming Patterns',
-      imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3VpdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    { 
-      id: 3, 
-      title: 'Music Theory 101', 
-      instructor: 'Robert Chen', 
-      progress: 30,
-      nextLesson: 'Understanding Time Signatures',
-      imageUrl: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8bXVzaWMlMjB0aGVvcnl8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-  ];
+  // Empty data arrays - removed all mock data
+  const enrolledCourses: {
+    id: number;
+    title: string;
+    instructor: string;
+    progress: number;
+    nextLesson: string;
+    imageUrl: string;
+  }[] = [];
 
-  const upcomingLessons = [
-    { id: 1, title: 'Piano Practice Session', instructor: 'Emily Johnson', date: '2023-09-12', time: '10:00 AM', duration: '45 minutes' },
-    { id: 2, title: 'Guitar Technique Workshop', instructor: 'David Smith', date: '2023-09-14', time: '02:30 PM', duration: '1 hour' },
-  ];
+  const upcomingLessons: {
+    id: number; 
+    title: string; 
+    instructor: string; 
+    date: string; 
+    time: string; 
+    duration: string;
+  }[] = [];
 
-  const recommendations = [
-    { 
-      id: 1, 
-      title: 'Vocal Training Essentials', 
-      instructor: 'Sarah Williams', 
-      level: 'Intermediate',
-      rating: 4.8,
-      students: 1245,
-      imageUrl: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c2luZ2luZ3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    { 
-      id: 2, 
-      title: 'Advanced Piano Techniques', 
-      instructor: 'Michael Brown', 
-      level: 'Advanced',
-      rating: 4.9,
-      students: 837,
-      imageUrl: 'https://images.unsplash.com/photo-1530190058431-68547e914cd2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cGlhbm98ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-  ];
+  const recommendations: {
+    id: number; 
+    title: string; 
+    instructor: string; 
+    level: string;
+    rating: number;
+    students: number;
+    imageUrl: string;
+  }[] = [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -87,7 +62,7 @@ const StudentDashboard = () => {
             <CardDescription>Your learning progress</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">12</div>
+            <div className="text-3xl font-bold text-music-500">0</div>
           </CardContent>
         </Card>
         
@@ -97,52 +72,65 @@ const StudentDashboard = () => {
             <CardDescription>This month</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">24.5</div>
+            <div className="text-3xl font-bold text-music-500">0</div>
           </CardContent>
         </Card>
       </div>
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your Courses</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {enrolledCourses.map((course) => (
-            <Card key={course.id} className="overflow-hidden music-card-hover">
-              <div className="h-48 overflow-hidden">
-                <img 
-                  src={course.imageUrl} 
-                  alt={course.title} 
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                />
-              </div>
-              <CardHeader>
-                <CardTitle>{course.title}</CardTitle>
-                <CardDescription>Instructor: {course.instructor}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Progress</span>
-                    <span>{course.progress}%</span>
-                  </div>
-                  <Progress value={course.progress} className="h-2" />
+        {enrolledCourses.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {enrolledCourses.map((course) => (
+              <Card key={course.id} className="overflow-hidden music-card-hover">
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={course.imageUrl} 
+                    alt={course.title} 
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                  />
                 </div>
-                
-                <div>
-                  <div className="text-sm font-medium mb-1">Next Lesson:</div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <BookOpen className="h-4 w-4 mr-1 text-music-500" />
-                    <span>{course.nextLesson}</span>
+                <CardHeader>
+                  <CardTitle>{course.title}</CardTitle>
+                  <CardDescription>Instructor: {course.instructor}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>Progress</span>
+                      <span>{course.progress}%</span>
+                    </div>
+                    <Progress value={course.progress} className="h-2" />
                   </div>
-                </div>
-                
-                <Button variant="outline" className="w-full border-music-300 text-music-500 hover:bg-music-50">
-                  <PlayCircle className="h-4 w-4 mr-2" />
-                  Continue Learning
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  
+                  <div>
+                    <div className="text-sm font-medium mb-1">Next Lesson:</div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <BookOpen className="h-4 w-4 mr-1 text-music-500" />
+                      <span>{course.nextLesson}</span>
+                    </div>
+                  </div>
+                  
+                  <Button variant="outline" className="w-full border-music-300 text-music-500 hover:bg-music-50">
+                    <PlayCircle className="h-4 w-4 mr-2" />
+                    Continue Learning
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 px-4 border rounded-md">
+            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No courses enrolled</h3>
+            <p className="text-gray-500 max-w-sm mx-auto mb-4">
+              You haven't enrolled in any courses yet. Browse our catalog to find courses that interest you.
+            </p>
+            <Button className="bg-music-500 hover:bg-music-600">
+              Browse Courses
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -153,44 +141,48 @@ const StudentDashboard = () => {
               <CardDescription>Your scheduled sessions</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {upcomingLessons.map((lesson) => (
-                  <div key={lesson.id} className="flex p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="bg-music-200 h-14 w-14 rounded-full flex items-center justify-center mr-4">
-                      <Calendar className="h-6 w-6 text-music-700" />
-                    </div>
-                    <div className="flex-grow">
-                      <h4 className="font-medium text-gray-900">{lesson.title}</h4>
-                      <p className="text-sm text-gray-600">with {lesson.instructor}</p>
-                      <div className="flex items-center mt-2 space-x-4">
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          <span>{new Date(lesson.date).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Clock className="h-3 w-3 mr-1" />
-                          <span>{lesson.time}</span>
-                        </div>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Music2 className="h-3 w-3 mr-1" />
-                          <span>{lesson.duration}</span>
+              {upcomingLessons.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingLessons.map((lesson) => (
+                    <div key={lesson.id} className="flex p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="bg-music-200 h-14 w-14 rounded-full flex items-center justify-center mr-4">
+                        <Calendar className="h-6 w-6 text-music-700" />
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="font-medium text-gray-900">{lesson.title}</h4>
+                        <p className="text-sm text-gray-600">with {lesson.instructor}</p>
+                        <div className="flex items-center mt-2 space-x-4">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            <span>{new Date(lesson.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Clock className="h-3 w-3 mr-1" />
+                            <span>{lesson.time}</span>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Music2 className="h-3 w-3 mr-1" />
+                            <span>{lesson.duration}</span>
+                          </div>
                         </div>
                       </div>
+                      <Button size="sm" className="bg-music-500 text-white hover:bg-music-600">
+                        Join
+                      </Button>
                     </div>
-                    <Button size="sm" className="bg-music-500 text-white hover:bg-music-600">
-                      Join
-                    </Button>
-                  </div>
-                ))}
-                
-                {upcomingLessons.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    No upcoming lessons scheduled.
-                  </div>
-                )}
-                
-                <Button variant="outline" className="w-full">Schedule a New Lesson</Button>
-              </div>
+                  ))}
+                  <Button variant="outline" className="w-full">Schedule a New Lesson</Button>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">No upcoming lessons</h3>
+                  <p className="text-gray-500 max-w-sm mx-auto mb-4">
+                    You don't have any scheduled lessons. Book a lesson with one of our instructors.
+                  </p>
+                  <Button variant="outline" className="w-full">Schedule a New Lesson</Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -202,31 +194,43 @@ const StudentDashboard = () => {
               <CardDescription>Based on your interests</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recommendations.map((course) => (
-                  <div key={course.id} className="flex rounded-lg overflow-hidden border border-gray-100 hover:border-music-200 transition-colors">
-                    <div className="h-24 w-24 flex-shrink-0">
-                      <img 
-                        src={course.imageUrl} 
-                        alt={course.title} 
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="p-3 flex-grow">
-                      <h5 className="font-medium text-sm">{course.title}</h5>
-                      <p className="text-xs text-gray-600">{course.instructor}</p>
-                      <div className="flex items-center mt-1">
-                        <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                        <span className="text-xs ml-1">{course.rating} • {course.level}</span>
+              {recommendations.length > 0 ? (
+                <div className="space-y-4">
+                  {recommendations.map((course) => (
+                    <div key={course.id} className="flex rounded-lg overflow-hidden border border-gray-100 hover:border-music-200 transition-colors">
+                      <div className="h-24 w-24 flex-shrink-0">
+                        <img 
+                          src={course.imageUrl} 
+                          alt={course.title} 
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="p-3 flex-grow">
+                        <h5 className="font-medium text-sm">{course.title}</h5>
+                        <p className="text-xs text-gray-600">{course.instructor}</p>
+                        <div className="flex items-center mt-1">
+                          <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                          <span className="text-xs ml-1">{course.rating} • {course.level}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                
-                <Button variant="link" className="w-full text-music-500">
-                  View All Recommendations
-                </Button>
-              </div>
+                  ))}
+                  <Button variant="link" className="w-full text-music-500">
+                    View All Recommendations
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">No recommendations yet</h3>
+                  <p className="text-gray-500 max-w-sm mx-auto mb-4">
+                    We'll suggest courses based on your interests as you explore our platform.
+                  </p>
+                  <Button variant="link" className="w-full text-music-500">
+                    Browse All Courses
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
