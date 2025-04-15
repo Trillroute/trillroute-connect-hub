@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,58 +17,59 @@ const AdminDashboard = () => {
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      const { count: totalCourses, error: coursesError } = await supabase
+        .from('courses')
+        .select('*', { count: 'exact', head: true });
         
-        const { count: totalCourses, error: coursesError } = await supabase
-          .from('courses')
-          .select('*', { count: 'exact', head: true });
-          
-        if (coursesError) {
-          console.error('Error fetching courses count:', coursesError);
-        } else {
-          setCoursesCount(totalCourses || 0);
-        }
-        
-        const { count: totalStudents, error: studentsError } = await supabase
-          .from('custom_users')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'student');
-          
-        if (studentsError) {
-          console.error('Error fetching students count:', studentsError);
-        } else {
-          setStudentsCount(totalStudents || 0);
-        }
-        
-        const { count: totalTeachers, error: teachersError } = await supabase
-          .from('custom_users')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'teacher');
-          
-        if (teachersError) {
-          console.error('Error fetching teachers count:', teachersError);
-        } else {
-          setTeachersCount(totalTeachers || 0);
-        }
-        
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-        setUserActivityData(months.map(month => ({ name: month, Students: 0, Teachers: 0 })));
-        setRevenueData(months.map(month => ({ name: month, Revenue: 0 })));
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
+      if (coursesError) {
+        console.error('Error fetching courses count:', coursesError);
+      } else {
+        setCoursesCount(totalCourses || 0);
       }
-    };
-    
+      
+      const { count: totalStudents, error: studentsError } = await supabase
+        .from('custom_users')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'student');
+        
+      if (studentsError) {
+        console.error('Error fetching students count:', studentsError);
+      } else {
+        setStudentsCount(totalStudents || 0);
+      }
+      
+      const { count: totalTeachers, error: teachersError } = await supabase
+        .from('custom_users')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'teacher');
+        
+      if (teachersError) {
+        console.error('Error fetching teachers count:', teachersError);
+      } else {
+        setTeachersCount(totalTeachers || 0);
+      }
+      
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+      setUserActivityData(months.map(month => ({ name: month, Students: 0, Teachers: 0 })));
+      setRevenueData(months.map(month => ({ name: month, Revenue: 0 })));
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchDashboardData();
     
     const subscription = supabase
       .channel('public:courses')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
+        console.log('Dashboard detected change in courses:', payload);
         fetchDashboardData();
       })
       .subscribe();
