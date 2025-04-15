@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Database } from '@/integrations/supabase/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Course {
   id: string;
@@ -30,6 +29,13 @@ interface Course {
   created_at: string;
 }
 
+interface Teacher {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
 const CourseManagement = () => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -38,12 +44,13 @@ const CourseManagement = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
 
   const courseSchema = z.object({
     title: z.string().min(3, { message: "Title must be at least 3 characters" }),
     description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-    instructor: z.string().min(3, { message: "Instructor name is required" }),
+    instructor: z.string().min(1, { message: "Instructor is required" }),
     level: z.string().min(1, { message: "Level is required" }),
     category: z.string().min(1, { message: "Category is required" }),
     duration: z.string().min(1, { message: "Duration is required" }),
@@ -80,6 +87,26 @@ const CourseManagement = () => {
       status: 'Active'
     }
   });
+
+  const fetchTeachers = async () => {
+    try {
+      console.log('Fetching teachers...');
+      const { data, error } = await supabase
+        .from('custom_users')
+        .select('id, first_name, last_name, email')
+        .eq('role', 'teacher');
+      
+      if (error) {
+        console.error('Error fetching teachers:', error);
+        return;
+      }
+      
+      console.log('Teachers data fetched:', data);
+      setTeachers(data || []);
+    } catch (error) {
+      console.error('Unexpected error fetching teachers:', error);
+    }
+  };
 
   const fetchCourses = async () => {
     try {
@@ -124,6 +151,7 @@ const CourseManagement = () => {
 
   useEffect(() => {
     fetchCourses();
+    fetchTeachers();
     
     const subscription = supabase
       .channel('public:courses')
@@ -289,6 +317,11 @@ const CourseManagement = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  const getInstructorFullName = (instructorId: string) => {
+    const teacher = teachers.find(t => t.id === instructorId);
+    return teacher ? `${teacher.first_name} ${teacher.last_name}` : instructorId;
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -325,7 +358,7 @@ const CourseManagement = () => {
                 {courses.map((course) => (
                   <TableRow key={course.id}>
                     <TableCell className="font-medium">{course.title}</TableCell>
-                    <TableCell>{course.instructor}</TableCell>
+                    <TableCell>{getInstructorFullName(course.instructor)}</TableCell>
                     <TableCell>{course.category}</TableCell>
                     <TableCell>{course.level}</TableCell>
                     <TableCell>{course.duration}</TableCell>
@@ -378,7 +411,7 @@ const CourseManagement = () => {
       </CardContent>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Course</DialogTitle>
             <DialogDescription>
@@ -410,7 +443,27 @@ const CourseManagement = () => {
                     <FormItem>
                       <FormLabel>Instructor</FormLabel>
                       <FormControl>
-                        <Input placeholder="Instructor Name" {...field} />
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select instructor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {teachers.length > 0 ? (
+                              teachers.map((teacher) => (
+                                <SelectItem key={teacher.id} value={teacher.id}>
+                                  {teacher.first_name} {teacher.last_name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-teachers" disabled>
+                                No teachers available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -522,7 +575,7 @@ const CourseManagement = () => {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Course</DialogTitle>
             <DialogDescription>
@@ -554,7 +607,27 @@ const CourseManagement = () => {
                     <FormItem>
                       <FormLabel>Instructor</FormLabel>
                       <FormControl>
-                        <Input placeholder="Instructor Name" {...field} />
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select instructor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {teachers.length > 0 ? (
+                              teachers.map((teacher) => (
+                                <SelectItem key={teacher.id} value={teacher.id}>
+                                  {teacher.first_name} {teacher.last_name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-teachers" disabled>
+                                No teachers available
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
