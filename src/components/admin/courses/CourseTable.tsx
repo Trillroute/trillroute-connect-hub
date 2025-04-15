@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, BookOpen } from 'lucide-react';
 import { Course } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
-import { useCourseInstructors } from '@/hooks/useCourseInstructors';
 import { Badge } from '@/components/ui/badge';
 
 interface CourseTableProps {
@@ -16,8 +15,7 @@ interface CourseTableProps {
 }
 
 const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onDelete }) => {
-  const { teachers } = useTeachers();
-  const { courseInstructorsMap } = useCourseInstructors(courses.map(course => course.id));
+  const { teachers = [] } = useTeachers();
 
   const getInstructorName = (instructorId: string) => {
     const teacher = teachers.find(t => t.id === instructorId);
@@ -66,8 +64,8 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
               <TableCell className="font-medium">{course.title}</TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">
-                  {courseInstructorsMap[course.id] && courseInstructorsMap[course.id].length > 0 ? (
-                    courseInstructorsMap[course.id].map((instructorId, index) => (
+                  {Array.isArray(course.instructor_ids) && course.instructor_ids.length > 0 ? (
+                    course.instructor_ids.map((instructorId) => (
                       <Badge key={instructorId} variant="outline" className="bg-gray-100">
                         {getInstructorName(instructorId)}
                       </Badge>

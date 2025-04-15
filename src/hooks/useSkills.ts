@@ -30,12 +30,17 @@ export function useSkills() {
             description: 'Failed to load skills data.',
             variant: 'destructive',
           });
+          // Even in case of error, initialize skills as empty array
+          setSkills([]);
           return;
         }
         
+        // Ensure data is an array, default to empty array if null or undefined
         setSkills(data || []);
       } catch (error) {
         console.error('Unexpected error:', error);
+        // Ensure skills is an empty array in case of any error
+        setSkills([]);
       } finally {
         setLoading(false);
       }

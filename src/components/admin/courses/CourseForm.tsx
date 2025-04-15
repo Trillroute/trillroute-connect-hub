@@ -54,10 +54,15 @@ const CourseForm: React.FC<CourseFormProps> = ({
   form,
   onSubmit,
   teachers,
-  skills,
+  skills = [], // Provide a default empty array
   submitButtonText,
   cancelAction
 }) => {
+  // Ensure teachers is always an array
+  const safeTeachers = Array.isArray(teachers) ? teachers : [];
+  // Ensure skills is always an array
+  const safeSkills = Array.isArray(skills) ? skills : [];
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -90,7 +95,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <div className="flex min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                         <div className="flex flex-wrap gap-1">
                           {field.value.map((instructorId) => {
-                            const teacher = teachers.find((t) => t.id === instructorId);
+                            const teacher = safeTeachers.find((t) => t.id === instructorId);
                             return teacher ? (
                               <Badge 
                                 key={teacher.id}
@@ -129,7 +134,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <CommandInput placeholder="Search instructors..." />
                       <CommandEmpty>No instructors found.</CommandEmpty>
                       <CommandGroup className="max-h-64 overflow-auto">
-                        {teachers.map((teacher) => {
+                        {safeTeachers.map((teacher) => {
                           const isSelected = field.value.includes(teacher.id);
                           return (
                             <CommandItem
@@ -194,7 +199,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {skills.map((skill) => (
+                    {safeSkills.map((skill) => (
                       <SelectItem key={skill.id} value={skill.name}>
                         {skill.name}
                       </SelectItem>

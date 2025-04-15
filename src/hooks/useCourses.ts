@@ -34,7 +34,8 @@ export function useCourses() {
         ...course,
         status: course.status === 'Active' || course.status === 'Draft' 
           ? course.status 
-          : 'Draft'
+          : 'Draft',
+        instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
       })) as Course[] || [];
       
       setCourses(typedCourses);
@@ -61,17 +62,8 @@ export function useCourses() {
       })
       .subscribe();
       
-    const instructorsSubscription = supabase
-      .channel('public:course_instructors')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'course_instructors' }, (payload) => {
-        console.log('Change received in course_instructors:', payload);
-        fetchCourses();
-      })
-      .subscribe();
-      
     return () => {
       coursesSubscription.unsubscribe();
-      instructorsSubscription.unsubscribe();
     };
   }, []);
 

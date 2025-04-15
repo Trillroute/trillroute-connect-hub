@@ -38,17 +38,19 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   onSuccess 
 }) => {
   const { toast } = useToast();
-  const { teachers } = useTeachers();
-  const { skills } = useSkills();
-  const [courseInstructors, setCourseInstructors] = useState<string[]>([]);
+  const { teachers = [] } = useTeachers();
+  const { skills = [] } = useSkills();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get instructor IDs from the course
+  const instructorIds = course.instructor_ids || [];
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: course.title,
       description: course.description,
-      instructors: courseInstructors,
+      instructors: instructorIds,
       level: course.level,
       category: course.category,
       duration: course.duration,
@@ -57,50 +59,13 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     }
   });
 
-  // Fetch course instructors when dialog opens
-  useEffect(() => {
-    const fetchCourseInstructors = async () => {
-      if (!open || !course.id) return;
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('course_instructors')
-          .select('instructor_id')
-          .eq('course_id', course.id);
-          
-        if (error) {
-          console.error('Error fetching course instructors:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load course instructors.',
-            variant: 'destructive',
-          });
-          return;
-        }
-        
-        const instructorIds = data.map(item => item.instructor_id);
-        setCourseInstructors(instructorIds);
-        
-        // Update form with fetched instructors
-        form.setValue('instructors', instructorIds);
-      } catch (error) {
-        console.error('Unexpected error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchCourseInstructors();
-  }, [course.id, open, form, toast]);
-
   // Reset form when dialog opens with current course data
   useEffect(() => {
     if (open) {
       form.reset({
         title: course.title,
         description: course.description,
-        instructors: courseInstructors,
+        instructors: instructorIds,
         level: course.level,
         category: course.category,
         duration: course.duration,
@@ -108,11 +73,11 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         image: course.image,
       });
     }
-  }, [course, form, open, courseInstructors]);
+  }, [course, form, open, instructorIds]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     try {
-      // First, update the course
+      // Update the course with instructor IDs directly
       const { error: courseError } = await supabase
         .from('courses')
         .update({
@@ -124,6 +89,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration_type: data.durationType,
           image: data.image,
           status: 'Active',
+          instructor_ids: data.instructors
         })
         .eq('id', course.id);
         
@@ -135,44 +101,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           variant: 'destructive',
         });
         return;
-      }
-      
-      // Remove all existing instructor relationships
-      const { error: deleteError } = await supabase
-        .from('course_instructors')
-        .delete()
-        .eq('course_id', course.id);
-        
-      if (deleteError) {
-        console.error('Error removing course instructors:', deleteError);
-        toast({
-          title: 'Error',
-          description: 'Failed to update course instructors. Please try again.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Add new instructor relationships
-      if (data.instructors.length > 0) {
-        const courseInstructors = data.instructors.map(instructorId => ({
-          course_id: course.id,
-          instructor_id: instructorId
-        }));
-        
-        const { error: instructorError } = await supabase
-          .from('course_instructors')
-          .insert(courseInstructors);
-          
-        if (instructorError) {
-          console.error('Error adding course instructors:', instructorError);
-          toast({
-            title: 'Error',
-            description: 'Course updated, but failed to add instructors. Please try again.',
-            variant: 'destructive',
-          });
-          return;
-        }
       }
       
       onOpenChange(false);

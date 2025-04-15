@@ -31,8 +31,8 @@ const courseSchema = z.object({
 
 const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
-  const { teachers } = useTeachers();
-  const { skills } = useSkills();
+  const { teachers = [] } = useTeachers();
+  const { skills = [] } = useSkills();
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -63,7 +63,8 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             duration_type: data.durationType,
             image: data.image,
             status: 'Active',
-            students: 0
+            students: 0,
+            instructor_ids: data.instructors // Store instructor IDs directly in the course table
           }
         ])
         .select()
@@ -77,28 +78,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
           variant: 'destructive',
         });
         return;
-      }
-      
-      // Now add the instructor relationships
-      if (courseData && data.instructors.length > 0) {
-        const courseInstructors = data.instructors.map(instructorId => ({
-          course_id: courseData.id,
-          instructor_id: instructorId
-        }));
-        
-        const { error: instructorError } = await supabase
-          .from('course_instructors')
-          .insert(courseInstructors);
-          
-        if (instructorError) {
-          console.error('Error adding course instructors:', instructorError);
-          toast({
-            title: 'Error',
-            description: 'Course created, but failed to add instructors. Please try again.',
-            variant: 'destructive',
-          });
-          return;
-        }
       }
       
       onOpenChange(false);

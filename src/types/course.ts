@@ -9,9 +9,9 @@ export interface Course {
   category: string;
   duration: string;
   duration_type: string;
-  status: string; // Keeping for backwards compatibility
+  status: string;
   created_at: string;
-  instructors?: Teacher[]; // Now courses can have multiple instructors
+  instructor_ids?: string[]; // Array of instructor IDs directly in the course
 }
 
 export interface Teacher {
@@ -21,6 +21,7 @@ export interface Teacher {
   email: string;
 }
 
+// This interface is kept for backward compatibility if needed
 export interface CourseInstructor {
   id: string;
   course_id: string;
