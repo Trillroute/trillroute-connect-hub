@@ -12,6 +12,12 @@ export interface Course {
   status: string;
   created_at: string;
   instructor_ids: string[];
+  classes_count?: number;
+  classes_duration?: number;
+  studio_sessions_count?: number;
+  studio_sessions_duration?: number;
+  practical_sessions_count?: number;
+  practical_sessions_duration?: number;
 }
 
 export interface Teacher {
@@ -31,4 +37,3 @@ export interface CourseInstructor {
 
 // New interface for duration metrics
 export type DurationMetric = 'days' | 'weeks' | 'months' | 'years';
-

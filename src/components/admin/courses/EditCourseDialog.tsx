@@ -10,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course, DurationMetric } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import CourseForm, { CourseFormValues } from './CourseForm';
 
 interface EditCourseDialogProps {
@@ -30,6 +29,13 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
+  // New fields
+  classesCount: z.string().optional(),
+  classesDuration: z.string().optional(),
+  studioSessionsCount: z.string().optional(),
+  studioSessionsDuration: z.string().optional(),
+  practicalSessionsCount: z.string().optional(),
+  practicalSessionsDuration: z.string().optional(),
 }).refine((data) => {
   // If durationType is fixed, require durationValue and durationMetric
   if (data.durationType === 'fixed') {
@@ -93,6 +99,13 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       durationMetric: durationMetric,
       durationType: course.duration_type || 'fixed',
       image: course.image,
+      // New fields with default values from course or 0
+      classesCount: course.classes_count?.toString() || '0',
+      classesDuration: course.classes_duration?.toString() || '0',
+      studioSessionsCount: course.studio_sessions_count?.toString() || '0',
+      studioSessionsDuration: course.studio_sessions_duration?.toString() || '0',
+      practicalSessionsCount: course.practical_sessions_count?.toString() || '0',
+      practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
     }
   });
 
@@ -110,6 +123,13 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         durationMetric: metric,
         durationType: course.duration_type || 'fixed',
         image: course.image,
+        // New fields
+        classesCount: course.classes_count?.toString() || '0',
+        classesDuration: course.classes_duration?.toString() || '0',
+        studioSessionsCount: course.studio_sessions_count?.toString() || '0',
+        studioSessionsDuration: course.studio_sessions_duration?.toString() || '0',
+        practicalSessionsCount: course.practical_sessions_count?.toString() || '0',
+        practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
       });
     }
   }, [course, form, open, instructorIds]);
@@ -139,7 +159,23 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration_type: data.durationType,
           image: data.image,
           status: 'Active',
-          instructor_ids: Array.isArray(data.instructors) ? data.instructors : []
+          instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
+          // Include new fields only if duration type is fixed
+          ...(data.durationType === 'fixed' ? {
+            classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
+            classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
+            studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
+            studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
+            practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
+            practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0,
+          } : {
+            classes_count: null,
+            classes_duration: null,
+            studio_sessions_count: null,
+            studio_sessions_duration: null,
+            practical_sessions_count: null,
+            practical_sessions_duration: null,
+          })
         })
         .eq('id', course.id);
         
@@ -175,48 +211,46 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <ScrollArea className="max-h-[80vh] overflow-y-auto pr-4">
-          <DialogHeader>
-            <DialogTitle>Edit Course</DialogTitle>
-            <DialogDescription>
-              Update the course information below.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-music-500"></div>
-            </div>
-          ) : (
-            <CourseForm 
-              form={form} 
-              onSubmit={handleUpdateCourse} 
-              teachers={teachers}
-              skills={skills}
-              submitButtonText="Update Course"
-              cancelAction={() => onOpenChange(false)}
-            />
-          )}
-          
-          <DialogFooter className="pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              className="bg-music-500 hover:bg-music-600"
-              onClick={form.handleSubmit(handleUpdateCourse)}
-              disabled={isLoading}
-            >
-              Update Course
-            </Button>
-          </DialogFooter>
-        </ScrollArea>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Course</DialogTitle>
+          <DialogDescription>
+            Update the course information below.
+          </DialogDescription>
+        </DialogHeader>
+        
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-music-500"></div>
+          </div>
+        ) : (
+          <CourseForm 
+            form={form} 
+            onSubmit={handleUpdateCourse} 
+            teachers={teachers}
+            skills={skills}
+            submitButtonText="Update Course"
+            cancelAction={() => onOpenChange(false)}
+          />
+        )}
+        
+        <DialogFooter className="pt-4">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            className="bg-music-500 hover:bg-music-600"
+            onClick={form.handleSubmit(handleUpdateCourse)}
+            disabled={isLoading}
+          >
+            Update Course
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
