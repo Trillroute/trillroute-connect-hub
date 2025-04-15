@@ -28,11 +28,12 @@ const Login = () => {
     
     setIsLoading(true);
     try {
-      await login(email, password);
+      console.log('Submitting login form with email:', email);
+      await login(email.trim(), password);
       // Redirect will happen in the login function
-    } catch (error) {
-      // Error notification handled in login function
+    } catch (error: any) {
       console.error('Login failed:', error);
+      // Login function already handles the toast error
     } finally {
       setIsLoading(false);
     }

@@ -63,22 +63,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Fetch user from custom_users table
+      console.log('Login attempt for:', email);
+      
+      // Fetch user from custom_users table - use toLowerCase to ensure case-insensitive email matching
       const { data, error } = await supabase
         .from('custom_users')
         .select('*')
         .eq('email', email.toLowerCase())
         .single();
 
+      console.log('Login query result:', data, error);
+
       if (error || !data) {
+        console.error('User fetch error:', error);
         throw new Error('Invalid email or password');
       }
 
       // Type assertion to match CustomUser interface
       const userData = data as CustomUser;
+      
+      console.log('User found, verifying password');
 
       // Verify password
       const isPasswordValid = await verifyPassword(password, userData.password_hash);
+      console.log('Password valid:', isPasswordValid);
+      
       if (!isPasswordValid) {
         throw new Error('Invalid email or password');
       }
@@ -237,4 +246,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
