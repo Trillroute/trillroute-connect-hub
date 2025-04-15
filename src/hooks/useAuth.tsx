@@ -63,19 +63,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      console.log('Login attempt for:', email);
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log('Login attempt for normalized email:', normalizedEmail);
       
-      // Fetch user from custom_users table - use toLowerCase to ensure case-insensitive email matching
+      // Fetch user from custom_users table with normalized email
       const { data, error } = await supabase
         .from('custom_users')
         .select('*')
-        .eq('email', email.toLowerCase())
-        .single();
+        .ilike('email', normalizedEmail)
+        .maybeSingle();
 
       console.log('Login query result:', data, error);
 
-      if (error || !data) {
-        console.error('User fetch error:', error);
+      if (error) {
+        console.error('Database error when fetching user:', error);
+        throw new Error('Error connecting to the database. Please try again.');
+      }
+
+      if (!data) {
+        console.error('No user found with email:', normalizedEmail);
         throw new Error('Invalid email or password');
       }
 

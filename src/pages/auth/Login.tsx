@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock } from 'lucide-react';
@@ -28,8 +29,9 @@ const Login = () => {
     
     setIsLoading(true);
     try {
-      console.log('Submitting login form with email:', email);
-      await login(email.trim(), password);
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log('Submitting login form with normalized email:', normalizedEmail);
+      await login(normalizedEmail, password);
       // Redirect will happen in the login function
     } catch (error: any) {
       console.error('Login failed:', error);
