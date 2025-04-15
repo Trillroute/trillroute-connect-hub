@@ -84,9 +84,6 @@ const Login = () => {
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500">
-                  <span className="font-semibold">Hint:</span> Use email with "teacher" or "admin" to login as those roles
-                </p>
               </div>
               
               <div className="space-y-2">
