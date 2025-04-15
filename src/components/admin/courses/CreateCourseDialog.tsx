@@ -122,15 +122,13 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             status: 'Active',
             students: 0,
             instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-            // Include new fields only if duration type is fixed
-            ...(data.durationType === 'fixed' ? {
-              classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
-              classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
-              studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
-              studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
-              practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
-              practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0,
-            } : {})
+            // Always include session fields regardless of duration type
+            classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
+            classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
+            studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
+            studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
+            practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
+            practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0,
           }
         ])
         .select()

@@ -265,208 +265,206 @@ const CourseForm: React.FC<CourseFormProps> = ({
         />
         
         {durationType === "fixed" && (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="durationValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration Value</FormLabel>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="durationValue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration Value</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 8, 12, etc." 
+                      {...field} 
+                      onChange={(e) => {
+                        // Ensure only positive numbers
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="durationMetric"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration Unit</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="e.g., 8, 12, etc." 
-                        {...field} 
-                        onChange={(e) => {
-                          // Ensure only positive numbers
-                          const value = Math.max(0, parseInt(e.target.value) || 0);
-                          field.onChange(value.toString());
-                        }}
-                      />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="durationMetric"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration Unit</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select unit" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="days">Days</SelectItem>
-                        <SelectItem value="weeks">Weeks</SelectItem>
-                        <SelectItem value="months">Months</SelectItem>
-                        <SelectItem value="years">Years</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            {/* Classes */}
-            <div className="border-t pt-4 mt-4">
-              <h3 className="text-md font-medium mb-3">Classes</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="classesCount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Classes</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="e.g., 10" 
-                          {...field} 
-                          onChange={(e) => {
-                            const value = Math.max(0, parseInt(e.target.value) || 0);
-                            field.onChange(value.toString());
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="classesDuration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Class Duration (minutes)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="e.g., 60" 
-                          {...field} 
-                          onChange={(e) => {
-                            const value = Math.max(0, parseInt(e.target.value) || 0);
-                            field.onChange(value.toString());
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-            
-            {/* Studio Sessions */}
-            <div className="border-t pt-4 mt-4">
-              <h3 className="text-md font-medium mb-3">Studio Sessions</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="studioSessionsCount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Studio Sessions</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="e.g., 5" 
-                          {...field} 
-                          onChange={(e) => {
-                            const value = Math.max(0, parseInt(e.target.value) || 0);
-                            field.onChange(value.toString());
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="studioSessionsDuration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Studio Session Duration (minutes)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="e.g., 120" 
-                          {...field} 
-                          onChange={(e) => {
-                            const value = Math.max(0, parseInt(e.target.value) || 0);
-                            field.onChange(value.toString());
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-            
-            {/* Practical Sessions */}
-            <div className="border-t pt-4 mt-4">
-              <h3 className="text-md font-medium mb-3">Practical Sessions</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="practicalSessionsCount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Practical Sessions</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="e.g., 8" 
-                          {...field} 
-                          onChange={(e) => {
-                            const value = Math.max(0, parseInt(e.target.value) || 0);
-                            field.onChange(value.toString());
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="practicalSessionsDuration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Practical Session Duration (minutes)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="e.g., 90" 
-                          {...field} 
-                          onChange={(e) => {
-                            const value = Math.max(0, parseInt(e.target.value) || 0);
-                            field.onChange(value.toString());
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-          </>
+                    <SelectContent>
+                      <SelectItem value="days">Days</SelectItem>
+                      <SelectItem value="weeks">Weeks</SelectItem>
+                      <SelectItem value="months">Months</SelectItem>
+                      <SelectItem value="years">Years</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         )}
+        
+        {/* Classes - Always visible now */}
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-md font-medium mb-3">Classes</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="classesCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Classes</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 10" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="classesDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Class Duration (minutes)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 60" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        {/* Studio Sessions - Always visible now */}
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-md font-medium mb-3">Studio Sessions</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="studioSessionsCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Studio Sessions</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 5" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="studioSessionsDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Studio Session Duration (minutes)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 120" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        {/* Practical Sessions - Always visible now */}
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-md font-medium mb-3">Practical Sessions</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="practicalSessionsCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Practical Sessions</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 8" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="practicalSessionsDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Practical Session Duration (minutes)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g., 90" 
+                      {...field} 
+                      onChange={(e) => {
+                        const value = Math.max(0, parseInt(e.target.value) || 0);
+                        field.onChange(value.toString());
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
         
         <FormField
           control={form.control}
