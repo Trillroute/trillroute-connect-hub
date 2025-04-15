@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AreaChart, BarChart, LineChart } from '@/components/ui/chart';
+import { AreaChart, BarChart, LineChart } from '@/components/ui/charts';
 import { Calendar, CheckCircle, Download, FileText, PlusCircle, Settings, User, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
