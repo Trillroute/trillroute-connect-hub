@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock, User, UserPlus } from 'lucide-react';
@@ -47,8 +46,8 @@ const Register = () => {
       await register(email, password, firstName, lastName, role);
       // Redirect will happen in the register function
     } catch (error) {
-      console.error('Registration failed:', error);
       // Error notification handled in register function
+      console.error('Registration failed:', error);
     } finally {
       setIsLoading(false);
     }

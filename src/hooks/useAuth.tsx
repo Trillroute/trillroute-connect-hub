@@ -1,8 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export type UserRole = 'student' | 'teacher' | 'admin';
@@ -30,95 +29,58 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Initialize the auth state
+  // Initialize the auth state from localStorage on component mount
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        setSession(newSession);
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          fetchUserProfile(newSession?.user);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    const initializeAuth = async () => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        setSession(initialSession);
-        if (initialSession?.user) {
-          await fetchUserProfile(initialSession.user);
-        }
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
       } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error parsing stored user data:', error);
+        localStorage.removeItem('user');
       }
-    };
-
-    initializeAuth();
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    }
+    setLoading(false);
   }, []);
 
-  // Fetch user profile data from Supabase
-  const fetchUserProfile = async (authUser: User | undefined | null) => {
-    if (!authUser) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, role')
-        .eq('id', authUser.id)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-          firstName: data.first_name,
-          lastName: data.last_name,
-          role: data.role as UserRole,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load user profile. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Login function - now checks credentials against our custom users table
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        throw error;
+      // Fetch user from custom users table
+      const { data, error } = await supabase
+        .from('custom_users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error || !data) {
+        throw new Error('Invalid email or password');
       }
+
+      // Verify password
+      const isPasswordValid = await verifyPassword(password, data.password_hash);
+      if (!isPasswordValid) {
+        throw new Error('Invalid email or password');
+      }
+
+      // Create user object from database data
+      const userData: UserData = {
+        id: data.id,
+        email: data.email,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        role: data.role as UserRole,
+      };
+
+      // Store user in state and localStorage
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
 
       toast({
         title: "Login Successful",
@@ -126,7 +88,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
       });
 
-      // Navigation will happen automatically via auth state change
+      // Redirect based on role
+      navigate(`/dashboard/${userData.role}`);
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
@@ -144,22 +107,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
     setLoading(true);
     try {
-      // Register with Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            role,
-          },
-        },
-      });
-      
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('custom_users')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (existingUser) {
+        throw new Error('User with this email already exists');
+      }
+
+      // Hash the password
+      const passwordHash = await hashPassword(password);
+
+      // Generate a UUID for the user
+      const userId = crypto.randomUUID();
+
+      // Insert new user
+      const { error } = await supabase
+        .from('custom_users')
+        .insert({
+          id: userId,
+          email: email.toLowerCase(),
+          password_hash: passwordHash,
+          first_name: firstName,
+          last_name: lastName,
+          role: role,
+          created_at: new Date().toISOString()
+        });
+
       if (error) {
         throw error;
       }
+
+      // Create user object
+      const userData: UserData = {
+        id: userId,
+        email: email.toLowerCase(),
+        firstName,
+        lastName,
+        role,
+      };
+
+      // Store user in state and localStorage
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
 
       toast({
         title: "Registration Successful",
@@ -167,7 +160,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
       });
 
-      // The trigger will create the profile and auth state change will handle the rest
+      // Redirect based on role
+      navigate(`/dashboard/${role}`);
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
@@ -184,8 +178,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      // Just remove user from state and localStorage
       setUser(null);
+      localStorage.removeItem('user');
+      
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",
