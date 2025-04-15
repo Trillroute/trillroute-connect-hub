@@ -7,6 +7,7 @@ import { Calendar, CheckCircle, Download, FileText, PlusCircle, Settings, User, 
 import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import CourseManagement from '@/components/admin/CourseManagement';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -49,15 +50,6 @@ const AdminDashboard = () => {
     { id: 3, name: 'Emma Thompson', role: 'Student', email: 'emma.t@example.com', joinDate: '2023-09-08', status: 'Pending' },
     { id: 4, name: 'Michael Brown', role: 'Student', email: 'michael.b@example.com', joinDate: '2023-09-07', status: 'Active' },
     { id: 5, name: 'Jessica Smith', role: 'Teacher', email: 'jessica.s@example.com', joinDate: '2023-09-06', status: 'Active' },
-  ];
-
-  // Mock data for recent courses
-  const recentCourses = [
-    { id: 1, title: 'Advanced Piano Techniques', instructor: 'Jessica Smith', students: 24, created: '2023-09-05', status: 'Active' },
-    { id: 2, title: 'Guitar for Beginners', instructor: 'David Williams', students: 36, created: '2023-09-04', status: 'Active' },
-    { id: 3, title: 'Music Theory 101', instructor: 'Robert Chen', students: 18, created: '2023-09-03', status: 'Active' },
-    { id: 4, title: 'Vocal Training Essentials', instructor: 'Maria Garcia', students: 21, created: '2023-09-02', status: 'Draft' },
-    { id: 5, title: 'Violin Masterclass', instructor: 'Emily Johnson', students: 15, created: '2023-09-01', status: 'Active' },
   ];
 
   return (
@@ -125,6 +117,11 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
+      {/* Course Management Section */}
+      <div className="mb-8">
+        <CourseManagement />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <Card>
           <CardHeader>
@@ -160,228 +157,102 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Latest Activity</CardTitle>
-              <CardDescription>Recent users and course updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="users" className="mt-2">
-                <TabsList>
-                  <TabsTrigger value="users">Recent Users</TabsTrigger>
-                  <TabsTrigger value="courses">Recent Courses</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="users" className="mt-4">
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Join Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentUsers.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">{user.name}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'Teacher' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                                {user.role}
-                              </span>
-                            </TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                {user.status}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <User className="h-4 w-4" />
-                                <span className="sr-only">View user</span>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="flex justify-end mt-4">
-                    <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-                      View All Users
-                    </Button>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="courses" className="mt-4">
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Course Name</TableHead>
-                          <TableHead>Instructor</TableHead>
-                          <TableHead>Students</TableHead>
-                          <TableHead>Created</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentCourses.map((course) => (
-                          <TableRow key={course.id}>
-                            <TableCell className="font-medium">{course.title}</TableCell>
-                            <TableCell>{course.instructor}</TableCell>
-                            <TableCell>{course.students}</TableCell>
-                            <TableCell>{new Date(course.created).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs ${course.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                {course.status}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <FileText className="h-4 w-4" />
-                                <span className="sr-only">View course</span>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="flex justify-end mt-4">
-                    <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-                      View All Courses
-                    </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div>
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle>Enrollment by Course</CardTitle>
-              <CardDescription>Student distribution</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <BarChart
-                  data={enrollmentData}
-                  index="name"
-                  categories={["Students"]}
-                  colors={["music.500"]}
-                  layout="vertical"
-                  valueFormatter={(value: number) => `${value} students`}
-                  className="h-full"
-                />
-              </div>
-              <div className="mt-4">
-                <Button className="w-full bg-music-500 hover:bg-music-600">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add New Course
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      
+      {/* Recent Users */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Users</CardTitle>
+            <CardDescription>New user registrations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Join Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'Teacher' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {user.role}
+                        </span>
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          {user.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <User className="h-4 w-4" />
+                          <span className="sr-only">View user</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
+                View All Users
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card>
+          <CardHeader>
+            <CardTitle>Enrollment by Course</CardTitle>
+            <CardDescription>Student distribution</CardDescription>
+          </CardHeader>
+          <CardContent className="h-80">
+            <BarChart
+              data={enrollmentData}
+              index="name"
+              categories={["Students"]}
+              colors={["music.500"]}
+              layout="vertical"
+              valueFormatter={(value: number) => `${value} students`}
+              className="h-full"
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Button className="w-full justify-start bg-music-500 hover:bg-music-600">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button className="justify-start bg-music-500 hover:bg-music-600">
               <Users className="h-4 w-4 mr-2" />
               Manage Users
             </Button>
-            <Button className="w-full justify-start bg-music-500 hover:bg-music-600">
+            <Button className="justify-start bg-music-500 hover:bg-music-600">
               <FileText className="h-4 w-4 mr-2" />
               Manage Courses
             </Button>
-            <Button className="w-full justify-start bg-music-500 hover:bg-music-600">
+            <Button className="justify-start bg-music-500 hover:bg-music-600">
               <Calendar className="h-4 w-4 mr-2" />
               Schedule Management
             </Button>
-            <Button className="w-full justify-start bg-music-500 hover:bg-music-600">
+            <Button className="justify-start bg-music-500 hover:bg-music-600">
               <CheckCircle className="h-4 w-4 mr-2" />
               Review Applications
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>System Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <div className="font-medium">Server Status</div>
-                <div className="text-sm text-gray-500">All systems operational</div>
-              </div>
-              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <div className="font-medium">Database</div>
-                <div className="text-sm text-gray-500">Healthy • 24ms response</div>
-              </div>
-              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <div className="font-medium">Storage</div>
-                <div className="text-sm text-gray-500">42% used</div>
-              </div>
-              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <div className="font-medium">API Status</div>
-                <div className="text-sm text-gray-500">All endpoints responsive</div>
-              </div>
-              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Tasks</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-3 rounded-lg border border-gray-100">
-              <div className="font-medium">Review New Teacher Applications</div>
-              <div className="text-sm text-gray-500 mt-1">3 pending reviews</div>
-              <div className="text-xs text-red-500 mt-2">Due: Today</div>
-            </div>
-            <div className="p-3 rounded-lg border border-gray-100">
-              <div className="font-medium">Send Monthly Newsletter</div>
-              <div className="text-sm text-gray-500 mt-1">September edition</div>
-              <div className="text-xs text-amber-500 mt-2">Due: Tomorrow</div>
-            </div>
-            <div className="p-3 rounded-lg border border-gray-100">
-              <div className="font-medium">Update Course Catalog</div>
-              <div className="text-sm text-gray-500 mt-1">Add Fall semester courses</div>
-              <div className="text-xs text-green-500 mt-2">Due: In 3 days</div>
-            </div>
-            
-            <Button variant="outline" className="w-full border-music-300 text-music-500 hover:bg-music-50">
-              View All Tasks
             </Button>
           </CardContent>
         </Card>
