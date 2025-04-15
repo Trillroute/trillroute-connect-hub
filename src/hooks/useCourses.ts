@@ -38,7 +38,8 @@ export function useCourses() {
           status: course.status === 'Active' || course.status === 'Draft' 
             ? course.status 
             : 'Draft',
-          instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
+          instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : [],
+          skill: course.skill || ''
         };
         return processedCourse;
       });

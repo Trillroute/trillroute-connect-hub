@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,16 +37,16 @@ const Courses = () => {
     getInstructorNames(course).toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  // Get all unique categories from courses
-  const uniqueCategories = [...new Set((courses || []).map(course => course.category))];
+  // Get all unique skills from courses
+  const uniqueSkills = [...new Set((courses || []).map(course => course.skill))];
   
-  // Group courses by category for the tabs
-  const coursesByCategory = {
+  // Group courses by skill for the tabs
+  const coursesBySkill = {
     all: filteredCourses,
     ...Object.fromEntries(
-      uniqueCategories.map(category => [
-        category.toLowerCase().replace(/\s+/g, '-'),
-        filteredCourses.filter(course => course.category === category)
+      uniqueSkills.map(skill => [
+        skill.toLowerCase().replace(/\s+/g, '-'),
+        filteredCourses.filter(course => course.skill === skill)
       ])
     )
   };
@@ -164,10 +165,10 @@ const Courses = () => {
               <div className="flex justify-center items-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-music-500"></div>
               </div>
-            ) : filteredCourses.filter(course => course.category === skill.name).length > 0 ? (
+            ) : filteredCourses.filter(course => course.skill === skill.name).length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredCourses
-                  .filter(course => course.category === skill.name)
+                  .filter(course => course.skill === skill.name)
                   .map((course) => (
                     <CourseCard key={course.id} course={course} />
                   ))}

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -28,12 +29,12 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
-  classesCount: z.string().optional(),
-  classesDuration: z.string().optional(),
-  studioSessionsCount: z.string().optional(),
-  studioSessionsDuration: z.string().optional(),
-  practicalSessionsCount: z.string().optional(),
-  practicalSessionsDuration: z.string().optional(),
+  classesCount: z.string().min(1, { message: "Number of classes is required" }),
+  classesDuration: z.string().min(1, { message: "Class duration is required" }),
+  studioSessionsCount: z.string().min(1, { message: "Number of studio sessions is required" }),
+  studioSessionsDuration: z.string().min(1, { message: "Studio session duration is required" }),
+  practicalSessionsCount: z.string().min(1, { message: "Number of practical sessions is required" }),
+  practicalSessionsDuration: z.string().min(1, { message: "Practical session duration is required" }),
 }).refine((data) => {
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;

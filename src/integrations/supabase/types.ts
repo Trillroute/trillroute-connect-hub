@@ -11,7 +11,6 @@ export type Database = {
     Tables: {
       courses: {
         Row: {
-          category: string
           created_at: string
           description: string
           duration: string
@@ -20,12 +19,12 @@ export type Database = {
           image: string
           instructor_ids: string[] | null
           level: string
+          skill: string
           status: string
           students: number
           title: string
         }
         Insert: {
-          category: string
           created_at?: string
           description: string
           duration: string
@@ -34,12 +33,12 @@ export type Database = {
           image: string
           instructor_ids?: string[] | null
           level: string
+          skill: string
           status: string
           students?: number
           title: string
         }
         Update: {
-          category?: string
           created_at?: string
           description?: string
           duration?: string
@@ -48,6 +47,7 @@ export type Database = {
           image?: string
           instructor_ids?: string[] | null
           level?: string
+          skill?: string
           status?: string
           students?: number
           title?: string
