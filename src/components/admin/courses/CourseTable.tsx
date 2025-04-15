@@ -49,7 +49,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
           <TableRow>
             <TableHead>Title</TableHead>
             <TableHead>Instructors</TableHead>
-            <TableHead>Category</TableHead>
+            <TableHead>Skill</TableHead>
             <TableHead>Level</TableHead>
             <TableHead>Duration</TableHead>
             <TableHead>Type</TableHead>
@@ -75,7 +75,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                   )}
                 </div>
               </TableCell>
-              <TableCell>{course.category}</TableCell>
+              <TableCell>{course.skill}</TableCell>
               <TableCell>{course.level}</TableCell>
               <TableCell>{course.duration}</TableCell>
               <TableCell>
