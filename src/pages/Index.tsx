@@ -1,71 +1,10 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Music, Headphones, BookOpen, Award, Star, ChevronRight, Play } from 'lucide-react';
+import { Music, Headphones, BookOpen, Award, ChevronRight, Play } from 'lucide-react';
 
 const Index = () => {
-  // Sample data
-  const featuredCourses = [
-    {
-      id: 1,
-      title: 'Piano Mastery',
-      description: 'From beginner to advanced, learn to play beautiful piano pieces with proper technique.',
-      instructor: 'Emily Johnson',
-      level: 'All Levels',
-      students: 1245,
-      image: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBpYW5vfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 2,
-      title: 'Guitar Fundamentals',
-      description: 'Master the basics of guitar playing with practical exercises and popular songs.',
-      instructor: 'David Smith',
-      level: 'Beginner',
-      students: 982,
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3VpdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 3,
-      title: 'Music Theory 101',
-      description: 'Understand the language of music with this comprehensive introduction to music theory.',
-      instructor: 'Robert Chen',
-      level: 'Beginner',
-      students: 756,
-      image: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8bXVzaWMlMjB0aGVvcnl8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-  ];
-  
-  const testimonials = [
-    {
-      id: 1,
-      text: "Trillroute transformed my musical journey. The teachers are world-class and I've improved more in 3 months than I did in years of self-teaching.",
-      author: 'Sarah M.',
-      role: 'Piano Student',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 2,
-      text: "The flexibility of online lessons combined with the quality of instruction is unmatched. My daughter has flourished under her violin teacher's guidance.",
-      author: 'Michael T.',
-      role: 'Parent of Student',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-    {
-      id: 3,
-      text: "As a teacher, Trillroute provides me with all the tools I need to deliver high-quality music education. The platform is intuitive and my students love it.",
-      author: 'Jessica W.',
-      role: 'Guitar Instructor',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
-    },
-  ];
-  
-  const stats = [
-    { id: 1, value: '10,000+', label: 'Students Taught' },
-    { id: 2, value: '50+', label: 'Expert Instructors' },
-    { id: 3, value: '100+', label: 'Music Courses' },
-    { id: 4, value: '95%', label: 'Satisfaction Rate' },
-  ];
-
   return (
     <div>
       {/* Hero Section */}
@@ -104,14 +43,7 @@ const Index = () => {
                 </Link>
               </div>
               
-              <div className="flex items-center justify-center lg:justify-start space-x-2 mt-8 text-gray-600">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200"></div>
-                  ))}
-                </div>
-                <p className="text-sm">Join <span className="font-semibold">10,000+</span> music enthusiasts</p>
-              </div>
+              {/* Removed the "Join 10000+ music enthusiasts" element */}
             </div>
             
             <div className="lg:w-1/2">
@@ -206,7 +138,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Featured Courses */}
+      {/* Featured Courses - Removed mock data */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
@@ -224,102 +156,27 @@ const Index = () => {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredCourses.map((course) => (
-              <div key={course.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 music-card-hover">
-                <div className="h-48 overflow-hidden">
-                  <img 
-                    src={course.image} 
-                    alt={course.title} 
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                  />
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium bg-music-100 text-music-700 px-2 py-1 rounded-full">
-                      {course.level}
-                    </span>
-                    <div className="flex items-center text-amber-500">
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
-                      <Star className="h-4 w-4 fill-current" />
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {course.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-gray-200 mr-2"></div>
-                      <span className="text-sm text-gray-600">{course.instructor}</span>
-                    </div>
-                    <span className="text-xs text-gray-500">{course.students} students</span>
-                  </div>
-                  
-                  <Link to="/courses">
-                    <Button className="w-full mt-4 bg-music-500 hover:bg-music-600">View Course</Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Testimonials */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">What Our Students Say</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Hear from students who have transformed their musical abilities with Trillroute
+          <div className="text-center py-16">
+            <p className="text-xl text-gray-600">
+              Visit our courses page to discover our selection of music education offerings.
             </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <div key={testimonial.id} className="p-6 border border-gray-100 rounded-xl music-card-hover">
-                <div className="flex items-center mb-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                
-                <p className="text-gray-700 mb-6 italic">"{testimonial.text}"</p>
-                
-                <div className="flex items-center">
-                  <img 
-                    src={testimonial.avatar} 
-                    alt={testimonial.author} 
-                    className="h-12 w-12 rounded-full object-cover mr-4"
-                  />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">{testimonial.author}</h4>
-                    <p className="text-sm text-gray-500">{testimonial.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+            <Link to="/courses" className="mt-8 inline-block">
+              <Button className="bg-music-500 hover:bg-music-600">Browse All Courses</Button>
+            </Link>
           </div>
         </div>
       </section>
       
-      {/* Stats */}
+      {/* Removed Testimonials Section */}
+      
+      {/* Stats - Removed mock values */}
       <section className="py-20 bg-music-500 text-white">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat) => (
-              <div key={stat.id} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold mb-2">{stat.value}</div>
-                <p className="text-lg opacity-80">{stat.label}</p>
-              </div>
-            ))}
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Join Our Musical Community</h2>
+            <p className="text-xl opacity-90 max-w-2xl mx-auto">
+              Experience the transformative power of music education with Trillroute's expert instruction and supportive community.
+            </p>
           </div>
         </div>
       </section>
