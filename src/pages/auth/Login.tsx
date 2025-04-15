@@ -31,6 +31,7 @@ const Login = () => {
     try {
       const normalizedEmail = email.trim().toLowerCase();
       console.log('Submitting login form with normalized email:', normalizedEmail);
+      // Don't normalize email again in login call since we've already done it here
       await login(normalizedEmail, password);
       // Redirect will happen in the login function
     } catch (error: any) {

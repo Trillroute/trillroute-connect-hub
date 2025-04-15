@@ -63,10 +63,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
+      // Ensure email is normalized consistently
       const normalizedEmail = email.trim().toLowerCase();
       console.log('Login attempt for normalized email:', normalizedEmail);
       
-      // Fetch user from custom_users table with normalized email
+      // First check if the user exists at all
       const { data, error } = await supabase
         .from('custom_users')
         .select('*')
@@ -89,12 +90,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData = data as CustomUser;
       
       console.log('User found, verifying password');
+      console.log('Stored password hash:', userData.password_hash);
 
-      // Verify password
+      // Verify password with detailed logging
       const isPasswordValid = await verifyPassword(password, userData.password_hash);
       console.log('Password valid:', isPasswordValid);
       
       if (!isPasswordValid) {
+        console.error('Invalid password for user:', normalizedEmail);
         throw new Error('Invalid email or password');
       }
 

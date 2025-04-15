@@ -25,5 +25,10 @@ export const hashPassword = async (password: string): Promise<string> => {
 // Helper function to verify passwords
 export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
   const hashedInput = await hashPassword(password);
+  // Add detailed debugging for password verification
+  console.log('Password verification:');
+  console.log('- Input hash:', hashedInput.substring(0, 10) + '...');
+  console.log('- Stored hash:', hashedPassword.substring(0, 10) + '...');
+  console.log('- Match:', hashedInput === hashedPassword);
   return hashedInput === hashedPassword;
 };
