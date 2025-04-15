@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +13,10 @@ interface User {
   role: UserRole;
 }
 
+interface StoredUser extends User {
+  password: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -23,7 +28,8 @@ interface AuthContextType {
   isAdmin: () => boolean;
 }
 
-const validUsers = [
+// Initial demo users
+const initialUsers = [
   {
     id: "user_1",
     email: "student@example.com",
@@ -58,6 +64,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Load registered users or initialize with demo users
+  const [registeredUsers, setRegisteredUsers] = useState<StoredUser[]>(() => {
+    const storedUsers = localStorage.getItem('trillroute_registered_users');
+    return storedUsers ? JSON.parse(storedUsers) : initialUsers;
+  });
+
   useEffect(() => {
     // Check local storage for user data when component mounts
     const storedUser = localStorage.getItem('trillroute_user');
@@ -75,8 +87,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Check if the email and password match a valid user
-      const foundUser = validUsers.find(
+      // Check if the email and password match a registered user
+      const foundUser = registeredUsers.find(
         (u) => u.email === email && u.password === password
       );
       
@@ -120,22 +132,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       // Check if user with this email already exists
-      if (validUsers.some(u => u.email === email)) {
+      if (registeredUsers.some(u => u.email === email)) {
         throw new Error("User with this email already exists");
       }
       
-      // In a real app, we'd add the user to the database
-      // For now, we'll just simulate successful registration
-      const newUser: User = {
+      // Create a new user
+      const newUser: StoredUser = {
         id: `user_${Date.now()}`,
         email,
+        password,
         firstName,
         lastName,
         role,
       };
       
-      setUser(newUser);
-      localStorage.setItem('trillroute_user', JSON.stringify(newUser));
+      // Add to registered users and save to localStorage
+      const updatedUsers = [...registeredUsers, newUser];
+      setRegisteredUsers(updatedUsers);
+      localStorage.setItem('trillroute_registered_users', JSON.stringify(updatedUsers));
+      
+      // Log in the user automatically
+      const authenticatedUser: User = {
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role,
+      };
+      
+      setUser(authenticatedUser);
+      localStorage.setItem('trillroute_user', JSON.stringify(authenticatedUser));
       
       toast({
         title: "Registration Successful",
