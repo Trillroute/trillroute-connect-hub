@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,11 +46,11 @@ const Courses = () => {
         }
         
         console.log('Courses data fetched:', data);
-        // Process all courses with proper types
+        // Process all courses and add instructor_ids as an empty array
         const typedCourses = (data || []).map(course => {
           return {
             ...course,
-            instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
+            instructor_ids: [] // Add empty instructor_ids array
           } as Course;
         });
         
