@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -24,12 +23,11 @@ const courseSchema = z.object({
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   level: z.string().min(1, { message: "Level is required" }),
-  category: z.string().min(1, { message: "Category is required" }),
+  skill: z.string().min(1, { message: "Skill is required" }),
   durationType: z.enum(["fixed", "recurring"]),
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
-  // New fields
   classesCount: z.string().optional(),
   classesDuration: z.string().optional(),
   studioSessionsCount: z.string().optional(),
@@ -37,7 +35,6 @@ const courseSchema = z.object({
   practicalSessionsCount: z.string().optional(),
   practicalSessionsDuration: z.string().optional(),
 }).refine((data) => {
-  // If durationType is fixed, require durationValue and durationMetric
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
   }
@@ -57,11 +54,9 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
   const [isLoading, setIsLoading] = useState(false);
-
-  // Get instructor IDs from the course
+  
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
 
-  // Parse the duration string into value and metric
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
     if (durationType !== 'fixed' || !duration) {
       return { value: '0', metric: 'weeks' };
@@ -69,7 +64,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     
     const parts = duration.split(' ');
     const value = parts[0] || '0';
-    // Default to 'weeks' if no valid metric is found
     let metric: DurationMetric = 'weeks';
     
     if (parts[1]) {
@@ -94,12 +88,11 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       description: course.description,
       instructors: instructorIds,
       level: course.level,
-      category: course.category,
+      skill: course.skill,
       durationValue: durationValue,
       durationMetric: durationMetric,
       durationType: course.duration_type || 'fixed',
       image: course.image,
-      // New fields with default values from course or 0
       classesCount: course.classes_count?.toString() || '0',
       classesDuration: course.classes_duration?.toString() || '0',
       studioSessionsCount: course.studio_sessions_count?.toString() || '0',
@@ -109,21 +102,18 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     }
   });
 
-  // Reset form when dialog opens with current course data
   useEffect(() => {
     if (open) {
-      const { value, metric } = parseDuration(course.duration, course.duration_type);
       form.reset({
         title: course.title,
         description: course.description,
         instructors: instructorIds,
         level: course.level,
-        category: course.category,
-        durationValue: value,
-        durationMetric: metric,
+        skill: course.skill,
+        durationValue: durationValue,
+        durationMetric: durationMetric,
         durationType: course.duration_type || 'fixed',
         image: course.image,
-        // New fields
         classesCount: course.classes_count?.toString() || '0',
         classesDuration: course.classes_duration?.toString() || '0',
         studioSessionsCount: course.studio_sessions_count?.toString() || '0',
@@ -137,9 +127,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const handleUpdateCourse = async (data: CourseFormValues) => {
     try {
       setIsLoading(true);
-      console.log('Updating course with data:', data);
-      
-      // Format the duration string based on the type and values
       let duration = '';
       if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
         duration = `${data.durationValue} ${data.durationMetric}`;
@@ -147,20 +134,18 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         duration = 'Recurring';
       }
       
-      // Update the course with instructor IDs directly
       const { error: courseError } = await supabase
         .from('courses')
         .update({
           title: data.title,
           description: data.description,
           level: data.level,
-          category: data.category,
+          skill: data.skill,
           duration: duration,
           duration_type: data.durationType,
           image: data.image,
           status: 'Active',
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-          // Always include session fields regardless of duration type
           classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
           classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
           studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,

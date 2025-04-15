@@ -6,7 +6,7 @@ export interface Course {
   level: string;
   students: number;
   image: string;
-  category: string;
+  skill: string; // Renamed from category
   duration: string;
   duration_type: string;
   status: string;

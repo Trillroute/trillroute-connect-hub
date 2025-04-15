@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -23,12 +22,11 @@ const courseSchema = z.object({
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   level: z.string().min(1, { message: "Level is required" }),
-  category: z.string().min(1, { message: "Category is required" }),
+  skill: z.string().min(1, { message: "Skill is required" }),
   durationType: z.enum(["fixed", "recurring"]),
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
-  // New fields for sessions
   classesCount: z.string().optional(),
   classesDuration: z.string().optional(),
   studioSessionsCount: z.string().optional(),
@@ -36,7 +34,6 @@ const courseSchema = z.object({
   practicalSessionsCount: z.string().optional(),
   practicalSessionsDuration: z.string().optional(),
 }).refine((data) => {
-  // If durationType is fixed, require durationValue and durationMetric
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
   }
@@ -57,13 +54,12 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       title: '',
       description: '',
       instructors: [],
-      level: 'Beginner', // Default to Beginner level
-      category: '',
+      level: 'For Anyone',
+      skill: '',
       durationValue: '0',
       durationMetric: 'weeks',
       durationType: 'fixed',
       image: '',
-      // New fields
       classesCount: '0',
       classesDuration: '0',
       studioSessionsCount: '0',
@@ -79,13 +75,12 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         title: '',
         description: '',
         instructors: [],
-        level: 'Beginner', // Default to Beginner level
-        category: '',
+        level: 'For Anyone',
+        skill: '',
         durationValue: '0',
         durationMetric: 'weeks',
         durationType: 'fixed',
         image: '',
-        // New fields
         classesCount: '0',
         classesDuration: '0',
         studioSessionsCount: '0',
@@ -100,7 +95,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
     try {
       console.log('Creating course with data:', data);
       
-      // Format the duration string based on the type and values
       let duration = '';
       if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
         duration = `${data.durationValue} ${data.durationMetric}`;
@@ -115,14 +109,13 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             title: data.title,
             description: data.description,
             level: data.level,
-            category: data.category,
+            skill: data.skill,
             duration: duration,
             duration_type: data.durationType,
             image: data.image,
             status: 'Active',
             students: 0,
             instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-            // Always include session fields regardless of duration type
             classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
             classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
             studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -24,12 +23,11 @@ export interface CourseFormValues {
   description: string;
   instructors: string[];
   level: string;
-  category: string;
+  skill: string;
   durationValue: string;
   durationMetric: DurationMetric;
   durationType: string;
   image: string;
-  // New fields
   classesCount: string;
   classesDuration: string;
   studioSessionsCount: string;
@@ -47,7 +45,6 @@ interface CourseFormProps {
   cancelAction: () => void;
 }
 
-// Predefined skill levels array
 const skillLevels = [
   "For Anyone",
   "Early Beginner",
@@ -67,15 +64,12 @@ const CourseForm: React.FC<CourseFormProps> = ({
   submitButtonText,
   cancelAction
 }) => {
-  // Ensure teachers and skills are always arrays
   const safeTeachers = Array.isArray(teachers) ? teachers : [];
   const safeSkills = Array.isArray(skills) ? skills : [];
 
-  // Log data for debugging
   console.log('Teachers received in CourseForm:', safeTeachers);
   console.log('Teacher count:', safeTeachers.length);
   
-  // Ensure form instructors field is an array
   useEffect(() => {
     const currentInstructors = form.getValues('instructors');
     if (!Array.isArray(currentInstructors)) {
@@ -85,7 +79,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
 
   const durationType = form.watch('durationType');
 
-  // Helper to get teacher name by ID
   const getTeacherName = (id: string) => {
     const teacher = safeTeachers.find(t => t.id === id);
     return teacher ? `${teacher.first_name} ${teacher.last_name}` : 'Unknown Teacher';
@@ -117,7 +110,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
             <FormItem>
               <FormLabel>Instructors</FormLabel>
               <div className="space-y-2">
-                {/* Show selected instructors as badges */}
                 {Array.isArray(field.value) && field.value.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
                     {field.value.map(instructorId => (
@@ -144,7 +136,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   </div>
                 )}
                 
-                {/* Teacher selection with checkboxes */}
                 <div className="border rounded-md p-3 max-h-48 overflow-y-auto">
                   {safeTeachers.length > 0 ? (
                     safeTeachers.map((teacher) => {
@@ -198,10 +189,10 @@ const CourseForm: React.FC<CourseFormProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="category"
+            name="skill"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Category</FormLabel>
+                <FormLabel>Skill</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
@@ -209,7 +200,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder="Select a skill" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -305,7 +296,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       placeholder="e.g., 8, 12, etc." 
                       {...field} 
                       onChange={(e) => {
-                        // Ensure only positive numbers
                         const value = Math.max(0, parseInt(e.target.value) || 0);
                         field.onChange(value.toString());
                       }}
@@ -346,7 +336,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
           </div>
         )}
         
-        {/* Classes - Always visible now */}
         <div className="border-t pt-4 mt-4">
           <h3 className="text-md font-medium mb-3">Classes</h3>
           <div className="grid grid-cols-2 gap-4">
@@ -395,7 +384,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
           </div>
         </div>
         
-        {/* Studio Sessions - Always visible now */}
         <div className="border-t pt-4 mt-4">
           <h3 className="text-md font-medium mb-3">Studio Sessions</h3>
           <div className="grid grid-cols-2 gap-4">
@@ -444,7 +432,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
           </div>
         </div>
         
-        {/* Practical Sessions - Always visible now */}
         <div className="border-t pt-4 mt-4">
           <h3 className="text-md font-medium mb-3">Practical Sessions</h3>
           <div className="grid grid-cols-2 gap-4">
