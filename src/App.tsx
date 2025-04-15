@@ -1,3 +1,5 @@
+
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +13,6 @@ import Layout from "@/components/Layout";
 // Pages
 import Index from "./pages/Index";
 import Courses from "./pages/Courses";
-import Contact from "./pages/Contact";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -40,7 +41,6 @@ const App = () => (
               {/* Main Pages */}
               <Route path="/" element={<Index />} />
               <Route path="/courses" element={<Courses />} />
-              <Route path="/contact" element={<Contact />} />
               
               {/* Auth Pages */}
               <Route path="/auth/login" element={<Login />} />
