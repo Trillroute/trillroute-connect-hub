@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [coursesCount, setCoursesCount] = useState(0);
-  const [activeCoursesCount, setActiveCoursesCount] = useState(0);
   const [studentsCount, setStudentsCount] = useState(0);
   const [teachersCount, setTeachersCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,25 +34,29 @@ const AdminDashboard = () => {
           setCoursesCount(totalCourses || 0);
         }
         
-        // Get active courses count
-        const { count: activeCourses, error: activeCoursesError } = await supabase
-          .from('courses')
+        // Get students count - fetch from users table with role='student'
+        const { count: totalStudents, error: studentsError } = await supabase
+          .from('custom_users')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'Active');
+          .eq('role', 'student');
           
-        if (activeCoursesError) {
-          console.error('Error fetching active courses count:', activeCoursesError);
+        if (studentsError) {
+          console.error('Error fetching students count:', studentsError);
         } else {
-          setActiveCoursesCount(activeCourses || 0);
+          setStudentsCount(totalStudents || 0);
         }
         
-        // Get students count - This is just a placeholder as we're not storing students in this implementation
-        // In a real implementation, you would fetch from the users table with role filter
-        setStudentsCount(0);
-        
-        // Get teachers count - This is just a placeholder as we're not storing teachers in this implementation
-        // In a real implementation, you would fetch from the users table with role filter
-        setTeachersCount(0);
+        // Get teachers count - fetch from users table with role='teacher'
+        const { count: totalTeachers, error: teachersError } = await supabase
+          .from('custom_users')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'teacher');
+          
+        if (teachersError) {
+          console.error('Error fetching teachers count:', teachersError);
+        } else {
+          setTeachersCount(totalTeachers || 0);
+        }
         
         // Create empty chart data for user activity and revenue (no actual data available)
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
@@ -99,7 +103,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Total Students</CardTitle>
@@ -122,19 +126,6 @@ const AdminDashboard = () => {
             <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
             <p className="text-sm text-gray-500 mt-1">
               {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Active Courses</CardTitle>
-            <CardDescription>Currently running</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-music-500">{activeCoursesCount}</div>
-            <p className="text-sm text-gray-500 mt-1">
-              {activeCoursesCount === 0 ? "No active courses" : `${activeCoursesCount} active courses`}
             </p>
           </CardContent>
         </Card>
