@@ -1,19 +1,70 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter, Star, Users, Clock, BookOpen } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
-  // Empty courses array - removed all dummy data
-  const allCourses = [];
+  // Fetch courses from Supabase
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*');
+          
+        if (error) {
+          console.error('Error fetching courses:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to load courses. Please try again later.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        
+        console.log('Courses fetched:', data);
+        setCourses(data || []);
+      } catch (error) {
+        console.error('Unexpected error:', error);
+        toast({
+          title: 'Error',
+          description: 'An unexpected error occurred.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCourses();
+    
+    // Set up realtime subscription
+    const subscription = supabase
+      .channel('public:courses')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
+        console.log('Change received:', payload);
+        fetchCourses();
+      })
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [toast]);
   
   // Filter courses based on search term
-  const filteredCourses = allCourses.filter(course => 
+  const filteredCourses = courses.filter(course => 
     course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
@@ -30,6 +81,46 @@ const Courses = () => {
     percussion: filteredCourses.filter(course => course.category === 'Percussion'),
     jazz: filteredCourses.filter(course => course.category === 'Jazz'),
   };
+  
+  // Render a course card
+  const CourseCard = ({ course }) => (
+    <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg">
+      <div className="relative h-48 overflow-hidden">
+        <img 
+          src={course.image} 
+          alt={course.title} 
+          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          onError={(e) => {
+            e.currentTarget.src = '/placeholder.svg';
+          }}
+        />
+        <div className="absolute top-2 right-2 bg-white rounded-full px-2 py-1 text-xs font-bold">
+          {course.status}
+        </div>
+      </div>
+      <CardHeader>
+        <CardTitle className="text-xl">{course.title}</CardTitle>
+        <CardDescription className="flex items-center text-sm">
+          <span className="mr-2">{course.instructor}</span> • 
+          <span className="mx-2">{course.level}</span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-600 line-clamp-2">{course.description}</p>
+        <div className="flex items-center mt-4 text-sm text-gray-500">
+          <Clock className="h-4 w-4 mr-1" />
+          <span className="mr-3">{course.duration}</span>
+          <Users className="h-4 w-4 mr-1" />
+          <span>{course.students} students</span>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button className="w-full bg-music-500 hover:bg-music-600">
+          View Course
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -83,9 +174,15 @@ const Courses = () => {
         
         {Object.entries(coursesByCategory).map(([category, courses]) => (
           <TabsContent key={category} value={category}>
-            {courses.length > 0 ? (
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-music-500"></div>
+              </div>
+            ) : courses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {/* Course cards would be mapped here if there were any courses */}
+                {courses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
               </div>
             ) : (
               <div className="text-center py-12">

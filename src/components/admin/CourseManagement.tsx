@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,9 +12,11 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Course {
-  id: number;
+  id: string;
   title: string;
   description: string;
   instructor: string;
@@ -23,17 +26,18 @@ interface Course {
   category: string;
   duration: string;
   status: 'Active' | 'Draft';
-  created: string;
+  created_at: string;
 }
 
 const CourseManagement = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  
   const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const courseSchema = z.object({
     title: z.string().min(3, { message: "Title must be at least 3 characters" }),
@@ -76,39 +80,110 @@ const CourseManagement = () => {
     }
   });
 
-  const handleCreateCourse = (data: CourseFormValues) => {
-    const newCourse: Course = {
-      id: Math.max(0, ...courses.map(c => c.id)) + 1,
-      title: data.title,
-      description: data.description,
-      instructor: data.instructor,
-      level: data.level,
-      category: data.category,
-      duration: data.duration,
-      image: data.image,
-      status: data.status,
-      students: 0,
-      created: new Date().toISOString().split('T')[0]
-    };
-    
-    setCourses([...courses, newCourse]);
-    setIsCreateDialogOpen(false);
-    createForm.reset();
-    
-    toast({
-      title: "Course Created",
-      description: `${data.title} has been successfully created`,
-      duration: 3000,
-    });
+  // Fetch courses from Supabase
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching courses...');
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching courses:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load courses. Please try again later.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      console.log('Courses data fetched:', data);
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditCourse = (data: CourseFormValues) => {
+  useEffect(() => {
+    fetchCourses();
+    
+    // Set up realtime subscription
+    const subscription = supabase
+      .channel('public:courses')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
+        console.log('Change received:', payload);
+        fetchCourses();
+      })
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleCreateCourse = async (data: CourseFormValues) => {
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .insert([
+          {
+            title: data.title,
+            description: data.description,
+            instructor: data.instructor,
+            level: data.level,
+            category: data.category,
+            duration: data.duration,
+            image: data.image,
+            status: data.status,
+            students: 0
+          }
+        ]);
+        
+      if (error) {
+        console.error('Error creating course:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to create course. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      setIsCreateDialogOpen(false);
+      createForm.reset();
+      
+      toast({
+        title: "Course Created",
+        description: `${data.title} has been successfully created`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleEditCourse = async (data: CourseFormValues) => {
     if (!selectedCourse) return;
     
-    const updatedCourses = courses.map(course => {
-      if (course.id === selectedCourse.id) {
-        return { 
-          ...course,
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .update({
           title: data.title,
           description: data.description,
           instructor: data.instructor,
@@ -117,37 +192,74 @@ const CourseManagement = () => {
           duration: data.duration,
           image: data.image,
           status: data.status
-        };
+        })
+        .eq('id', selectedCourse.id);
+        
+      if (error) {
+        console.error('Error updating course:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update course. Please try again.',
+          variant: 'destructive',
+        });
+        return;
       }
-      return course;
-    });
-    
-    setCourses(updatedCourses);
-    setIsEditDialogOpen(false);
-    setSelectedCourse(null);
-    
-    toast({
-      title: "Course Updated",
-      description: `${data.title} has been successfully updated`,
-      duration: 3000,
-    });
+      
+      setIsEditDialogOpen(false);
+      setSelectedCourse(null);
+      
+      toast({
+        title: "Course Updated",
+        description: `${data.title} has been successfully updated`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleDeleteCourse = () => {
+  const handleDeleteCourse = async () => {
     if (!selectedCourse) return;
     
-    const updatedCourses = courses.filter(course => course.id !== selectedCourse.id);
-    setCourses(updatedCourses);
-    setIsDeleteDialogOpen(false);
-    
-    toast({
-      title: "Course Deleted",
-      description: `${selectedCourse.title} has been successfully deleted`,
-      variant: "destructive",
-      duration: 3000,
-    });
-    
-    setSelectedCourse(null);
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', selectedCourse.id);
+        
+      if (error) {
+        console.error('Error deleting course:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete course. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      setIsDeleteDialogOpen(false);
+      
+      toast({
+        title: "Course Deleted",
+        description: `${selectedCourse.title} has been successfully deleted`,
+        variant: "destructive",
+        duration: 3000,
+      });
+      
+      setSelectedCourse(null);
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const openEditDialog = (course: Course) => {
@@ -183,7 +295,11 @@ const CourseManagement = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        {courses.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-music-500"></div>
+          </div>
+        ) : courses.length > 0 ? (
           <div className="rounded-md border">
             <Table>
               <TableHeader>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart, BarChart, LineChart } from '@/components/ui/charts';
@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import CourseManagement from '@/components/admin/CourseManagement';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -19,6 +20,69 @@ const AdminDashboard = () => {
     joinDate: string;
     status: string;
   }>>([]);
+  const [coursesCount, setCoursesCount] = useState(0);
+  const [activeCoursesCount, setActiveCoursesCount] = useState(0);
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [teachersCount, setTeachersCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get all courses count
+        const { count: totalCourses, error: coursesError } = await supabase
+          .from('courses')
+          .select('*', { count: 'exact', head: true });
+          
+        if (coursesError) {
+          console.error('Error fetching courses count:', coursesError);
+        } else {
+          setCoursesCount(totalCourses || 0);
+        }
+        
+        // Get active courses count
+        const { count: activeCourses, error: activeCoursesError } = await supabase
+          .from('courses')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'Active');
+          
+        if (activeCoursesError) {
+          console.error('Error fetching active courses count:', activeCoursesError);
+        } else {
+          setActiveCoursesCount(activeCourses || 0);
+        }
+        
+        // Get students count - This is just a placeholder as we're not storing students in this implementation
+        // In a real implementation, you would fetch from the users table with role filter
+        setStudentsCount(0);
+        
+        // Get teachers count - This is just a placeholder as we're not storing teachers in this implementation
+        // In a real implementation, you would fetch from the users table with role filter
+        setTeachersCount(0);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboardData();
+    
+    // Set up realtime subscription
+    const subscription = supabase
+      .channel('public:courses')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
   
   // Mock data for charts
   const userActivityData = [
@@ -77,8 +141,10 @@ const AdminDashboard = () => {
             <CardDescription>Enrolled students</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">0</div>
-            <p className="text-sm text-gray-500 mt-1">No students enrolled yet</p>
+            <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
+            <p className="text-sm text-gray-500 mt-1">
+              {studentsCount === 0 ? "No students enrolled yet" : `${studentsCount} enrolled students`}
+            </p>
           </CardContent>
         </Card>
         
@@ -88,8 +154,10 @@ const AdminDashboard = () => {
             <CardDescription>Active instructors</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">0</div>
-            <p className="text-sm text-gray-500 mt-1">No teachers registered yet</p>
+            <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
+            <p className="text-sm text-gray-500 mt-1">
+              {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
+            </p>
           </CardContent>
         </Card>
         
@@ -99,19 +167,23 @@ const AdminDashboard = () => {
             <CardDescription>Currently running</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">0</div>
-            <p className="text-sm text-gray-500 mt-1">No active courses</p>
+            <div className="text-3xl font-bold text-music-500">{activeCoursesCount}</div>
+            <p className="text-sm text-gray-500 mt-1">
+              {activeCoursesCount === 0 ? "No active courses" : `${activeCoursesCount} active courses`}
+            </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Monthly Revenue</CardTitle>
-            <CardDescription>Current month</CardDescription>
+            <CardTitle className="text-lg">Total Courses</CardTitle>
+            <CardDescription>All courses</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">$0</div>
-            <p className="text-sm text-gray-500 mt-1">No revenue generated yet</p>
+            <div className="text-3xl font-bold text-music-500">{coursesCount}</div>
+            <p className="text-sm text-gray-500 mt-1">
+              {coursesCount === 0 ? "No courses created yet" : `${coursesCount} total courses`}
+            </p>
           </CardContent>
         </Card>
       </div>
