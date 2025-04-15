@@ -121,11 +121,18 @@ const CourseManagement = () => {
     }
   });
 
-  // Handle create course
+  // Handle create course - Fixed TypeScript error by explicitly typing all required properties
   const handleCreateCourse = (data: CourseFormValues) => {
     const newCourse: Course = {
       id: Math.max(0, ...courses.map(c => c.id)) + 1,
-      ...data,
+      title: data.title,
+      description: data.description,
+      instructor: data.instructor,
+      level: data.level,
+      category: data.category,
+      duration: data.duration,
+      image: data.image,
+      status: data.status,
       students: 0,
       created: new Date().toISOString().split('T')[0]
     };
@@ -147,7 +154,17 @@ const CourseManagement = () => {
     
     const updatedCourses = courses.map(course => {
       if (course.id === selectedCourse.id) {
-        return { ...course, ...data };
+        return { 
+          ...course,
+          title: data.title,
+          description: data.description,
+          instructor: data.instructor,
+          level: data.level,
+          category: data.category,
+          duration: data.duration,
+          image: data.image,
+          status: data.status
+        };
       }
       return course;
     });
