@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -11,6 +10,7 @@ import { Course, DurationMetric } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
 import CourseForm, { CourseFormValues } from './CourseForm';
+import { useAuth } from '@/hooks/useAuth';
 
 interface EditCourseDialogProps {
   open: boolean;
@@ -55,6 +55,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
   const [isLoading, setIsLoading] = useState(false);
+  const { user, isAdmin } = useAuth();
   
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
 
@@ -128,6 +129,17 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const handleUpdateCourse = async (data: CourseFormValues) => {
     try {
       setIsLoading(true);
+      
+      if (user && !isAdmin()) {
+        toast({
+          title: 'Permission Denied',
+          description: 'Only administrators can update courses.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+      
       let duration = '';
       if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
         duration = `${data.durationValue} ${data.durationMetric}`;
@@ -158,11 +170,19 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         
       if (courseError) {
         console.error('Error updating course:', courseError);
-        toast({
-          title: 'Error',
-          description: 'Failed to update course. Please try again.',
-          variant: 'destructive',
-        });
+        if (courseError.message.includes('row-level security policy')) {
+          toast({
+            title: 'Access Denied',
+            description: 'You do not have permission to update courses. Make sure you are logged in with admin privileges.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Failed to update course. Please try again.',
+            variant: 'destructive',
+          });
+        }
         return;
       }
       

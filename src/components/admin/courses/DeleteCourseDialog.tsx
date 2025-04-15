@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/types/course';
+import { useAuth } from '@/hooks/useAuth';
 
 interface DeleteCourseDialogProps {
   open: boolean;
@@ -15,9 +16,20 @@ interface DeleteCourseDialogProps {
 
 const DeleteCourseDialog: React.FC<DeleteCourseDialogProps> = ({ open, onOpenChange, course, onSuccess }) => {
   const { toast } = useToast();
+  const { user, isAdmin } = useAuth();
 
   const handleDeleteCourse = async () => {
     try {
+      // Check if user is admin
+      if (user && !isAdmin()) {
+        toast({
+          title: 'Permission Denied',
+          description: 'Only administrators can delete courses.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       const { error } = await supabase
         .from('courses')
         .delete()
@@ -25,11 +37,19 @@ const DeleteCourseDialog: React.FC<DeleteCourseDialogProps> = ({ open, onOpenCha
         
       if (error) {
         console.error('Error deleting course:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to delete course. Please try again.',
-          variant: 'destructive',
-        });
+        if (error.message.includes('row-level security policy')) {
+          toast({
+            title: 'Access Denied',
+            description: 'You do not have permission to delete courses. Make sure you are logged in with admin privileges.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Failed to delete course. Please try again.',
+            variant: 'destructive',
+          });
+        }
         return;
       }
       

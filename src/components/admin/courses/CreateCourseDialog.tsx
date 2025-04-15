@@ -49,7 +49,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -98,6 +98,16 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
     try {
       console.log('Creating course with data:', data);
       
+      // Check if user is admin
+      if (user && !isAdmin()) {
+        toast({
+          title: 'Permission Denied',
+          description: 'Only administrators can create courses.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       let duration = '';
       if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
         duration = `${data.durationValue} ${data.durationMetric}`;
@@ -118,7 +128,13 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             image: data.image,
             status: 'Active',
             students: 0,
-            instructor_ids: Array.isArray(data.instructors) ? data.instructors : []
+            instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
+            classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
+            classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
+            studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
+            studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
+            practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
+            practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0
           }
         ])
         .select()
@@ -128,8 +144,8 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         console.error('Error creating course:', courseError);
         if (courseError.message.includes('row-level security policy')) {
           toast({
-            title: 'Error',
-            description: 'You do not have permission to create courses. Please contact your administrator.',
+            title: 'Access Denied',
+            description: 'You do not have permission to create courses. Make sure you are logged in with admin privileges.',
             variant: 'destructive',
           });
         } else {
