@@ -22,13 +22,21 @@ export const hashPassword = async (password: string): Promise<string> => {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
-// Helper function to verify passwords
+// Helper function to verify passwords with more detailed logging
 export const verifyPassword = async (password: string, hashedPassword: string): Promise<boolean> => {
-  const hashedInput = await hashPassword(password);
-  // Add detailed debugging for password verification
-  console.log('Password verification:');
-  console.log('- Input hash:', hashedInput.substring(0, 10) + '...');
-  console.log('- Stored hash:', hashedPassword.substring(0, 10) + '...');
-  console.log('- Match:', hashedInput === hashedPassword);
-  return hashedInput === hashedPassword;
+  try {
+    const hashedInput = await hashPassword(password);
+    
+    // Add detailed debugging for password verification
+    console.log('Password verification details:');
+    console.log('- Input password length:', password.length);
+    console.log('- Input hash:', hashedInput);
+    console.log('- Stored hash:', hashedPassword);
+    console.log('- Match result:', hashedInput === hashedPassword);
+    
+    return hashedInput === hashedPassword;
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
 };

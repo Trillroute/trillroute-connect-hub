@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -59,48 +58,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  // Login function - now checks credentials against custom_users table
+  // Login function - completely rewritten for better debugging and reliability
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Ensure email is normalized consistently
+      // Standardize email format to prevent case sensitivity issues
       const normalizedEmail = email.trim().toLowerCase();
-      console.log('Login attempt for normalized email:', normalizedEmail);
+      console.log(`[AUTH] Login attempt for email: ${normalizedEmail}`);
       
-      // First check if the user exists at all
-      const { data, error } = await supabase
+      // Fetch user with case-insensitive email matching
+      const { data: users, error: queryError } = await supabase
         .from('custom_users')
         .select('*')
-        .ilike('email', normalizedEmail)
-        .maybeSingle();
-
-      console.log('Login query result:', data, error);
-
-      if (error) {
-        console.error('Database error when fetching user:', error);
+        .ilike('email', normalizedEmail);
+      
+      console.log(`[AUTH] Query returned ${users?.length || 0} users`);
+      
+      if (queryError) {
+        console.error('[AUTH] Database error:', queryError);
         throw new Error('Error connecting to the database. Please try again.');
       }
-
-      if (!data) {
-        console.error('No user found with email:', normalizedEmail);
+      
+      if (!users || users.length === 0) {
+        console.error('[AUTH] No user found with email:', normalizedEmail);
         throw new Error('Invalid email or password');
       }
-
-      // Type assertion to match CustomUser interface
-      const userData = data as CustomUser;
       
-      console.log('User found, verifying password');
-      console.log('Stored password hash:', userData.password_hash);
-
-      // Verify password with detailed logging
+      // Get the first matching user
+      const userData = users[0] as CustomUser;
+      console.log(`[AUTH] Found user with ID: ${userData.id}`);
+      
+      // Verify password
+      console.log('[AUTH] Verifying password...');
       const isPasswordValid = await verifyPassword(password, userData.password_hash);
-      console.log('Password valid:', isPasswordValid);
+      console.log(`[AUTH] Password verification result: ${isPasswordValid}`);
       
       if (!isPasswordValid) {
-        console.error('Invalid password for user:', normalizedEmail);
+        console.error('[AUTH] Password verification failed');
         throw new Error('Invalid email or password');
       }
-
+      
+      console.log('[AUTH] Login successful');
+      
       // Create user object from database data
       const authUser: UserData = {
         id: userData.id,
@@ -109,24 +108,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         lastName: userData.last_name,
         role: userData.role,
       };
-
+      
       // Store user in state and localStorage
       setUser(authUser);
       localStorage.setItem('user', JSON.stringify(authUser));
-
+      
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: `Welcome back, ${authUser.firstName}!`,
         duration: 3000,
       });
-
+      
       // Redirect based on role
       navigate(`/dashboard/${authUser.role}`);
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('[AUTH] Login error:', error);
       toast({
         title: "Login Failed",
-        description: error?.message || "Invalid email or password. Please try again.",
+        description: error?.message || "Invalid credentials. Please try again.",
         variant: "destructive",
         duration: 3000,
       });

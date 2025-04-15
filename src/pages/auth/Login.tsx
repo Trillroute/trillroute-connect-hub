@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock } from 'lucide-react';
@@ -29,14 +28,12 @@ const Login = () => {
     
     setIsLoading(true);
     try {
-      const normalizedEmail = email.trim().toLowerCase();
-      console.log('Submitting login form with normalized email:', normalizedEmail);
-      // Don't normalize email again in login call since we've already done it here
-      await login(normalizedEmail, password);
-      // Redirect will happen in the login function
+      console.log('Attempting login with:', { email });
+      await login(email, password);
+      // Redirect handled in login function
     } catch (error: any) {
-      console.error('Login failed:', error);
-      // Login function already handles the toast error
+      console.error('Login failed in component:', error);
+      // Toast is already handled in the login function
     } finally {
       setIsLoading(false);
     }
