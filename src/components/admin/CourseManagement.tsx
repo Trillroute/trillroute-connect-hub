@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +48,7 @@ const CourseManagement = () => {
     category: z.string().min(1, { message: "Category is required" }),
     duration: z.string().min(1, { message: "Duration is required" }),
     image: z.string().url({ message: "Must be a valid URL" }),
-    status: z.enum(['Active', 'Draft'])
+    status: z.string() // Changed from z.enum(['Active', 'Draft']) to accept any string
   });
   
   type CourseFormValues = z.infer<typeof courseSchema>;
