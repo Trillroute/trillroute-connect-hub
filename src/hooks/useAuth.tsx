@@ -14,6 +14,17 @@ interface UserData {
   role: UserRole;
 }
 
+// Update the interface to match custom_users table
+interface CustomUser {
+  id: string;
+  email: string;
+  password_hash: string;
+  first_name: string;
+  last_name: string;
+  role: UserRole;
+  created_at: string;
+}
+
 interface AuthContextType {
   user: UserData | null;
   loading: boolean;
@@ -48,11 +59,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  // Login function - now checks credentials against our custom users table
+  // Login function - now checks credentials against custom_users table
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Fetch user from custom users table
+      // Fetch user from custom_users table
       const { data, error } = await supabase
         .from('custom_users')
         .select('*')
@@ -63,24 +74,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Invalid email or password');
       }
 
+      // Type assertion to match CustomUser interface
+      const userData = data as CustomUser;
+
       // Verify password
-      const isPasswordValid = await verifyPassword(password, data.password_hash);
+      const isPasswordValid = await verifyPassword(password, userData.password_hash);
       if (!isPasswordValid) {
         throw new Error('Invalid email or password');
       }
 
       // Create user object from database data
-      const userData: UserData = {
-        id: data.id,
-        email: data.email,
-        firstName: data.first_name,
-        lastName: data.last_name,
-        role: data.role as UserRole,
+      const authUser: UserData = {
+        id: userData.id,
+        email: userData.email,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        role: userData.role,
       };
 
       // Store user in state and localStorage
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(authUser);
+      localStorage.setItem('user', JSON.stringify(authUser));
 
       toast({
         title: "Login Successful",
@@ -89,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       // Redirect based on role
-      navigate(`/dashboard/${userData.role}`);
+      navigate(`/dashboard/${authUser.role}`);
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
@@ -124,7 +138,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Generate a UUID for the user
       const userId = crypto.randomUUID();
 
-      // Insert new user
+      // Insert new user into custom_users table
       const { error } = await supabase
         .from('custom_users')
         .insert({
@@ -223,3 +237,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+
