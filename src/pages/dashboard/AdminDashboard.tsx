@@ -25,6 +25,9 @@ const AdminDashboard = () => {
   const [studentsCount, setStudentsCount] = useState(0);
   const [teachersCount, setTeachersCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number }[]>([]);
+  const [enrollmentData, setEnrollmentData] = useState<{ name: string; Students: number }[]>([]);
+  const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   
   // Fetch dashboard data
   useEffect(() => {
@@ -62,6 +65,38 @@ const AdminDashboard = () => {
         // Get teachers count - This is just a placeholder as we're not storing teachers in this implementation
         // In a real implementation, you would fetch from the users table with role filter
         setTeachersCount(0);
+        
+        // Fetch course enrollment data by category
+        const { data: courses, error: coursesListError } = await supabase
+          .from('courses')
+          .select('category, students');
+          
+        if (coursesListError) {
+          console.error('Error fetching courses for enrollment data:', coursesListError);
+        } else {
+          // Group courses by category and sum up student counts
+          const enrollmentByCategory = courses.reduce((acc: Record<string, number>, course: any) => {
+            const category = course.category;
+            if (!acc[category]) {
+              acc[category] = 0;
+            }
+            acc[category] += course.students || 0;
+            return acc;
+          }, {});
+          
+          // Convert to chart data format
+          const formattedEnrollmentData = Object.entries(enrollmentByCategory).map(([name, students]) => ({
+            name,
+            Students: students
+          }));
+          
+          setEnrollmentData(formattedEnrollmentData);
+        }
+
+        // Create empty chart data for user activity and revenue (no actual data available)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
+        setUserActivityData(months.map(month => ({ name: month, Students: 0, Teachers: 0 })));
+        setRevenueData(months.map(month => ({ name: month, Revenue: 0 })));
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -84,37 +119,6 @@ const AdminDashboard = () => {
     };
   }, []);
   
-  // Mock data for charts
-  const userActivityData = [
-    { name: 'Jan', Students: 45, Teachers: 8 },
-    { name: 'Feb', Students: 52, Teachers: 10 },
-    { name: 'Mar', Students: 61, Teachers: 12 },
-    { name: 'Apr', Students: 67, Teachers: 14 },
-    { name: 'May', Students: 81, Teachers: 15 },
-    { name: 'Jun', Students: 87, Teachers: 17 },
-    { name: 'Jul', Students: 91, Teachers: 18 },
-  ];
-
-  const enrollmentData = [
-    { name: 'Piano', Students: 0 },
-    { name: 'Guitar', Students: 0 },
-    { name: 'Vocals', Students: 0 },
-    { name: 'Violin', Students: 0 },
-    { name: 'Theory', Students: 0 },
-    { name: 'Drums', Students: 0 },
-    { name: 'Saxophone', Students: 0 },
-  ];
-
-  const revenueData = [
-    { name: 'Jan', Revenue: 0 },
-    { name: 'Feb', Revenue: 0 },
-    { name: 'Mar', Revenue: 0 },
-    { name: 'Apr', Revenue: 0 },
-    { name: 'May', Revenue: 0 },
-    { name: 'Jun', Revenue: 0 },
-    { name: 'Jul', Revenue: 0 },
-  ];
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 flex justify-between items-center">
@@ -200,14 +204,20 @@ const AdminDashboard = () => {
             <CardDescription>Students and teachers over time</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <AreaChart
-              data={userActivityData}
-              index="name"
-              categories={["Students", "Teachers"]}
-              colors={["music.500", "music.300"]}
-              valueFormatter={(value: number) => `${value}`}
-              className="h-full"
-            />
+            {userActivityData.length > 0 ? (
+              <AreaChart
+                data={userActivityData}
+                index="name"
+                categories={["Students", "Teachers"]}
+                colors={["music.500", "music.300"]}
+                valueFormatter={(value: number) => `${value}`}
+                className="h-full"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <p>No user activity data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
         
@@ -217,14 +227,20 @@ const AdminDashboard = () => {
             <CardDescription>Financial performance</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <LineChart
-              data={revenueData}
-              index="name"
-              categories={["Revenue"]}
-              colors={["music.500"]}
-              valueFormatter={(value: number) => `$${value.toLocaleString()}`}
-              className="h-full"
-            />
+            {revenueData.length > 0 ? (
+              <LineChart
+                data={revenueData}
+                index="name"
+                categories={["Revenue"]}
+                colors={["music.500"]}
+                valueFormatter={(value: number) => `$${value.toLocaleString()}`}
+                className="h-full"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <p>No revenue data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -302,15 +318,21 @@ const AdminDashboard = () => {
             <CardDescription>Student distribution</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <BarChart
-              data={enrollmentData}
-              index="name"
-              categories={["Students"]}
-              colors={["music.500"]}
-              layout="vertical"
-              valueFormatter={(value: number) => `${value} students`}
-              className="h-full"
-            />
+            {enrollmentData.length > 0 ? (
+              <BarChart
+                data={enrollmentData}
+                index="name"
+                categories={["Students"]}
+                colors={["music.500"]}
+                layout="vertical"
+                valueFormatter={(value: number) => `${value} students`}
+                className="h-full"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <p>No enrollment data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -46,6 +46,14 @@ export function AreaChart({
     {} as Record<string, { label: string; color: string }>
   );
 
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        <p>No data available</p>
+      </div>
+    );
+  }
+
   return (
     <ChartContainer config={chartConfig} className={className}>
       <RechartsAreaChart data={data}>
@@ -109,6 +117,14 @@ export function BarChart({
     },
     {} as Record<string, { label: string; color: string }>
   );
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        <p>No data available</p>
+      </div>
+    );
+  }
 
   return (
     <ChartContainer config={chartConfig} className={className}>
@@ -192,6 +208,14 @@ export function LineChart({
     },
     {} as Record<string, { label: string; color: string }>
   );
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        <p>No data available</p>
+      </div>
+    );
+  }
 
   return (
     <ChartContainer config={chartConfig} className={className}>
