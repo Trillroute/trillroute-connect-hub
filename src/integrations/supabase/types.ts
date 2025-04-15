@@ -18,6 +18,7 @@ export type Database = {
           duration_type: string
           id: string
           image: string
+          instructor_ids: string[] | null
           level: string
           status: string
           students: number
@@ -31,6 +32,7 @@ export type Database = {
           duration_type?: string
           id?: string
           image: string
+          instructor_ids?: string[] | null
           level: string
           status: string
           students?: number
@@ -44,6 +46,7 @@ export type Database = {
           duration_type?: string
           id?: string
           image?: string
+          instructor_ids?: string[] | null
           level?: string
           status?: string
           students?: number

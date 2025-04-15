@@ -1,82 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter, Users, Clock, BookOpen } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSkills } from '@/hooks/useSkills';
 import { useTeachers } from '@/hooks/useTeachers';
+import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { skills = [] } = useSkills();
   const { teachers = [] } = useTeachers();
+  const { courses, loading } = useCourses();
   
-  // Fetch courses from Supabase
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setLoading(true);
-        console.log('Fetching courses...');
-        const { data, error } = await supabase
-          .from('courses')
-          .select('*')
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          console.error('Error fetching courses:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load courses. Please try again later.',
-            variant: 'destructive',
-          });
-          return;
-        }
-        
-        console.log('Courses data fetched:', data);
-        // Process all courses and handle instructor_ids
-        const typedCourses = (data || []).map(course => {
-          return {
-            ...course,
-            instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
-          } as Course;
-        });
-        
-        setCourses(typedCourses);
-      } catch (error) {
-        console.error('Unexpected error:', error);
-        toast({
-          title: 'Error',
-          description: 'An unexpected error occurred.',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchCourses();
-    
-    // Set up realtime subscription
-    const subscription = supabase
-      .channel('public:courses')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
-        console.log('Change received:', payload);
-        fetchCourses();
-      })
-      .subscribe();
-      
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [toast]);
-
   // Get instructor names for a course
   const getInstructorNames = (course: Course) => {
     if (!course.instructor_ids || !Array.isArray(course.instructor_ids) || !course.instructor_ids.length) {
