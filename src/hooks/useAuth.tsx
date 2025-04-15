@@ -1,11 +1,13 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export type UserRole = 'student' | 'teacher' | 'admin';
 
-interface User {
+interface UserData {
   id: string;
   email: string;
   firstName: string;
@@ -13,116 +15,127 @@ interface User {
   role: UserRole;
 }
 
-interface StoredUser extends User {
-  password: string;
-}
-
 interface AuthContextType {
-  user: User | null;
+  user: UserData | null;
   loading: boolean;
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, firstName: string, lastName: string, role: UserRole) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: () => boolean;
 }
 
-// Initial demo users
-const initialUsers = [
-  {
-    id: "user_1",
-    email: "student@example.com",
-    password: "password",
-    firstName: "Student",
-    lastName: "User",
-    role: "student" as UserRole
-  },
-  {
-    id: "user_2",
-    email: "teacher@example.com",
-    password: "password",
-    firstName: "Teacher",
-    lastName: "User",
-    role: "teacher" as UserRole
-  },
-  {
-    id: "user_3",
-    email: "admin@example.com",
-    password: "password",
-    firstName: "Admin",
-    lastName: "User",
-    role: "admin" as UserRole
-  }
-];
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Load registered users or initialize with demo users
-  const [registeredUsers, setRegisteredUsers] = useState<StoredUser[]>(() => {
-    const storedUsers = localStorage.getItem('trillroute_registered_users');
-    return storedUsers ? JSON.parse(storedUsers) : initialUsers;
-  });
-
+  // Initialize the auth state
   useEffect(() => {
-    // Check local storage for user data when component mounts
-    const storedUser = localStorage.getItem('trillroute_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user data:', error);
-        localStorage.removeItem('trillroute_user');
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          fetchUserProfile(newSession?.user);
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
       }
-    }
-    setLoading(false);
+    );
+
+    // THEN check for existing session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        if (initialSession?.user) {
+          await fetchUserProfile(initialSession.user);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Fetch user profile data from Supabase
+  const fetchUserProfile = async (authUser: User | undefined | null) => {
+    if (!authUser) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, role')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          firstName: data.first_name,
+          lastName: data.last_name,
+          role: data.role as UserRole,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load user profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Check if the email and password match a registered user
-      const foundUser = registeredUsers.find(
-        (u) => u.email === email && u.password === password
-      );
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
-      if (!foundUser) {
-        throw new Error("Invalid email or password");
+      if (error) {
+        throw error;
       }
-      
-      const authenticatedUser: User = {
-        id: foundUser.id,
-        email: foundUser.email,
-        firstName: foundUser.firstName,
-        lastName: foundUser.lastName,
-        role: foundUser.role,
-      };
-      
-      setUser(authenticatedUser);
-      localStorage.setItem('trillroute_user', JSON.stringify(authenticatedUser));
-      
+
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${authenticatedUser.firstName}!`,
+        description: "Welcome back!",
         duration: 3000,
       });
-      
-      // Redirect based on role
-      navigate(`/dashboard/${authenticatedUser.role}`);
-    } catch (error) {
+
+      // Navigation will happen automatically via auth state change
+    } catch (error: any) {
       console.error('Login error:', error);
       toast({
         title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
+        description: error?.message || "Invalid email or password. Please try again.",
         variant: "destructive",
         duration: 3000,
       });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -131,68 +144,62 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
     setLoading(true);
     try {
-      // Check if user with this email already exists
-      if (registeredUsers.some(u => u.email === email)) {
-        throw new Error("User with this email already exists");
-      }
-      
-      // Create a new user
-      const newUser: StoredUser = {
-        id: `user_${Date.now()}`,
+      // Register with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        firstName,
-        lastName,
-        role,
-      };
-      
-      // Add to registered users and save to localStorage
-      const updatedUsers = [...registeredUsers, newUser];
-      setRegisteredUsers(updatedUsers);
-      localStorage.setItem('trillroute_registered_users', JSON.stringify(updatedUsers));
-      
-      // Log in the user automatically
-      const authenticatedUser: User = {
-        id: newUser.id,
-        email: newUser.email,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        role: newUser.role,
-      };
-      
-      setUser(authenticatedUser);
-      localStorage.setItem('trillroute_user', JSON.stringify(authenticatedUser));
-      
-      toast({
-        title: "Registration Successful",
-        description: `Welcome to Trillroute, ${firstName}!`,
-        duration: 3000,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role,
+          },
+        },
       });
       
-      // Redirect based on role
-      navigate(`/dashboard/${role}`);
-    } catch (error) {
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Registration Successful",
+        description: "Welcome to Trillroute!",
+        duration: 3000,
+      });
+
+      // The trigger will create the profile and auth state change will handle the rest
+    } catch (error: any) {
       console.error('Registration error:', error);
       toast({
         title: "Registration Failed",
-        description: error instanceof Error ? error.message : "Please check your information and try again.",
+        description: error?.message || "Please check your information and try again.",
         variant: "destructive",
         duration: 3000,
       });
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('trillroute_user');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-      duration: 3000,
-    });
-    navigate('/');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+        duration: 3000,
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const isAdmin = () => {
