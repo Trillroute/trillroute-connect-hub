@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -58,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  // Login function - completely rewritten for better debugging and reliability
+  // Login function - completely rewritten to better debug and fix issues
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
@@ -66,11 +67,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const normalizedEmail = email.trim().toLowerCase();
       console.log(`[AUTH] Login attempt for email: ${normalizedEmail}`);
       
-      // Fetch user with case-insensitive email matching
+      // Debug output: print the SQL query equivalent
+      console.log(`[AUTH] DEBUG - querying for email: ${normalizedEmail}`);
+      
+      // Fetch all users first to debug the issue
+      const { data: allUsers, error: allUsersError } = await supabase
+        .from('custom_users')
+        .select('email');
+        
+      if (allUsersError) {
+        console.error('[AUTH] Error fetching all users:', allUsersError);
+      } else {
+        console.log('[AUTH] All users in database:', allUsers);
+      }
+      
+      // Now try to fetch the specific user
       const { data: users, error: queryError } = await supabase
         .from('custom_users')
         .select('*')
-        .ilike('email', normalizedEmail);
+        .eq('email', normalizedEmail);
       
       console.log(`[AUTH] Query returned ${users?.length || 0} users`);
       

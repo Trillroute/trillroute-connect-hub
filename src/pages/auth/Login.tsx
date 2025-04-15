@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock } from 'lucide-react';
@@ -29,6 +30,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       console.log('Attempting login with:', { email });
+      // Pass the raw email to login - normalization will happen there
       await login(email, password);
       // Redirect handled in login function
     } catch (error: any) {

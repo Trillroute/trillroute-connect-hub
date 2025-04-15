@@ -9,7 +9,14 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: localStorage
+  }
+});
 
 // Helper function to hash passwords - in a real app, use a proper library
 export const hashPassword = async (password: string): Promise<string> => {
@@ -19,7 +26,14 @@ export const hashPassword = async (password: string): Promise<string> => {
   const data = encoder.encode(password);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  console.log('Password hash details:');
+  console.log('- Input password length:', password.length);
+  console.log('- Generated hash:', hashHex);
+  console.log('- Hash length:', hashHex.length);
+  
+  return hashHex;
 };
 
 // Helper function to verify passwords with more detailed logging
@@ -33,6 +47,7 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
     console.log('- Input hash:', hashedInput);
     console.log('- Stored hash:', hashedPassword);
     console.log('- Match result:', hashedInput === hashedPassword);
+    console.log('- Hash lengths match:', hashedInput.length === hashedPassword.length);
     
     return hashedInput === hashedPassword;
   } catch (error) {
