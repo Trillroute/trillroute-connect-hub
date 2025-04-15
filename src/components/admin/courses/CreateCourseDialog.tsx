@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -129,13 +128,12 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             status: 'Active',
             students: 0,
             instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-            // Remove fields that don't exist in the database
-            // classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
-            // classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
-            // studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
-            // studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
-            // practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
-            // practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0
+            classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
+            classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
+            studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
+            studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
+            practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
+            practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0
           }
         ])
         .select()

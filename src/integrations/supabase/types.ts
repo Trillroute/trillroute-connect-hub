@@ -11,6 +11,8 @@ export type Database = {
     Tables: {
       courses: {
         Row: {
+          classes_count: number | null
+          classes_duration: number | null
           created_at: string
           description: string
           duration: string
@@ -19,12 +21,18 @@ export type Database = {
           image: string
           instructor_ids: string[] | null
           level: string
+          practical_sessions_count: number | null
+          practical_sessions_duration: number | null
           skill: string
           status: string
           students: number
+          studio_sessions_count: number | null
+          studio_sessions_duration: number | null
           title: string
         }
         Insert: {
+          classes_count?: number | null
+          classes_duration?: number | null
           created_at?: string
           description: string
           duration: string
@@ -33,12 +41,18 @@ export type Database = {
           image: string
           instructor_ids?: string[] | null
           level: string
+          practical_sessions_count?: number | null
+          practical_sessions_duration?: number | null
           skill: string
           status: string
           students?: number
+          studio_sessions_count?: number | null
+          studio_sessions_duration?: number | null
           title: string
         }
         Update: {
+          classes_count?: number | null
+          classes_duration?: number | null
           created_at?: string
           description?: string
           duration?: string
@@ -47,9 +61,13 @@ export type Database = {
           image?: string
           instructor_ids?: string[] | null
           level?: string
+          practical_sessions_count?: number | null
+          practical_sessions_duration?: number | null
           skill?: string
           status?: string
           students?: number
+          studio_sessions_count?: number | null
+          studio_sessions_duration?: number | null
           title?: string
         }
         Relationships: []
