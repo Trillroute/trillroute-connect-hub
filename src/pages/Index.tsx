@@ -138,34 +138,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Featured Courses - Removed mock data */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Courses</h2>
-              <p className="text-xl text-gray-600">
-                Explore our most popular music courses
-              </p>
-            </div>
-            <Link to="/courses">
-              <Button variant="link" className="text-music-500 hover:text-music-600">
-                View All Courses
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-          </div>
-          
-          <div className="text-center py-16">
-            <p className="text-xl text-gray-600">
-              Visit our courses page to discover our selection of music education offerings.
-            </p>
-            <Link to="/courses" className="mt-8 inline-block">
-              <Button className="bg-music-500 hover:bg-music-600">Browse All Courses</Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Removed Featured Courses Section */}
       
       {/* Removed Testimonials Section */}
       
@@ -181,40 +154,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* CTA */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-music-500 to-purple-600 rounded-2xl overflow-hidden shadow-xl">
-            <div className="flex flex-col md:flex-row items-center">
-              <div className="md:w-1/2 p-12">
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Start Your Musical Journey?</h2>
-                <p className="text-xl text-white opacity-90 mb-8">
-                  Join Trillroute today and discover the joy of learning music with expert guidance.
-                </p>
-                <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                  <Link to="/auth/register">
-                    <Button className="h-12 px-8 text-lg bg-white text-music-700 hover:bg-gray-100">
-                      Get Started
-                    </Button>
-                  </Link>
-                  <Link to="/courses">
-                    <Button variant="outline" className="h-12 px-8 text-lg border-white text-white hover:bg-white/10">
-                      Browse Courses
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-              <div className="md:w-1/2 p-6 md:p-0">
-                <img 
-                  src="https://images.unsplash.com/photo-1514119412350-e174d90d280e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fG11c2ljJTIwc3R1ZGVudHxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60" 
-                  alt="Music Student" 
-                  className="rounded-xl md:rounded-l-2xl md:rounded-r-none w-full h-full object-cover"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Removed CTA Section */}
     </div>
   );
 };
