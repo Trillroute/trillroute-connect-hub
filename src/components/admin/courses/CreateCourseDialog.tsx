@@ -11,6 +11,7 @@ import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { DurationMetric } from '@/types/course';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -48,6 +49,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
+  const { user } = useAuth();
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -124,11 +126,19 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         
       if (courseError) {
         console.error('Error creating course:', courseError);
-        toast({
-          title: 'Error',
-          description: 'Failed to create course. Please try again.',
-          variant: 'destructive',
-        });
+        if (courseError.message.includes('row-level security policy')) {
+          toast({
+            title: 'Error',
+            description: 'You do not have permission to create courses. Please contact your administrator.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Failed to create course. Please try again.',
+            variant: 'destructive',
+          });
+        }
         return;
       }
       
