@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -43,7 +42,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Get instructor IDs from the course
-  const instructorIds = course.instructor_ids || [];
+  const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -77,6 +76,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     try {
+      setIsLoading(true);
+      console.log('Updating course with data:', data);
       // Update the course with instructor IDs directly
       const { error: courseError } = await supabase
         .from('courses')
@@ -89,7 +90,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration_type: data.durationType,
           image: data.image,
           status: 'Active',
-          instructor_ids: data.instructors
+          instructor_ids: Array.isArray(data.instructors) ? data.instructors : []
         })
         .eq('id', course.id);
         
@@ -118,6 +119,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         description: 'An unexpected error occurred.',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

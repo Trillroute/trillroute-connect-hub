@@ -30,7 +30,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
     );
   }
 
-  if (courses.length === 0) {
+  if (!Array.isArray(courses) || courses.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-md">
         <BookOpen className="h-12 w-12 text-gray-300 mb-4" />

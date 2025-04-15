@@ -10,20 +10,23 @@ export function useCourseInstructors(courseIds: string[]) {
 
   useEffect(() => {
     const fetchCourseInstructors = async () => {
-      if (!courseIds.length) {
+      // Ensure courseIds is an array and not empty
+      if (!Array.isArray(courseIds) || courseIds.length === 0) {
         setLoading(false);
+        setCourseInstructorsMap({});
         return;
       }
       
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('course_instructors')
-          .select('course_id, instructor_id')
-          .in('course_id', courseIds);
+        // First check if we need to fetch from course_instructors table or use instructor_ids from courses table
+        const { data: coursesWithInstructors, error: coursesError } = await supabase
+          .from('courses')
+          .select('id, instructor_ids')
+          .in('id', courseIds);
           
-        if (error) {
-          console.error('Error fetching course instructors:', error);
+        if (coursesError) {
+          console.error('Error fetching courses with instructor_ids:', coursesError);
           toast({
             title: 'Error',
             description: 'Failed to load course instructor data.',
@@ -32,13 +35,12 @@ export function useCourseInstructors(courseIds: string[]) {
           return;
         }
         
-        // Group instructors by course ID
+        // Build instructor map from courses data
         const instructorsMap: Record<string, string[]> = {};
-        data.forEach(item => {
-          if (!instructorsMap[item.course_id]) {
-            instructorsMap[item.course_id] = [];
+        coursesWithInstructors?.forEach(course => {
+          if (course.id) {
+            instructorsMap[course.id] = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
           }
-          instructorsMap[item.course_id].push(item.instructor_id);
         });
         
         setCourseInstructorsMap(instructorsMap);

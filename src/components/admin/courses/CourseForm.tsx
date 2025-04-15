@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -54,13 +53,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
   form,
   onSubmit,
   teachers,
-  skills = [], // Provide a default empty array
+  skills = [], 
   submitButtonText,
   cancelAction
 }) => {
-  // Ensure teachers is always an array
   const safeTeachers = Array.isArray(teachers) ? teachers : [];
-  // Ensure skills is always an array
   const safeSkills = Array.isArray(skills) ? skills : [];
 
   return (
@@ -94,7 +91,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                     <FormControl>
                       <div className="flex min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                         <div className="flex flex-wrap gap-1">
-                          {field.value.map((instructorId) => {
+                          {Array.isArray(field.value) ? field.value.map((instructorId) => {
                             const teacher = safeTeachers.find((t) => t.id === instructorId);
                             return teacher ? (
                               <Badge 
@@ -117,7 +114,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                                 </button>
                               </Badge>
                             ) : null;
-                          })}
+                          }) : null}
                         </div>
                         <button 
                           type="button" 
@@ -135,15 +132,16 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <CommandEmpty>No instructors found.</CommandEmpty>
                       <CommandGroup className="max-h-64 overflow-auto">
                         {safeTeachers.map((teacher) => {
-                          const isSelected = field.value.includes(teacher.id);
+                          const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
                           return (
                             <CommandItem
                               key={teacher.id}
                               value={`${teacher.first_name.toLowerCase()} ${teacher.last_name.toLowerCase()}`}
                               onSelect={() => {
+                                const currentValue = Array.isArray(field.value) ? field.value : [];
                                 const newValue = isSelected
-                                  ? field.value.filter((id) => id !== teacher.id)
-                                  : [...field.value, teacher.id];
+                                  ? currentValue.filter((id) => id !== teacher.id)
+                                  : [...currentValue, teacher.id];
                                 field.onChange(newValue);
                               }}
                             >

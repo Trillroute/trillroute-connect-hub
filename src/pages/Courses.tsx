@@ -1,24 +1,27 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, Star, Users, Clock, BookOpen } from 'lucide-react';
+import { Search, Filter, Users, Clock, BookOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useSkills } from '@/hooks/useSkills';
 import { useCourseInstructors } from '@/hooks/useCourseInstructors';
 import { useTeachers } from '@/hooks/useTeachers';
+import { Course } from '@/types/course';
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { skills } = useSkills();
-  const { teachers } = useTeachers();
-  const { courseInstructorsMap } = useCourseInstructors(courses.map(course => course.id));
+  const { skills = [] } = useSkills();
+  const { teachers = [] } = useTeachers();
+  
+  // Only pass course IDs if courses array is not empty
+  const courseIds = Array.isArray(courses) ? courses.map(course => course.id) : [];
+  const { courseInstructorsMap } = useCourseInstructors(courseIds);
   
   // Fetch courses from Supabase
   useEffect(() => {
@@ -42,7 +45,13 @@ const Courses = () => {
         }
         
         console.log('Courses data fetched:', data);
-        setCourses(data || []);
+        // Ensure each course has instructor_ids as an array
+        const typedCourses = data?.map(course => ({
+          ...course,
+          instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : []
+        })) as Course[] || [];
+        
+        setCourses(typedCourses);
       } catch (error) {
         console.error('Unexpected error:', error);
         toast({
@@ -72,8 +81,8 @@ const Courses = () => {
   }, [toast]);
 
   // Get instructor names for a course
-  const getInstructorNames = (courseId) => {
-    if (!courseInstructorsMap[courseId] || !courseInstructorsMap[courseId].length) {
+  const getInstructorNames = (courseId: string) => {
+    if (!courseInstructorsMap[courseId] || !Array.isArray(courseInstructorsMap[courseId]) || !courseInstructorsMap[courseId].length) {
       return 'No instructors';
     }
     

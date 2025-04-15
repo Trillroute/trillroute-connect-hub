@@ -30,6 +30,7 @@ export function useCourses() {
       
       console.log('Courses data fetched:', data);
       
+      // Ensure that all courses have proper types and default values
       const typedCourses = data?.map(course => ({
         ...course,
         status: course.status === 'Active' || course.status === 'Draft' 

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,9 +47,24 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
     }
   });
 
+  useEffect(() => {
+    if (!open) {
+      form.reset({
+        title: '',
+        description: '',
+        instructors: [],
+        level: 'Beginner',
+        category: '',
+        duration: '',
+        durationType: 'fixed',
+        image: '',
+      });
+    }
+  }, [open, form]);
+
   const handleCreateCourse = async (data: CourseFormValues) => {
     try {
-      // First, create the course
+      console.log('Creating course with data:', data);
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
         .insert([
@@ -64,7 +78,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             image: data.image,
             status: 'Active',
             students: 0,
-            instructor_ids: data.instructors // Store instructor IDs directly in the course table
+            instructor_ids: Array.isArray(data.instructors) ? data.instructors : []
           }
         ])
         .select()
