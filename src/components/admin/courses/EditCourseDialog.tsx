@@ -130,7 +130,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     try {
       setIsLoading(true);
       
-      if (user && !isAdmin()) {
+      if (!isAdmin()) {
         toast({
           title: 'Permission Denied',
           description: 'Only administrators can update courses.',
@@ -170,19 +170,11 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         
       if (courseError) {
         console.error('Error updating course:', courseError);
-        if (courseError.message.includes('row-level security policy')) {
-          toast({
-            title: 'Access Denied',
-            description: 'You do not have permission to update courses. Make sure you are logged in with admin privileges.',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Error',
-            description: 'Failed to update course. Please try again.',
-            variant: 'destructive',
-          });
-        }
+        toast({
+          title: 'Error',
+          description: 'Failed to update course. Please try again.',
+          variant: 'destructive',
+        });
         return;
       }
       

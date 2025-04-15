@@ -21,7 +21,7 @@ const DeleteCourseDialog: React.FC<DeleteCourseDialogProps> = ({ open, onOpenCha
   const handleDeleteCourse = async () => {
     try {
       // Check if user is admin
-      if (user && !isAdmin()) {
+      if (!isAdmin()) {
         toast({
           title: 'Permission Denied',
           description: 'Only administrators can delete courses.',
@@ -37,19 +37,11 @@ const DeleteCourseDialog: React.FC<DeleteCourseDialogProps> = ({ open, onOpenCha
         
       if (error) {
         console.error('Error deleting course:', error);
-        if (error.message.includes('row-level security policy')) {
-          toast({
-            title: 'Access Denied',
-            description: 'You do not have permission to delete courses. Make sure you are logged in with admin privileges.',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Error',
-            description: 'Failed to delete course. Please try again.',
-            variant: 'destructive',
-          });
-        }
+        toast({
+          title: 'Error',
+          description: 'Failed to delete course. Please try again.',
+          variant: 'destructive',
+        });
         return;
       }
       
