@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +22,7 @@ interface EditCourseDialogProps {
 const courseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  instructor: z.string().min(1, { message: "Instructor is required" }),
+  instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   level: z.string().min(1, { message: "Level is required" }),
   category: z.string().min(1, { message: "Category is required" }),
   duration: z.string().min(1, { message: "Duration is required" }),
@@ -37,13 +37,15 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { teachers } = useTeachers();
+  const [courseInstructors, setCourseInstructors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: course.title,
       description: course.description,
-      instructor: course.instructor,
+      instructors: courseInstructors,
       level: course.level,
       category: course.category,
       duration: course.duration,
@@ -51,28 +53,66 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     }
   });
 
+  // Fetch course instructors when dialog opens
+  useEffect(() => {
+    const fetchCourseInstructors = async () => {
+      if (!open || !course.id) return;
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('course_instructors')
+          .select('instructor_id')
+          .eq('course_id', course.id);
+          
+        if (error) {
+          console.error('Error fetching course instructors:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to load course instructors.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        
+        const instructorIds = data.map(item => item.instructor_id);
+        setCourseInstructors(instructorIds);
+        
+        // Update form with fetched instructors
+        form.setValue('instructors', instructorIds);
+      } catch (error) {
+        console.error('Unexpected error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchCourseInstructors();
+  }, [course.id, open, form, toast]);
+
+  // Reset form when dialog opens with current course data
   useEffect(() => {
     if (open) {
       form.reset({
         title: course.title,
         description: course.description,
-        instructor: course.instructor,
+        instructors: courseInstructors,
         level: course.level,
         category: course.category,
         duration: course.duration,
         image: course.image,
       });
     }
-  }, [course, form, open]);
+  }, [course, form, open, courseInstructors]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     try {
-      const { error } = await supabase
+      // First, update the course
+      const { error: courseError } = await supabase
         .from('courses')
         .update({
           title: data.title,
           description: data.description,
-          instructor: data.instructor,
           level: data.level,
           category: data.category,
           duration: data.duration,
@@ -81,14 +121,52 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         })
         .eq('id', course.id);
         
-      if (error) {
-        console.error('Error updating course:', error);
+      if (courseError) {
+        console.error('Error updating course:', courseError);
         toast({
           title: 'Error',
           description: 'Failed to update course. Please try again.',
           variant: 'destructive',
         });
         return;
+      }
+      
+      // Remove all existing instructor relationships
+      const { error: deleteError } = await supabase
+        .from('course_instructors')
+        .delete()
+        .eq('course_id', course.id);
+        
+      if (deleteError) {
+        console.error('Error removing course instructors:', deleteError);
+        toast({
+          title: 'Error',
+          description: 'Failed to update course instructors. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Add new instructor relationships
+      if (data.instructors.length > 0) {
+        const courseInstructors = data.instructors.map(instructorId => ({
+          course_id: course.id,
+          instructor_id: instructorId
+        }));
+        
+        const { error: instructorError } = await supabase
+          .from('course_instructors')
+          .insert(courseInstructors);
+          
+        if (instructorError) {
+          console.error('Error adding course instructors:', instructorError);
+          toast({
+            title: 'Error',
+            description: 'Course updated, but failed to add instructors. Please try again.',
+            variant: 'destructive',
+          });
+          return;
+        }
       }
       
       onOpenChange(false);
@@ -120,13 +198,19 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
             </DialogDescription>
           </DialogHeader>
           
-          <CourseForm 
-            form={form} 
-            onSubmit={handleUpdateCourse} 
-            teachers={teachers}
-            submitButtonText="Update Course"
-            cancelAction={() => onOpenChange(false)}
-          />
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-music-500"></div>
+            </div>
+          ) : (
+            <CourseForm 
+              form={form} 
+              onSubmit={handleUpdateCourse} 
+              teachers={teachers}
+              submitButtonText="Update Course"
+              cancelAction={() => onOpenChange(false)}
+            />
+          )}
           
           <DialogFooter className="pt-4">
             <Button 
@@ -140,6 +224,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
               type="submit"
               className="bg-music-500 hover:bg-music-600"
               onClick={form.handleSubmit(handleUpdateCourse)}
+              disabled={isLoading}
             >
               Update Course
             </Button>

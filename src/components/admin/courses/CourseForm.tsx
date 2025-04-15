@@ -4,13 +4,34 @@ import { UseFormReturn } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Teacher } from '@/types/course';
 
 export interface CourseFormValues {
   title: string;
   description: string;
-  instructor: string;
+  instructors: string[]; // Changed from instructor to instructors array
   level: string;
   category: string;
   duration: string;
@@ -35,7 +56,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="title"
@@ -49,41 +70,92 @@ const CourseForm: React.FC<CourseFormProps> = ({
               </FormItem>
             )}
           />
-          
-          <FormField
-            control={form.control}
-            name="instructor"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Instructor</FormLabel>
-                <FormControl>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select instructor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teachers.length > 0 ? (
-                        teachers.map((teacher) => (
-                          <SelectItem key={teacher.id} value={teacher.id}>
-                            {teacher.first_name} {teacher.last_name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no-teachers" disabled>
-                          No teachers available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
+        
+        <FormField
+          control={form.control}
+          name="instructors"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Instructors</FormLabel>
+              <div className="relative">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <div className="flex min-h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                        <div className="flex flex-wrap gap-1">
+                          {field.value.map((instructorId) => {
+                            const teacher = teachers.find((t) => t.id === instructorId);
+                            return teacher ? (
+                              <Badge 
+                                key={teacher.id}
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
+                                {teacher.first_name} {teacher.last_name}
+                                <button
+                                  type="button"
+                                  className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    const newValue = field.value.filter((id) => id !== teacher.id);
+                                    field.onChange(newValue);
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                  <span className="sr-only">Remove {teacher.first_name} {teacher.last_name}</span>
+                                </button>
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                        <button 
+                          type="button" 
+                          className="ml-auto h-4 w-4 shrink-0 opacity-50"
+                        >
+                          <ChevronsUpDown className="h-4 w-4" />
+                          <span className="sr-only">Show instructors</span>
+                        </button>
+                      </div>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search instructors..." />
+                      <CommandEmpty>No instructors found.</CommandEmpty>
+                      <CommandGroup className="max-h-64 overflow-auto">
+                        {teachers.map((teacher) => {
+                          const isSelected = field.value.includes(teacher.id);
+                          return (
+                            <CommandItem
+                              key={teacher.id}
+                              value={`${teacher.first_name.toLowerCase()} ${teacher.last_name.toLowerCase()}`}
+                              onSelect={() => {
+                                const newValue = isSelected
+                                  ? field.value.filter((id) => id !== teacher.id)
+                                  : [...field.value, teacher.id];
+                                field.onChange(newValue);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {teacher.first_name} {teacher.last_name}
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <FormField
           control={form.control}

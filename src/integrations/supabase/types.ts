@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      course_instructors: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          instructor_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          instructor_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          instructor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_instructors_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_instructors_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           category: string
@@ -17,7 +53,6 @@ export type Database = {
           duration: string
           id: string
           image: string
-          instructor: string
           level: string
           status: string
           students: number
@@ -30,7 +65,6 @@ export type Database = {
           duration: string
           id?: string
           image: string
-          instructor: string
           level: string
           status: string
           students?: number
@@ -43,7 +77,6 @@ export type Database = {
           duration?: string
           id?: string
           image?: string
-          instructor?: string
           level?: string
           status?: string
           students?: number

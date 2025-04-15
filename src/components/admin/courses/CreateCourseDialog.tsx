@@ -20,7 +20,7 @@ interface CreateCourseDialogProps {
 const courseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  instructor: z.string().min(1, { message: "Instructor is required" }),
+  instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   level: z.string().min(1, { message: "Level is required" }),
   category: z.string().min(1, { message: "Category is required" }),
   duration: z.string().min(1, { message: "Duration is required" }),
@@ -36,7 +36,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
     defaultValues: {
       title: '',
       description: '',
-      instructor: '',
+      instructors: [],
       level: 'Beginner',
       category: '',
       duration: '',
@@ -46,30 +46,54 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
 
   const handleCreateCourse = async (data: CourseFormValues) => {
     try {
-      const { error } = await supabase
+      // First, create the course
+      const { data: courseData, error: courseError } = await supabase
         .from('courses')
         .insert([
           {
             title: data.title,
             description: data.description,
-            instructor: data.instructor,
             level: data.level,
             category: data.category,
             duration: data.duration,
             image: data.image,
-            status: 'Active', // Hardcoded to Active since draft field is removed
+            status: 'Active',
             students: 0
           }
-        ]);
+        ])
+        .select()
+        .single();
         
-      if (error) {
-        console.error('Error creating course:', error);
+      if (courseError) {
+        console.error('Error creating course:', courseError);
         toast({
           title: 'Error',
           description: 'Failed to create course. Please try again.',
           variant: 'destructive',
         });
         return;
+      }
+      
+      // Now add the instructor relationships
+      if (courseData && data.instructors.length > 0) {
+        const courseInstructors = data.instructors.map(instructorId => ({
+          course_id: courseData.id,
+          instructor_id: instructorId
+        }));
+        
+        const { error: instructorError } = await supabase
+          .from('course_instructors')
+          .insert(courseInstructors);
+          
+        if (instructorError) {
+          console.error('Error adding course instructors:', instructorError);
+          toast({
+            title: 'Error',
+            description: 'Course created, but failed to add instructors. Please try again.',
+            variant: 'destructive',
+          });
+          return;
+        }
       }
       
       onOpenChange(false);

@@ -53,16 +53,25 @@ export function useCourses() {
   useEffect(() => {
     fetchCourses();
     
-    const subscription = supabase
+    const coursesSubscription = supabase
       .channel('public:courses')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
-        console.log('Change received:', payload);
+        console.log('Change received in courses:', payload);
+        fetchCourses();
+      })
+      .subscribe();
+      
+    const instructorsSubscription = supabase
+      .channel('public:course_instructors')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'course_instructors' }, (payload) => {
+        console.log('Change received in course_instructors:', payload);
         fetchCourses();
       })
       .subscribe();
       
     return () => {
-      subscription.unsubscribe();
+      coursesSubscription.unsubscribe();
+      instructorsSubscription.unsubscribe();
     };
   }, []);
 
