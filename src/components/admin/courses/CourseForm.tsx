@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -57,8 +58,12 @@ const CourseForm: React.FC<CourseFormProps> = ({
   submitButtonText,
   cancelAction
 }) => {
+  // Ensure teachers is always an array
   const safeTeachers = Array.isArray(teachers) ? teachers : [];
   const safeSkills = Array.isArray(skills) ? skills : [];
+
+  // Log teachers to help with debugging
+  console.log('Teachers received in CourseForm:', safeTeachers);
 
   return (
     <Form {...form}>
@@ -131,30 +136,34 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <CommandInput placeholder="Search instructors..." />
                       <CommandEmpty>No instructors found.</CommandEmpty>
                       <CommandGroup className="max-h-64 overflow-auto">
-                        {safeTeachers.map((teacher) => {
-                          const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
-                          return (
-                            <CommandItem
-                              key={teacher.id}
-                              value={`${teacher.first_name.toLowerCase()} ${teacher.last_name.toLowerCase()}`}
-                              onSelect={() => {
-                                const currentValue = Array.isArray(field.value) ? field.value : [];
-                                const newValue = isSelected
-                                  ? currentValue.filter((id) => id !== teacher.id)
-                                  : [...currentValue, teacher.id];
-                                field.onChange(newValue);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  isSelected ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              {teacher.first_name} {teacher.last_name}
-                            </CommandItem>
-                          );
-                        })}
+                        {safeTeachers.length > 0 ? (
+                          safeTeachers.map((teacher) => {
+                            const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
+                            return (
+                              <CommandItem
+                                key={teacher.id}
+                                value={`${teacher.first_name.toLowerCase()} ${teacher.last_name.toLowerCase()}`}
+                                onSelect={() => {
+                                  const currentValue = Array.isArray(field.value) ? field.value : [];
+                                  const newValue = isSelected
+                                    ? currentValue.filter((id) => id !== teacher.id)
+                                    : [...currentValue, teacher.id];
+                                  field.onChange(newValue);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    isSelected ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {teacher.first_name} {teacher.last_name}
+                              </CommandItem>
+                            );
+                          })
+                        ) : (
+                          <CommandItem disabled>No teachers available</CommandItem>
+                        )}
                       </CommandGroup>
                     </Command>
                   </PopoverContent>

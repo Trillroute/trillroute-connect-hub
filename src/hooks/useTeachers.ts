@@ -28,8 +28,10 @@ export function useTeachers() {
         return;
       }
       
-      console.log('Teachers data fetched:', data);
-      setTeachers(data || []);
+      // Ensure we have a valid array of teachers
+      const validTeachers = Array.isArray(data) ? data : [];
+      console.log('Teachers data fetched:', validTeachers);
+      setTeachers(validTeachers);
     } catch (error) {
       console.error('Unexpected error fetching teachers:', error);
       toast({
@@ -46,5 +48,5 @@ export function useTeachers() {
     fetchTeachers();
   }, []);
 
-  return { teachers, loading };
+  return { teachers: teachers || [], loading };
 }
