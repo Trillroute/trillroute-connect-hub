@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -39,21 +38,21 @@ const Index = () => {
   const testimonials = [
     {
       id: 1,
-      text: 'Trillroute transformed my musical journey. The teachers are world-class and I've improved more in 3 months than I did in years of self-teaching.',
+      text: "Trillroute transformed my musical journey. The teachers are world-class and I've improved more in 3 months than I did in years of self-teaching.",
       author: 'Sarah M.',
       role: 'Piano Student',
       avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60'
     },
     {
       id: 2,
-      text: 'The flexibility of online lessons combined with the quality of instruction is unmatched. My daughter has flourished under her violin teacher's guidance.',
+      text: "The flexibility of online lessons combined with the quality of instruction is unmatched. My daughter has flourished under her violin teacher's guidance.",
       author: 'Michael T.',
       role: 'Parent of Student',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
     },
     {
       id: 3,
-      text: 'As a teacher, Trillroute provides me with all the tools I need to deliver high-quality music education. The platform is intuitive and my students love it.',
+      text: "As a teacher, Trillroute provides me with all the tools I need to deliver high-quality music education. The platform is intuitive and my students love it.",
       author: 'Jessica W.',
       role: 'Guitar Instructor',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
