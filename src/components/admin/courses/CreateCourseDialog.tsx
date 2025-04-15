@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeachers } from '@/hooks/useTeachers';
+import { useSkills } from '@/hooks/useSkills';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import CourseForm, { CourseFormValues } from './CourseForm';
 
@@ -24,12 +25,14 @@ const courseSchema = z.object({
   level: z.string().min(1, { message: "Level is required" }),
   category: z.string().min(1, { message: "Category is required" }),
   duration: z.string().min(1, { message: "Duration is required" }),
+  durationType: z.enum(["fixed", "recurring"]),
   image: z.string().url({ message: "Must be a valid URL" }),
 });
 
 const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
   const { teachers } = useTeachers();
+  const { skills } = useSkills();
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -40,6 +43,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       level: 'Beginner',
       category: '',
       duration: '',
+      durationType: 'fixed',
       image: '',
     }
   });
@@ -56,6 +60,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             level: data.level,
             category: data.category,
             duration: data.duration,
+            duration_type: data.durationType,
             image: data.image,
             status: 'Active',
             students: 0
@@ -130,6 +135,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             form={form} 
             onSubmit={handleCreateCourse} 
             teachers={teachers} 
+            skills={skills}
             submitButtonText="Create Course"
             cancelAction={() => onOpenChange(false)}
           />

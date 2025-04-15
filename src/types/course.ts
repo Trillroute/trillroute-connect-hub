@@ -8,6 +8,7 @@ export interface Course {
   image: string;
   category: string;
   duration: string;
+  duration_type: string;
   status: string; // Keeping for backwards compatibility
   created_at: string;
   instructors?: Teacher[]; // Now courses can have multiple instructors

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
+import { useSkills } from '@/hooks/useSkills';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import CourseForm, { CourseFormValues } from './CourseForm';
 
@@ -26,6 +27,7 @@ const courseSchema = z.object({
   level: z.string().min(1, { message: "Level is required" }),
   category: z.string().min(1, { message: "Category is required" }),
   duration: z.string().min(1, { message: "Duration is required" }),
+  durationType: z.enum(["fixed", "recurring"]),
   image: z.string().url({ message: "Must be a valid URL" }),
 });
 
@@ -37,6 +39,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { teachers } = useTeachers();
+  const { skills } = useSkills();
   const [courseInstructors, setCourseInstructors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,6 +52,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       level: course.level,
       category: course.category,
       duration: course.duration,
+      durationType: course.duration_type || 'fixed',
       image: course.image,
     }
   });
@@ -100,6 +104,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         level: course.level,
         category: course.category,
         duration: course.duration,
+        durationType: course.duration_type || 'fixed',
         image: course.image,
       });
     }
@@ -116,6 +121,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           level: data.level,
           category: data.category,
           duration: data.duration,
+          duration_type: data.durationType,
           image: data.image,
           status: 'Active',
         })
@@ -207,6 +213,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
               form={form} 
               onSubmit={handleUpdateCourse} 
               teachers={teachers}
+              skills={skills}
               submitButtonText="Update Course"
               cancelAction={() => onOpenChange(false)}
             />

@@ -51,6 +51,7 @@ export type Database = {
           created_at: string
           description: string
           duration: string
+          duration_type: string
           id: string
           image: string
           level: string
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string
           description: string
           duration: string
+          duration_type?: string
           id?: string
           image: string
           level: string
@@ -75,6 +77,7 @@ export type Database = {
           created_at?: string
           description?: string
           duration?: string
+          duration_type?: string
           id?: string
           image?: string
           level?: string
@@ -111,6 +114,24 @@ export type Database = {
           last_name?: string
           password_hash?: string
           role?: string
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }

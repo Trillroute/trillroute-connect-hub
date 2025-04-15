@@ -24,17 +24,20 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Teacher } from '@/types/course';
+import { Skill } from '@/hooks/useSkills';
 
 export interface CourseFormValues {
   title: string;
   description: string;
-  instructors: string[]; // Changed from instructor to instructors array
+  instructors: string[];
   level: string;
   category: string;
   duration: string;
+  durationType: string;
   image: string;
 }
 
@@ -42,6 +45,7 @@ interface CourseFormProps {
   form: UseFormReturn<CourseFormValues>;
   onSubmit: (data: CourseFormValues) => void;
   teachers: Teacher[];
+  skills: Skill[];
   submitButtonText: string;
   cancelAction: () => void;
 }
@@ -50,6 +54,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   form,
   onSubmit,
   teachers,
+  skills,
   submitButtonText,
   cancelAction
 }) => {
@@ -178,9 +183,24 @@ const CourseForm: React.FC<CourseFormProps> = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Piano, Guitar, etc." {...field} />
-                </FormControl>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {skills.map((skill) => (
+                      <SelectItem key={skill.id} value={skill.name}>
+                        {skill.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -210,6 +230,42 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 <FormLabel>Duration</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., 8 weeks, 3 months, etc." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="durationType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duration Type</FormLabel>
+                <FormControl>
+                  <RadioGroup 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value} 
+                    className="flex space-x-4"
+                    value={field.value}
+                  >
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="fixed" />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer">
+                        Fixed
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="recurring" />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer">
+                        Recurring
+                      </FormLabel>
+                    </FormItem>
+                  </RadioGroup>
                 </FormControl>
                 <FormMessage />
               </FormItem>

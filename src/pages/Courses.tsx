@@ -7,21 +7,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter, Star, Users, Clock, BookOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSkills } from '@/hooks/useSkills';
+import { useCourseInstructors } from '@/hooks/useCourseInstructors';
+import { useTeachers } from '@/hooks/useTeachers';
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { skills } = useSkills();
+  const { teachers } = useTeachers();
+  const { courseInstructorsMap } = useCourseInstructors(courses.map(course => course.id));
   
   // Fetch courses from Supabase
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
+        console.log('Fetching courses...');
         const { data, error } = await supabase
           .from('courses')
-          .select('*');
+          .select('*')
+          .order('created_at', { ascending: false });
           
         if (error) {
           console.error('Error fetching courses:', error);
@@ -33,7 +41,7 @@ const Courses = () => {
           return;
         }
         
-        console.log('Courses fetched:', data);
+        console.log('Courses data fetched:', data);
         setCourses(data || []);
       } catch (error) {
         console.error('Unexpected error:', error);
@@ -62,24 +70,38 @@ const Courses = () => {
       subscription.unsubscribe();
     };
   }, [toast]);
+
+  // Get instructor names for a course
+  const getInstructorNames = (courseId) => {
+    if (!courseInstructorsMap[courseId] || !courseInstructorsMap[courseId].length) {
+      return 'No instructors';
+    }
+    
+    return courseInstructorsMap[courseId].map(instructorId => {
+      const teacher = teachers.find(t => t.id === instructorId);
+      return teacher ? `${teacher.first_name} ${teacher.last_name}` : 'Unknown';
+    }).join(', ');
+  };
   
   // Filter courses based on search term
   const filteredCourses = courses.filter(course => 
     course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.instructor.toLowerCase().includes(searchTerm.toLowerCase())
+    (courseInstructorsMap[course.id] && getInstructorNames(course.id).toLowerCase().includes(searchTerm.toLowerCase()))
   );
+  
+  // Get all unique categories from courses
+  const uniqueCategories = [...new Set(courses.map(course => course.category))];
   
   // Group courses by category for the tabs
   const coursesByCategory = {
     all: filteredCourses,
-    piano: filteredCourses.filter(course => course.category === 'Piano'),
-    guitar: filteredCourses.filter(course => course.category === 'Guitar'),
-    strings: filteredCourses.filter(course => course.category === 'Strings'),
-    voice: filteredCourses.filter(course => course.category === 'Voice'),
-    theory: filteredCourses.filter(course => course.category === 'Theory'),
-    percussion: filteredCourses.filter(course => course.category === 'Percussion'),
-    jazz: filteredCourses.filter(course => course.category === 'Jazz'),
+    ...Object.fromEntries(
+      uniqueCategories.map(category => [
+        category.toLowerCase().replace(/\s+/g, '-'),
+        filteredCourses.filter(course => course.category === category)
+      ])
+    )
   };
   
   // Render a course card
@@ -101,7 +123,7 @@ const Courses = () => {
       <CardHeader>
         <CardTitle className="text-xl">{course.title}</CardTitle>
         <CardDescription className="flex items-center text-sm">
-          <span className="mr-2">{course.instructor}</span> • 
+          <span className="mr-2">{getInstructorNames(course.id)}</span> • 
           <span className="mx-2">{course.level}</span>
         </CardDescription>
       </CardHeader>
@@ -109,7 +131,7 @@ const Courses = () => {
         <p className="text-gray-600 line-clamp-2">{course.description}</p>
         <div className="flex items-center mt-4 text-sm text-gray-500">
           <Clock className="h-4 w-4 mr-1" />
-          <span className="mr-3">{course.duration}</span>
+          <span className="mr-3">{course.duration} ({course.duration_type})</span>
           <Users className="h-4 w-4 mr-1" />
           <span>{course.students} students</span>
         </div>
@@ -162,33 +184,53 @@ const Courses = () => {
         <div className="overflow-x-auto pb-2">
           <TabsList className="mb-8">
             <TabsTrigger value="all">All Courses</TabsTrigger>
-            <TabsTrigger value="piano">Piano</TabsTrigger>
-            <TabsTrigger value="guitar">Guitar</TabsTrigger>
-            <TabsTrigger value="strings">Strings</TabsTrigger>
-            <TabsTrigger value="voice">Voice</TabsTrigger>
-            <TabsTrigger value="theory">Theory</TabsTrigger>
-            <TabsTrigger value="percussion">Percussion</TabsTrigger>
-            <TabsTrigger value="jazz">Jazz</TabsTrigger>
+            {skills.map(skill => (
+              <TabsTrigger key={skill.id} value={skill.name.toLowerCase().replace(/\s+/g, '-')}>
+                {skill.name}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
         
-        {Object.entries(coursesByCategory).map(([category, courses]) => (
-          <TabsContent key={category} value={category}>
+        <TabsContent value="all">
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-music-500"></div>
+            </div>
+          ) : filteredCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredCourses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <BookOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-xl font-medium text-gray-900 mb-2">No courses found</h3>
+              <p className="text-gray-600">No courses are currently available. Check back soon!</p>
+            </div>
+          )}
+        </TabsContent>
+        
+        {skills.map(skill => (
+          <TabsContent key={skill.id} value={skill.name.toLowerCase().replace(/\s+/g, '-')}>
             {loading ? (
               <div className="flex justify-center items-center py-20">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-music-500"></div>
               </div>
-            ) : courses.length > 0 ? (
+            ) : filteredCourses.filter(course => course.category === skill.name).length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {courses.map((course) => (
-                  <CourseCard key={course.id} course={course} />
-                ))}
+                {filteredCourses
+                  .filter(course => course.category === skill.name)
+                  .map((course) => (
+                    <CourseCard key={course.id} course={course} />
+                  ))}
               </div>
             ) : (
               <div className="text-center py-12">
                 <BookOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-medium text-gray-900 mb-2">No courses found</h3>
-                <p className="text-gray-600">No courses are currently available. Check back soon!</p>
+                <h3 className="text-xl font-medium text-gray-900 mb-2">No {skill.name} courses found</h3>
+                <p className="text-gray-600">No courses in this category are currently available. Check back soon!</p>
               </div>
             )}
           </TabsContent>

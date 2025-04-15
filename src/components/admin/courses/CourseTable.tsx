@@ -54,6 +54,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             <TableHead>Category</TableHead>
             <TableHead>Level</TableHead>
             <TableHead>Duration</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Students</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
@@ -79,6 +80,11 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
               <TableCell>{course.category}</TableCell>
               <TableCell>{course.level}</TableCell>
               <TableCell>{course.duration}</TableCell>
+              <TableCell>
+                <Badge variant="outline" className={course.duration_type === 'recurring' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
+                  {course.duration_type === 'recurring' ? 'Recurring' : 'Fixed'}
+                </Badge>
+              </TableCell>
               <TableCell>{course.students}</TableCell>
               <TableCell>
                 <span className={`px-2 py-1 rounded-full text-xs ${
