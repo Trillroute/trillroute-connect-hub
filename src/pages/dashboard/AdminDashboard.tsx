@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart, BarChart, LineChart } from '@/components/ui/charts';
@@ -11,6 +11,14 @@ import CourseManagement from '@/components/admin/CourseManagement';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const [recentUsers, setRecentUsers] = useState<Array<{
+    id: number;
+    name: string;
+    role: string;
+    email: string;
+    joinDate: string;
+    status: string;
+  }>>([]);
   
   // Mock data for charts
   const userActivityData = [
@@ -41,15 +49,6 @@ const AdminDashboard = () => {
     { name: 'May', Revenue: 19500 },
     { name: 'Jun', Revenue: 21200 },
     { name: 'Jul', Revenue: 22800 },
-  ];
-
-  // Mock data for recent users
-  const recentUsers = [
-    { id: 1, name: 'Sarah Johnson', role: 'Student', email: 'sarah.j@example.com', joinDate: '2023-09-10', status: 'Active' },
-    { id: 2, name: 'David Williams', role: 'Teacher', email: 'david.w@example.com', joinDate: '2023-09-09', status: 'Active' },
-    { id: 3, name: 'Emma Thompson', role: 'Student', email: 'emma.t@example.com', joinDate: '2023-09-08', status: 'Pending' },
-    { id: 4, name: 'Michael Brown', role: 'Student', email: 'michael.b@example.com', joinDate: '2023-09-07', status: 'Active' },
-    { id: 5, name: 'Jessica Smith', role: 'Teacher', email: 'jessica.s@example.com', joinDate: '2023-09-06', status: 'Active' },
   ];
 
   return (
@@ -158,7 +157,7 @@ const AdminDashboard = () => {
         </Card>
       </div>
       
-      {/* Recent Users */}
+      {/* Recent Users (Empty State) */}
       <div className="mb-8">
         <Card>
           <CardHeader>
@@ -166,45 +165,55 @@ const AdminDashboard = () => {
             <CardDescription>New user registrations</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Join Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'Teacher' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {user.role}
-                        </span>
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                          {user.status}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <User className="h-4 w-4" />
-                          <span className="sr-only">View user</span>
-                        </Button>
-                      </TableCell>
+            {recentUsers.length > 0 ? (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Join Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {recentUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'Teacher' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {user.role}
+                          </span>
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                            {user.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <User className="h-4 w-4" />
+                            <span className="sr-only">View user</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                <Users className="h-12 w-12 text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">No users yet</h3>
+                <p className="text-gray-500 max-w-sm mb-4">
+                  When new users register, they will appear here.
+                </p>
+              </div>
+            )}
             <div className="flex justify-end mt-4">
               <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
                 View All Users
