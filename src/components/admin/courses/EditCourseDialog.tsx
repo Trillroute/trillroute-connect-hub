@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -147,7 +148,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration: duration,
           duration_type: data.durationType,
           image: data.image,
-          status: 'Active',
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
           classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,

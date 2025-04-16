@@ -24,7 +24,6 @@ export type Database = {
           practical_sessions_count: number | null
           practical_sessions_duration: number | null
           skill: string
-          status: string
           students: number
           studio_sessions_count: number | null
           studio_sessions_duration: number | null
@@ -44,7 +43,6 @@ export type Database = {
           practical_sessions_count?: number | null
           practical_sessions_duration?: number | null
           skill: string
-          status: string
           students?: number
           studio_sessions_count?: number | null
           studio_sessions_duration?: number | null
@@ -64,7 +62,6 @@ export type Database = {
           practical_sessions_count?: number | null
           practical_sessions_duration?: number | null
           skill?: string
-          status?: string
           students?: number
           studio_sessions_count?: number | null
           studio_sessions_duration?: number | null

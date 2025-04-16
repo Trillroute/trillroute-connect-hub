@@ -54,7 +54,6 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             <TableHead>Duration</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Students</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -84,15 +83,6 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                 </Badge>
               </TableCell>
               <TableCell>{course.students}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  course.status === 'Active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {course.status}
-                </span>
-              </TableCell>
               <TableCell>
                 <div className="flex space-x-2">
                   <Button 

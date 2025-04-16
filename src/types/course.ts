@@ -9,7 +9,6 @@ export interface Course {
   skill: string; // Renamed from category
   duration: string;
   duration_type: string;
-  status: string;
   created_at: string;
   instructor_ids: string[];
   classes_count?: number;
