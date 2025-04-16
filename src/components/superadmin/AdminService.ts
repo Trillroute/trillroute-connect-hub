@@ -30,6 +30,7 @@ export const fetchAdmins = async (): Promise<UserManagementUser[]> => {
     whatsappEnabled: user.whatsapp_enabled,
     address: user.address,
     idProof: user.id_proof,
+    adminRoleName: user.admin_level_name // Using admin_level_name field instead of admin_level
   }));
 };
 

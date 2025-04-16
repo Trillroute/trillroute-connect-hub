@@ -30,7 +30,7 @@ export const fetchAllUsers = async (): Promise<UserManagementUser[]> => {
     whatsappEnabled: user.whatsapp_enabled,
     address: user.address,
     idProof: user.id_proof,
-    adminLevel: user.admin_level || (user.role === 'admin' ? 8 : undefined) // Default to level 8 for admins
+    adminRoleName: user.admin_level_name || (user.role === 'admin' ? "Limited View" : undefined) // Use admin_level_name instead of admin_level
   }));
 };
 
@@ -56,7 +56,7 @@ export const addUser = async (userData: NewUserData) => {
     whatsapp_enabled: userData.whatsappEnabled,
     address: userData.address,
     id_proof: userData.idProof,
-    admin_level: userData.role === 'admin' ? 8 : null // Default new admins to level 8
+    admin_level_name: userData.role === 'admin' ? "Limited View" : null // Default new admins to "Limited View" role
   };
   
   const { error } = await supabase
@@ -79,10 +79,10 @@ export const deleteUser = async (userId: string) => {
   }
 };
 
-export const updateAdminLevel = async (userId: string, level: number) => {
+export const updateAdminLevel = async (userId: string, levelName: string) => {
   const { error } = await supabase
     .from('custom_users')
-    .update({ admin_level: level })
+    .update({ admin_level_name: levelName })
     .eq('id', userId);
 
   if (error) {

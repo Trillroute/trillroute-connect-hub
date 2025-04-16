@@ -13,22 +13,21 @@ import { UserManagementUser } from '@/types/student';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchAdminLevels } from '@/components/superadmin/AdminService';
-import { AdminLevel, updateCachedAdminLevels } from '@/utils/adminPermissions';
+import { fetchAdminRoles } from '@/components/superadmin/AdminService';
+import { AdminLevel, updateCachedAdminRoles } from '@/utils/adminPermissions';
 
 interface EditAdminLevelDialogProps {
   admin: UserManagementUser | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdateLevel: (userId: string, newLevel: number) => Promise<void>;
+  onUpdateLevel: (userId: string, newLevelName: string) => Promise<void>;
   isLoading: boolean;
 }
 
 // Default admin levels as fallback
 export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
   {
-    level: 0,
-    name: "Level 0 (Super Admin Equivalent)",
+    name: "Super Admin",
     description: "All permissions and functionality as the super admins",
     studentPermissions: ["view", "add", "edit", "delete"],
     teacherPermissions: ["view", "add", "edit", "delete"],
@@ -37,7 +36,6 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view", "add", "edit", "delete"]
   },
   {
-    level: 1,
     name: "Level 1",
     description: "High-level administrator",
     studentPermissions: ["view", "add", "edit", "delete"],
@@ -47,7 +45,6 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view", "add", "edit", "delete"]
   },
   {
-    level: 2,
     name: "Level 2",
     description: "Mid-level administrator",
     studentPermissions: ["view", "add"],
@@ -57,7 +54,6 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view", "add", "edit", "delete"]
   },
   {
-    level: 3,
     name: "Level 3",
     description: "Mid-level administrator",
     studentPermissions: ["view", "add", "edit", "delete"],
@@ -67,7 +63,6 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view", "add"]
   },
   {
-    level: 4,
     name: "Level 4",
     description: "Limited administrator",
     studentPermissions: ["view", "add"],
@@ -77,7 +72,6 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view", "add"]
   },
   {
-    level: 5,
     name: "Level 5",
     description: "View-only administrator with limited add capabilities",
     studentPermissions: ["view"],
@@ -87,7 +81,6 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view", "add"]
   },
   {
-    level: 6,
     name: "Level 6",
     description: "Limited administrator",
     studentPermissions: ["view", "add"],
@@ -97,8 +90,7 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view"]
   },
   {
-    level: 8,
-    name: "Level 8",
+    name: "Limited View",
     description: "View-only administrator",
     studentPermissions: ["view"],
     teacherPermissions: ["view"],
@@ -115,14 +107,14 @@ const EditAdminLevelDialog = ({
   onUpdateLevel,
   isLoading,
 }: EditAdminLevelDialogProps) => {
-  const [selectedLevel, setSelectedLevel] = useState<number>(8);
+  const [selectedLevelName, setSelectedLevelName] = useState<string>("Limited View");
   const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
   const [isLoadingLevels, setIsLoadingLevels] = useState<boolean>(false);
   const { isSuperAdmin } = useAuth();
 
   useEffect(() => {
     if (admin) {
-      setSelectedLevel(admin.adminLevel || 8);
+      setSelectedLevelName(admin.adminRoleName || "Limited View");
     }
   }, [admin]);
 
@@ -135,14 +127,14 @@ const EditAdminLevelDialog = ({
   const loadAdminLevels = async () => {
     try {
       setIsLoadingLevels(true);
-      const levels = await fetchAdminLevels();
+      const levels = await fetchAdminRoles();
       setAdminLevels(levels);
-      updateCachedAdminLevels(levels);
+      updateCachedAdminRoles(levels);
     } catch (error) {
       console.error('Error loading admin levels:', error);
       // Fallback to default levels if the fetch fails
       setAdminLevels(DEFAULT_ADMIN_LEVELS);
-      updateCachedAdminLevels(DEFAULT_ADMIN_LEVELS);
+      updateCachedAdminRoles(DEFAULT_ADMIN_LEVELS);
     } finally {
       setIsLoadingLevels(false);
     }
@@ -150,7 +142,7 @@ const EditAdminLevelDialog = ({
 
   const handleSave = async () => {
     if (admin && isSuperAdmin()) {
-      await onUpdateLevel(admin.id, selectedLevel);
+      await onUpdateLevel(admin.id, selectedLevelName);
     }
   };
 
@@ -203,15 +195,15 @@ const EditAdminLevelDialog = ({
             </div>
           ) : (
             <RadioGroup
-              value={selectedLevel.toString()}
-              onValueChange={(value) => setSelectedLevel(parseInt(value))}
+              value={selectedLevelName}
+              onValueChange={(value) => setSelectedLevelName(value)}
               className="flex flex-col space-y-4"
             >
               {displayLevels.map((level) => (
-                <div key={level.level} className="flex items-start space-x-2 p-3 rounded hover:bg-muted border">
-                  <RadioGroupItem value={level.level.toString()} id={`level-${level.level}`} className="mt-1" />
+                <div key={level.name} className="flex items-start space-x-2 p-3 rounded hover:bg-muted border">
+                  <RadioGroupItem value={level.name} id={`level-${level.name}`} className="mt-1" />
                   <div className="flex-1">
-                    <Label htmlFor={`level-${level.level}`} className="font-medium">{level.name}</Label>
+                    <Label htmlFor={`level-${level.name}`} className="font-medium">{level.name}</Label>
                     <p className="text-sm text-muted-foreground mb-2">{level.description}</p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -237,7 +229,7 @@ const EditAdminLevelDialog = ({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isLoading || isLoadingLevels || selectedLevel === (admin.adminLevel || 8)}
+            disabled={isLoading || isLoadingLevels || selectedLevelName === (admin.adminRoleName || "Limited View")}
           >
             {isLoading ? 'Saving...' : 'Save Changes'}
           </Button>

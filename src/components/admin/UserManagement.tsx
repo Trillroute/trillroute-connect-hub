@@ -122,10 +122,10 @@ const UserManagement = ({
     }
   };
 
-  const handleUpdateAdminLevel = async (userId: string, newLevel: number) => {
+  const handleUpdateAdminLevel = async (userId: string, newLevelName: string) => {
     try {
       setIsLoading(true);
-      await updateAdminLevel(userId, newLevel);
+      await updateAdminLevel(userId, newLevelName);
 
       toast({
         title: 'Success',

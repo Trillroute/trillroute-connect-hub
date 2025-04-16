@@ -56,6 +56,7 @@ const ProtectedRoute = ({
       lastName: user.lastName,
       email: user.email,
       createdAt: user.createdAt || new Date().toISOString(),
+      adminRoleName: user.adminRoleName // Use adminRoleName instead of adminLevel
     };
 
     const hasAllRequiredPermissions = requiredPermissions.every(permission => 
