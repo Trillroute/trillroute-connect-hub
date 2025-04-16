@@ -75,6 +75,7 @@ const AdminDashboard = () => {
         viewLeads: true, // All admins can view leads
       });
 
+      // Ensure the active tab matches available permissions
       if (canManageCourses(userForPermissions, 'view')) {
         setActiveTab('courses');
       } else if (canViewStudents || canViewTeachers) {
@@ -111,6 +112,7 @@ const AdminDashboard = () => {
         </p>
       </div>
 
+      {/* Only show tab navigation if user has access to more than one tab */}
       {(
         (permissionMap.viewUsers && permissionMap.viewCourses) || 
         (permissionMap.viewUsers && permissionMap.viewLeads) || 

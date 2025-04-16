@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -21,9 +20,15 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface UserManagementProps {
   allowAdminCreation?: boolean;
+  canAddUser?: boolean;
+  canDeleteUser?: boolean;
 }
 
-const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => {
+const UserManagement = ({ 
+  allowAdminCreation = false,
+  canAddUser = true,
+  canDeleteUser = true 
+}: UserManagementProps) => {
   const [users, setUsers] = useState<UserManagementUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -157,19 +162,17 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
     setIsEditAdminLevelDialogOpen(true);
   };
 
-  // Determine which users can be deleted based on current user role
-  const canDeleteUser = (user: UserManagementUser) => {
+  const canUserBeDeleted = (user: UserManagementUser) => {
+    if (!canDeleteUser) return false;
+    
     if (isSuperAdmin()) {
-      // SuperAdmin can delete anyone except themselves
       return true;
     } else if (isAdmin()) {
-      // Admin can't delete other admins or superadmins
       return user.role !== 'admin' && user.role !== 'superadmin';
     }
     return false;
   };
 
-  // Determine if the current user can edit admin levels
   const canEditAdminLevel = (user: UserManagementUser) => {
     return isSuperAdmin() && user.role === 'admin';
   };
@@ -187,10 +190,12 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
+            {canAddUser && (
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add User
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -201,7 +206,7 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
           onViewUser={openViewDialog}
           onDeleteUser={openDeleteDialog}
           onEditAdminLevel={openEditAdminLevelDialog}
-          canDeleteUser={canDeleteUser}
+          canDeleteUser={canUserBeDeleted}
           canEditAdminLevel={canEditAdminLevel}
         />
         
