@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -180,7 +181,6 @@ const SuperAdminDashboard = () => {
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back, {user?.firstName}! You have full access to the Trillroute Music School system.</p>
         </div>
         <div className="flex space-x-4">
           <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">

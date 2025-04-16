@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,6 +89,16 @@ const AdminDashboard = () => {
       const canRemoveAdmins = user.role === 'superadmin';
       const canEditAdminLevel = user.role === 'superadmin';
       
+      // Check course permissions
+      const canViewCourses = canManageCourses(userForPermissions, 'view');
+      const canAddCourses = canManageCourses(userForPermissions, 'add');
+      const canRemoveCourses = canManageCourses(userForPermissions, 'remove');
+      
+      // Check lead permissions - default to false unless explicitly granted
+      // In this system, we'll assume only level 0-5 admins can view leads
+      const canViewLeads = user.role === 'superadmin' || 
+                          (user.role === 'admin' && user.adminLevel !== undefined && user.adminLevel <= 5);
+      
       setPermissionMap({
         viewStudents: canViewStudents,
         addStudents: canAddStudents,
@@ -99,23 +110,23 @@ const AdminDashboard = () => {
         addAdmins: canAddAdmins,
         removeAdmins: canRemoveAdmins,
         editAdminLevel: canEditAdminLevel,
-        viewCourses: canManageCourses(userForPermissions, 'view'),
-        addCourses: canManageCourses(userForPermissions, 'add'),
-        removeCourses: canManageCourses(userForPermissions, 'remove'),
-        viewLeads: true, // All admins can view leads
+        viewCourses: canViewCourses,
+        addCourses: canAddCourses,
+        removeCourses: canRemoveCourses,
+        viewLeads: canViewLeads,
       });
 
-      // Ensure the active tab matches available permissions
-      if (canManageCourses(userForPermissions, 'view')) {
-        setActiveTab('courses');
-      } else if (canViewStudents) {
-        setActiveTab('students');
-      } else if (canViewTeachers) {
-        setActiveTab('teachers');
-      } else if (canViewAdmins) {
-        setActiveTab('admins');
-      } else {
-        setActiveTab('leads');
+      // Find first available tab to set as active
+      const firstAvailableTab = [
+        canViewCourses && 'courses',
+        canViewStudents && 'students',
+        canViewTeachers && 'teachers',
+        canViewAdmins && 'admins',
+        canViewLeads && 'leads'
+      ].find(Boolean) as ActiveTab | undefined;
+
+      if (firstAvailableTab) {
+        setActiveTab(firstAvailableTab);
       }
     }
   }, [user]);
@@ -147,6 +158,13 @@ const AdminDashboard = () => {
   ].filter(Boolean);
 
   const showTabNavigation = availableTabs.length > 1;
+
+  // Check if admin has access to at least one section
+  const hasAnyAccess = permissionMap.viewCourses || 
+                       permissionMap.viewStudents || 
+                       permissionMap.viewTeachers || 
+                       permissionMap.viewAdmins || 
+                       permissionMap.viewLeads;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -214,7 +232,10 @@ const AdminDashboard = () => {
 
       <div className="mb-8">
         {activeTab === 'courses' && permissionMap.viewCourses && (
-          <CourseManagement />
+          <CourseManagement 
+            canAddCourse={permissionMap.addCourses}
+            canDeleteCourse={permissionMap.removeCourses}
+          />
         )}
         
         {activeTab === 'students' && permissionMap.viewStudents && (
@@ -243,9 +264,7 @@ const AdminDashboard = () => {
           <LeadManagement />
         )}
 
-        {(!permissionMap.viewCourses && !permissionMap.viewStudents && 
-          !permissionMap.viewTeachers && !permissionMap.viewAdmins && 
-          !permissionMap.viewLeads) && (
+        {!hasAnyAccess && (
           <Card>
             <CardHeader>
               <CardTitle>Limited Access</CardTitle>
