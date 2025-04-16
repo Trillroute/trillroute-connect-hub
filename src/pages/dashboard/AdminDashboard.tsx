@@ -293,7 +293,11 @@ const AdminDashboard = () => {
         )}
         
         {activeTab === 'leads' && permissionMap.leads.view && (
-          <LeadManagement />
+          <LeadManagement 
+            canAddLead={permissionMap.leads.add}
+            canEditLead={permissionMap.leads.edit}
+            canDeleteLead={permissionMap.leads.delete}
+          />
         )}
 
         {!hasAnyAccess && (
