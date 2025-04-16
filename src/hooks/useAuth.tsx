@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         address: userData.address,
         idProof: userData.id_proof,
         createdAt: userData.created_at,
-        adminLevel: userData.admin_level,
+        adminLevel: undefined,
         adminRoleName: userData.admin_level_name
       };
       
@@ -277,4 +277,4 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-export { UserRole };
+export type { UserRole };

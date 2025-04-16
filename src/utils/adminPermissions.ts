@@ -126,24 +126,28 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
     return cachedPermissions.get(cacheKey) || false;
   }
   
-  // Get the user's admin role permissions
-  const roleInfo = cachedAdminRoles.get(user.role) || FALLBACK_ADMIN_ROLES[user.role] || FALLBACK_ADMIN_ROLES["assistant"];
+  // Use adminRoleName to get the role info
+  const adminRoleName = 'adminRoleName' in user ? user.adminRoleName : undefined;
+  const roleInfo = adminRoleName ? cachedAdminRoles.get(adminRoleName) : undefined;
+  
+  // Fall back to default roles if no specific role found
+  const effectiveRoleInfo = roleInfo || FALLBACK_ADMIN_ROLES[adminRoleName || "Limited View"] || FALLBACK_ADMIN_ROLES["assistant"];
   
   let hasPermission = false;
   
   // Map permission enum to module and operation
   if (permission.startsWith('VIEW_')) {
     const module = permission.substring(5).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(roleInfo, module, 'view');
+    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'view');
   } else if (permission.startsWith('ADD_')) {
     const module = permission.substring(4).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(roleInfo, module, 'add');
+    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'add');
   } else if (permission.startsWith('EDIT_')) {
     const module = permission.substring(5).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(roleInfo, module, 'edit');
+    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'edit');
   } else if (permission.startsWith('DELETE_')) {
     const module = permission.substring(7).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(roleInfo, module, 'delete');
+    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'delete');
   }
   
   // Cache the result

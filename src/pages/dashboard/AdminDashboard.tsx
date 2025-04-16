@@ -76,9 +76,10 @@ const AdminDashboard = () => {
         email: user.email,
         role: user.role,
         createdAt: user.createdAt || new Date().toISOString(),
+        adminRoleName: user.adminRoleName // Use adminRoleName for permissions
       };
 
-      // Check students permissions
+      // Check permissions using the adminRoleName
       const canViewStudents = canManageStudents(userForPermissions, 'view');
       const canAddStudents = canManageStudents(userForPermissions, 'add');
       const canEditStudents = canManageStudents(userForPermissions, 'edit');
