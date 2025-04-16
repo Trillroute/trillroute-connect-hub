@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,6 @@ import {
   canManageCourses,
   canManageAdmins,
   canManageLeads,
-  fetchAdminLevels,
   clearPermissionsCache,
   AdminLevel,
   updateCachedAdminLevels
@@ -295,11 +293,7 @@ const AdminDashboard = () => {
         )}
         
         {activeTab === 'leads' && permissionMap.leads.view && (
-          <LeadManagement 
-            canAddLead={permissionMap.leads.add}
-            canEditLead={permissionMap.leads.edit}
-            canDeleteLead={permissionMap.leads.delete}
-          />
+          <LeadManagement />
         )}
 
         {!hasAnyAccess && (

@@ -14,7 +14,17 @@ import { useFetchLeads } from '@/hooks/useFetchLeads';
 import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
 
-const LeadManagement = () => {
+interface LeadManagementProps {
+  canAddLead?: boolean;
+  canEditLead?: boolean;
+  canDeleteLead?: boolean;
+}
+
+const LeadManagement: React.FC<LeadManagementProps> = ({
+  canAddLead = true,
+  canEditLead = true,
+  canDeleteLead = true
+}) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -52,13 +62,15 @@ const LeadManagement = () => {
               <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
-            <Button 
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="bg-primary text-white flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Lead
-            </Button>
+            {canAddLead && (
+              <Button 
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="bg-primary text-white flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Lead
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -102,32 +114,34 @@ const LeadManagement = () => {
         <LeadTable 
           leads={leads} 
           loading={loading} 
-          onEdit={openEditDialog} 
-          onDelete={openDeleteDialog}
+          onEdit={canEditLead ? openEditDialog : undefined} 
+          onDelete={canDeleteLead ? openDeleteDialog : undefined}
         />
         
-        <CreateLeadDialog 
-          open={isCreateDialogOpen} 
-          onOpenChange={setIsCreateDialogOpen} 
-          onSuccess={fetchLeads}
-        />
+        {canAddLead && (
+          <CreateLeadDialog 
+            open={isCreateDialogOpen} 
+            onOpenChange={setIsCreateDialogOpen} 
+            onSuccess={fetchLeads}
+          />
+        )}
         
-        {selectedLead && (
-          <>
-            <EditLeadDialog 
-              open={isEditDialogOpen} 
-              onOpenChange={setIsEditDialogOpen} 
-              lead={selectedLead}
-              onSuccess={fetchLeads}
-            />
-            
-            <DeleteLeadDialog 
-              open={isDeleteDialogOpen} 
-              onOpenChange={setIsDeleteDialogOpen} 
-              lead={selectedLead}
-              onSuccess={fetchLeads}
-            />
-          </>
+        {selectedLead && canEditLead && (
+          <EditLeadDialog 
+            open={isEditDialogOpen} 
+            onOpenChange={setIsEditDialogOpen} 
+            lead={selectedLead}
+            onSuccess={fetchLeads}
+          />
+        )}
+        
+        {selectedLead && canDeleteLead && (
+          <DeleteLeadDialog 
+            open={isDeleteDialogOpen} 
+            onOpenChange={setIsDeleteDialogOpen} 
+            lead={selectedLead}
+            onSuccess={fetchLeads}
+          />
         )}
       </CardContent>
     </Card>
