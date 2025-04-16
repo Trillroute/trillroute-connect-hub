@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -23,6 +22,9 @@ import StudentRegistration from "./pages/auth/StudentRegistration";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
+
+// Profile Page
+import Profile from "./pages/profile/Profile";
 
 // Other
 import NotFound from "./pages/NotFound";
@@ -72,6 +74,16 @@ const App = () => (
                     <AdminDashboard />
                   </ProtectedRoute>
                 } 
+              />
+              
+              {/* Profile Page */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
               />
               
               {/* Catch-all 404 route */}
