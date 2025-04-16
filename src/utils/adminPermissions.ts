@@ -105,6 +105,9 @@ const FALLBACK_PERMISSION_MAP: Record<number, AdminPermission[]> = {
   ]
 };
 
+// Add a cached permissions map to avoid re-calculating permissions
+let cachedPermissions = new Map<string, boolean>();
+
 /**
  * Check if a user has a specific permission
  */
@@ -120,9 +123,37 @@ export const hasPermission = (user: UserManagementUser | null, permission: Admin
   // Get the user's admin level, default to level 8 (most restrictive)
   const adminLevel = user.adminLevel ?? 8;
   
+  // Use cache for better performance
+  const cacheKey = `${user.id}:${permission}`;
+  if (cachedPermissions.has(cacheKey)) {
+    return cachedPermissions.get(cacheKey) || false;
+  }
+  
   // Check if the user's level grants this permission
   const permissions = FALLBACK_PERMISSION_MAP[adminLevel] || [];
-  return permissions.includes(permission);
+  const hasPermission = permissions.includes(permission);
+  
+  // Cache the result
+  cachedPermissions.set(cacheKey, hasPermission);
+  
+  return hasPermission;
+};
+
+/**
+ * Clear the permissions cache for a user
+ */
+export const clearPermissionsCache = (userId?: string) => {
+  if (userId) {
+    // Clear only for specific user
+    cachedPermissions.forEach((_, key) => {
+      if (key.startsWith(`${userId}:`)) {
+        cachedPermissions.delete(key);
+      }
+    });
+  } else {
+    // Clear all cache
+    cachedPermissions.clear();
+  }
 };
 
 /**
@@ -169,4 +200,25 @@ export const canManageCourses = (user: UserManagementUser | null, action: 'view'
   } else {
     return hasPermission(user, AdminPermission.REMOVE_COURSES);
   }
+};
+
+/**
+ * Helper to check if user has access to any user management features
+ */
+export const hasUserManagementAccess = (user: UserManagementUser | null): boolean => {
+  return canManageStudents(user, 'view') || 
+         canManageTeachers(user, 'view') ||
+         canManageStudents(user, 'add') ||
+         canManageTeachers(user, 'add') ||
+         canManageStudents(user, 'remove') ||
+         canManageTeachers(user, 'remove');
+};
+
+/**
+ * Helper to check if user has access to any course management features
+ */
+export const hasCourseManagementAccess = (user: UserManagementUser | null): boolean => {
+  return canManageCourses(user, 'view') ||
+         canManageCourses(user, 'add') ||
+         canManageCourses(user, 'remove');
 };

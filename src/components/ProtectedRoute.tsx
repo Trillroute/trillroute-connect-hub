@@ -2,19 +2,22 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/hooks/useAuth';
+import { hasPermission, AdminPermission } from '@/utils/adminPermissions';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
+  requiredPermissions?: AdminPermission[];
 }
 
 const ProtectedRoute = ({ 
   children, 
   allowedRoles, 
   requireAdmin = false,
-  requireSuperAdmin = false
+  requireSuperAdmin = false,
+  requiredPermissions = [],
 }: ProtectedRouteProps) => {
   const { user, loading, isAdmin, isSuperAdmin } = useAuth();
 
@@ -26,19 +29,34 @@ const ProtectedRoute = ({
     return <Navigate to="/auth/login" replace />;
   }
 
+  // Check for superadmin requirement
   if (requireSuperAdmin && !isSuperAdmin()) {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
+  // Check for admin requirement
   if (requireAdmin && !isAdmin()) {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
+  // Check for specific role requirement
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
+  }
+
+  // Check for specific permissions if user is an admin
+  if (requiredPermissions.length > 0 && user.role === 'admin') {
+    const hasAllRequiredPermissions = requiredPermissions.every(permission => 
+      hasPermission(user, permission)
+    );
+
+    if (!hasAllRequiredPermissions) {
+      // If admin doesn't have required permissions, redirect to admin dashboard
+      return <Navigate to="/dashboard/admin" replace />;
+    }
   }
 
   return <>{children}</>;
