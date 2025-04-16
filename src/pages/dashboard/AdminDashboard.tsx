@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,15 +46,16 @@ const AdminDashboard = () => {
   // Debug output to help troubleshoot
   useEffect(() => {
     if (user) {
-      console.log('Admin Dashboard - User data:', user);
-      console.log('Is SuperAdmin?', isSuperAdmin());
-      console.log('Admin role name:', user.adminRoleName);
+      console.log('[AdminDashboard] User data:', user);
+      console.log('[AdminDashboard] Is SuperAdmin?', isSuperAdmin());
+      console.log('[AdminDashboard] Admin role name:', user.adminRoleName);
     }
   }, [user, isSuperAdmin]);
 
   // Clear permissions cache to ensure fresh checks
   useEffect(() => {
     if (user) {
+      console.log('[AdminDashboard] Clearing permissions cache for user', user.id);
       clearPermissionsCache(user.id);
       loadAdminRoles();
     }
@@ -66,12 +66,13 @@ const AdminDashboard = () => {
     
     try {
       setIsLoadingRoles(true);
+      console.log('[AdminDashboard] Loading admin roles from database');
       const roles = await fetchAdminRoles();
+      console.log('[AdminDashboard] Received admin roles:', roles);
       setAdminRoles(roles);
       updateCachedAdminRoles(roles);
-      console.log('Loaded admin roles:', roles);
     } catch (error) {
-      console.error('Error loading admin roles:', error);
+      console.error('[AdminDashboard] Error loading admin roles:', error);
     } finally {
       setIsLoadingRoles(false);
     }
@@ -81,8 +82,12 @@ const AdminDashboard = () => {
     if (!user) return;
     
     // Explicitly check if user is a superadmin
-    if (user.role === 'superadmin') {
-      console.log('User is a superadmin - granting all permissions');
+    const isSuperAdminUser = user.role === 'superadmin';
+    console.log('[AdminDashboard] User role:', user.role);
+    console.log('[AdminDashboard] Is user superadmin?', isSuperAdminUser);
+    
+    if (isSuperAdminUser) {
+      console.log('[AdminDashboard] User is a superadmin - granting all permissions');
       
       // Grant all permissions for superadmin
       setPermissionMap({
@@ -109,7 +114,7 @@ const AdminDashboard = () => {
       adminRoleName: user.adminRoleName // Use adminRoleName for permissions
     };
     
-    console.log('Checking permissions for:', userForPermissions);
+    console.log('[AdminDashboard] Checking permissions for:', userForPermissions);
 
     // Check permissions using the adminRoleName
     const canViewStudents = canManageStudents(userForPermissions, 'view');
@@ -194,7 +199,7 @@ const AdminDashboard = () => {
     if (firstAvailableTab) {
       setActiveTab(firstAvailableTab);
     }
-  }, [user, adminRoles]);
+  }, [user, adminRoles, isSuperAdmin]);
   
   // Count how many tabs are available
   const availableTabs = [
@@ -205,8 +210,8 @@ const AdminDashboard = () => {
     permissionMap.leads.view && 'leads',
   ].filter(Boolean);
 
-  console.log('Available tabs:', availableTabs);
-  console.log('Current permission map:', permissionMap);
+  console.log('[AdminDashboard] Available tabs:', availableTabs);
+  console.log('[AdminDashboard] Current permission map:', permissionMap);
 
   const showTabNavigation = availableTabs.length > 1;
 
@@ -217,14 +222,14 @@ const AdminDashboard = () => {
                        permissionMap.admins.view || 
                        permissionMap.leads.view;
 
-  console.log('Has any access:', hasAnyAccess);
+  console.log('[AdminDashboard] Has any access:', hasAnyAccess);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
         <p className="mt-2 text-gray-600">
-          Your role: {user?.role}
+          Your role: {user?.role} {user?.adminRoleName ? `(${user.adminRoleName})` : ''}
         </p>
       </div>
 

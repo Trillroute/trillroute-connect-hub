@@ -1,4 +1,3 @@
-
 /**
  * Admin Permission Level Utility
  * 
@@ -13,7 +12,6 @@
  */
 
 import { UserManagementUser } from "@/types/student";
-import { supabase } from '@/integrations/supabase/client';
 
 // Define a more generic user type that works with both UserData and UserManagementUser
 export interface PermissionUser {
@@ -60,42 +58,6 @@ export interface AdminLevel {
 
 // Fallback permissions mapping in case we can't fetch from database
 const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
-  "superadmin": {
-    name: "Super Admin",
-    description: "All permissions and functionality",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view", "add", "edit", "delete"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
-  },
-  "admin": {
-    name: "Admin",
-    description: "High-level administrator",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
-  },
-  "manager": {
-    name: "Manager",
-    description: "Mid-level administrator",
-    studentPermissions: ["view", "add"],
-    teacherPermissions: ["view", "add"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
-  },
-  "assistant": {
-    name: "Assistant",
-    description: "Limited administrator",
-    studentPermissions: ["view"],
-    teacherPermissions: ["view"],
-    adminPermissions: [],
-    leadPermissions: ["view"],
-    coursePermissions: ["view"]
-  },
   "Limited View": {
     name: "Limited View",
     description: "Limited view-only access",
@@ -125,13 +87,13 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
   
   // Superadmins have all permissions
   if (user.role === 'superadmin') {
-    console.log('Superadmin always has permission:', permission);
+    console.log('[adminPermissions] Superadmin always has permission:', permission);
     return true;
   }
   
   // Only admins can have these permissions
   if (user.role !== 'admin') {
-    console.log('User is not admin or superadmin, denying permission:', permission);
+    console.log('[adminPermissions] User is not admin or superadmin, denying permission:', permission);
     return false;
   }
   
@@ -139,27 +101,27 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
   const cacheKey = `${user.id}:${permission}`;
   if (cachedPermissions.has(cacheKey)) {
     const result = cachedPermissions.get(cacheKey) || false;
-    console.log(`Using cached permission for ${cacheKey}:`, result);
+    console.log(`[adminPermissions] Using cached permission for ${cacheKey}:`, result);
     return result;
   }
   
   // Use adminRoleName to get the role info
   const adminRoleName = 'adminRoleName' in user ? user.adminRoleName : undefined;
-  console.log('Checking permissions with adminRoleName:', adminRoleName);
+  console.log('[adminPermissions] Checking permissions with adminRoleName:', adminRoleName);
   
   const roleInfo = adminRoleName ? cachedAdminRoles.get(adminRoleName) : undefined;
   
   // Fall back to default roles if no specific role found
   let effectiveRoleInfo;
   if (roleInfo) {
-    console.log('Using cached role info:', roleInfo.name);
+    console.log('[adminPermissions] Using cached role info:', roleInfo.name);
     effectiveRoleInfo = roleInfo;
   } else if (adminRoleName && FALLBACK_ADMIN_ROLES[adminRoleName]) {
-    console.log('Using fallback role for:', adminRoleName);
+    console.log('[adminPermissions] Using fallback role for:', adminRoleName);
     effectiveRoleInfo = FALLBACK_ADMIN_ROLES[adminRoleName];
   } else {
-    console.log('Using default assistant role');
-    effectiveRoleInfo = FALLBACK_ADMIN_ROLES["assistant"];
+    console.log('[adminPermissions] Using default Limited View role');
+    effectiveRoleInfo = FALLBACK_ADMIN_ROLES["Limited View"];
   }
   
   let hasPermission = false;
@@ -179,7 +141,7 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
     hasPermission = checkModulePermission(effectiveRoleInfo, module, 'delete');
   }
   
-  console.log(`Permission check for ${permission}:`, hasPermission);
+  console.log(`[adminPermissions] Permission check for ${permission}:`, hasPermission);
   
   // Cache the result
   cachedPermissions.set(cacheKey, hasPermission);
@@ -193,18 +155,21 @@ function checkModulePermission(roleInfo: AdminLevel, module: string, operation: 
   const permissions = roleInfo[permissionsKey] as string[];
   
   const result = Array.isArray(permissions) && permissions.includes(operation);
-  console.log(`Checking ${module} ${operation} permission:`, result, 'Available permissions:', permissions);
+  console.log(`[adminPermissions] Checking ${module} ${operation} permission:`, result, 'Available permissions:', permissions);
   return result;
 }
 
 // Function to update cached admin roles from database
 export const updateCachedAdminRoles = (adminRoles: AdminLevel[]): void => {
-  console.log('Updating cached admin roles:', adminRoles);
+  console.log('[adminPermissions] Updating cached admin roles:', adminRoles);
   cachedAdminRoles.clear();
   
   adminRoles.forEach(role => {
     cachedAdminRoles.set(role.name, role);
   });
+  
+  console.log('[adminPermissions] Updated admin roles cache. Current roles:', 
+    Array.from(cachedAdminRoles.keys()));
 };
 
 /**

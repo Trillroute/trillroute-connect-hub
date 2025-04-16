@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -13,7 +12,7 @@ import { UserManagementUser } from '@/types/student';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchAdminLevels } from '@/components/superadmin/AdminService';
+import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { AdminLevel, updateCachedAdminRoles } from '@/utils/adminPermissions';
 
 interface EditAdminLevelDialogProps {
@@ -24,71 +23,8 @@ interface EditAdminLevelDialogProps {
   isLoading: boolean;
 }
 
-// Default admin levels as fallback
+// Default admin levels as fallback - only used if DB fetch fails
 export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
-  {
-    name: "Super Admin",
-    description: "All permissions and functionality as the super admins",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view", "add", "edit", "delete"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
-  },
-  {
-    name: "Level 1",
-    description: "High-level administrator",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
-  },
-  {
-    name: "Level 2",
-    description: "Mid-level administrator",
-    studentPermissions: ["view", "add"],
-    teacherPermissions: ["view", "add"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
-  },
-  {
-    name: "Level 3",
-    description: "Mid-level administrator",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add"]
-  },
-  {
-    name: "Level 4",
-    description: "Limited administrator",
-    studentPermissions: ["view", "add"],
-    teacherPermissions: ["view", "add"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add"]
-  },
-  {
-    name: "Level 5",
-    description: "View-only administrator with limited add capabilities",
-    studentPermissions: ["view"],
-    teacherPermissions: ["view"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add"]
-  },
-  {
-    name: "Level 6",
-    description: "Limited administrator",
-    studentPermissions: ["view", "add"],
-    teacherPermissions: ["view", "add"],
-    adminPermissions: [],
-    leadPermissions: [],
-    coursePermissions: ["view"]
-  },
   {
     name: "Limited View",
     description: "View-only administrator",
@@ -127,11 +63,13 @@ const EditAdminLevelDialog = ({
   const loadAdminLevels = async () => {
     try {
       setIsLoadingLevels(true);
-      const levels = await fetchAdminLevels();
+      console.log('[EditAdminLevelDialog] Loading admin levels from database');
+      const levels = await fetchAdminRoles();
+      console.log('[EditAdminLevelDialog] Received admin levels:', levels);
       setAdminLevels(levels);
       updateCachedAdminRoles(levels);
     } catch (error) {
-      console.error('Error loading admin levels:', error);
+      console.error('[EditAdminLevelDialog] Error loading admin levels:', error);
       // Fallback to default levels if the fetch fails
       setAdminLevels(DEFAULT_ADMIN_LEVELS);
       updateCachedAdminRoles(DEFAULT_ADMIN_LEVELS);
@@ -151,6 +89,8 @@ const EditAdminLevelDialog = ({
   const displayLevels = adminLevels.length > 0 
     ? adminLevels 
     : DEFAULT_ADMIN_LEVELS;
+
+  console.log('[EditAdminLevelDialog] Display levels:', displayLevels);
 
   const renderPermissionBadges = (permissions: string[], moduleType: string) => {
     const colors: Record<string, string> = {
