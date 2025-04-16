@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Music, ChevronDown } from 'lucide-react';
+import { Menu, X, Music, ChevronDown, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,6 +35,11 @@ const Navbar = () => {
   };
 
   const dashboardOption = dashboardLink();
+
+  const getUserInitials = () => {
+    if (!user) return '';
+    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+  };
 
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
@@ -70,8 +76,17 @@ const Navbar = () => {
           <div className="hidden md:flex md:items-center md:space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
-                <Link to="/profile" className="text-sm font-medium text-gray-700 hover:text-music-500">
-                  Profile
+                <Link to="/profile" className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-music-500">
+                  <Avatar className="h-8 w-8 border border-gray-200">
+                    {user.profilePhoto ? (
+                      <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
+                    ) : (
+                      <AvatarFallback className="bg-music-100 text-music-600">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <span>Profile</span>
                 </Link>
                 <Button
                   variant="outline"
@@ -139,9 +154,18 @@ const Navbar = () => {
             <div className="space-y-1 w-full text-center">
               <Link
                 to="/profile"
-                className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
+                className="flex items-center justify-center px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
+                <Avatar className="h-8 w-8 mr-2 border border-gray-200">
+                  {user.profilePhoto ? (
+                    <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
+                  ) : (
+                    <AvatarFallback className="bg-music-100 text-music-600">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 Profile
               </Link>
               <button
