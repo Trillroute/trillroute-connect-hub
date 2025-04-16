@@ -36,7 +36,7 @@ const ProtectedRoute = ({
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
-  // Superadmin can access any route
+  // Superadmin can access any route - explicit check moved before any other checks
   if (user.role === 'superadmin') {
     console.log('[ProtectedRoute] User is superadmin, granting access');
     return <>{children}</>;

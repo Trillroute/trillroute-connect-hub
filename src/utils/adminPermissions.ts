@@ -1,4 +1,3 @@
-
 /**
  * Admin Permission Level Utility
  * 
@@ -68,6 +67,15 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     adminPermissions: [],
     leadPermissions: [],
     coursePermissions: ["view"]
+  },
+  "SuperAdmin": {
+    name: "SuperAdmin",
+    description: "Full access to all features",
+    studentPermissions: ["view", "add", "edit", "delete"],
+    teacherPermissions: ["view", "add", "edit", "delete"],
+    adminPermissions: ["view", "add", "edit", "delete"],
+    leadPermissions: ["view", "add", "edit", "delete"],
+    coursePermissions: ["view", "add", "edit", "delete"]
   }
 };
 
@@ -279,6 +287,7 @@ export const canManageLeads = (user: UserManagementUser | PermissionUser | null,
  */
 export const canManageCourses = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
   if (user?.role === 'superadmin') {
+    console.log('[adminPermissions] Superadmin can manage courses:', action);
     return true;
   }
   

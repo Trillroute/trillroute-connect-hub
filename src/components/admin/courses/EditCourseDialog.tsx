@@ -60,7 +60,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   
-  const hasEditPermission = user?.role === 'superadmin' || canManageCourses(user, 'edit');
+  // Fix the permission check by explicitly handling superadmin role
+  const hasEditPermission = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'edit'));
   
   useEffect(() => {
     if (open && !hasEditPermission) {

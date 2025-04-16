@@ -253,7 +253,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isSuperAdmin = () => {
-    // Fixed function to correctly check for superadmin role
+    // Make sure we're explicitly checking for 'superadmin' role
     const isSuperAdminUser = user?.role === 'superadmin';
     console.log('[useAuth] isSuperAdmin check:', isSuperAdminUser, 'User role:', user?.role);
     return isSuperAdminUser;

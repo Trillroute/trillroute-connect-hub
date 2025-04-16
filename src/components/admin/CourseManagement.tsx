@@ -34,10 +34,16 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const { courses, loading, fetchCourses } = useCourses();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Check if the user is a superadmin and override permissions
+  const isSuperAdmin = user?.role === 'superadmin';
+  const effectiveCanEditCourse = isSuperAdmin ? true : canEditCourse;
+  const effectiveCanDeleteCourse = isSuperAdmin ? true : canDeleteCourse;
+  const effectiveCanAddCourse = isSuperAdmin ? true : canAddCourse;
   
   const openEditDialog = (course: Course) => {
     // Only allow opening the edit dialog if the user has edit permissions
-    if (!canEditCourse) {
+    if (!effectiveCanEditCourse) {
       toast({
         title: "Permission Denied",
         description: "You don't have permission to edit courses.",
@@ -51,7 +57,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
 
   const openDeleteDialog = (course: Course) => {
     // Only allow opening the delete dialog if the user has delete permissions
-    if (!canDeleteCourse) {
+    if (!effectiveCanDeleteCourse) {
       toast({
         title: "Permission Denied",
         description: "You don't have permission to delete courses.",
@@ -80,7 +86,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
               <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
-            {canAddCourse && (
+            {effectiveCanAddCourse && (
               <Button 
                 onClick={() => setIsCreateDialogOpen(true)}
                 className="bg-primary text-white flex items-center gap-2"
@@ -132,13 +138,13 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         <CourseTable 
           courses={courses} 
           loading={loading} 
-          // Only pass the onEdit and onDelete callbacks if the user has permission
-          onEdit={canEditCourse ? openEditDialog : undefined} 
-          onDelete={canDeleteCourse ? openDeleteDialog : undefined}
+          // Use the effective permissions based on superadmin status
+          onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
+          onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
         />
       </CardContent>
 
-      {canAddCourse && (
+      {effectiveCanAddCourse && (
         <CreateCourseDialog 
           open={isCreateDialogOpen} 
           onOpenChange={setIsCreateDialogOpen} 
@@ -148,7 +154,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
 
       {selectedCourse && (
         <>
-          {canEditCourse && (
+          {effectiveCanEditCourse && (
             <EditCourseDialog 
               open={isEditDialogOpen} 
               onOpenChange={setIsEditDialogOpen} 
@@ -157,7 +163,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
             />
           )}
           
-          {canDeleteCourse && (
+          {effectiveCanDeleteCourse && (
             <DeleteCourseDialog 
               open={isDeleteDialogOpen} 
               onOpenChange={setIsDeleteDialogOpen} 
