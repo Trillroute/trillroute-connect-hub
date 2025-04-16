@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -313,7 +314,7 @@ const SuperAdminDashboard = () => {
       </div>
 
       <div className="mb-8">
-        {activeTab === 'courses' && <CourseManagement canAddCourse={true} canDeleteCourse={true} />}
+        {activeTab === 'courses' && <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />}
         {activeTab === 'students' && <StudentManagement canAddUser={true} canDeleteUser={true} />}
         {activeTab === 'teachers' && <TeacherManagement canAddUser={true} canDeleteUser={true} />}
         {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}

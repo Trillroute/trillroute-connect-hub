@@ -81,6 +81,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                   <Eye className="h-4 w-4" />
                 </Button>
                 
+                {/* Only render the edit button if onEdit is provided and permission is granted */}
                 {onEdit && (
                   <Button
                     variant="outline"
@@ -91,6 +92,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                   </Button>
                 )}
                 
+                {/* Only render the delete button if onDelete is provided and permission is granted */}
                 {onDelete && (
                   <Button
                     variant="outline"

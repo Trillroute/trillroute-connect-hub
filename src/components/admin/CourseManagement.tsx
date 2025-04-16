@@ -132,6 +132,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         <CourseTable 
           courses={courses} 
           loading={loading} 
+          // Only pass the onEdit and onDelete callbacks if the user has permission
           onEdit={canEditCourse ? openEditDialog : undefined} 
           onDelete={canDeleteCourse ? openDeleteDialog : undefined}
         />

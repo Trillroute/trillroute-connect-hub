@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -280,6 +281,7 @@ const AdminDashboard = () => {
             {activeTab === 'courses' && permissionMap.courses.view && (
               <CourseManagement 
                 canAddCourse={permissionMap.courses.add}
+                canEditCourse={permissionMap.courses.edit}
                 canDeleteCourse={permissionMap.courses.delete}
               />
             )}
