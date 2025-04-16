@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Filter, ArrowUpDown } from 'lucide-react';
+import { Plus, RefreshCw, Filter, ArrowUpDown, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,6 +36,15 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   
   const openEditDialog = (lead: Lead) => {
+    // Only allow opening the edit dialog if the user has edit permissions
+    if (!canEditLead) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit leads.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedLead(lead);
     setIsEditDialogOpen(true);
   };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -15,23 +14,29 @@ import UserTable from './users/UserTable';
 import AddUserDialog, { NewUserData } from './users/AddUserDialog';
 import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
+import EditUserDialog from './users/EditUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
+import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
 
 interface StudentManagementProps {
   canAddUser?: boolean;
+  canEditUser?: boolean;
   canDeleteUser?: boolean;
 }
 
 const StudentManagement = ({ 
   canAddUser = true,
+  canEditUser = true,
   canDeleteUser = true 
 }: StudentManagementProps) => {
   const [students, setStudents] = useState<UserManagementUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [studentToEdit, setStudentToEdit] = useState<UserManagementUser | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<UserManagementUser | null>(null);
   const [studentToView, setStudentToView] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
@@ -95,6 +100,31 @@ const StudentManagement = ({
     }
   };
 
+  const handleUpdateStudent = async (userId: string, userData: Partial<UserManagementUser>) => {
+    try {
+      setIsLoading(true);
+      await updateUser(userId, userData);
+
+      toast({
+        title: 'Success',
+        description: 'Student updated successfully.',
+      });
+      
+      setIsEditDialogOpen(false);
+      setStudentToEdit(null);
+      loadStudents();
+    } catch (error: any) {
+      console.error('Error updating student:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update student. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDeleteStudent = async () => {
     if (!studentToDelete) return;
     
@@ -120,6 +150,19 @@ const StudentManagement = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openEditDialog = (student: UserManagementUser) => {
+    if (!canEditUser) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit students.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setStudentToEdit(student);
+    setIsEditDialogOpen(true);
   };
 
   const openViewDialog = (student: UserManagementUser) => {
@@ -164,8 +207,10 @@ const StudentManagement = ({
           users={students} 
           isLoading={isLoading}
           onViewUser={openViewDialog}
+          onEditUser={canEditUser ? openEditDialog : undefined}
           onDeleteUser={openDeleteDialog}
           canDeleteUser={canStudentBeDeleted}
+          canEditUser={canEditUser ? () => true : undefined}
           roleFilter="student"
         />
         
@@ -177,6 +222,15 @@ const StudentManagement = ({
           allowAdminCreation={false}
           defaultRole="student"
           title="Add Student"
+        />
+
+        <EditUserDialog
+          user={studentToEdit}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onUpdateUser={handleUpdateStudent}
+          isLoading={isLoading}
+          userRole="Student"
         />
         
         <DeleteUserDialog

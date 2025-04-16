@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -8,30 +7,36 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, GraduationCap } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import UserTable from './users/UserTable';
 import AddUserDialog, { NewUserData } from './users/AddUserDialog';
 import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
+import EditUserDialog from './users/EditUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
+import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
 
 interface TeacherManagementProps {
   canAddUser?: boolean;
+  canEditUser?: boolean;
   canDeleteUser?: boolean;
 }
 
 const TeacherManagement = ({ 
   canAddUser = true,
+  canEditUser = true,
   canDeleteUser = true 
 }: TeacherManagementProps) => {
   const [teachers, setTeachers] = useState<UserManagementUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [teacherToEdit, setTeacherToEdit] = useState<UserManagementUser | null>(null);
   const [teacherToDelete, setTeacherToDelete] = useState<UserManagementUser | null>(null);
   const [teacherToView, setTeacherToView] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
@@ -95,6 +100,31 @@ const TeacherManagement = ({
     }
   };
 
+  const handleUpdateTeacher = async (userId: string, userData: Partial<UserManagementUser>) => {
+    try {
+      setIsLoading(true);
+      await updateUser(userId, userData);
+
+      toast({
+        title: 'Success',
+        description: 'Teacher updated successfully.',
+      });
+      
+      setIsEditDialogOpen(false);
+      setTeacherToEdit(null);
+      loadTeachers();
+    } catch (error: any) {
+      console.error('Error updating teacher:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update teacher. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDeleteTeacher = async () => {
     if (!teacherToDelete) return;
     
@@ -120,6 +150,19 @@ const TeacherManagement = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openEditDialog = (teacher: UserManagementUser) => {
+    if (!canEditUser) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit teachers.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setTeacherToEdit(teacher);
+    setIsEditDialogOpen(true);
   };
 
   const openViewDialog = (teacher: UserManagementUser) => {
@@ -164,8 +207,10 @@ const TeacherManagement = ({
           users={teachers} 
           isLoading={isLoading}
           onViewUser={openViewDialog}
+          onEditUser={canEditUser ? openEditDialog : undefined}
           onDeleteUser={openDeleteDialog}
           canDeleteUser={canTeacherBeDeleted}
+          canEditUser={canEditUser ? () => true : undefined}
           roleFilter="teacher"
         />
         
@@ -177,6 +222,15 @@ const TeacherManagement = ({
           allowAdminCreation={false}
           defaultRole="teacher"
           title="Add Teacher"
+        />
+
+        <EditUserDialog
+          user={teacherToEdit}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onUpdateUser={handleUpdateTeacher}
+          isLoading={isLoading}
+          userRole="Teacher"
         />
         
         <DeleteUserDialog

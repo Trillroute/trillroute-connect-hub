@@ -289,6 +289,7 @@ const AdminDashboard = () => {
             {activeTab === 'students' && permissionMap.students.view && (
               <StudentManagement 
                 canAddUser={permissionMap.students.add}
+                canEditUser={permissionMap.students.edit}
                 canDeleteUser={permissionMap.students.delete}
               />
             )}
@@ -296,6 +297,7 @@ const AdminDashboard = () => {
             {activeTab === 'teachers' && permissionMap.teachers.view && (
               <TeacherManagement 
                 canAddUser={permissionMap.teachers.add}
+                canEditUser={permissionMap.teachers.edit}
                 canDeleteUser={permissionMap.teachers.delete}
               />
             )}
@@ -303,6 +305,7 @@ const AdminDashboard = () => {
             {activeTab === 'admins' && permissionMap.admins.view && (
               <AdminManagement 
                 canAddAdmin={permissionMap.admins.add}
+                canEditAdmin={permissionMap.admins.edit}
                 canDeleteAdmin={permissionMap.admins.delete}
                 canEditAdminLevel={permissionMap.admins.edit}
               />
