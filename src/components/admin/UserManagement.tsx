@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, RefreshCw } from 'lucide-react';
+import { UserPlus, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import UserTable from './users/UserTable';
@@ -132,7 +132,7 @@ const UserManagement = () => {
               Refresh
             </Button>
             <Button onClick={() => setIsAddDialogOpen(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
+              <UserPlus className="h-4 w-4 mr-2" />
               Add User
             </Button>
           </div>
