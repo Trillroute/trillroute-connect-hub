@@ -80,6 +80,8 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
+                
+                {/* Only render edit button if onEdit callback is provided */}
                 {onEdit && (
                   <Button
                     variant="outline"
@@ -89,6 +91,8 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                     <Pencil className="h-4 w-4" />
                   </Button>
                 )}
+                
+                {/* Only render delete button if onDelete callback is provided */}
                 {onDelete && (
                   <Button
                     variant="outline"
