@@ -31,5 +31,6 @@ export interface UserManagementUser {
   whatsappEnabled?: boolean;
   address?: string;
   idProof?: string;
-  adminLevel?: number; // New field for admin level
+  adminLevel?: number; // Keep for backward compatibility
+  adminRoleName?: string; // New field for admin level name
 }

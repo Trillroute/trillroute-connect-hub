@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -46,7 +45,6 @@ const AdminManagement = ({
     try {
       setIsLoading(true);
       const usersData = await fetchAllUsers();
-      // Filter to only show admins
       setAdmins(usersData.filter(user => user.role === 'admin'));
     } catch (error) {
       console.error('Error fetching admins:', error);
@@ -75,7 +73,6 @@ const AdminManagement = ({
         return;
       }
       
-      // Ensure we're adding an admin
       userData.role = 'admin';
       
       setIsLoading(true);
@@ -127,10 +124,10 @@ const AdminManagement = ({
     }
   };
 
-  const handleUpdateAdminLevel = async (userId: string, newLevel: number) => {
+  const handleUpdateAdminLevel = async (userId: string, newLevelName: string) => {
     try {
       setIsLoading(true);
-      await updateAdminLevel(userId, newLevel);
+      await updateAdminLevel(userId, newLevelName);
 
       toast({
         title: 'Success',

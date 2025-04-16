@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserManagementUser } from '@/types/student';
 import { hashPassword } from '@/integrations/supabase/client';
@@ -30,6 +29,7 @@ export const fetchAllUsers = async (): Promise<UserManagementUser[]> => {
     whatsappEnabled: user.whatsapp_enabled,
     address: user.address,
     idProof: user.id_proof,
+    adminLevel: user.admin_level,
     adminRoleName: user.admin_level_name || (user.role === 'admin' ? "Limited View" : undefined)
   }));
 };

@@ -106,6 +106,7 @@ export type Database = {
         Row: {
           address: string | null
           admin_level: number | null
+          admin_level_name: string | null
           created_at: string
           date_of_birth: string | null
           email: string
@@ -125,6 +126,7 @@ export type Database = {
         Insert: {
           address?: string | null
           admin_level?: number | null
+          admin_level_name?: string | null
           created_at?: string
           date_of_birth?: string | null
           email: string
@@ -144,6 +146,7 @@ export type Database = {
         Update: {
           address?: string | null
           admin_level?: number | null
+          admin_level_name?: string | null
           created_at?: string
           date_of_birth?: string | null
           email?: string
