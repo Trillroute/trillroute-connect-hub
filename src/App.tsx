@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -22,6 +23,7 @@ import StudentRegistration from "./pages/auth/StudentRegistration";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 
 // Profile Page
 import Profile from "./pages/profile/Profile";
@@ -72,6 +74,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard/superadmin" 
+                element={
+                  <ProtectedRoute allowedRoles={['superadmin']}>
+                    <SuperAdminDashboard />
                   </ProtectedRoute>
                 } 
               />

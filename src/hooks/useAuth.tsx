@@ -1,11 +1,10 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { StudentProfile } from '@/types/student';
 
-export type UserRole = 'student' | 'teacher' | 'admin';
+export type UserRole = 'student' | 'teacher' | 'admin' | 'superadmin';
 
 interface UserData {
   id: string;
@@ -24,7 +23,6 @@ interface UserData {
   idProof?: string;
 }
 
-// Update the interface to match custom_users table
 interface CustomUser {
   id: string;
   email: string;
@@ -53,9 +51,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
 }
 
-// Interface for additional user profile data
 interface StudentProfileData {
   date_of_birth?: string;
   profile_photo?: string;
@@ -202,7 +200,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const passwordHash = await hashPassword(password);
       const userId = crypto.randomUUID();
 
-      // Create new user with all fields directly in custom_users table
       const insertData = {
         id: userId,
         email: email.toLowerCase(),
@@ -211,7 +208,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         last_name: lastName,
         role: role,
         created_at: new Date().toISOString(),
-        // Include additional data if provided
         ...(additionalData && {
           date_of_birth: additionalData.date_of_birth,
           profile_photo: additionalData.profile_photo,
@@ -233,7 +229,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      // Create user data for the client
       const userData: UserData = {
         id: userId,
         email: email.toLowerCase(),
@@ -299,7 +294,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAdmin = () => {
-    return user?.role === 'admin';
+    return user?.role === 'admin' || user?.role === 'superadmin';
+  };
+
+  const isSuperAdmin = () => {
+    return user?.role === 'superadmin';
   };
 
   const value = {
@@ -311,6 +310,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     isAuthenticated: !!user,
     isAdmin,
+    isSuperAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

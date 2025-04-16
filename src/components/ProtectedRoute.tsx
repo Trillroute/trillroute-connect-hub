@@ -7,10 +7,16 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: UserRole[];
   requireAdmin?: boolean;
+  requireSuperAdmin?: boolean;
 }
 
-const ProtectedRoute = ({ children, allowedRoles, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin } = useAuth();
+const ProtectedRoute = ({ 
+  children, 
+  allowedRoles, 
+  requireAdmin = false,
+  requireSuperAdmin = false
+}: ProtectedRouteProps) => {
+  const { user, loading, isAdmin, isSuperAdmin } = useAuth();
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -18,6 +24,11 @@ const ProtectedRoute = ({ children, allowedRoles, requireAdmin = false }: Protec
 
   if (!user) {
     return <Navigate to="/auth/login" replace />;
+  }
+
+  if (requireSuperAdmin && !isSuperAdmin()) {
+    // Redirect to the appropriate dashboard based on role
+    return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
   if (requireAdmin && !isAdmin()) {

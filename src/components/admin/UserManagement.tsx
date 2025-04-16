@@ -17,7 +17,11 @@ import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
 
-const UserManagement = () => {
+interface UserManagementProps {
+  allowAdminCreation?: boolean;
+}
+
+const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => {
   const [users, setUsers] = useState<UserManagementUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -151,6 +155,7 @@ const UserManagement = () => {
           onOpenChange={setIsAddDialogOpen}
           onAddUser={handleAddUser}
           isLoading={isLoading}
+          allowAdminCreation={allowAdminCreation}
         />
         
         <DeleteUserDialog

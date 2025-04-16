@@ -33,6 +33,7 @@ interface AddUserDialogProps {
   onOpenChange: (open: boolean) => void;
   onAddUser: (userData: NewUserData) => Promise<void>;
   isLoading: boolean;
+  allowAdminCreation?: boolean;
 }
 
 export interface NewUserData {
@@ -69,7 +70,13 @@ const initialUserData: NewUserData = {
   idProof: ''
 };
 
-const AddUserDialog = ({ isOpen, onOpenChange, onAddUser, isLoading }: AddUserDialogProps) => {
+const AddUserDialog = ({ 
+  isOpen, 
+  onOpenChange, 
+  onAddUser, 
+  isLoading,
+  allowAdminCreation = false
+}: AddUserDialogProps) => {
   const [userData, setUserData] = useState<NewUserData>(initialUserData);
 
   const handleSubmit = async () => {
@@ -162,6 +169,7 @@ const AddUserDialog = ({ isOpen, onOpenChange, onAddUser, isLoading }: AddUserDi
                     <SelectContent>
                       <SelectItem value="student">Student</SelectItem>
                       <SelectItem value="teacher">Teacher</SelectItem>
+                      {allowAdminCreation && <SelectItem value="admin">Administrator</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
