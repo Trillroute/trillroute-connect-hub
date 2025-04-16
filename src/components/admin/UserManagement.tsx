@@ -340,7 +340,13 @@ const UserManagement = () => {
                           <Label htmlFor="role">Role</Label>
                           <Select 
                             value={newUserData.role} 
-                            onValueChange={(value) => setNewUserData({ ...newUserData, role: value })}
+                            onValueChange={(value) => {
+                              setNewUserData({ 
+                                ...newUserData, 
+                                role: value,
+                                guardianRelation: value === 'student' ? newUserData.guardianRelation : ''
+                              });
+                            }}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select role" />
@@ -381,6 +387,7 @@ const UserManagement = () => {
                               onChange={(e) =>
                                 setNewUserData({ ...newUserData, guardianRelation: e.target.value })
                               }
+                              placeholder="e.g. Father, Mother, Guardian"
                             />
                           </div>
                         )}
