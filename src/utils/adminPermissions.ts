@@ -26,8 +26,16 @@ export enum AdminPermission {
   REMOVE_COURSES = 'remove_courses'
 }
 
+export interface AdminLevel {
+  level: number;
+  name: string;
+  description: string;
+  permissions: string[];
+}
+
 // Map of permission levels to their granted permissions
-const PERMISSION_MAP: Record<number, AdminPermission[]> = {
+// This is used as a fallback in case the database query fails
+const FALLBACK_PERMISSION_MAP: Record<number, AdminPermission[]> = {
   0: [
     AdminPermission.VIEW_STUDENTS,
     AdminPermission.ADD_STUDENTS,
@@ -113,7 +121,7 @@ export const hasPermission = (user: UserManagementUser | null, permission: Admin
   const adminLevel = user.adminLevel ?? 8;
   
   // Check if the user's level grants this permission
-  const permissions = PERMISSION_MAP[adminLevel] || [];
+  const permissions = FALLBACK_PERMISSION_MAP[adminLevel] || [];
   return permissions.includes(permission);
 };
 
@@ -121,7 +129,7 @@ export const hasPermission = (user: UserManagementUser | null, permission: Admin
  * Get all permissions for a specific admin level
  */
 export const getPermissionsForLevel = (level: number): AdminPermission[] => {
-  return PERMISSION_MAP[level] || [];
+  return FALLBACK_PERMISSION_MAP[level] || [];
 };
 
 /**

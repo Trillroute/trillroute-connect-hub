@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserManagementUser } from '@/types/student';
+import { AdminLevel } from '@/utils/adminPermissions';
 
 export const fetchAdmins = async (): Promise<UserManagementUser[]> => {
   const { data, error } = await supabase
@@ -30,6 +31,24 @@ export const fetchAdmins = async (): Promise<UserManagementUser[]> => {
     address: user.address,
     idProof: user.id_proof,
     adminLevel: user.admin_level
+  }));
+};
+
+export const fetchAdminLevels = async (): Promise<AdminLevel[]> => {
+  const { data, error } = await supabase
+    .from('admin_levels')
+    .select('*')
+    .order('id', { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(level => ({
+    level: level.id,
+    name: level.name,
+    description: level.description,
+    permissions: level.permissions
   }));
 };
 

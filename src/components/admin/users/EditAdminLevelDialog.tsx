@@ -13,6 +13,8 @@ import { UserManagementUser } from '@/types/student';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { fetchAdminLevels } from '@/components/superadmin/AdminService';
+import { AdminLevel } from '@/utils/adminPermissions';
 
 interface EditAdminLevelDialogProps {
   admin: UserManagementUser | null;
@@ -22,8 +24,8 @@ interface EditAdminLevelDialogProps {
   isLoading: boolean;
 }
 
-// Define admin levels and their permissions
-export const ADMIN_LEVELS = [
+// Default admin levels as fallback
+export const DEFAULT_ADMIN_LEVELS = [
   {
     level: 0,
     name: "Level 0 (Super Admin Equivalent)",
@@ -74,6 +76,8 @@ const EditAdminLevelDialog = ({
   isLoading,
 }: EditAdminLevelDialogProps) => {
   const [selectedLevel, setSelectedLevel] = useState<number>(8);
+  const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
+  const [isLoadingLevels, setIsLoadingLevels] = useState<boolean>(false);
   const { isSuperAdmin } = useAuth();
 
   useEffect(() => {
@@ -82,6 +86,26 @@ const EditAdminLevelDialog = ({
     }
   }, [admin]);
 
+  useEffect(() => {
+    if (isOpen) {
+      loadAdminLevels();
+    }
+  }, [isOpen]);
+
+  const loadAdminLevels = async () => {
+    try {
+      setIsLoadingLevels(true);
+      const levels = await fetchAdminLevels();
+      setAdminLevels(levels);
+    } catch (error) {
+      console.error('Error loading admin levels:', error);
+      // Fallback to default levels if the fetch fails
+      setAdminLevels(DEFAULT_ADMIN_LEVELS as AdminLevel[]);
+    } finally {
+      setIsLoadingLevels(false);
+    }
+  };
+
   const handleSave = async () => {
     if (admin && isSuperAdmin()) {
       await onUpdateLevel(admin.id, selectedLevel);
@@ -89,6 +113,10 @@ const EditAdminLevelDialog = ({
   };
 
   if (!admin || !isSuperAdmin()) return null;
+
+  const displayLevels = adminLevels.length > 0 
+    ? adminLevels 
+    : DEFAULT_ADMIN_LEVELS as AdminLevel[];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -100,21 +128,27 @@ const EditAdminLevelDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <RadioGroup
-            value={selectedLevel.toString()}
-            onValueChange={(value) => setSelectedLevel(parseInt(value))}
-            className="flex flex-col space-y-4"
-          >
-            {ADMIN_LEVELS.map((level) => (
-              <div key={level.level} className="flex items-start space-x-2 p-2 rounded hover:bg-muted">
-                <RadioGroupItem value={level.level.toString()} id={`level-${level.level}`} className="mt-1" />
-                <div className="flex-1">
-                  <Label htmlFor={`level-${level.level}`} className="font-medium">{level.name}</Label>
-                  <p className="text-sm text-muted-foreground">{level.description}</p>
+          {isLoadingLevels ? (
+            <div className="flex justify-center p-4">
+              <p>Loading admin levels...</p>
+            </div>
+          ) : (
+            <RadioGroup
+              value={selectedLevel.toString()}
+              onValueChange={(value) => setSelectedLevel(parseInt(value))}
+              className="flex flex-col space-y-4"
+            >
+              {displayLevels.map((level) => (
+                <div key={level.level} className="flex items-start space-x-2 p-2 rounded hover:bg-muted">
+                  <RadioGroupItem value={level.level.toString()} id={`level-${level.level}`} className="mt-1" />
+                  <div className="flex-1">
+                    <Label htmlFor={`level-${level.level}`} className="font-medium">{level.name}</Label>
+                    <p className="text-sm text-muted-foreground">{level.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </RadioGroup>
+              ))}
+            </RadioGroup>
+          )}
         </div>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)} variant="outline">
@@ -122,7 +156,7 @@ const EditAdminLevelDialog = ({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isLoading || selectedLevel === (admin.adminLevel || 8)}
+            disabled={isLoading || isLoadingLevels || selectedLevel === (admin.adminLevel || 8)}
           >
             {isLoading ? 'Saving...' : 'Save Changes'}
           </Button>

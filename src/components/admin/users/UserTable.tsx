@@ -126,8 +126,17 @@ const UserTable = ({
 
   const getAdminLevelName = (level?: number) => {
     if (level === undefined) return '';
-    const adminLevel = ADMIN_LEVELS.find(l => l.level === level);
-    return adminLevel ? `Level ${adminLevel.level}` : '';
+    switch (level) {
+      case 0: return 'Level 0 (Super Admin)';
+      case 1: return 'Level 1';
+      case 2: return 'Level 2';
+      case 3: return 'Level 3';
+      case 4: return 'Level 4';
+      case 5: return 'Level 5';
+      case 6: return 'Level 6';
+      case 8: return 'Level 8';
+      default: return `Level ${level}`;
+    }
   };
 
   if (isLoading) {
