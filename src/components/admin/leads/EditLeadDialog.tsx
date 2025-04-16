@@ -25,7 +25,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
     email: lead?.email || '',
     phone: lead?.phone || '',
     status: lead?.status || 'NEW',
-    notes: lead?.notes || ''
+    notes: '' // Changed this to default empty string since notes doesn't exist in Lead type
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

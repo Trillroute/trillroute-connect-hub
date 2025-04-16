@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Trash2, BadgeCheck, UserCog, UserPlus, ArrowUpDown, Search, Filter, X, ShieldAlert } from 'lucide-react';
+import { Eye, Trash2, BadgeCheck, UserCog, UserPlus, ArrowUpDown, Search, Filter, X, ShieldAlert, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
   DropdownMenu,
@@ -34,9 +34,11 @@ interface UserTableProps {
   isLoading: boolean;
   onViewUser: (user: UserManagementUser) => void;
   onDeleteUser: (user: UserManagementUser) => void;
+  onEditUser?: (user: UserManagementUser) => void;
   onEditAdminLevel?: (user: UserManagementUser) => void;
   canDeleteUser?: (user: UserManagementUser) => boolean;
   canEditAdminLevel?: (user: UserManagementUser) => boolean;
+  canEditUser?: (user: UserManagementUser) => boolean;
   roleFilter?: string;
 }
 
@@ -48,9 +50,11 @@ const UserTable = ({
   isLoading, 
   onViewUser, 
   onDeleteUser,
+  onEditUser,
   onEditAdminLevel,
   canDeleteUser = () => true,
   canEditAdminLevel = () => false,
+  canEditUser = () => false,
   roleFilter
 }: UserTableProps) => {
   const [users, setUsers] = useState<UserManagementUser[]>(initialUsers);
@@ -357,6 +361,17 @@ const UserTable = ({
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">View</span>
                     </Button>
+                    
+                    {canEditUser && canEditUser(user) && onEditUser && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEditUser(user)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                    )}
                     
                     {canEditAdminLevel && canEditAdminLevel(user) && onEditAdminLevel && (
                       <Button

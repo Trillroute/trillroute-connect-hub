@@ -8,4 +8,5 @@ export type Lead = {
   source: string | null;
   created_at: string;
   user_id?: string | null;
+  notes?: string | null; // Added notes field as optional
 };

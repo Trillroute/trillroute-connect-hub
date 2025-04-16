@@ -26,7 +26,7 @@ const EditUserDialog = ({
   onOpenChange,
   onUpdateUser,
   isLoading,
-  userRole = 'User',
+  userRole = 'Student',
 }: EditUserDialogProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState<{
