@@ -34,11 +34,21 @@ const EditUserDialog = ({
     lastName: string;
     email: string;
     primaryPhone: string;
+    secondaryPhone?: string;
+    address?: string;
+    dateOfBirth?: string;
+    parentName?: string;
+    guardianRelation?: string;
   }>({
     firstName: '',
     lastName: '',
     email: '',
     primaryPhone: '',
+    secondaryPhone: '',
+    address: '',
+    dateOfBirth: '',
+    parentName: '',
+    guardianRelation: '',
   });
 
   React.useEffect(() => {
@@ -48,6 +58,11 @@ const EditUserDialog = ({
         lastName: user.lastName || '',
         email: user.email || '',
         primaryPhone: user.primaryPhone || '',
+        secondaryPhone: user.secondaryPhone || '',
+        address: user.address || '',
+        dateOfBirth: user.dateOfBirth || '',
+        parentName: user.parentName || '',
+        guardianRelation: user.guardianRelation || '',
       });
     }
   }, [user]);
@@ -62,6 +77,11 @@ const EditUserDialog = ({
         lastName: formData.lastName,
         email: formData.email,
         primaryPhone: formData.primaryPhone,
+        secondaryPhone: formData.secondaryPhone,
+        address: formData.address,
+        dateOfBirth: formData.dateOfBirth,
+        parentName: formData.parentName,
+        guardianRelation: formData.guardianRelation,
       });
       
       toast({
@@ -89,7 +109,7 @@ const EditUserDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Edit {userRole}</DialogTitle>
           <DialogDescription>
@@ -141,18 +161,90 @@ const EditUserDialog = ({
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="primaryPhone" className="text-sm font-medium">
+                Primary Phone
+              </label>
+              <input
+                id="primaryPhone"
+                name="primaryPhone"
+                className="px-3 py-2 border border-gray-300 rounded-md"
+                value={formData.primaryPhone}
+                onChange={handleChange}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="secondaryPhone" className="text-sm font-medium">
+                Secondary Phone
+              </label>
+              <input
+                id="secondaryPhone"
+                name="secondaryPhone"
+                className="px-3 py-2 border border-gray-300 rounded-md"
+                value={formData.secondaryPhone}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
           <div className="grid gap-2">
-            <label htmlFor="primaryPhone" className="text-sm font-medium">
-              Phone
+            <label htmlFor="address" className="text-sm font-medium">
+              Address
             </label>
             <input
-              id="primaryPhone"
-              name="primaryPhone"
+              id="address"
+              name="address"
               className="px-3 py-2 border border-gray-300 rounded-md"
-              value={formData.primaryPhone}
+              value={formData.address}
               onChange={handleChange}
             />
           </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="dateOfBirth" className="text-sm font-medium">
+              Date of Birth
+            </label>
+            <input
+              id="dateOfBirth"
+              name="dateOfBirth"
+              className="px-3 py-2 border border-gray-300 rounded-md"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              placeholder="YYYY-MM-DD"
+            />
+          </div>
+
+          {userRole === 'Student' && (
+            <>
+              <div className="grid gap-2">
+                <label htmlFor="parentName" className="text-sm font-medium">
+                  Parent/Guardian Name
+                </label>
+                <input
+                  id="parentName"
+                  name="parentName"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.parentName}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="guardianRelation" className="text-sm font-medium">
+                  Guardian Relationship
+                </label>
+                <input
+                  id="guardianRelation"
+                  name="guardianRelation"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.guardianRelation}
+                  onChange={handleChange}
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button

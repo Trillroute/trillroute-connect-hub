@@ -12,17 +12,21 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import { fetchAdmins, updateUserRole, deleteUser } from './AdminService';
+import { updateUser } from '../admin/users/UserServiceExtended';
 import AdminTable from './AdminTable';
 import EditAdminDialog from './EditAdminDialog';
 import DeleteAdminDialog from './DeleteAdminDialog';
+import EditUserDialog from '../admin/users/EditUserDialog';
 
 const AdminManagement = () => {
   const [admins, setAdmins] = useState<UserManagementUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [adminToEdit, setAdminToEdit] = useState<UserManagementUser | null>(null);
   const [adminToDelete, setAdminToDelete] = useState<UserManagementUser | null>(null);
+  const [userToEdit, setUserToEdit] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
 
   const loadAdmins = async () => {
@@ -71,6 +75,31 @@ const AdminManagement = () => {
     }
   };
 
+  const handleUpdateUserDetails = async (userId: string, userData: Partial<UserManagementUser>) => {
+    try {
+      setIsLoading(true);
+      await updateUser(userId, userData);
+
+      toast({
+        title: 'Success',
+        description: 'Administrator details updated successfully.',
+      });
+      
+      setIsEditUserDialogOpen(false);
+      setUserToEdit(null);
+      loadAdmins();
+    } catch (error: any) {
+      console.error('Error updating admin details:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update administrator details. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDeleteAdmin = async () => {
     if (!adminToDelete) return;
     
@@ -103,6 +132,11 @@ const AdminManagement = () => {
     setIsEditDialogOpen(true);
   };
 
+  const openEditUserDialog = (admin: UserManagementUser) => {
+    setUserToEdit(admin);
+    setIsEditUserDialogOpen(true);
+  };
+
   const openDeleteDialog = (admin: UserManagementUser) => {
     setAdminToDelete(admin);
     setIsDeleteDialogOpen(true);
@@ -130,6 +164,7 @@ const AdminManagement = () => {
           isLoading={isLoading}
           onEditAdmin={openEditDialog}
           onDeleteAdmin={openDeleteDialog}
+          onEditUserDetails={openEditUserDialog}
         />
         
         <EditAdminDialog
@@ -146,6 +181,15 @@ const AdminManagement = () => {
           onOpenChange={setIsDeleteDialogOpen}
           onDelete={handleDeleteAdmin}
           isLoading={isLoading}
+        />
+
+        <EditUserDialog
+          user={userToEdit}
+          isOpen={isEditUserDialogOpen}
+          onOpenChange={setIsEditUserDialogOpen}
+          onUpdateUser={handleUpdateUserDetails}
+          isLoading={isLoading}
+          userRole="Administrator"
         />
       </CardContent>
     </Card>

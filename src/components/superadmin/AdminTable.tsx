@@ -19,9 +19,16 @@ interface AdminTableProps {
   isLoading: boolean;
   onEditAdmin: (admin: UserManagementUser) => void;
   onDeleteAdmin: (admin: UserManagementUser) => void;
+  onEditUserDetails?: (admin: UserManagementUser) => void; // New prop for editing user details
 }
 
-const AdminTable = ({ admins, isLoading, onEditAdmin, onDeleteAdmin }: AdminTableProps) => {
+const AdminTable = ({ 
+  admins, 
+  isLoading, 
+  onEditAdmin, 
+  onDeleteAdmin,
+  onEditUserDetails 
+}: AdminTableProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   
   const filteredAdmins = admins.filter(admin => 
@@ -74,13 +81,25 @@ const AdminTable = ({ admins, isLoading, onEditAdmin, onDeleteAdmin }: AdminTabl
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
+                    {onEditUserDetails && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEditUserDetails(admin)}
+                        title="Edit user details"
+                      >
+                        <PenSquare className="h-4 w-4" />
+                        <span className="sr-only">Edit Details</span>
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onEditAdmin(admin)}
+                      title="Edit admin role"
                     >
-                      <PenSquare className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
+                      <Shield className="h-4 w-4" />
+                      <span className="sr-only">Edit Role</span>
                     </Button>
                     <Button
                       variant="ghost"
