@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ADMIN_LEVELS } from './EditAdminLevelDialog';
+import { DEFAULT_ADMIN_LEVELS } from './EditAdminLevelDialog';
 
 interface UserTableProps {
   users: UserManagementUser[];
