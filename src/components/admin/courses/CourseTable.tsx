@@ -74,29 +74,30 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
+                  className="bg-white hover:bg-gray-100 border-none"
                   onClick={() => viewCourse(course.id)}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
                 
-                {/* Only render the edit button if onEdit is provided and permission is granted */}
                 {onEdit && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
+                    className="bg-white hover:bg-gray-100 border-none"
                     onClick={() => onEdit(course)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                 )}
                 
-                {/* Only render the delete button if onDelete is provided and permission is granted */}
                 {onDelete && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
+                    className="bg-white hover:bg-gray-100 border-none"
                     onClick={() => onDelete(course)}
                   >
                     <Trash2 className="h-4 w-4" />
