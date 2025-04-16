@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/ui/charts';
-import { Download, Settings, Users, BookOpen, GraduationCap } from 'lucide-react';
+import { Download, Settings, Users, BookOpen, GraduationCap, UserPlus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
 import UserManagement from '@/components/admin/UserManagement';
+import LeadManagement from '@/components/admin/LeadManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -19,7 +19,7 @@ const AdminDashboard = () => {
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [activeTab, setActiveTab] = useState<'courses' | 'users'>('courses');
+  const [activeTab, setActiveTab] = useState<'courses' | 'users' | 'leads'>('courses');
   
   const fetchDashboardData = async () => {
     try {
@@ -57,7 +57,6 @@ const AdminDashboard = () => {
         setTeachersCount(totalTeachers || 0);
       }
       
-      // Fetch monthly user growth data (all months in the current year)
       await fetchUserGrowthData(currentYear);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -70,18 +69,13 @@ const AdminDashboard = () => {
     try {
       const monthsData: { name: string; Students: number; Teachers: number }[] = [];
       
-      // Generate all 12 months of the year
       for (let month = 0; month < 12; month++) {
-        // Create date for first day of the month in the selected year
         const monthDate = new Date(year, month, 1);
-        // Get month name (short format)
         const monthLabel = format(monthDate, 'MMM');
         
-        // Calculate start and end of the month for database queries
         const startOfMonth = new Date(year, month, 1).toISOString();
         const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
         
-        // Count students registered in this month
         const { count: monthlyStudents, error: studentsError } = await supabase
           .from('custom_users')
           .select('*', { count: 'exact', head: true })
@@ -93,7 +87,6 @@ const AdminDashboard = () => {
           console.error(`Error fetching students for ${monthLabel}:`, studentsError);
         }
         
-        // Count teachers registered in this month
         const { count: monthlyTeachers, error: teachersError } = await supabase
           .from('custom_users')
           .select('*', { count: 'exact', head: true })
@@ -114,7 +107,6 @@ const AdminDashboard = () => {
       
       setUserActivityData(monthsData);
       
-      // Mock revenue data based on the same months
       setRevenueData(monthsData.map(({ name }) => ({ 
         name, 
         Revenue: Math.floor(Math.random() * 10000) + 1000 
@@ -248,12 +240,21 @@ const AdminDashboard = () => {
             <Users className="h-4 w-4 mr-2" />
             Users
           </Button>
+          <Button
+            variant={activeTab === 'leads' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('leads')}
+            className="rounded-md px-3 py-1"
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Leads
+          </Button>
         </div>
       </div>
 
       <div className="mb-8">
         {activeTab === 'courses' && <CourseManagement />}
         {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'leads' && <LeadManagement />}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
