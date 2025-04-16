@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { UserManagementUser } from '@/types/student';
@@ -47,16 +46,13 @@ const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }:
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Update users when initialUsers changes
   useEffect(() => {
     setUsers(initialUsers);
   }, [initialUsers]);
 
-  // Apply search, sort, and filter
   useEffect(() => {
     let filteredUsers = [...initialUsers];
     
-    // Apply search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filteredUsers = filteredUsers.filter(
@@ -67,12 +63,10 @@ const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }:
       );
     }
     
-    // Apply role filter
     if (roleFilter !== 'all') {
       filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
     }
     
-    // Apply sorting
     filteredUsers.sort((a, b) => {
       let comparison = 0;
       
@@ -99,7 +93,6 @@ const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }:
     setUsers(filteredUsers);
   }, [initialUsers, searchQuery, sortField, sortDirection, roleFilter]);
 
-  // Toggle sort direction and field
   const handleSort = (field: SortField) => {
     if (field === sortField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -123,12 +116,12 @@ const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }:
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative w-full sm:w-64">
+        <div className="relative w-full sm:w-auto flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             type="search"
             placeholder="Search users..."
-            className="pl-9"
+            className="pl-9 w-full"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
