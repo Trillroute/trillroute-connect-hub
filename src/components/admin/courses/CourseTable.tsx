@@ -110,4 +110,3 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
 };
 
 export default CourseTable;
-
