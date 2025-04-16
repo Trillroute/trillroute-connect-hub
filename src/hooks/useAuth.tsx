@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { StudentProfile } from '@/types/student';
+import { StudentProfile, StudentProfileData } from '@/types/student';
 
 export type UserRole = 'student' | 'teacher' | 'admin';
 
@@ -27,25 +27,12 @@ interface CustomUser {
   created_at: string;
 }
 
-// New interface for student profile data
-interface StudentProfileData {
-  dateOfBirth?: string;
-  profilePhoto?: string;
-  parentName?: string;
-  guardianRelation?: string;
-  primaryPhone?: string;
-  secondaryPhone?: string;
-  whatsappEnabled?: boolean;
-  address?: string;
-  idProof?: string;
-}
-
 interface AuthContextType {
   user: UserData | null;
   loading: boolean;
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole, studentData?: StudentProfileData) => Promise<void>;
+  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole, studentData?: Omit<StudentProfileData, 'user_id'>) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: () => boolean;
@@ -130,17 +117,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('[AUTH] Login successful');
 
-      // If user is a student, fetch their student profile
+      // If user is a student, fetch their student profile using direct SQL
       let studentProfile = null;
       if (userData.role === 'student') {
-        const { data: profileData } = await supabase
-          .from('student_profiles')
-          .select('*')
-          .eq('user_id', userData.id)
+        // Use custom SQL query to fetch student profile data to bypass TypeScript limitations
+        const { data: studentData, error: studentError } = await supabase
+          .rpc('get_student_profile', {
+            user_id_param: userData.id
+          })
           .single();
         
-        if (profileData) {
-          studentProfile = profileData;
+        if (studentError) {
+          console.error('[AUTH] Error fetching student profile:', studentError);
+        } else if (studentData) {
+          // Transform database fields to camelCase for frontend
+          studentProfile = {
+            id: userData.id,
+            firstName: userData.first_name,
+            lastName: userData.last_name,
+            email: userData.email,
+            dateOfBirth: studentData.date_of_birth,
+            profilePhoto: studentData.profile_photo,
+            parentName: studentData.parent_name,
+            guardianRelation: studentData.guardian_relation,
+            primaryPhone: studentData.primary_phone,
+            secondaryPhone: studentData.secondary_phone,
+            whatsappEnabled: studentData.whatsapp_enabled,
+            address: studentData.address,
+            idProof: studentData.id_proof
+          };
         }
       }
       
@@ -186,7 +191,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     firstName: string, 
     lastName: string, 
     role: UserRole,
-    studentData?: StudentProfileData
+    studentData?: Omit<StudentProfileData, 'user_id'>
   ) => {
     setLoading(true);
     try {
@@ -225,20 +230,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // If registering as a student and studentData provided, create student profile
+      // Use a stored procedure to bypass TypeScript limitations
       if (role === 'student' && studentData) {
+        // We'll use a RPC call instead of direct table access
         const { error: studentError } = await supabase
-          .from('student_profiles')
-          .insert({
-            user_id: userId,
-            date_of_birth: studentData.dateOfBirth,
-            profile_photo: studentData.profilePhoto,
-            parent_name: studentData.parentName,
-            guardian_relation: studentData.guardianRelation,
-            primary_phone: studentData.primaryPhone,
-            secondary_phone: studentData.secondaryPhone,
-            whatsapp_enabled: studentData.whatsappEnabled,
-            address: studentData.address,
-            id_proof: studentData.idProof
+          .rpc('create_student_profile', {
+            user_id_param: userId,
+            date_of_birth_param: studentData.date_of_birth || null,
+            profile_photo_param: studentData.profile_photo || null,
+            parent_name_param: studentData.parent_name || null,
+            guardian_relation_param: studentData.guardian_relation || null,
+            primary_phone_param: studentData.primary_phone || null,
+            secondary_phone_param: studentData.secondary_phone || null,
+            whatsapp_enabled_param: studentData.whatsapp_enabled || false,
+            address_param: studentData.address || null,
+            id_proof_param: studentData.id_proof || null
           });
 
         if (studentError) {
@@ -259,15 +265,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           firstName,
           lastName,
           email: email.toLowerCase(),
-          dateOfBirth: studentData?.dateOfBirth,
-          profilePhoto: studentData?.profilePhoto,
-          parentName: studentData?.parentName,
-          guardianRelation: studentData?.guardianRelation,
-          primaryPhone: studentData?.primaryPhone,
-          secondaryPhone: studentData?.secondaryPhone,
-          whatsappEnabled: studentData?.whatsappEnabled,
+          dateOfBirth: studentData?.date_of_birth,
+          profilePhoto: studentData?.profile_photo,
+          parentName: studentData?.parent_name,
+          guardianRelation: studentData?.guardian_relation,
+          primaryPhone: studentData?.primary_phone,
+          secondaryPhone: studentData?.secondary_phone,
+          whatsappEnabled: studentData?.whatsapp_enabled,
           address: studentData?.address,
-          idProof: studentData?.idProof
+          idProof: studentData?.id_proof
         } : undefined
       };
 

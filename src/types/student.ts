@@ -14,3 +14,18 @@ export interface StudentProfile {
   address?: string;
   idProof?: string;
 }
+
+// Interface that defines the structure we'll use when storing student profiles
+// This matches the custom_users table directly
+export interface StudentProfileData {
+  user_id: string;
+  date_of_birth?: string;
+  profile_photo?: string;
+  parent_name?: string;
+  guardian_relation?: string;
+  primary_phone?: string;
+  secondary_phone?: string;
+  whatsapp_enabled?: boolean;
+  address?: string;
+  id_proof?: string;
+}
