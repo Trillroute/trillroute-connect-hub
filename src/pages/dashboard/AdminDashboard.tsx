@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,9 +13,9 @@ import {
   canManageTeachers, 
   canManageCourses,
   AdminPermission,
-  hasPermission
+  hasPermission,
+  clearPermissionsCache
 } from '@/utils/adminPermissions';
-import { UserManagementUser } from '@/types/student';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -38,24 +39,22 @@ const AdminDashboard = () => {
     viewLeads: false,
   });
 
+  // Clear permissions cache to ensure fresh checks
   useEffect(() => {
     if (user) {
-      const userForPermissions: UserManagementUser = {
+      clearPermissionsCache(user.id);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      const userForPermissions = {
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-        createdAt: user.createdAt,
-        dateOfBirth: user.dateOfBirth,
-        profilePhoto: user.profilePhoto,
-        parentName: user.parentName,
-        guardianRelation: user.guardianRelation,
-        primaryPhone: user.primaryPhone,
-        secondaryPhone: user.secondaryPhone,
-        whatsappEnabled: user.whatsappEnabled,
-        address: user.address,
-        idProof: user.idProof,
+        createdAt: user.createdAt || new Date().toISOString(),
         adminLevel: user.adminLevel
       };
 
@@ -161,6 +160,8 @@ const AdminDashboard = () => {
         {activeTab === 'users' && permissionMap.viewUsers && (
           <UserManagement 
             allowAdminCreation={false} // Regular admins can't create other admins
+            canAddUser={permissionMap.addUsers}
+            canDeleteUser={permissionMap.removeUsers}
           />
         )}
         

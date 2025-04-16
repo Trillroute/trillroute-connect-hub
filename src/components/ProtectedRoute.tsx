@@ -49,14 +49,14 @@ const ProtectedRoute = ({
 
   // Check for specific permissions if user is an admin
   if (requiredPermissions.length > 0 && user.role === 'admin') {
-    // Convert UserData to format expected by hasPermission
     const userForPermissionCheck = {
-      ...user,
       id: user.id,
       role: user.role,
       adminLevel: user.adminLevel,
-      // Add other required fields for UserManagementUser
-      createdAt: user.createdAt
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      createdAt: user.createdAt || new Date().toISOString(),
     };
 
     const hasAllRequiredPermissions = requiredPermissions.every(permission => 
