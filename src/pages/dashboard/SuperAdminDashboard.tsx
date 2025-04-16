@@ -314,7 +314,7 @@ const SuperAdminDashboard = () => {
       </div>
 
       <div className="mb-8">
-        {activeTab === 'courses' && <CourseManagement />}
+        {activeTab === 'courses' && <CourseManagement canAddCourse={true} canDeleteCourse={true} />}
         {activeTab === 'students' && <StudentManagement />}
         {activeTab === 'teachers' && <TeacherManagement />}
         {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}

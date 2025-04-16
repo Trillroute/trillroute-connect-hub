@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,15 @@ import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
 import { Input } from '@/components/ui/input';
 
-const CourseManagement = () => {
+interface CourseManagementProps {
+  canAddCourse?: boolean;
+  canDeleteCourse?: boolean;
+}
+
+const CourseManagement: React.FC<CourseManagementProps> = ({ 
+  canAddCourse = true, 
+  canDeleteCourse = true 
+}) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -51,13 +60,15 @@ const CourseManagement = () => {
               <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
-            <Button 
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="bg-primary text-white flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Course
-            </Button>
+            {canAddCourse && (
+              <Button 
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="bg-primary text-white flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Course
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -102,15 +113,17 @@ const CourseManagement = () => {
           courses={courses} 
           loading={loading} 
           onEdit={openEditDialog} 
-          onDelete={openDeleteDialog}
+          onDelete={canDeleteCourse ? openDeleteDialog : undefined}
         />
       </CardContent>
 
-      <CreateCourseDialog 
-        open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen} 
-        onSuccess={fetchCourses}
-      />
+      {canAddCourse && (
+        <CreateCourseDialog 
+          open={isCreateDialogOpen} 
+          onOpenChange={setIsCreateDialogOpen} 
+          onSuccess={fetchCourses}
+        />
+      )}
 
       {selectedCourse && (
         <>
@@ -121,12 +134,14 @@ const CourseManagement = () => {
             onSuccess={fetchCourses}
           />
           
-          <DeleteCourseDialog 
-            open={isDeleteDialogOpen} 
-            onOpenChange={setIsDeleteDialogOpen} 
-            course={selectedCourse}
-            onSuccess={fetchCourses}
-          />
+          {canDeleteCourse && (
+            <DeleteCourseDialog 
+              open={isDeleteDialogOpen} 
+              onOpenChange={setIsDeleteDialogOpen} 
+              course={selectedCourse}
+              onSuccess={fetchCourses}
+            />
+          )}
         </>
       )}
     </Card>
