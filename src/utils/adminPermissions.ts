@@ -1,4 +1,3 @@
-
 /**
  * Admin Permission Level Utility
  * 
@@ -13,6 +12,13 @@
  */
 
 import { UserManagementUser } from "@/types/student";
+
+// Define a more generic user type that works with both UserData and UserManagementUser
+export interface PermissionUser {
+  id: string;
+  role: string;
+  adminLevel?: number;
+}
 
 export enum AdminPermission {
   VIEW_STUDENTS = 'view_students',
@@ -111,7 +117,7 @@ let cachedPermissions = new Map<string, boolean>();
 /**
  * Check if a user has a specific permission
  */
-export const hasPermission = (user: UserManagementUser | null, permission: AdminPermission): boolean => {
+export const hasPermission = (user: UserManagementUser | PermissionUser | null, permission: AdminPermission): boolean => {
   if (!user) return false;
   
   // Superadmins have all permissions
@@ -166,7 +172,7 @@ export const getPermissionsForLevel = (level: number): AdminPermission[] => {
 /**
  * Helper function to determine if a specific user can perform actions on students
  */
-export const canManageStudents = (user: UserManagementUser | null, action: 'view' | 'add' | 'remove'): boolean => {
+export const canManageStudents = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'remove'): boolean => {
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_STUDENTS);
   } else if (action === 'add') {
@@ -179,7 +185,7 @@ export const canManageStudents = (user: UserManagementUser | null, action: 'view
 /**
  * Helper function to determine if a specific user can perform actions on teachers
  */
-export const canManageTeachers = (user: UserManagementUser | null, action: 'view' | 'add' | 'remove'): boolean => {
+export const canManageTeachers = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'remove'): boolean => {
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_TEACHERS);
   } else if (action === 'add') {
@@ -192,7 +198,7 @@ export const canManageTeachers = (user: UserManagementUser | null, action: 'view
 /**
  * Helper function to determine if a specific user can perform actions on courses
  */
-export const canManageCourses = (user: UserManagementUser | null, action: 'view' | 'add' | 'remove'): boolean => {
+export const canManageCourses = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'remove'): boolean => {
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_COURSES);
   } else if (action === 'add') {
@@ -205,7 +211,7 @@ export const canManageCourses = (user: UserManagementUser | null, action: 'view'
 /**
  * Helper to check if user has access to any user management features
  */
-export const hasUserManagementAccess = (user: UserManagementUser | null): boolean => {
+export const hasUserManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
   return canManageStudents(user, 'view') || 
          canManageTeachers(user, 'view') ||
          canManageStudents(user, 'add') ||
@@ -217,7 +223,7 @@ export const hasUserManagementAccess = (user: UserManagementUser | null): boolea
 /**
  * Helper to check if user has access to any course management features
  */
-export const hasCourseManagementAccess = (user: UserManagementUser | null): boolean => {
+export const hasCourseManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
   return canManageCourses(user, 'view') ||
          canManageCourses(user, 'add') ||
          canManageCourses(user, 'remove');

@@ -20,6 +20,8 @@ interface UserData {
   whatsappEnabled?: boolean;
   address?: string;
   idProof?: string;
+  adminLevel?: number;
+  createdAt: string;
 }
 
 interface CustomUser {
@@ -39,6 +41,7 @@ interface CustomUser {
   whatsapp_enabled?: boolean;
   address?: string;
   id_proof?: string;
+  admin_level?: number;
 }
 
 interface AuthContextType {
@@ -150,6 +153,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         whatsappEnabled: userData.whatsapp_enabled,
         address: userData.address,
         idProof: userData.id_proof,
+        createdAt: userData.created_at,
+        adminLevel: userData.admin_level
       };
       
       setUser(authUser);
@@ -202,6 +207,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const passwordHash = await hashPassword(password);
       const userId = crypto.randomUUID();
+      const createdAt = new Date().toISOString();
 
       const insertData = {
         id: userId,
@@ -210,7 +216,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         first_name: firstName,
         last_name: lastName,
         role: role,
-        created_at: new Date().toISOString(),
+        created_at: createdAt,
         ...(additionalData && {
           date_of_birth: additionalData.date_of_birth,
           profile_photo: additionalData.profile_photo,
@@ -238,6 +244,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName,
         lastName,
         role,
+        createdAt: createdAt,
         ...(additionalData && {
           dateOfBirth: additionalData.date_of_birth,
           profilePhoto: additionalData.profile_photo,

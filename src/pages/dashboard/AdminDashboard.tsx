@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
   AdminPermission,
   hasPermission
 } from '@/utils/adminPermissions';
+import { UserManagementUser } from '@/types/student';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -40,25 +40,43 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      const canViewStudents = canManageStudents(user, 'view');
-      const canViewTeachers = canManageTeachers(user, 'view');
-      const canAddStudents = canManageStudents(user, 'add');
-      const canAddTeachers = canManageTeachers(user, 'add');
-      const canRemoveStudents = canManageStudents(user, 'remove');
-      const canRemoveTeachers = canManageTeachers(user, 'remove');
+      const userForPermissions: UserManagementUser = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+        dateOfBirth: user.dateOfBirth,
+        profilePhoto: user.profilePhoto,
+        parentName: user.parentName,
+        guardianRelation: user.guardianRelation,
+        primaryPhone: user.primaryPhone,
+        secondaryPhone: user.secondaryPhone,
+        whatsappEnabled: user.whatsappEnabled,
+        address: user.address,
+        idProof: user.idProof,
+        adminLevel: user.adminLevel
+      };
+
+      const canViewStudents = canManageStudents(userForPermissions, 'view');
+      const canViewTeachers = canManageTeachers(userForPermissions, 'view');
+      const canAddStudents = canManageStudents(userForPermissions, 'add');
+      const canAddTeachers = canManageTeachers(userForPermissions, 'add');
+      const canRemoveStudents = canManageStudents(userForPermissions, 'remove');
+      const canRemoveTeachers = canManageTeachers(userForPermissions, 'remove');
       
       setPermissionMap({
         viewUsers: canViewStudents || canViewTeachers,
         addUsers: canAddStudents || canAddTeachers,
         removeUsers: canRemoveStudents || canRemoveTeachers,
-        viewCourses: canManageCourses(user, 'view'),
-        addCourses: canManageCourses(user, 'add'),
-        removeCourses: canManageCourses(user, 'remove'),
+        viewCourses: canManageCourses(userForPermissions, 'view'),
+        addCourses: canManageCourses(userForPermissions, 'add'),
+        removeCourses: canManageCourses(userForPermissions, 'remove'),
         viewLeads: true, // All admins can view leads
       });
 
-      // Set initial active tab based on permissions
-      if (canManageCourses(user, 'view')) {
+      if (canManageCourses(userForPermissions, 'view')) {
         setActiveTab('courses');
       } else if (canViewStudents || canViewTeachers) {
         setActiveTab('users');
@@ -68,7 +86,6 @@ const AdminDashboard = () => {
     }
   }, [user]);
 
-  // Determine which admin level the user has
   const adminLevel = user?.adminLevel || 8; // Default to most restrictive level (8) if undefined
   const adminLevelName = getAdminLevelName(adminLevel);
 
@@ -95,7 +112,6 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      {/* Only show tab navigation if user has permission to see at least two sections */}
       {(
         (permissionMap.viewUsers && permissionMap.viewCourses) || 
         (permissionMap.viewUsers && permissionMap.viewLeads) || 
@@ -152,7 +168,6 @@ const AdminDashboard = () => {
           <LeadManagement />
         )}
 
-        {/* Fallback if user somehow has no permissions */}
         {(!permissionMap.viewCourses && !permissionMap.viewUsers && !permissionMap.viewLeads) && (
           <Card>
             <CardHeader>
