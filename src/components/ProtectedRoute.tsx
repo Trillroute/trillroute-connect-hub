@@ -20,7 +20,7 @@ const ProtectedRoute = ({
   requireSuperAdmin = false,
   requiredPermissions = [],
 }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin, isSuperAdmin } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -40,7 +40,7 @@ const ProtectedRoute = ({
   }
 
   // Check for admin requirement
-  if (requireAdmin && !isAdmin()) {
+  if (requireAdmin && user.role !== 'admin' && user.role !== 'superadmin') {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }

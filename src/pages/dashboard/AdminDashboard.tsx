@@ -20,7 +20,7 @@ import {
   AdminLevel,
   updateCachedAdminRoles
 } from '@/utils/adminPermissions';
-import { fetchAdminRoles } from '@/components/superadmin/AdminService';
+import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
 
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!user) return;
     
-    // Check if user is a superadmin - this is a critical fix
+    // Check if user is a superadmin
     const isSuperAdminUser = user.role === 'superadmin';
     console.log('[AdminDashboard] Is user superadmin?', isSuperAdminUser);
     

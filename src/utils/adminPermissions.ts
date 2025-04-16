@@ -1,3 +1,4 @@
+
 /**
  * Admin Permission Level Utility
  * 
@@ -85,7 +86,7 @@ let cachedAdminRoles = new Map<string, AdminLevel>();
 export const hasPermission = (user: UserManagementUser | PermissionUser | null, permission: AdminPermission): boolean => {
   if (!user) return false;
   
-  // Superadmins have all permissions
+  // Superadmins have all permissions - critical fix
   if (user.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin always has permission:', permission);
     return true;
