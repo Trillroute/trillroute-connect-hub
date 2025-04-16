@@ -318,7 +318,7 @@ const UserTable = ({
                     ) : (
                       <UserPlus className="h-4 w-4 text-music-300 mr-1" />
                     )}
-                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    {user.role === 'superadmin' ? 'Super Admin' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                   </div>
                 </TableCell>
                 <TableCell>
