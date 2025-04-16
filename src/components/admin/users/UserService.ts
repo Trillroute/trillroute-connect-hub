@@ -29,7 +29,7 @@ export const fetchAllUsers = async (): Promise<UserManagementUser[]> => {
     whatsappEnabled: user.whatsapp_enabled,
     address: user.address,
     idProof: user.id_proof,
-    adminLevel: user.admin_level,
+    adminLevel: undefined,
     adminRoleName: user.admin_level_name || (user.role === 'admin' ? "Limited View" : undefined)
   }));
 };
@@ -56,7 +56,7 @@ export const addUser = async (userData: NewUserData) => {
     whatsapp_enabled: userData.whatsappEnabled,
     address: userData.address,
     id_proof: userData.idProof,
-    admin_level_name: userData.role === 'admin' ? "Limited View" : null // Default new admins to "Limited View" role
+    admin_level_name: userData.role === 'admin' ? "Limited View" : null
   };
   
   const { error } = await supabase
