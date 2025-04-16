@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { StudentProfileData } from '@/types/student';
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -80,13 +80,25 @@ const StudentRegistration = () => {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      // Registration will be handled by the parent component
+      const studentProfileData: Omit<StudentProfileData, 'user_id'> = {
+        date_of_birth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : undefined,
+        profile_photo: profilePhotoFile ? profilePhotoFile.name : undefined,
+        parent_name: data.parentName,
+        guardian_relation: data.guardianRelation,
+        primary_phone: data.primaryPhone,
+        secondary_phone: data.secondaryPhone,
+        whatsapp_enabled: data.whatsappEnabled,
+        address: data.address,
+        id_proof: idProofFile ? idProofFile.name : undefined
+      };
+      
       await registerUser(
         data.email,
         data.password,
         data.firstName,
         data.lastName,
-        'student'
+        'student',
+        studentProfileData
       );
 
       toast({
@@ -94,7 +106,6 @@ const StudentRegistration = () => {
         description: "Welcome to Trillroute! You are now logged in.",
       });
       
-      // Navigate to student dashboard
       navigate("/dashboard/student");
     } catch (error: any) {
       console.error("Registration error:", error);

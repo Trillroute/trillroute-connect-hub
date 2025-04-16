@@ -16,7 +16,7 @@ export interface StudentProfile {
 }
 
 // Interface that defines the structure we'll use when storing student profiles
-// This matches the custom_users table directly
+// This matches the student_profiles table directly
 export interface StudentProfileData {
   user_id: string;
   date_of_birth?: string;

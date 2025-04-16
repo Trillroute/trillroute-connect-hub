@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -76,7 +75,6 @@ const UserManagement = () => {
         throw error;
       }
 
-      // Transform the data to match our interface
       const formattedUsers = data.map((user) => ({
         id: user.id,
         firstName: user.first_name,
@@ -105,7 +103,6 @@ const UserManagement = () => {
 
   const handleAddUser = async () => {
     try {
-      // Validate input
       if (!newUserData.firstName || !newUserData.lastName || !newUserData.email || !newUserData.password) {
         toast({
           title: 'Missing fields',
@@ -117,13 +114,10 @@ const UserManagement = () => {
       
       setIsLoading(true);
       
-      // Hash the password
       const passwordHash = await hashPassword(newUserData.password);
       
-      // Generate a UUID for the user
       const userId = crypto.randomUUID();
       
-      // Insert the new user
       const { error: userError } = await supabase
         .from('custom_users')
         .insert({
@@ -140,7 +134,6 @@ const UserManagement = () => {
         throw userError;
       }
       
-      // If the user is a student, create a student profile
       if (newUserData.role === 'student') {
         const { error: profileError } = await supabase
           .rpc('create_student_profile', {
@@ -166,7 +159,6 @@ const UserManagement = () => {
         description: `${newUserData.role.charAt(0).toUpperCase() + newUserData.role.slice(1)} added successfully.`,
       });
       
-      // Reset form and close dialog
       setNewUserData({
         firstName: '',
         lastName: '',
@@ -176,7 +168,6 @@ const UserManagement = () => {
       });
       setIsAddDialogOpen(false);
       
-      // Refresh user list
       fetchUsers();
     } catch (error: any) {
       console.error('Error adding user:', error);

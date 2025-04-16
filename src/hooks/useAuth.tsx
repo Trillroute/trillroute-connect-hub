@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -46,7 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Initialize the auth state from localStorage on component mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -61,18 +59,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  // Login function - completely rewritten to better debug and fix issues
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Standardize email format to prevent case sensitivity issues
       const normalizedEmail = email.trim().toLowerCase();
       console.log(`[AUTH] Login attempt for email: ${normalizedEmail}`);
       
-      // Debug output: print the SQL query equivalent
       console.log(`[AUTH] DEBUG - querying for email: ${normalizedEmail}`);
       
-      // Fetch all users first to debug the issue
       const { data: allUsers, error: allUsersError } = await supabase
         .from('custom_users')
         .select('email');
@@ -83,7 +77,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('[AUTH] All users in database:', allUsers);
       }
       
-      // Now try to fetch the specific user
       const { data: users, error: queryError } = await supabase
         .from('custom_users')
         .select('*')
@@ -101,12 +94,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Invalid email or password');
       }
       
-      // Get the first matching user
       const userData = users[0] as CustomUser;
       console.log(`[AUTH] Found user with ID: ${userData.id}`);
       
-      // Verify password
-      console.log('[AUTH] Verifying password...');
       const isPasswordValid = await verifyPassword(password, userData.password_hash);
       console.log(`[AUTH] Password verification result: ${isPasswordValid}`);
       
@@ -117,20 +107,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('[AUTH] Login successful');
 
-      // If user is a student, fetch their student profile using direct SQL
       let studentProfile = null;
       if (userData.role === 'student') {
-        // Use custom SQL query to fetch student profile data to bypass TypeScript limitations
         const { data: studentData, error: studentError } = await supabase
           .rpc('get_student_profile', {
             user_id_param: userData.id
-          })
-          .single();
+          });
         
         if (studentError) {
           console.error('[AUTH] Error fetching student profile:', studentError);
         } else if (studentData) {
-          // Transform database fields to camelCase for frontend
           studentProfile = {
             id: userData.id,
             firstName: userData.first_name,
@@ -149,7 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Create user object from database data
       const authUser: UserData = {
         id: userData.id,
         email: userData.email,
@@ -159,7 +144,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         studentProfile: studentProfile || undefined,
       };
       
-      // Store user in state and localStorage
       setUser(authUser);
       localStorage.setItem('user', JSON.stringify(authUser));
       
@@ -169,7 +153,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
       });
       
-      // Redirect based on role
       navigate(`/dashboard/${authUser.role}`);
     } catch (error: any) {
       console.error('[AUTH] Login error:', error);
@@ -195,7 +178,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   ) => {
     setLoading(true);
     try {
-      // Check if user already exists
       const { data: existingUser } = await supabase
         .from('custom_users')
         .select('id')
@@ -206,13 +188,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('User with this email already exists');
       }
 
-      // Hash the password
       const passwordHash = await hashPassword(password);
 
-      // Generate a UUID for the user
       const userId = crypto.randomUUID();
 
-      // Insert new user into custom_users table
       const { error } = await supabase
         .from('custom_users')
         .insert({
@@ -229,10 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      // If registering as a student and studentData provided, create student profile
-      // Use a stored procedure to bypass TypeScript limitations
       if (role === 'student' && studentData) {
-        // We'll use a RPC call instead of direct table access
         const { error: studentError } = await supabase
           .rpc('create_student_profile', {
             user_id_param: userId,
@@ -249,11 +225,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (studentError) {
           console.error('Error creating student profile:', studentError);
-          // Continue with login even if student profile creation fails
         }
       }
 
-      // Create user object
       const userData: UserData = {
         id: userId,
         email: email.toLowerCase(),
@@ -277,7 +251,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } : undefined
       };
 
-      // Store user in state and localStorage
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
 
@@ -287,7 +260,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
       });
 
-      // Redirect based on role
       navigate(`/dashboard/${role}`);
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -305,7 +277,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      // Just remove user from state and localStorage
       setUser(null);
       localStorage.removeItem('user');
       
