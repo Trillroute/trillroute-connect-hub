@@ -19,7 +19,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [role, setRole] = useState<UserRole>('student');
+  const [role, setRole] = useState<UserRole>('teacher');
   const [isLoading, setIsLoading] = useState(false);
   
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -34,6 +34,7 @@ const Register = () => {
   const { register } = useAuth();
   const { toast } = useToast();
 
+  // Only redirect to StudentRegistration if role is student
   if (role === 'student') {
     return <StudentRegistration />;
   }
