@@ -19,7 +19,9 @@ export const useFetchLeads = () => {
 
       if (error) throw error;
       
-      setLeads(data || []);
+      // Type-cast the data to match our Lead type
+      const typedLeads = (data || []) as Lead[];
+      setLeads(typedLeads);
     } catch (error) {
       console.error('Error fetching leads:', error);
       toast({

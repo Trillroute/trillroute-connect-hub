@@ -21,6 +21,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, loading, onEdit, onDelete 
       case 'qualified': return 'bg-purple-500';
       case 'converted': return 'bg-green-500';
       case 'lost': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
@@ -54,10 +55,10 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, loading, onEdit, onDelete 
               <Badge 
                 className={`${getStatusColor(lead.status)} text-white`}
               >
-                {lead.status}
+                {lead.status || 'unknown'}
               </Badge>
             </TableCell>
-            <TableCell>{lead.source}</TableCell>
+            <TableCell>{lead.source || '-'}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Button 

@@ -11,6 +11,7 @@ import CreateLeadDialog from './leads/CreateLeadDialog';
 import EditLeadDialog from './leads/EditLeadDialog';
 import DeleteLeadDialog from './leads/DeleteLeadDialog';
 import { useFetchLeads } from '@/hooks/useFetchLeads';
+import { Lead } from '@/types/lead';
 
 const LeadManagement = () => {
   const { toast } = useToast();
