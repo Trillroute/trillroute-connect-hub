@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -41,16 +40,13 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Update leads when initialLeads changes
   useEffect(() => {
     setLeads(initialLeads);
   }, [initialLeads]);
 
-  // Apply search, sort, and filter
   useEffect(() => {
     let filteredLeads = [...initialLeads];
     
-    // Apply search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filteredLeads = filteredLeads.filter(
@@ -61,12 +57,10 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
       );
     }
     
-    // Apply status filter
     if (statusFilter !== 'all') {
       filteredLeads = filteredLeads.filter(lead => lead.status === statusFilter);
     }
     
-    // Apply sorting
     filteredLeads.sort((a, b) => {
       let comparison = 0;
       
@@ -96,7 +90,6 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
     setLeads(filteredLeads);
   }, [initialLeads, searchQuery, sortField, sortDirection, statusFilter]);
 
-  // Toggle sort direction and field
   const handleSort = (field: SortField) => {
     if (field === sortField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
