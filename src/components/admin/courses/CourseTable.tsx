@@ -72,35 +72,35 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             <TableCell className="hidden md:table-cell">{course.skill}</TableCell>
             <TableCell className="hidden md:table-cell">{course.duration}</TableCell>
             <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end space-x-2">
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="bg-white hover:bg-gray-100 border-none"
+                  size="sm"
                   onClick={() => viewCourse(course.id)}
                 >
                   <Eye className="h-4 w-4" />
+                  <span className="sr-only">View</span>
                 </Button>
                 
                 {onEdit && (
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="bg-white hover:bg-gray-100 border-none"
+                    size="sm"
                     onClick={() => onEdit(course)}
                   >
                     <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
                   </Button>
                 )}
                 
                 {onDelete && (
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="bg-white hover:bg-gray-100 border-none"
+                    size="sm"
                     onClick={() => onDelete(course)}
                   >
                     <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
                   </Button>
                 )}
               </div>
