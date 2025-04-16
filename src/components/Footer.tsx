@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, MapPin, Phone } from 'lucide-react';
@@ -6,7 +7,7 @@ const Footer = () => {
   return (
     <footer className="bg-white border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
             <div className="flex items-center">
               <Music className="h-8 w-8 text-music-500" />
@@ -48,16 +49,8 @@ const Footer = () => {
             <ul className="mt-4 space-y-2">
               <li><Link to="/" className="text-base text-gray-500 hover:text-music-500">Home</Link></li>
               <li><Link to="/courses" className="text-base text-gray-500 hover:text-music-500">Courses</Link></li>
-              <li><Link to="/about" className="text-base text-gray-500 hover:text-music-500">About</Link></li>
-              <li><Link to="/contact" className="text-base text-gray-500 hover:text-music-500">Contact</Link></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">Resources</h3>
-            <ul className="mt-4 space-y-2">
               <li><Link to="/teachers" className="text-base text-gray-500 hover:text-music-500">Instructor Portal</Link></li>
-              <li><a href="/faq" className="text-base text-gray-500 hover:text-music-500">FAQs</a></li>
+              <li><Link to="/faq" className="text-base text-gray-500 hover:text-music-500">FAQs</Link></li>
             </ul>
           </div>
           
