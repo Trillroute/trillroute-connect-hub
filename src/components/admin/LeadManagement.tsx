@@ -44,7 +44,7 @@ const LeadManagement = () => {
         throw error;
       }
       
-      setLeads(data || []);
+      setLeads(data as Lead[] || []);
     } catch (error) {
       console.error('Error fetching leads:', error);
       toast({
@@ -71,7 +71,7 @@ const LeadManagement = () => {
   const filteredLeads = leads.filter(lead => 
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phone.includes(searchTerm)
+    (lead.phone && lead.phone.includes(searchTerm))
   );
   
   const formatDate = (dateString: string) => {
@@ -157,10 +157,12 @@ const LeadManagement = () => {
                               <Mail className="h-3.5 w-3.5 text-gray-500" />
                               <span className="text-sm">{lead.email}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-3.5 w-3.5 text-gray-500" />
-                              <span className="text-sm">{lead.phone}</span>
-                            </div>
+                            {lead.phone && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-3.5 w-3.5 text-gray-500" />
+                                <span className="text-sm">{lead.phone}</span>
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>{lead.source || 'N/A'}</TableCell>
@@ -169,7 +171,7 @@ const LeadManagement = () => {
                             variant="secondary" 
                             className={`${getStatusColor(lead.status)} text-white capitalize`}
                           >
-                            {lead.status}
+                            {lead.status || 'new'}
                           </Badge>
                         </TableCell>
                         <TableCell>{formatDate(lead.created_at)}</TableCell>
