@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { StudentProfile } from '@/types/student';
 
 export type UserRole = 'student' | 'teacher' | 'admin' | 'superadmin';
 
@@ -162,7 +161,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         duration: 3000,
       });
       
-      navigate(`/dashboard/${authUser.role}`);
+      if (authUser.role === 'superadmin') {
+        navigate('/dashboard/superadmin');
+      } else {
+        navigate(`/dashboard/${authUser.role}`);
+      }
     } catch (error: any) {
       console.error('[AUTH] Login error:', error);
       toast({
