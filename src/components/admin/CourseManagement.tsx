@@ -36,13 +36,29 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   
   const openEditDialog = (course: Course) => {
-    if (!canEditCourse) return;
+    // Only allow opening the edit dialog if the user has edit permissions
+    if (!canEditCourse) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit courses.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedCourse(course);
     setIsEditDialogOpen(true);
   };
 
   const openDeleteDialog = (course: Course) => {
-    if (!canDeleteCourse) return;
+    // Only allow opening the delete dialog if the user has delete permissions
+    if (!canDeleteCourse) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to delete courses.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedCourse(course);
     setIsDeleteDialogOpen(true);
   };

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -12,6 +11,7 @@ import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { useAuth } from '@/hooks/useAuth';
+import { canManageCourses } from '@/utils/adminPermissions';
 
 interface EditCourseDialogProps {
   open: boolean;
@@ -58,6 +58,19 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   
+  const hasEditPermission = user?.role === 'superadmin' || canManageCourses(user, 'edit');
+  
+  useEffect(() => {
+    if (open && !hasEditPermission) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+    }
+  }, [open, hasEditPermission, onOpenChange, toast]);
+
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
 
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
@@ -128,6 +141,16 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   }, [course, form, open, instructorIds]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
+    if (!hasEditPermission) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
@@ -189,7 +212,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && hasEditPermission} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Course</DialogTitle>
@@ -225,7 +248,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
             type="submit"
             className="bg-music-500 hover:bg-music-600"
             onClick={form.handleSubmit(handleUpdateCourse)}
-            disabled={isLoading}
+            disabled={isLoading || !hasEditPermission}
           >
             Update Course
           </Button>
