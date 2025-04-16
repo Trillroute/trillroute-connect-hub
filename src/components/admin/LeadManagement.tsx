@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { PlusCircle, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,16 +33,24 @@ const LeadManagement = () => {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Lead Management</CardTitle>
-        <Button 
-          className="bg-music-500 hover:bg-music-600" 
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Lead
-        </Button>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Lead Management</CardTitle>
+            <CardDescription>Manage prospective students</CardDescription>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={fetchLeads}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Add Lead
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <LeadTable 
@@ -51,31 +59,31 @@ const LeadManagement = () => {
           onEdit={openEditDialog} 
           onDelete={openDeleteDialog}
         />
+        
+        <CreateLeadDialog 
+          open={isCreateDialogOpen} 
+          onOpenChange={setIsCreateDialogOpen} 
+          onSuccess={fetchLeads}
+        />
+        
+        {selectedLead && (
+          <>
+            <EditLeadDialog 
+              open={isEditDialogOpen} 
+              onOpenChange={setIsEditDialogOpen} 
+              lead={selectedLead}
+              onSuccess={fetchLeads}
+            />
+            
+            <DeleteLeadDialog 
+              open={isDeleteDialogOpen} 
+              onOpenChange={setIsDeleteDialogOpen} 
+              lead={selectedLead}
+              onSuccess={fetchLeads}
+            />
+          </>
+        )}
       </CardContent>
-
-      <CreateLeadDialog 
-        open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen} 
-        onSuccess={fetchLeads}
-      />
-
-      {selectedLead && (
-        <>
-          <EditLeadDialog 
-            open={isEditDialogOpen} 
-            onOpenChange={setIsEditDialogOpen} 
-            lead={selectedLead}
-            onSuccess={fetchLeads}
-          />
-          
-          <DeleteLeadDialog 
-            open={isDeleteDialogOpen} 
-            onOpenChange={setIsDeleteDialogOpen} 
-            lead={selectedLead}
-            onSuccess={fetchLeads}
-          />
-        </>
-      )}
     </Card>
   );
 };

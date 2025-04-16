@@ -1,10 +1,27 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, UserPlus, ArrowUpDown, Search, Filter, X } from 'lucide-react';
 import { Lead } from '@/types/lead';
+import { Input } from '@/components/ui/input';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type LeadTableProps = {
   leads: Lead[];
@@ -13,7 +30,89 @@ type LeadTableProps = {
   onDelete: (lead: Lead) => void;
 };
 
-const LeadTable: React.FC<LeadTableProps> = ({ leads, loading, onEdit, onDelete }) => {
+type SortField = 'name' | 'email' | 'status' | 'source' | 'created_at';
+type SortDirection = 'asc' | 'desc';
+
+const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onEdit, onDelete }) => {
+  const [leads, setLeads] = useState<Lead[]>(initialLeads);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Update leads when initialLeads changes
+  useEffect(() => {
+    setLeads(initialLeads);
+  }, [initialLeads]);
+
+  // Apply search, sort, and filter
+  useEffect(() => {
+    let filteredLeads = [...initialLeads];
+    
+    // Apply search
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filteredLeads = filteredLeads.filter(
+        lead => 
+          lead.name.toLowerCase().includes(query) || 
+          lead.email.toLowerCase().includes(query) ||
+          (lead.phone && lead.phone.toLowerCase().includes(query))
+      );
+    }
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filteredLeads = filteredLeads.filter(lead => lead.status === statusFilter);
+    }
+    
+    // Apply sorting
+    filteredLeads.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortField) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'email':
+          comparison = a.email.localeCompare(b.email);
+          break;
+        case 'status':
+          comparison = String(a.status || '').localeCompare(String(b.status || ''));
+          break;
+        case 'source':
+          comparison = String(a.source || '').localeCompare(String(b.source || ''));
+          break;
+        case 'created_at':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        default:
+          comparison = 0;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    
+    setLeads(filteredLeads);
+  }, [initialLeads, searchQuery, sortField, sortDirection, statusFilter]);
+
+  // Toggle sort direction and field
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSortField('created_at');
+    setSortDirection('desc');
+  };
+
   const getStatusColor = (status: Lead['status']) => {
     switch (status) {
       case 'new': return 'bg-blue-500';
@@ -24,63 +123,225 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads, loading, onEdit, onDelete 
       default: return 'bg-gray-500';
     }
   };
-
+  
   if (loading) {
-    return <div className="text-center py-4">Loading leads...</div>;
+    return <div className="py-8 text-center text-gray-500">Loading leads...</div>;
   }
-
-  if (leads.length === 0) {
-    return <div className="text-center py-4">No leads found</div>;
+  
+  if (leads.length === 0 && !searchQuery && statusFilter === 'all') {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-md">
+        <UserPlus className="h-12 w-12 text-gray-300 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-1">No leads yet</h3>
+        <p className="text-gray-500 max-w-sm mb-4">
+          Add your first lead by clicking the "Add Lead" button.
+        </p>
+      </div>
+    );
   }
-
+  
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Phone</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Source</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {leads.map((lead) => (
-          <TableRow key={lead.id}>
-            <TableCell>{lead.name}</TableCell>
-            <TableCell>{lead.email}</TableCell>
-            <TableCell>{lead.phone}</TableCell>
-            <TableCell>
-              <Badge 
-                className={`${getStatusColor(lead.status)} text-white`}
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            type="search"
+            placeholder="Search leads..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="h-4 w-4 mr-2" /> 
+            {showFilters ? "Hide Filters" : "Show Filters"}
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <ArrowUpDown className="h-4 w-4 mr-2" /> Sort
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                className={sortField === 'name' ? 'bg-accent' : ''}
+                onClick={() => handleSort('name')}
               >
-                {lead.status || 'unknown'}
-              </Badge>
-            </TableCell>
-            <TableCell>{lead.source || '-'}</TableCell>
-            <TableCell>
-              <div className="flex space-x-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onEdit(lead)}
+                Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={sortField === 'email' ? 'bg-accent' : ''}
+                onClick={() => handleSort('email')}
+              >
+                Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={sortField === 'status' ? 'bg-accent' : ''}
+                onClick={() => handleSort('status')}
+              >
+                Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={sortField === 'source' ? 'bg-accent' : ''}
+                onClick={() => handleSort('source')}
+              >
+                Source {sortField === 'source' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={sortField === 'created_at' ? 'bg-accent' : ''}
+                onClick={() => handleSort('created_at')}
+              >
+                Created Date {sortField === 'created_at' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={clearFilters}>
+                <X className="h-4 w-4 mr-2" /> Clear Filters
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      
+      {showFilters && (
+        <div className="p-4 bg-muted/40 rounded-md border">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div>
+              <p className="text-sm font-medium mb-1">Filter by Status</p>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="qualified">Qualified</SelectItem>
+                  <SelectItem value="converted">Converted</SelectItem>
+                  <SelectItem value="lost">Lost</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearFilters}
+              className="self-end mb-0.5"
+            >
+              <X className="h-4 w-4 mr-1" /> Clear All
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {leads.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">
+          No leads match your search criteria.
+        </div>
+      ) : (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead 
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleSort('name')}
                 >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onDelete(lead)}
+                  Name {sortField === 'name' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleSort('email')}
                 >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+                  Email {sortField === 'email' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleSort('status')}
+                >
+                  Status {sortField === 'status' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleSort('source')}
+                >
+                  Source {sortField === 'source' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleSort('created_at')}
+                >
+                  Created {sortField === 'created_at' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {leads.map((lead) => (
+                <TableRow key={lead.id}>
+                  <TableCell className="font-medium">{lead.name}</TableCell>
+                  <TableCell>{lead.email}</TableCell>
+                  <TableCell>{lead.phone || '-'}</TableCell>
+                  <TableCell>
+                    <Badge className={`${getStatusColor(lead.status)} text-white`}>
+                      {lead.status || 'Unknown'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{lead.source || '-'}</TableCell>
+                  <TableCell>
+                    {format(new Date(lead.created_at), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => onEdit(lead)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit lead</span>
+                      </Button>
+                      <Button
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50"
+                        onClick={() => onDelete(lead)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete lead</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+      <div className="text-sm text-muted-foreground pt-2">
+        Showing {leads.length} of {initialLeads.length} leads
+      </div>
+    </div>
   );
 };
 
