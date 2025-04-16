@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Music, ChevronDown, UserCircle } from 'lucide-react';
+import { Menu, X, Music, ChevronDown, UserCircle, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout, role } = useAuth();
+  const { user, logout, role, isSuperAdmin } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -21,6 +21,10 @@ const Navbar = () => {
 
   const dashboardLink = () => {
     if (!user) return null;
+    
+    if (isSuperAdmin()) {
+      return { name: 'SuperAdmin Dashboard', path: '/dashboard/superadmin' };
+    }
     
     switch(role) {
       case 'student':
@@ -68,6 +72,7 @@ const Navbar = () => {
                 to={dashboardOption.path}
                 className="inline-flex items-center px-1 pt-1 text-sm font-medium text-music-500 hover:text-music-600 transition-colors"
               >
+                {isSuperAdmin() && <ShieldCheck className="mr-1 h-4 w-4" />}
                 {dashboardOption.name}
               </Link>
             )}
@@ -144,6 +149,7 @@ const Navbar = () => {
               className="block px-4 py-2 text-base font-medium text-music-500 hover:text-music-600 hover:bg-gray-50"
               onClick={() => setIsMenuOpen(false)}
             >
+              {isSuperAdmin() && <ShieldCheck className="inline-block mr-1 h-4 w-4" />}
               {dashboardOption.name}
             </Link>
           )}
