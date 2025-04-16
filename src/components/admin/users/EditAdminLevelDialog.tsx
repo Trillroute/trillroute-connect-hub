@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { AdminLevel, updateCachedAdminRoles } from '@/utils/adminPermissions';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditAdminLevelDialogProps {
   admin: UserManagementUser | null;
@@ -122,48 +123,50 @@ const EditAdminLevelDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Admin Permission Level</DialogTitle>
           <DialogDescription>
             Set permission level for {admin.firstName} {admin.lastName}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          {isLoadingLevels ? (
-            <div className="flex justify-center p-4">
-              <p>Loading admin levels...</p>
-            </div>
-          ) : (
-            <RadioGroup
-              value={selectedLevelName}
-              onValueChange={(value) => setSelectedLevelName(value)}
-              className="flex flex-col space-y-4"
-            >
-              {displayLevels.map((level) => (
-                <div key={level.name} className="flex items-start space-x-2 p-3 rounded hover:bg-muted border">
-                  <RadioGroupItem value={level.name} id={`level-${level.name}`} className="mt-1" />
-                  <div className="flex-1">
-                    <Label htmlFor={`level-${level.name}`} className="font-medium">{level.name}</Label>
-                    <p className="text-sm text-muted-foreground mb-2">{level.description}</p>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                      <div>
-                        {renderPermissionBadges(level.studentPermissions, 'Students')}
-                        {renderPermissionBadges(level.teacherPermissions, 'Teachers')}
-                        {renderPermissionBadges(level.adminPermissions, 'Admins')}
-                      </div>
-                      <div>
-                        {renderPermissionBadges(level.coursePermissions, 'Courses')}
-                        {renderPermissionBadges(level.leadPermissions, 'Leads')}
+        <ScrollArea className="max-h-[calc(100vh-14rem)] pr-4">
+          <div className="py-4">
+            {isLoadingLevels ? (
+              <div className="flex justify-center p-4">
+                <p>Loading admin levels...</p>
+              </div>
+            ) : (
+              <RadioGroup
+                value={selectedLevelName}
+                onValueChange={(value) => setSelectedLevelName(value)}
+                className="flex flex-col space-y-4"
+              >
+                {displayLevels.map((level) => (
+                  <div key={level.name} className="flex items-start space-x-2 p-3 rounded hover:bg-muted border">
+                    <RadioGroupItem value={level.name} id={`level-${level.name}`} className="mt-1" />
+                    <div className="flex-1">
+                      <Label htmlFor={`level-${level.name}`} className="font-medium">{level.name}</Label>
+                      <p className="text-sm text-muted-foreground mb-2">{level.description}</p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                        <div>
+                          {renderPermissionBadges(level.studentPermissions, 'Students')}
+                          {renderPermissionBadges(level.teacherPermissions, 'Teachers')}
+                          {renderPermissionBadges(level.adminPermissions, 'Admins')}
+                        </div>
+                        <div>
+                          {renderPermissionBadges(level.coursePermissions, 'Courses')}
+                          {renderPermissionBadges(level.leadPermissions, 'Leads')}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </RadioGroup>
-          )}
-        </div>
+                ))}
+              </RadioGroup>
+            )}
+          </div>
+        </ScrollArea>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)} variant="outline">
             Cancel

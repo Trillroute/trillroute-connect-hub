@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { PenSquare, Trash2, Shield, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AdminTableProps {
   admins: UserManagementUser[];
@@ -59,62 +60,64 @@ const AdminTable = ({
           {admins.length === 0 ? "No administrators found." : "No administrators match your search."}
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAdmins.map((admin) => (
-              <TableRow key={admin.id}>
-                <TableCell className="font-medium flex items-center">
-                  <Shield className="h-4 w-4 text-music-500 mr-2" />
-                  {`${admin.firstName} ${admin.lastName}`}
-                </TableCell>
-                <TableCell>{admin.email}</TableCell>
-                <TableCell>
-                  {format(new Date(admin.createdAt), 'MMM d, yyyy')}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-2">
-                    {onEditUserDetails && (
+        <ScrollArea className="h-[calc(100vh-16rem)] rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAdmins.map((admin) => (
+                <TableRow key={admin.id}>
+                  <TableCell className="font-medium flex items-center">
+                    <Shield className="h-4 w-4 text-music-500 mr-2" />
+                    {`${admin.firstName} ${admin.lastName}`}
+                  </TableCell>
+                  <TableCell>{admin.email}</TableCell>
+                  <TableCell>
+                    {format(new Date(admin.createdAt), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      {onEditUserDetails && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEditUserDetails(admin)}
+                          title="Edit user details"
+                        >
+                          <PenSquare className="h-4 w-4" />
+                          <span className="sr-only">Edit Details</span>
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onEditUserDetails(admin)}
-                        title="Edit user details"
+                        onClick={() => onEditAdmin(admin)}
+                        title="Edit admin role"
                       >
-                        <PenSquare className="h-4 w-4" />
-                        <span className="sr-only">Edit Details</span>
+                        <Shield className="h-4 w-4" />
+                        <span className="sr-only">Edit Role</span>
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEditAdmin(admin)}
-                      title="Edit admin role"
-                    >
-                      <Shield className="h-4 w-4" />
-                      <span className="sr-only">Edit Role</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDeleteAdmin(admin)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteAdmin(admin)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       )}
       <div className="text-sm text-muted-foreground pt-2">
         Showing {filteredAdmins.length} of {admins.length} administrators

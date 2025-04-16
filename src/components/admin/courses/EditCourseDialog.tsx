@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -12,6 +13,7 @@ import { useSkills } from '@/hooks/useSkills';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { useAuth } from '@/hooks/useAuth';
 import { canManageCourses } from '@/utils/adminPermissions';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditCourseDialogProps {
   open: boolean;
@@ -213,7 +215,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   return (
     <Dialog open={open && hasEditPermission} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Course</DialogTitle>
           <DialogDescription>
@@ -226,14 +228,16 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-music-500"></div>
           </div>
         ) : (
-          <CourseForm 
-            form={form} 
-            onSubmit={handleUpdateCourse} 
-            teachers={teachers}
-            skills={skills}
-            submitButtonText="Update Course"
-            cancelAction={() => onOpenChange(false)}
-          />
+          <ScrollArea className="max-h-[calc(100vh-14rem)] pr-4">
+            <CourseForm 
+              form={form} 
+              onSubmit={handleUpdateCourse} 
+              teachers={teachers}
+              skills={skills}
+              submitButtonText="Update Course"
+              cancelAction={() => onOpenChange(false)}
+            />
+          </ScrollArea>
         )}
         
         <DialogFooter className="pt-4">

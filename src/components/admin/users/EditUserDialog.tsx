@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { UserManagementUser } from '@/types/student';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditUserDialogProps {
   user: UserManagementUser | null;
@@ -109,157 +110,160 @@ const EditUserDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit {userRole}</DialogTitle>
           <DialogDescription>
             Update {userRole.toLowerCase()} information. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="grid grid-cols-2 gap-4">
+        
+        <ScrollArea className="h-[calc(100vh-14rem)] pr-4">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <label htmlFor="firstName" className="text-sm font-medium">
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <label htmlFor="lastName" className="text-sm font-medium">
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+
             <div className="grid gap-2">
-              <label htmlFor="firstName" className="text-sm font-medium">
-                First Name
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
               </label>
               <input
-                id="firstName"
-                name="firstName"
+                id="email"
+                name="email"
+                type="email"
                 className="px-3 py-2 border border-gray-300 rounded-md"
-                value={formData.firstName}
+                value={formData.email}
                 onChange={handleChange}
                 required
               />
             </div>
-            <div className="grid gap-2">
-              <label htmlFor="lastName" className="text-sm font-medium">
-                Last Name
-              </label>
-              <input
-                id="lastName"
-                name="lastName"
-                className="px-3 py-2 border border-gray-300 rounded-md"
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
 
-          <div className="grid gap-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              className="px-3 py-2 border border-gray-300 rounded-md"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <label htmlFor="primaryPhone" className="text-sm font-medium">
-                Primary Phone
-              </label>
-              <input
-                id="primaryPhone"
-                name="primaryPhone"
-                className="px-3 py-2 border border-gray-300 rounded-md"
-                value={formData.primaryPhone}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="secondaryPhone" className="text-sm font-medium">
-                Secondary Phone
-              </label>
-              <input
-                id="secondaryPhone"
-                name="secondaryPhone"
-                className="px-3 py-2 border border-gray-300 rounded-md"
-                value={formData.secondaryPhone}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <label htmlFor="address" className="text-sm font-medium">
-              Address
-            </label>
-            <input
-              id="address"
-              name="address"
-              className="px-3 py-2 border border-gray-300 rounded-md"
-              value={formData.address}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <label htmlFor="dateOfBirth" className="text-sm font-medium">
-              Date of Birth
-            </label>
-            <input
-              id="dateOfBirth"
-              name="dateOfBirth"
-              className="px-3 py-2 border border-gray-300 rounded-md"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              placeholder="YYYY-MM-DD"
-            />
-          </div>
-
-          {userRole === 'Student' && (
-            <>
+            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <label htmlFor="parentName" className="text-sm font-medium">
-                  Parent/Guardian Name
+                <label htmlFor="primaryPhone" className="text-sm font-medium">
+                  Primary Phone
                 </label>
                 <input
-                  id="parentName"
-                  name="parentName"
+                  id="primaryPhone"
+                  name="primaryPhone"
                   className="px-3 py-2 border border-gray-300 rounded-md"
-                  value={formData.parentName}
+                  value={formData.primaryPhone}
                   onChange={handleChange}
                 />
               </div>
-
+              
               <div className="grid gap-2">
-                <label htmlFor="guardianRelation" className="text-sm font-medium">
-                  Guardian Relationship
+                <label htmlFor="secondaryPhone" className="text-sm font-medium">
+                  Secondary Phone
                 </label>
                 <input
-                  id="guardianRelation"
-                  name="guardianRelation"
+                  id="secondaryPhone"
+                  name="secondaryPhone"
                   className="px-3 py-2 border border-gray-300 rounded-md"
-                  value={formData.guardianRelation}
+                  value={formData.secondaryPhone}
                   onChange={handleChange}
                 />
               </div>
-            </>
-          )}
+            </div>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </form>
+            <div className="grid gap-2">
+              <label htmlFor="address" className="text-sm font-medium">
+                Address
+              </label>
+              <input
+                id="address"
+                name="address"
+                className="px-3 py-2 border border-gray-300 rounded-md"
+                value={formData.address}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label htmlFor="dateOfBirth" className="text-sm font-medium">
+                Date of Birth
+              </label>
+              <input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                className="px-3 py-2 border border-gray-300 rounded-md"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                placeholder="YYYY-MM-DD"
+              />
+            </div>
+
+            {userRole === 'Student' && (
+              <>
+                <div className="grid gap-2">
+                  <label htmlFor="parentName" className="text-sm font-medium">
+                    Parent/Guardian Name
+                  </label>
+                  <input
+                    id="parentName"
+                    name="parentName"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.parentName}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label htmlFor="guardianRelation" className="text-sm font-medium">
+                    Guardian Relationship
+                  </label>
+                  <input
+                    id="guardianRelation"
+                    name="guardianRelation"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.guardianRelation}
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

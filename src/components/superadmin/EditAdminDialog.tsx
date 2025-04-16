@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { UserManagementUser } from '@/types/student';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditAdminDialogProps {
   admin: UserManagementUser | null;
@@ -46,29 +47,31 @@ const EditAdminDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Administrator Role</DialogTitle>
           <DialogDescription>
             Change the role of {admin.firstName} {admin.lastName}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <RadioGroup
-            value={selectedRole}
-            onValueChange={(value) => setSelectedRole(value as 'admin' | 'teacher')}
-            className="flex flex-col space-y-3"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="admin" id="admin" />
-              <Label htmlFor="admin" className="font-medium">Administrator</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="teacher" id="teacher" />
-              <Label htmlFor="teacher" className="font-medium">Teacher</Label>
-            </div>
-          </RadioGroup>
-        </div>
+        <ScrollArea className="max-h-[calc(100vh-14rem)] pr-4">
+          <div className="py-4">
+            <RadioGroup
+              value={selectedRole}
+              onValueChange={(value) => setSelectedRole(value as 'admin' | 'teacher')}
+              className="flex flex-col space-y-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="admin" id="admin" />
+                <Label htmlFor="admin" className="font-medium">Administrator</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="teacher" id="teacher" />
+                <Label htmlFor="teacher" className="font-medium">Teacher</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </ScrollArea>
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)} variant="outline">
             Cancel
