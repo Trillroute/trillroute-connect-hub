@@ -1,7 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserManagementUser } from '@/types/student';
 import { hashPassword } from '@/integrations/supabase/client';
 import { NewUserData } from './AddUserDialog';
+import { mapDatabaseUserToUserModel } from '@/utils/userMappers';
 
 export const fetchAllUsers = async (): Promise<UserManagementUser[]> => {
   const { data, error } = await supabase
@@ -13,25 +15,7 @@ export const fetchAllUsers = async (): Promise<UserManagementUser[]> => {
     throw error;
   }
 
-  return data.map((user) => ({
-    id: user.id,
-    firstName: user.first_name,
-    lastName: user.last_name,
-    email: user.email,
-    role: user.role,
-    createdAt: user.created_at,
-    dateOfBirth: user.date_of_birth,
-    profilePhoto: user.profile_photo,
-    parentName: user.parent_name,
-    guardianRelation: user.guardian_relation,
-    primaryPhone: user.primary_phone,
-    secondaryPhone: user.secondary_phone,
-    whatsappEnabled: user.whatsapp_enabled,
-    address: user.address,
-    idProof: user.id_proof,
-    adminLevel: undefined,
-    adminRoleName: user.admin_level_name || (user.role === 'admin' ? "Limited View" : undefined)
-  }));
+  return data.map(mapDatabaseUserToUserModel);
 };
 
 export const addUser = async (userData: NewUserData) => {
@@ -79,13 +63,6 @@ export const deleteUser = async (userId: string) => {
   }
 };
 
-export const updateAdminLevel = async (userId: string, levelName: string) => {
-  const { error } = await supabase
-    .from('custom_users')
-    .update({ admin_level_name: levelName })
-    .eq('id', userId);
-
-  if (error) {
-    throw error;
-  }
-};
+// This function is now imported from AdminRoleService
+import { updateAdminLevel as updateAdminLevelDb } from '@/components/superadmin/AdminRoleService';
+export const updateAdminLevel = updateAdminLevelDb;

@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth, UserRole } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/types/auth';
 import { hasPermission, AdminPermission } from '@/utils/adminPermissions';
 
 interface ProtectedRouteProps {
