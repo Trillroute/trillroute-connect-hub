@@ -35,15 +35,17 @@ const LeadManagement = () => {
     try {
       setLoading(true);
       
+      // Use type assertion to tell TypeScript that this is valid
       const { data, error } = await supabase
         .from('leads')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
       
       if (error) {
         throw error;
       }
       
+      // Type assertion to ensure it matches the Lead type
       setLeads(data as Lead[] || []);
     } catch (error) {
       console.error('Error fetching leads:', error);
