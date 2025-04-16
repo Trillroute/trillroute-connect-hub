@@ -33,8 +33,11 @@ const CreateLeadDialog: React.FC<CreateLeadDialogProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={() => onOpenChange(false)}>
-            Create Lead
+          <Button 
+            onClick={() => onOpenChange(false)}
+            className="bg-primary text-white"
+          >
+            Add Lead
           </Button>
         </div>
       </DialogContent>

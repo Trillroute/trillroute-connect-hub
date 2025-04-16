@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus } from 'lucide-react';
+import { Plus, RefreshCw, Filter, ArrowUpDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import CourseTable from './courses/CourseTable';
@@ -12,6 +12,7 @@ import EditCourseDialog from './courses/EditCourseDialog';
 import DeleteCourseDialog from './courses/DeleteCourseDialog';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
+import { Input } from '@/components/ui/input';
 
 const CourseManagement = () => {
   const { toast } = useToast();
@@ -21,6 +22,8 @@ const CourseManagement = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { courses, loading, fetchCourses } = useCourses();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   
   const openEditDialog = (course: Course) => {
     setSelectedCourse(course);
@@ -34,17 +37,68 @@ const CourseManagement = () => {
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Course Management</CardTitle>
-        <Button 
-          className="bg-music-500 hover:bg-music-600" 
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Course
-        </Button>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Course Management</CardTitle>
+            <CardDescription>Manage courses and lessons</CardDescription>
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              onClick={fetchCourses}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+            <Button 
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="bg-primary text-white flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add New Course
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
+          <div className="relative w-full sm:w-auto flex-1">
+            <Input
+              type="search"
+              placeholder="Search courses..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+          </div>
+          
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4" /> 
+              Show Filters
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+            >
+              <ArrowUpDown className="h-4 w-4" /> 
+              Sort
+            </Button>
+          </div>
+        </div>
+
         <CourseTable 
           courses={courses} 
           loading={loading} 
