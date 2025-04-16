@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock, User, UserPlus, Phone, Home, Calendar, Upload } from 'lucide-react';
@@ -22,7 +21,6 @@ const Register = () => {
   const [role, setRole] = useState<UserRole>('student');
   const [isLoading, setIsLoading] = useState(false);
   
-  // Additional fields for teacher registration
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [primaryPhone, setPrimaryPhone] = useState('');
   const [secondaryPhone, setSecondaryPhone] = useState('');
@@ -35,7 +33,6 @@ const Register = () => {
   const { register } = useAuth();
   const { toast } = useToast();
 
-  // If role is student, show the special student registration form
   if (role === 'student') {
     return <StudentRegistration />;
   }
@@ -63,7 +60,6 @@ const Register = () => {
     
     setIsLoading(true);
     try {
-      // Include the additional fields for teacher registration
       await register(
         email, 
         password, 
@@ -81,9 +77,7 @@ const Register = () => {
           id_proof: idProof
         }
       );
-      // Redirect will happen in the register function
     } catch (error) {
-      // Error notification handled in register function
       console.error('Registration failed:', error);
     } finally {
       setIsLoading(false);
@@ -234,16 +228,18 @@ const Register = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="parentName">Parent/Guardian Name (Optional)</Label>
-                    <Input
-                      id="parentName"
-                      type="text"
-                      placeholder="Parent/Guardian Name"
-                      value={parentName}
-                      onChange={(e) => setParentName(e.target.value)}
-                    />
-                  </div>
+                  {role === 'student' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="parentName">Parent/Guardian Name</Label>
+                      <Input
+                        id="parentName"
+                        type="text"
+                        placeholder="Parent/Guardian Name"
+                        value={parentName}
+                        onChange={(e) => setParentName(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="contact" className="space-y-4 pt-4">

@@ -344,7 +344,8 @@ const UserManagement = () => {
                               setNewUserData({ 
                                 ...newUserData, 
                                 role: value,
-                                guardianRelation: value === 'student' ? newUserData.guardianRelation : ''
+                                guardianRelation: value === 'student' ? newUserData.guardianRelation : '',
+                                parentName: value === 'student' ? newUserData.parentName : ''
                               });
                             }}
                           >
@@ -368,16 +369,18 @@ const UserManagement = () => {
                             }
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="parentName">Parent/Guardian Name</Label>
-                          <Input
-                            id="parentName"
-                            value={newUserData.parentName}
-                            onChange={(e) =>
-                              setNewUserData({ ...newUserData, parentName: e.target.value })
-                            }
-                          />
-                        </div>
+                        {newUserData.role === 'student' && (
+                          <div className="space-y-2">
+                            <Label htmlFor="parentName">Parent/Guardian Name</Label>
+                            <Input
+                              id="parentName"
+                              value={newUserData.parentName}
+                              onChange={(e) =>
+                                setNewUserData({ ...newUserData, parentName: e.target.value })
+                              }
+                            />
+                          </div>
+                        )}
                         {newUserData.role === 'student' && (
                           <div className="space-y-2">
                             <Label htmlFor="guardianRelation">Guardian Relation</Label>
