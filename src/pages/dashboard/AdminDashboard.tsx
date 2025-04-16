@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,6 @@ const AdminDashboard = () => {
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
-  // Debug output to help troubleshoot
   useEffect(() => {
     if (user) {
       console.log('[AdminDashboard] User data:', user);
@@ -55,7 +53,6 @@ const AdminDashboard = () => {
     }
   }, [user]);
 
-  // Clear permissions cache to ensure fresh checks
   useEffect(() => {
     if (user) {
       console.log('[AdminDashboard] Clearing permissions cache for user', user.id);
@@ -75,7 +72,6 @@ const AdminDashboard = () => {
       setAdminRoles(roles);
       updateCachedAdminRoles(roles);
       
-      // After loading roles, update permissions
       updateUserPermissions(roles);
     } catch (error) {
       console.error('[AdminDashboard] Error loading admin roles:', error);
@@ -92,14 +88,12 @@ const AdminDashboard = () => {
   const updateUserPermissions = (roles: AdminLevel[]) => {
     if (!user) return;
     
-    // Check if user is a superadmin
     const isSuperAdminUser = user.role === 'superadmin';
     console.log('[AdminDashboard] Is user superadmin?', isSuperAdminUser);
     
     if (isSuperAdminUser) {
       console.log('[AdminDashboard] User is a superadmin - granting all permissions');
       
-      // Grant all permissions for superadmin
       setPermissionMap({
         students: { view: true, add: true, edit: true, delete: true },
         teachers: { view: true, add: true, edit: true, delete: true },
@@ -108,23 +102,19 @@ const AdminDashboard = () => {
         courses: { view: true, add: true, edit: true, delete: true }
       });
       
-      // Set a default active tab for better UX
       setActiveTab('courses');
       return;
     }
 
-    // For regular admins, find their role in the loaded roles
     const adminRoleName = user.adminRoleName || "Limited View";
     console.log('[AdminDashboard] Looking for admin role:', adminRoleName);
 
-    // Find the user's role in the available roles
     const userRole = roles.find(role => role.name === adminRoleName);
     
     if (userRole) {
       console.log('[AdminDashboard] Found matching role:', userRole);
       setDebugInfo(null);
 
-      // Map the permissions from the admin role
       setPermissionMap({
         students: {
           view: userRole.studentPermissions.includes('view'),
@@ -158,7 +148,6 @@ const AdminDashboard = () => {
         }
       });
 
-      // Set first available tab as active
       if (userRole.coursePermissions.includes('view')) {
         setActiveTab('courses');
       } else if (userRole.studentPermissions.includes('view')) {
@@ -174,7 +163,6 @@ const AdminDashboard = () => {
       console.log('[AdminDashboard] No matching role found for:', adminRoleName);
       setDebugInfo(`No matching role found in database for: ${adminRoleName}. Available roles: ${roles.map(r => r.name).join(', ')}`);
       
-      // Use Limited View as fallback
       setPermissionMap({
         students: { view: true, add: false, edit: false, delete: false },
         teachers: { view: true, add: false, edit: false, delete: false },
@@ -183,7 +171,6 @@ const AdminDashboard = () => {
         courses: { view: true, add: false, edit: false, delete: false }
       });
       
-      // Set first tab with permissions as active
       setActiveTab('courses');
     }
   };
@@ -194,7 +181,6 @@ const AdminDashboard = () => {
     }
   }, [adminRoles, user]);
   
-  // Count how many tabs are available
   const availableTabs = [
     permissionMap.courses.view && 'courses',
     permissionMap.students.view && 'students',
@@ -208,22 +194,16 @@ const AdminDashboard = () => {
 
   const showTabNavigation = availableTabs.length > 1;
 
-  // Check if admin has access to at least one section
   const hasAnyAccess = permissionMap.courses.view || 
                        permissionMap.students.view || 
                        permissionMap.teachers.view || 
                        permissionMap.admins.view || 
                        permissionMap.leads.view;
 
-  console.log('[AdminDashboard] Has any access:', hasAnyAccess);
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="mt-2 text-gray-600">
-          Your role: {user?.role} {user?.adminRoleName ? `(${user.adminRoleName})` : ''}
-        </p>
         
         {debugInfo && (
           <Alert variant="destructive" className="mt-4">
@@ -239,7 +219,6 @@ const AdminDashboard = () => {
         </div>
       ) : (
         <>
-          {/* Only show tab navigation if user has access to more than one tab */}
           {showTabNavigation && (
             <div className="flex justify-center mb-6">
               <div className="inline-flex rounded-lg border bg-card p-1 text-card-foreground shadow">
