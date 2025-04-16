@@ -7,6 +7,7 @@ import { Download, Settings, Users, BookOpen, GraduationCap } from 'lucide-react
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   
   const fetchDashboardData = async () => {
     try {
@@ -53,8 +55,8 @@ const AdminDashboard = () => {
         setTeachersCount(totalTeachers || 0);
       }
       
-      // Fetch monthly user growth data (last 7 months)
-      await fetchUserGrowthData();
+      // Fetch monthly user growth data (all months in the current year)
+      await fetchUserGrowthData(currentYear);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -62,21 +64,20 @@ const AdminDashboard = () => {
     }
   };
   
-  const fetchUserGrowthData = async () => {
+  const fetchUserGrowthData = async (year: number) => {
     try {
-      // Get current date and calculate date 6 months ago
-      const now = new Date();
-      const monthLabels = [];
-      const monthDataPoints = [];
+      const monthsData: { name: string; Students: number; Teachers: number }[] = [];
       
-      // Generate last 7 months (including current)
-      for (let i = 6; i >= 0; i--) {
-        const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthLabel = monthDate.toLocaleString('default', { month: 'short' });
-        monthLabels.push(monthLabel);
+      // Generate all 12 months of the year
+      for (let month = 0; month < 12; month++) {
+        // Create date for first day of the month in the selected year
+        const monthDate = new Date(year, month, 1);
+        // Get month name (short format)
+        const monthLabel = format(monthDate, 'MMM');
         
-        const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toISOString();
-        const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).toISOString();
+        // Calculate start and end of the month for database queries
+        const startOfMonth = new Date(year, month, 1).toISOString();
+        const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
         
         // Count students registered in this month
         const { count: monthlyStudents, error: studentsError } = await supabase
@@ -84,7 +85,7 @@ const AdminDashboard = () => {
           .select('*', { count: 'exact', head: true })
           .eq('role', 'student')
           .gte('created_at', startOfMonth)
-          .lte('created_at', endOfMonth);
+          .lt('created_at', endOfMonth);
           
         if (studentsError) {
           console.error(`Error fetching students for ${monthLabel}:`, studentsError);
@@ -96,29 +97,35 @@ const AdminDashboard = () => {
           .select('*', { count: 'exact', head: true })
           .eq('role', 'teacher')
           .gte('created_at', startOfMonth)
-          .lte('created_at', endOfMonth);
+          .lt('created_at', endOfMonth);
           
         if (teachersError) {
           console.error(`Error fetching teachers for ${monthLabel}:`, teachersError);
         }
         
-        monthDataPoints.push({
+        monthsData.push({
           name: monthLabel,
           Students: monthlyStudents || 0,
           Teachers: monthlyTeachers || 0
         });
       }
       
-      setUserActivityData(monthDataPoints);
+      setUserActivityData(monthsData);
       
-      // Mock revenue data for now
-      setRevenueData(monthLabels.map(month => ({ 
-        name: month, 
+      // Mock revenue data based on the same months
+      setRevenueData(monthsData.map(({ name }) => ({ 
+        name, 
         Revenue: Math.floor(Math.random() * 10000) + 1000 
       })));
     } catch (error) {
       console.error('Error fetching user growth data:', error);
     }
+  };
+
+  const handleYearChange = (change: number) => {
+    const newYear = currentYear + change;
+    setCurrentYear(newYear);
+    fetchUserGrowthData(newYear);
   };
   
   useEffect(() => {
@@ -227,9 +234,27 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">
         <Card>
-          <CardHeader>
-            <CardTitle>User Growth</CardTitle>
-            <CardDescription>Students and teachers registered by month</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle>User Growth {currentYear}</CardTitle>
+              <CardDescription>Students and teachers registered by month</CardDescription>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleYearChange(-1)}
+              >
+                Previous Year
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleYearChange(1)}
+              >
+                Next Year
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="h-80">
             {userActivityData.length > 0 ? (
