@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { StudentProfile, StudentProfileData } from '@/types/student';
+import { StudentProfile } from '@/types/student';
 
 export type UserRole = 'student' | 'teacher' | 'admin';
 
@@ -24,6 +24,15 @@ interface CustomUser {
   last_name: string;
   role: UserRole;
   created_at: string;
+  date_of_birth?: string;
+  profile_photo?: string;
+  parent_name?: string;
+  guardian_relation?: string;
+  primary_phone?: string;
+  secondary_phone?: string;
+  whatsapp_enabled?: boolean;
+  address?: string;
+  id_proof?: string;
 }
 
 interface AuthContextType {
@@ -31,10 +40,23 @@ interface AuthContextType {
   loading: boolean;
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole, studentData?: Omit<StudentProfileData, 'user_id'>) => Promise<void>;
+  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole, studentData?: StudentProfileData) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: () => boolean;
+}
+
+// New interface to match data structure for student registration
+interface StudentProfileData {
+  date_of_birth?: string;
+  profile_photo?: string;
+  parent_name?: string;
+  guardian_relation?: string;
+  primary_phone?: string;
+  secondary_phone?: string;
+  whatsapp_enabled?: boolean;
+  address?: string;
+  id_proof?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -107,32 +129,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('[AUTH] Login successful');
 
+      // Create studentProfile object if the user is a student
       let studentProfile = null;
       if (userData.role === 'student') {
-        const { data: studentData, error: studentError } = await supabase
-          .rpc('get_student_profile', {
-            user_id_param: userData.id
-          });
-        
-        if (studentError) {
-          console.error('[AUTH] Error fetching student profile:', studentError);
-        } else if (studentData) {
-          studentProfile = {
-            id: userData.id,
-            firstName: userData.first_name,
-            lastName: userData.last_name,
-            email: userData.email,
-            dateOfBirth: studentData.date_of_birth,
-            profilePhoto: studentData.profile_photo,
-            parentName: studentData.parent_name,
-            guardianRelation: studentData.guardian_relation,
-            primaryPhone: studentData.primary_phone,
-            secondaryPhone: studentData.secondary_phone,
-            whatsappEnabled: studentData.whatsapp_enabled,
-            address: studentData.address,
-            idProof: studentData.id_proof
-          };
-        }
+        studentProfile = {
+          id: userData.id,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          email: userData.email,
+          dateOfBirth: userData.date_of_birth,
+          profilePhoto: userData.profile_photo,
+          parentName: userData.parent_name,
+          guardianRelation: userData.guardian_relation,
+          primaryPhone: userData.primary_phone,
+          secondaryPhone: userData.secondary_phone,
+          whatsappEnabled: userData.whatsapp_enabled,
+          address: userData.address,
+          idProof: userData.id_proof
+        };
       }
       
       const authUser: UserData = {
@@ -174,7 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     firstName: string, 
     lastName: string, 
     role: UserRole,
-    studentData?: Omit<StudentProfileData, 'user_id'>
+    studentData?: StudentProfileData
   ) => {
     setLoading(true);
     try {
@@ -189,45 +203,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const passwordHash = await hashPassword(password);
-
       const userId = crypto.randomUUID();
+
+      // Create new user with all fields directly in custom_users table
+      const insertData = {
+        id: userId,
+        email: email.toLowerCase(),
+        password_hash: passwordHash,
+        first_name: firstName,
+        last_name: lastName,
+        role: role,
+        created_at: new Date().toISOString()
+      };
+
+      // Add student profile data if user is a student
+      if (role === 'student' && studentData) {
+        Object.assign(insertData, {
+          date_of_birth: studentData.date_of_birth,
+          profile_photo: studentData.profile_photo,
+          parent_name: studentData.parent_name,
+          guardian_relation: studentData.guardian_relation,
+          primary_phone: studentData.primary_phone,
+          secondary_phone: studentData.secondary_phone,
+          whatsapp_enabled: studentData.whatsapp_enabled,
+          address: studentData.address,
+          id_proof: studentData.id_proof
+        });
+      }
 
       const { error } = await supabase
         .from('custom_users')
-        .insert({
-          id: userId,
-          email: email.toLowerCase(),
-          password_hash: passwordHash,
-          first_name: firstName,
-          last_name: lastName,
-          role: role,
-          created_at: new Date().toISOString()
-        });
+        .insert(insertData);
 
       if (error) {
         throw error;
       }
 
-      if (role === 'student' && studentData) {
-        const { error: studentError } = await supabase
-          .rpc('create_student_profile', {
-            user_id_param: userId,
-            date_of_birth_param: studentData.date_of_birth || null,
-            profile_photo_param: studentData.profile_photo || null,
-            parent_name_param: studentData.parent_name || null,
-            guardian_relation_param: studentData.guardian_relation || null,
-            primary_phone_param: studentData.primary_phone || null,
-            secondary_phone_param: studentData.secondary_phone || null,
-            whatsapp_enabled_param: studentData.whatsapp_enabled || false,
-            address_param: studentData.address || null,
-            id_proof_param: studentData.id_proof || null
-          });
-
-        if (studentError) {
-          console.error('Error creating student profile:', studentError);
-        }
-      }
-
+      // Create user data for the client
       const userData: UserData = {
         id: userId,
         email: email.toLowerCase(),

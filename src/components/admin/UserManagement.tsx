@@ -48,6 +48,18 @@ import {
   UserCog
 } from 'lucide-react';
 
+interface StudentData {
+  date_of_birth?: string;
+  profile_photo?: string;
+  parent_name?: string;
+  guardian_relation?: string;
+  primary_phone?: string;
+  secondary_phone?: string;
+  whatsapp_enabled?: boolean;
+  address?: string;
+  id_proof?: string;
+}
+
 const UserManagement = () => {
   const [users, setUsers] = useState<UserManagementUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -118,40 +130,36 @@ const UserManagement = () => {
       
       const userId = crypto.randomUUID();
       
+      const userData = {
+        id: userId,
+        email: newUserData.email.toLowerCase(),
+        password_hash: passwordHash,
+        first_name: newUserData.firstName,
+        last_name: newUserData.lastName,
+        role: newUserData.role,
+        created_at: new Date().toISOString()
+      };
+      
+      if (newUserData.role === 'student') {
+        Object.assign(userData, {
+          date_of_birth: null,
+          profile_photo: null,
+          parent_name: null,
+          guardian_relation: null,
+          primary_phone: null,
+          secondary_phone: null,
+          whatsapp_enabled: false,
+          address: null,
+          id_proof: null
+        });
+      }
+      
       const { error: userError } = await supabase
         .from('custom_users')
-        .insert({
-          id: userId,
-          email: newUserData.email.toLowerCase(),
-          password_hash: passwordHash,
-          first_name: newUserData.firstName,
-          last_name: newUserData.lastName,
-          role: newUserData.role,
-          created_at: new Date().toISOString()
-        });
+        .insert(userData);
 
       if (userError) {
         throw userError;
-      }
-      
-      if (newUserData.role === 'student') {
-        const { error: profileError } = await supabase
-          .rpc('create_student_profile', {
-            user_id_param: userId,
-            date_of_birth_param: null,
-            profile_photo_param: null,
-            parent_name_param: null,
-            guardian_relation_param: null,
-            primary_phone_param: null,
-            secondary_phone_param: null,
-            whatsapp_enabled_param: false,
-            address_param: null,
-            id_proof_param: null
-          });
-
-        if (profileError) {
-          console.error('Error creating student profile:', profileError);
-        }
       }
 
       toast({

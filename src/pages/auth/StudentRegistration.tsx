@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +17,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { StudentProfileData } from '@/types/student';
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -80,7 +80,7 @@ const StudentRegistration = () => {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      const studentProfileData: Omit<StudentProfileData, 'user_id'> = {
+      const studentProfileData = {
         date_of_birth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : undefined,
         profile_photo: profilePhotoFile ? profilePhotoFile.name : undefined,
         parent_name: data.parentName,
