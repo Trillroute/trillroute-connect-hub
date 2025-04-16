@@ -44,6 +44,15 @@ const AdminDashboard = () => {
   const [adminRoles, setAdminRoles] = useState<AdminLevel[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
 
+  // Debug output to help troubleshoot
+  useEffect(() => {
+    if (user) {
+      console.log('Admin Dashboard - User data:', user);
+      console.log('Is SuperAdmin?', isSuperAdmin());
+      console.log('Admin role name:', user.adminRoleName);
+    }
+  }, [user, isSuperAdmin]);
+
   // Clear permissions cache to ensure fresh checks
   useEffect(() => {
     if (user) {
@@ -60,6 +69,7 @@ const AdminDashboard = () => {
       const roles = await fetchAdminRoles();
       setAdminRoles(roles);
       updateCachedAdminRoles(roles);
+      console.log('Loaded admin roles:', roles);
     } catch (error) {
       console.error('Error loading admin roles:', error);
     } finally {
@@ -68,110 +78,123 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      // Check if user is a superadmin - they get full access to everything
-      const isSuperAdminUser = isSuperAdmin();
+    if (!user) return;
+    
+    // Explicitly check if user is a superadmin
+    if (user.role === 'superadmin') {
+      console.log('User is a superadmin - granting all permissions');
       
-      if (isSuperAdminUser) {
-        // Grant all permissions for superadmin
-        setPermissionMap({
-          students: { view: true, add: true, edit: true, delete: true },
-          teachers: { view: true, add: true, edit: true, delete: true },
-          admins: { view: true, add: true, edit: true, delete: true },
-          leads: { view: true, add: true, edit: true, delete: true },
-          courses: { view: true, add: true, edit: true, delete: true }
-        });
-        return;
-      }
-      
-      // Regular admin permissions check
-      const userForPermissions = {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt || new Date().toISOString(),
-        adminRoleName: user.adminRoleName // Use adminRoleName for permissions
-      };
-
-      // Check permissions using the adminRoleName
-      const canViewStudents = canManageStudents(userForPermissions, 'view');
-      const canAddStudents = canManageStudents(userForPermissions, 'add');
-      const canEditStudents = canManageStudents(userForPermissions, 'edit');
-      const canDeleteStudents = canManageStudents(userForPermissions, 'delete');
-      
-      // Check teachers permissions
-      const canViewTeachers = canManageTeachers(userForPermissions, 'view');
-      const canAddTeachers = canManageTeachers(userForPermissions, 'add');
-      const canEditTeachers = canManageTeachers(userForPermissions, 'edit');
-      const canDeleteTeachers = canManageTeachers(userForPermissions, 'delete');
-      
-      // Check admins permissions
-      const canViewAdmins = canManageAdmins(userForPermissions, 'view');
-      const canAddAdmins = canManageAdmins(userForPermissions, 'add');
-      const canEditAdmins = canManageAdmins(userForPermissions, 'edit');
-      const canDeleteAdmins = canManageAdmins(userForPermissions, 'delete');
-      
-      // Check leads permissions
-      const canViewLeads = canManageLeads(userForPermissions, 'view');
-      const canAddLeads = canManageLeads(userForPermissions, 'add');
-      const canEditLeads = canManageLeads(userForPermissions, 'edit');
-      const canDeleteLeads = canManageLeads(userForPermissions, 'delete');
-      
-      // Check courses permissions
-      const canViewCourses = canManageCourses(userForPermissions, 'view');
-      const canAddCourses = canManageCourses(userForPermissions, 'add');
-      const canEditCourses = canManageCourses(userForPermissions, 'edit');
-      const canDeleteCourses = canManageCourses(userForPermissions, 'delete');
-      
+      // Grant all permissions for superadmin
       setPermissionMap({
-        students: {
-          view: canViewStudents,
-          add: canAddStudents,
-          edit: canEditStudents,
-          delete: canDeleteStudents
-        },
-        teachers: {
-          view: canViewTeachers,
-          add: canAddTeachers,
-          edit: canEditTeachers,
-          delete: canDeleteTeachers
-        },
-        admins: {
-          view: canViewAdmins,
-          add: canAddAdmins,
-          edit: canEditAdmins,
-          delete: canDeleteAdmins
-        },
-        leads: {
-          view: canViewLeads,
-          add: canAddLeads,
-          edit: canEditLeads,
-          delete: canDeleteLeads
-        },
-        courses: {
-          view: canViewCourses,
-          add: canAddCourses,
-          edit: canEditCourses,
-          delete: canDeleteCourses
-        }
+        students: { view: true, add: true, edit: true, delete: true },
+        teachers: { view: true, add: true, edit: true, delete: true },
+        admins: { view: true, add: true, edit: true, delete: true },
+        leads: { view: true, add: true, edit: true, delete: true },
+        courses: { view: true, add: true, edit: true, delete: true }
       });
-
-      // Find first available tab to set as active
-      const firstAvailableTab = [
-        canViewCourses && 'courses',
-        canViewStudents && 'students',
-        canViewTeachers && 'teachers',
-        canViewAdmins && 'admins',
-        canViewLeads && 'leads'
-      ].find(Boolean) as ActiveTab | undefined;
-
-      if (firstAvailableTab) {
-        setActiveTab(firstAvailableTab);
-      }
+      
+      // Set a default active tab for better UX
+      setActiveTab('courses');
+      return;
     }
-  }, [user, adminRoles, isSuperAdmin]);
+    
+    // Regular admin permissions check
+    const userForPermissions = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt || new Date().toISOString(),
+      adminRoleName: user.adminRoleName // Use adminRoleName for permissions
+    };
+    
+    console.log('Checking permissions for:', userForPermissions);
+
+    // Check permissions using the adminRoleName
+    const canViewStudents = canManageStudents(userForPermissions, 'view');
+    const canAddStudents = canManageStudents(userForPermissions, 'add');
+    const canEditStudents = canManageStudents(userForPermissions, 'edit');
+    const canDeleteStudents = canManageStudents(userForPermissions, 'delete');
+    
+    // Check teachers permissions
+    const canViewTeachers = canManageTeachers(userForPermissions, 'view');
+    const canAddTeachers = canManageTeachers(userForPermissions, 'add');
+    const canEditTeachers = canManageTeachers(userForPermissions, 'edit');
+    const canDeleteTeachers = canManageTeachers(userForPermissions, 'delete');
+    
+    // Check admins permissions
+    const canViewAdmins = canManageAdmins(userForPermissions, 'view');
+    const canAddAdmins = canManageAdmins(userForPermissions, 'add');
+    const canEditAdmins = canManageAdmins(userForPermissions, 'edit');
+    const canDeleteAdmins = canManageAdmins(userForPermissions, 'delete');
+    
+    // Check leads permissions
+    const canViewLeads = canManageLeads(userForPermissions, 'view');
+    const canAddLeads = canManageLeads(userForPermissions, 'add');
+    const canEditLeads = canManageLeads(userForPermissions, 'edit');
+    const canDeleteLeads = canManageLeads(userForPermissions, 'delete');
+    
+    // Check courses permissions
+    const canViewCourses = canManageCourses(userForPermissions, 'view');
+    const canAddCourses = canManageCourses(userForPermissions, 'add');
+    const canEditCourses = canManageCourses(userForPermissions, 'edit');
+    const canDeleteCourses = canManageCourses(userForPermissions, 'delete');
+    
+    console.log('Permission results:', {
+      students: { view: canViewStudents, add: canAddStudents, edit: canEditStudents, delete: canDeleteStudents },
+      teachers: { view: canViewTeachers, add: canAddTeachers, edit: canEditTeachers, delete: canDeleteTeachers },
+      courses: { view: canViewCourses, add: canAddCourses, edit: canEditCourses, delete: canDeleteCourses },
+    });
+    
+    setPermissionMap({
+      students: {
+        view: canViewStudents,
+        add: canAddStudents,
+        edit: canEditStudents,
+        delete: canDeleteStudents
+      },
+      teachers: {
+        view: canViewTeachers,
+        add: canAddTeachers,
+        edit: canEditTeachers,
+        delete: canDeleteTeachers
+      },
+      admins: {
+        view: canViewAdmins,
+        add: canAddAdmins,
+        edit: canEditAdmins,
+        delete: canDeleteAdmins
+      },
+      leads: {
+        view: canViewLeads,
+        add: canAddLeads,
+        edit: canEditLeads,
+        delete: canDeleteLeads
+      },
+      courses: {
+        view: canViewCourses,
+        add: canAddCourses,
+        edit: canEditCourses,
+        delete: canDeleteCourses
+      }
+    });
+
+    // Find first available tab to set as active
+    const firstAvailableTab = [
+      canViewCourses && 'courses',
+      canViewStudents && 'students',
+      canViewTeachers && 'teachers',
+      canViewAdmins && 'admins',
+      canViewLeads && 'leads'
+    ].find(Boolean) as ActiveTab | undefined;
+
+    console.log('First available tab:', firstAvailableTab);
+
+    if (firstAvailableTab) {
+      setActiveTab(firstAvailableTab);
+    }
+  }, [user, adminRoles]);
   
   // Count how many tabs are available
   const availableTabs = [
@@ -182,6 +205,9 @@ const AdminDashboard = () => {
     permissionMap.leads.view && 'leads',
   ].filter(Boolean);
 
+  console.log('Available tabs:', availableTabs);
+  console.log('Current permission map:', permissionMap);
+
   const showTabNavigation = availableTabs.length > 1;
 
   // Check if admin has access to at least one section
@@ -190,6 +216,8 @@ const AdminDashboard = () => {
                        permissionMap.teachers.view || 
                        permissionMap.admins.view || 
                        permissionMap.leads.view;
+
+  console.log('Has any access:', hasAnyAccess);
 
   return (
     <div className="container mx-auto px-4 py-8">

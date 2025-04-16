@@ -95,6 +95,15 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     adminPermissions: [],
     leadPermissions: ["view"],
     coursePermissions: ["view"]
+  },
+  "Limited View": {
+    name: "Limited View",
+    description: "Limited view-only access",
+    studentPermissions: ["view"],
+    teacherPermissions: ["view"],
+    adminPermissions: [],
+    leadPermissions: [],
+    coursePermissions: ["view"]
   }
 };
 
@@ -115,23 +124,43 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
   if (!user) return false;
   
   // Superadmins have all permissions
-  if (user.role === 'superadmin') return true;
+  if (user.role === 'superadmin') {
+    console.log('Superadmin always has permission:', permission);
+    return true;
+  }
   
   // Only admins can have these permissions
-  if (user.role !== 'admin') return false;
+  if (user.role !== 'admin') {
+    console.log('User is not admin or superadmin, denying permission:', permission);
+    return false;
+  }
   
   // Use cache for better performance
   const cacheKey = `${user.id}:${permission}`;
   if (cachedPermissions.has(cacheKey)) {
-    return cachedPermissions.get(cacheKey) || false;
+    const result = cachedPermissions.get(cacheKey) || false;
+    console.log(`Using cached permission for ${cacheKey}:`, result);
+    return result;
   }
   
   // Use adminRoleName to get the role info
   const adminRoleName = 'adminRoleName' in user ? user.adminRoleName : undefined;
+  console.log('Checking permissions with adminRoleName:', adminRoleName);
+  
   const roleInfo = adminRoleName ? cachedAdminRoles.get(adminRoleName) : undefined;
   
   // Fall back to default roles if no specific role found
-  const effectiveRoleInfo = roleInfo || FALLBACK_ADMIN_ROLES[adminRoleName || "Limited View"] || FALLBACK_ADMIN_ROLES["assistant"];
+  let effectiveRoleInfo;
+  if (roleInfo) {
+    console.log('Using cached role info:', roleInfo.name);
+    effectiveRoleInfo = roleInfo;
+  } else if (adminRoleName && FALLBACK_ADMIN_ROLES[adminRoleName]) {
+    console.log('Using fallback role for:', adminRoleName);
+    effectiveRoleInfo = FALLBACK_ADMIN_ROLES[adminRoleName];
+  } else {
+    console.log('Using default assistant role');
+    effectiveRoleInfo = FALLBACK_ADMIN_ROLES["assistant"];
+  }
   
   let hasPermission = false;
   
@@ -150,6 +179,8 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
     hasPermission = checkModulePermission(effectiveRoleInfo, module, 'delete');
   }
   
+  console.log(`Permission check for ${permission}:`, hasPermission);
+  
   // Cache the result
   cachedPermissions.set(cacheKey, hasPermission);
   
@@ -161,11 +192,14 @@ function checkModulePermission(roleInfo: AdminLevel, module: string, operation: 
   const permissionsKey = `${module}Permissions` as keyof AdminLevel;
   const permissions = roleInfo[permissionsKey] as string[];
   
-  return Array.isArray(permissions) && permissions.includes(operation);
+  const result = Array.isArray(permissions) && permissions.includes(operation);
+  console.log(`Checking ${module} ${operation} permission:`, result, 'Available permissions:', permissions);
+  return result;
 }
 
 // Function to update cached admin roles from database
 export const updateCachedAdminRoles = (adminRoles: AdminLevel[]): void => {
+  console.log('Updating cached admin roles:', adminRoles);
   cachedAdminRoles.clear();
   
   adminRoles.forEach(role => {
@@ -177,6 +211,7 @@ export const updateCachedAdminRoles = (adminRoles: AdminLevel[]): void => {
  * Clear the permissions cache for a user
  */
 export const clearPermissionsCache = (userId?: string) => {
+  console.log('Clearing permissions cache for user:', userId);
   if (userId) {
     // Clear only for specific user
     cachedPermissions.forEach((_, key) => {
@@ -194,6 +229,10 @@ export const clearPermissionsCache = (userId?: string) => {
  * Helper function to determine if a specific user can perform actions on students
  */
 export const canManageStudents = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_STUDENTS);
   } else if (action === 'add') {
@@ -209,6 +248,10 @@ export const canManageStudents = (user: UserManagementUser | PermissionUser | nu
  * Helper function to determine if a specific user can perform actions on teachers
  */
 export const canManageTeachers = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_TEACHERS);
   } else if (action === 'add') {
@@ -224,6 +267,10 @@ export const canManageTeachers = (user: UserManagementUser | PermissionUser | nu
  * Helper function to determine if a specific user can perform actions on admins
  */
 export const canManageAdmins = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_ADMINS);
   } else if (action === 'add') {
@@ -239,6 +286,10 @@ export const canManageAdmins = (user: UserManagementUser | PermissionUser | null
  * Helper function to determine if a specific user can perform actions on leads
  */
 export const canManageLeads = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_LEADS);
   } else if (action === 'add') {
@@ -254,6 +305,10 @@ export const canManageLeads = (user: UserManagementUser | PermissionUser | null,
  * Helper function to determine if a specific user can perform actions on courses
  */
 export const canManageCourses = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_COURSES);
   } else if (action === 'add') {
@@ -269,6 +324,10 @@ export const canManageCourses = (user: UserManagementUser | PermissionUser | nul
  * Helper to check if user has access to any user management features
  */
 export const hasUserManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   return canManageStudents(user, 'view') || 
          canManageTeachers(user, 'view') ||
          canManageStudents(user, 'add') ||
@@ -279,6 +338,10 @@ export const hasUserManagementAccess = (user: UserManagementUser | PermissionUse
  * Helper to check if user has access to any course management features
  */
 export const hasCourseManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   return canManageCourses(user, 'view') ||
          canManageCourses(user, 'add');
 };
@@ -287,6 +350,10 @@ export const hasCourseManagementAccess = (user: UserManagementUser | PermissionU
  * Helper to check if user has access to any lead management features
  */
 export const hasLeadManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
   return canManageLeads(user, 'view') ||
          canManageLeads(user, 'add');
 };

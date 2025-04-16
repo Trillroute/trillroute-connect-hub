@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -24,6 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const userData = JSON.parse(storedUser);
         setUser(userData);
+        console.log('Restored user from storage:', userData);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         localStorage.removeItem('user');
@@ -251,7 +253,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isSuperAdmin = () => {
-    return user?.role === 'superadmin';
+    const isSuperAdminUser = user?.role === 'superadmin';
+    console.log('isSuperAdmin check:', isSuperAdminUser, 'User role:', user?.role);
+    return isSuperAdminUser;
   };
 
   const value = {
