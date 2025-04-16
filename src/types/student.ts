@@ -22,4 +22,13 @@ export interface UserManagementUser {
   email: string;
   role: string;
   createdAt: string;
+  dateOfBirth?: string;
+  profilePhoto?: string;
+  parentName?: string;
+  guardianRelation?: string;
+  primaryPhone?: string;
+  secondaryPhone?: string;
+  whatsappEnabled?: boolean;
+  address?: string;
+  idProof?: string;
 }

@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Mail, Lock, User, UserPlus } from 'lucide-react';
+import { Music, Mail, Lock, User, UserPlus, Phone, Home, Calendar, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,8 @@ import { useAuth, UserRole } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StudentRegistration from './StudentRegistration';
 
 const Register = () => {
@@ -18,6 +21,17 @@ const Register = () => {
   const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<UserRole>('student');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Additional fields for teacher registration
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [primaryPhone, setPrimaryPhone] = useState('');
+  const [secondaryPhone, setSecondaryPhone] = useState('');
+  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
+  const [address, setAddress] = useState('');
+  const [parentName, setParentName] = useState('');
+  const [profilePhoto, setProfilePhoto] = useState('');
+  const [idProof, setIdProof] = useState('');
+  
   const { register } = useAuth();
   const { toast } = useToast();
 
@@ -49,7 +63,24 @@ const Register = () => {
     
     setIsLoading(true);
     try {
-      await register(email, password, firstName, lastName, role);
+      // Include the additional fields for teacher registration
+      await register(
+        email, 
+        password, 
+        firstName, 
+        lastName, 
+        role, 
+        {
+          date_of_birth: dateOfBirth,
+          profile_photo: profilePhoto,
+          parent_name: parentName,
+          primary_phone: primaryPhone,
+          secondary_phone: secondaryPhone,
+          whatsapp_enabled: whatsappEnabled,
+          address: address,
+          id_proof: idProof
+        }
+      );
       // Redirect will happen in the register function
     } catch (error) {
       // Error notification handled in register function
@@ -85,107 +116,234 @@ const Register = () => {
           
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="firstName" className="text-sm font-medium text-gray-700">
-                    First Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <Input
-                      id="firstName"
-                      type="text"
-                      placeholder="John"
-                      className="pl-10"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="contact">Contact</TabsTrigger>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                </TabsList>
                 
-                <div className="space-y-2">
-                  <label htmlFor="lastName" className="text-sm font-medium text-gray-700">
-                    Last Name
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
+                <TabsContent value="basic" className="space-y-4 pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          id="firstName"
+                          type="text"
+                          placeholder="John"
+                          className="pl-10"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          required
+                        />
+                      </div>
                     </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          id="lastName"
+                          type="text"
+                          placeholder="Doe"
+                          className="pl-10"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        className="pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-10"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-10"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Calendar className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="dateOfBirth"
+                        type="date"
+                        className="pl-10"
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="parentName">Parent/Guardian Name (Optional)</Label>
                     <Input
-                      id="lastName"
+                      id="parentName"
                       type="text"
-                      placeholder="Doe"
-                      className="pl-10"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
+                      placeholder="Parent/Guardian Name"
+                      value={parentName}
+                      onChange={(e) => setParentName(e.target.value)}
                     />
                   </div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                </TabsContent>
+                
+                <TabsContent value="contact" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="primaryPhone">Primary Phone</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="primaryPhone"
+                        type="tel"
+                        placeholder="Primary Phone"
+                        className="pl-10"
+                        value={primaryPhone}
+                        onChange={(e) => setPrimaryPhone(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="secondaryPhone">Secondary Phone (Optional)</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="secondaryPhone"
+                        type="tel"
+                        placeholder="Secondary Phone"
+                        className="pl-10"
+                        value={secondaryPhone}
+                        onChange={(e) => setSecondaryPhone(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="whatsapp"
+                      checked={whatsappEnabled}
+                      onCheckedChange={setWhatsappEnabled}
+                    />
+                    <Label htmlFor="whatsapp">WhatsApp enabled on primary phone</Label>
                   </div>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Home className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="address"
+                        type="text"
+                        placeholder="Your address"
+                        className="pl-10"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="documents" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="profilePhoto">Profile Photo URL (Optional)</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Upload className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="profilePhoto"
+                        type="text"
+                        placeholder="URL to profile photo"
+                        className="pl-10"
+                        value={profilePhoto}
+                        onChange={(e) => setProfilePhoto(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="idProof">ID Proof (Optional)</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Upload className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <Input
+                        id="idProof"
+                        type="text"
+                        placeholder="URL to ID proof document"
+                        className="pl-10"
+                        value={idProof}
+                        onChange={(e) => setIdProof(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
               
               <div className="space-y-3">
                 <div className="text-sm font-medium text-gray-700">I am registering as:</div>

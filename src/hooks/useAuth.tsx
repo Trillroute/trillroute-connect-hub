@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -12,7 +13,15 @@ interface UserData {
   firstName: string;
   lastName: string;
   role: UserRole;
-  studentProfile?: StudentProfile;
+  dateOfBirth?: string;
+  profilePhoto?: string;
+  parentName?: string;
+  guardianRelation?: string;
+  primaryPhone?: string;
+  secondaryPhone?: string;
+  whatsappEnabled?: boolean;
+  address?: string;
+  idProof?: string;
 }
 
 // Update the interface to match custom_users table
@@ -40,13 +49,13 @@ interface AuthContextType {
   loading: boolean;
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole, studentData?: StudentProfileData) => Promise<void>;
+  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole, additionalData?: StudentProfileData) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: () => boolean;
 }
 
-// New interface to match data structure for student registration
+// Interface for additional user profile data
 interface StudentProfileData {
   date_of_birth?: string;
   profile_photo?: string;
@@ -128,26 +137,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       console.log('[AUTH] Login successful');
-
-      // Create studentProfile object if the user is a student
-      let studentProfile = null;
-      if (userData.role === 'student') {
-        studentProfile = {
-          id: userData.id,
-          firstName: userData.first_name,
-          lastName: userData.last_name,
-          email: userData.email,
-          dateOfBirth: userData.date_of_birth,
-          profilePhoto: userData.profile_photo,
-          parentName: userData.parent_name,
-          guardianRelation: userData.guardian_relation,
-          primaryPhone: userData.primary_phone,
-          secondaryPhone: userData.secondary_phone,
-          whatsappEnabled: userData.whatsapp_enabled,
-          address: userData.address,
-          idProof: userData.id_proof
-        };
-      }
       
       const authUser: UserData = {
         id: userData.id,
@@ -155,7 +144,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName: userData.first_name,
         lastName: userData.last_name,
         role: userData.role,
-        studentProfile: studentProfile || undefined,
+        dateOfBirth: userData.date_of_birth,
+        profilePhoto: userData.profile_photo,
+        parentName: userData.parent_name,
+        guardianRelation: userData.guardian_relation,
+        primaryPhone: userData.primary_phone,
+        secondaryPhone: userData.secondary_phone,
+        whatsappEnabled: userData.whatsapp_enabled,
+        address: userData.address,
+        idProof: userData.id_proof,
       };
       
       setUser(authUser);
@@ -188,7 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     firstName: string, 
     lastName: string, 
     role: UserRole,
-    studentData?: StudentProfileData
+    additionalData?: StudentProfileData
   ) => {
     setLoading(true);
     try {
@@ -213,23 +210,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         first_name: firstName,
         last_name: lastName,
         role: role,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        // Include additional data if provided
+        ...(additionalData && {
+          date_of_birth: additionalData.date_of_birth,
+          profile_photo: additionalData.profile_photo,
+          parent_name: additionalData.parent_name,
+          guardian_relation: role === 'student' ? additionalData.guardian_relation : null,
+          primary_phone: additionalData.primary_phone,
+          secondary_phone: additionalData.secondary_phone,
+          whatsapp_enabled: additionalData.whatsapp_enabled || false,
+          address: additionalData.address,
+          id_proof: additionalData.id_proof
+        })
       };
-
-      // Add student profile data if user is a student
-      if (role === 'student' && studentData) {
-        Object.assign(insertData, {
-          date_of_birth: studentData.date_of_birth,
-          profile_photo: studentData.profile_photo,
-          parent_name: studentData.parent_name,
-          guardian_relation: studentData.guardian_relation,
-          primary_phone: studentData.primary_phone,
-          secondary_phone: studentData.secondary_phone,
-          whatsapp_enabled: studentData.whatsapp_enabled,
-          address: studentData.address,
-          id_proof: studentData.id_proof
-        });
-      }
 
       const { error } = await supabase
         .from('custom_users')
@@ -246,21 +240,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName,
         lastName,
         role,
-        studentProfile: role === 'student' ? {
-          id: userId,
-          firstName,
-          lastName,
-          email: email.toLowerCase(),
-          dateOfBirth: studentData?.date_of_birth,
-          profilePhoto: studentData?.profile_photo,
-          parentName: studentData?.parent_name,
-          guardianRelation: studentData?.guardian_relation,
-          primaryPhone: studentData?.primary_phone,
-          secondaryPhone: studentData?.secondary_phone,
-          whatsappEnabled: studentData?.whatsapp_enabled,
-          address: studentData?.address,
-          idProof: studentData?.id_proof
-        } : undefined
+        ...(additionalData && {
+          dateOfBirth: additionalData.date_of_birth,
+          profilePhoto: additionalData.profile_photo,
+          parentName: additionalData.parent_name,
+          guardianRelation: role === 'student' ? additionalData.guardian_relation : undefined,
+          primaryPhone: additionalData.primary_phone,
+          secondaryPhone: additionalData.secondary_phone,
+          whatsappEnabled: additionalData.whatsapp_enabled,
+          address: additionalData.address,
+          idProof: additionalData.id_proof
+        })
       };
 
       setUser(userData);
@@ -283,7 +273,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       throw error;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
