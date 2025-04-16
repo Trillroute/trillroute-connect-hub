@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { StudentProfile } from '@/types/student';
 
 export type UserRole = 'student' | 'teacher' | 'admin';
 
@@ -12,6 +13,7 @@ interface UserData {
   firstName: string;
   lastName: string;
   role: UserRole;
+  studentProfile?: StudentProfile;
 }
 
 // Update the interface to match custom_users table
@@ -25,12 +27,25 @@ interface CustomUser {
   created_at: string;
 }
 
+// New interface for student profile data
+interface StudentProfileData {
+  dateOfBirth?: string;
+  profilePhoto?: string;
+  parentName?: string;
+  guardianRelation?: string;
+  primaryPhone?: string;
+  secondaryPhone?: string;
+  whatsappEnabled?: boolean;
+  address?: string;
+  idProof?: string;
+}
+
 interface AuthContextType {
   user: UserData | null;
   loading: boolean;
   role: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole) => Promise<void>;
+  register: (email: string, password: string, firstName: string, lastName: string, role: UserRole, studentData?: StudentProfileData) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: () => boolean;
@@ -114,6 +129,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       console.log('[AUTH] Login successful');
+
+      // If user is a student, fetch their student profile
+      let studentProfile = null;
+      if (userData.role === 'student') {
+        const { data: profileData } = await supabase
+          .from('student_profiles')
+          .select('*')
+          .eq('user_id', userData.id)
+          .single();
+        
+        if (profileData) {
+          studentProfile = profileData;
+        }
+      }
       
       // Create user object from database data
       const authUser: UserData = {
@@ -122,6 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName: userData.first_name,
         lastName: userData.last_name,
         role: userData.role,
+        studentProfile: studentProfile || undefined,
       };
       
       // Store user in state and localStorage
@@ -150,7 +180,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string, firstName: string, lastName: string, role: UserRole) => {
+  const register = async (
+    email: string, 
+    password: string, 
+    firstName: string, 
+    lastName: string, 
+    role: UserRole,
+    studentData?: StudentProfileData
+  ) => {
     setLoading(true);
     try {
       // Check if user already exists
@@ -187,6 +224,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
+      // If registering as a student and studentData provided, create student profile
+      if (role === 'student' && studentData) {
+        const { error: studentError } = await supabase
+          .from('student_profiles')
+          .insert({
+            user_id: userId,
+            date_of_birth: studentData.dateOfBirth,
+            profile_photo: studentData.profilePhoto,
+            parent_name: studentData.parentName,
+            guardian_relation: studentData.guardianRelation,
+            primary_phone: studentData.primaryPhone,
+            secondary_phone: studentData.secondaryPhone,
+            whatsapp_enabled: studentData.whatsappEnabled,
+            address: studentData.address,
+            id_proof: studentData.idProof
+          });
+
+        if (studentError) {
+          console.error('Error creating student profile:', studentError);
+          // Continue with login even if student profile creation fails
+        }
+      }
+
       // Create user object
       const userData: UserData = {
         id: userId,
@@ -194,6 +254,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName,
         lastName,
         role,
+        studentProfile: role === 'student' ? {
+          id: userId,
+          firstName,
+          lastName,
+          email: email.toLowerCase(),
+          dateOfBirth: studentData?.dateOfBirth,
+          profilePhoto: studentData?.profilePhoto,
+          parentName: studentData?.parentName,
+          guardianRelation: studentData?.guardianRelation,
+          primaryPhone: studentData?.primaryPhone,
+          secondaryPhone: studentData?.secondaryPhone,
+          whatsappEnabled: studentData?.whatsappEnabled,
+          address: studentData?.address,
+          idProof: studentData?.idProof
+        } : undefined
       };
 
       // Store user in state and localStorage

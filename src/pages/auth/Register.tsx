@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock, User, UserPlus } from 'lucide-react';
@@ -8,6 +9,7 @@ import { useAuth, UserRole } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import StudentRegistration from './StudentRegistration';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +21,11 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const { toast } = useToast();
+
+  // If role is student, show the special student registration form
+  if (role === 'student') {
+    return <StudentRegistration />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,7 +190,7 @@ const Register = () => {
               
               <div className="space-y-3">
                 <div className="text-sm font-medium text-gray-700">I am registering as:</div>
-                <RadioGroup defaultValue="student" className="grid grid-cols-3 gap-2" value={role} onValueChange={(value) => setRole(value as UserRole)}>
+                <RadioGroup defaultValue="teacher" className="grid grid-cols-2 gap-2" value={role} onValueChange={(value) => setRole(value as UserRole)}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="student" id="student" />
                     <Label htmlFor="student">Student</Label>
@@ -191,10 +198,6 @@ const Register = () => {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="teacher" id="teacher" />
                     <Label htmlFor="teacher">Teacher</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="admin" id="admin" />
-                    <Label htmlFor="admin">Admin</Label>
                   </div>
                 </RadioGroup>
               </div>

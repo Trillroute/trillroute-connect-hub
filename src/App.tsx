@@ -17,6 +17,7 @@ import Courses from "./pages/Courses";
 // Auth Pages
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import StudentRegistration from "./pages/auth/StudentRegistration";
 
 // Dashboard Pages
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
@@ -45,6 +46,7 @@ const App = () => (
               {/* Auth Pages */}
               <Route path="/auth/login" element={<Login />} />
               <Route path="/auth/register" element={<Register />} />
+              <Route path="/auth/student-registration" element={<StudentRegistration />} />
               
               {/* Dashboard Pages */}
               <Route 
