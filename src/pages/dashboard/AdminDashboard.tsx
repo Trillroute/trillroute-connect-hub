@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ import { fetchAdminRoles } from '@/components/superadmin/AdminService';
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
 
 const AdminDashboard = () => {
-  const { user, isSuperAdmin } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
   const [permissionMap, setPermissionMap] = useState<{
@@ -47,10 +48,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (user) {
       console.log('[AdminDashboard] User data:', user);
-      console.log('[AdminDashboard] Is SuperAdmin?', isSuperAdmin());
-      console.log('[AdminDashboard] Admin role name:', user.adminRoleName);
+      console.log('[AdminDashboard] User role:', user.role);
     }
-  }, [user, isSuperAdmin]);
+  }, [user]);
 
   // Clear permissions cache to ensure fresh checks
   useEffect(() => {
@@ -81,9 +81,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!user) return;
     
-    // Explicitly check if user is a superadmin
+    // Check if user is a superadmin - this is a critical fix
     const isSuperAdminUser = user.role === 'superadmin';
-    console.log('[AdminDashboard] User role:', user.role);
     console.log('[AdminDashboard] Is user superadmin?', isSuperAdminUser);
     
     if (isSuperAdminUser) {
@@ -111,7 +110,7 @@ const AdminDashboard = () => {
       email: user.email,
       role: user.role,
       createdAt: user.createdAt || new Date().toISOString(),
-      adminRoleName: user.adminRoleName // Use adminRoleName for permissions
+      adminRoleName: user.adminRoleName
     };
     
     console.log('[AdminDashboard] Checking permissions for:', userForPermissions);
@@ -199,7 +198,7 @@ const AdminDashboard = () => {
     if (firstAvailableTab) {
       setActiveTab(firstAvailableTab);
     }
-  }, [user, adminRoles, isSuperAdmin]);
+  }, [user, adminRoles]);
   
   // Count how many tabs are available
   const availableTabs = [
