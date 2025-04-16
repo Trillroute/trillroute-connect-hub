@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -26,6 +25,15 @@ export interface NewUserData {
   password: string;
   role: 'student' | 'teacher' | 'admin' | 'superadmin';
   adminLevel?: number;
+  dateOfBirth?: string;
+  profilePhoto?: string;
+  parentName?: string;
+  guardianRelation?: string;
+  primaryPhone?: string;
+  secondaryPhone?: string;
+  whatsappEnabled?: boolean;
+  address?: string;
+  idProof?: string;
 }
 
 interface AddUserDialogProps {
