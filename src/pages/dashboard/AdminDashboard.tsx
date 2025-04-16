@@ -25,7 +25,7 @@ import { fetchAdminRoles } from '@/components/superadmin/AdminService';
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
   const [permissionMap, setPermissionMap] = useState<{
@@ -69,6 +69,22 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (user) {
+      // Check if user is a superadmin - they get full access to everything
+      const isSuperAdminUser = isSuperAdmin();
+      
+      if (isSuperAdminUser) {
+        // Grant all permissions for superadmin
+        setPermissionMap({
+          students: { view: true, add: true, edit: true, delete: true },
+          teachers: { view: true, add: true, edit: true, delete: true },
+          admins: { view: true, add: true, edit: true, delete: true },
+          leads: { view: true, add: true, edit: true, delete: true },
+          courses: { view: true, add: true, edit: true, delete: true }
+        });
+        return;
+      }
+      
+      // Regular admin permissions check
       const userForPermissions = {
         id: user.id,
         firstName: user.firstName,
@@ -155,7 +171,7 @@ const AdminDashboard = () => {
         setActiveTab(firstAvailableTab);
       }
     }
-  }, [user, adminRoles]);
+  }, [user, adminRoles, isSuperAdmin]);
   
   // Count how many tabs are available
   const availableTabs = [
