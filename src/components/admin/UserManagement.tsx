@@ -8,14 +8,15 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import UserTable from './users/UserTable';
 import AddUserDialog, { NewUserData } from './users/AddUserDialog';
 import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
-import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
+import EditAdminLevelDialog from './users/EditAdminLevelDialog';
+import { fetchAllUsers, addUser, deleteUser, updateAdminLevel } from './users/UserService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface UserManagementProps {
@@ -28,8 +29,10 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditAdminLevelDialogOpen, setIsEditAdminLevelDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserManagementUser | null>(null);
   const [userToView, setUserToView] = useState<UserManagementUser | null>(null);
+  const [adminToEdit, setAdminToEdit] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
   const { isAdmin, isSuperAdmin } = useAuth();
 
@@ -114,6 +117,31 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
     }
   };
 
+  const handleUpdateAdminLevel = async (userId: string, newLevel: number) => {
+    try {
+      setIsLoading(true);
+      await updateAdminLevel(userId, newLevel);
+
+      toast({
+        title: 'Success',
+        description: `Admin permission level updated successfully.`,
+      });
+      
+      setIsEditAdminLevelDialogOpen(false);
+      setAdminToEdit(null);
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error updating admin level:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update permission level. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const openViewDialog = (user: UserManagementUser) => {
     setUserToView(user);
     setIsViewDialogOpen(true);
@@ -122,6 +150,11 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
   const openDeleteDialog = (user: UserManagementUser) => {
     setUserToDelete(user);
     setIsDeleteDialogOpen(true);
+  };
+
+  const openEditAdminLevelDialog = (admin: UserManagementUser) => {
+    setAdminToEdit(admin);
+    setIsEditAdminLevelDialogOpen(true);
   };
 
   // Determine which users can be deleted based on current user role
@@ -134,6 +167,11 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
       return user.role !== 'admin' && user.role !== 'superadmin';
     }
     return false;
+  };
+
+  // Determine if the current user can edit admin levels
+  const canEditAdminLevel = (user: UserManagementUser) => {
+    return isSuperAdmin() && user.role === 'admin';
   };
 
   return (
@@ -162,7 +200,9 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
           isLoading={isLoading}
           onViewUser={openViewDialog}
           onDeleteUser={openDeleteDialog}
+          onEditAdminLevel={openEditAdminLevelDialog}
           canDeleteUser={canDeleteUser}
+          canEditAdminLevel={canEditAdminLevel}
         />
         
         <AddUserDialog
@@ -185,6 +225,14 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
           user={userToView}
           isOpen={isViewDialogOpen}
           onOpenChange={setIsViewDialogOpen}
+        />
+
+        <EditAdminLevelDialog
+          admin={adminToEdit}
+          isOpen={isEditAdminLevelDialogOpen}
+          onOpenChange={setIsEditAdminLevelDialogOpen}
+          onUpdateLevel={handleUpdateAdminLevel}
+          isLoading={isLoading}
         />
       </CardContent>
     </Card>

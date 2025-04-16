@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Trash2, BadgeCheck, UserCog, UserPlus, ArrowUpDown, Search, Filter, X } from 'lucide-react';
+import { Eye, Trash2, BadgeCheck, UserCog, UserPlus, ArrowUpDown, Search, Filter, X, ShieldAlert } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
   DropdownMenu,
@@ -27,16 +27,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ADMIN_LEVELS } from './EditAdminLevelDialog';
 
 interface UserTableProps {
   users: UserManagementUser[];
   isLoading: boolean;
   onViewUser: (user: UserManagementUser) => void;
   onDeleteUser: (user: UserManagementUser) => void;
+  onEditAdminLevel?: (user: UserManagementUser) => void;
   canDeleteUser?: (user: UserManagementUser) => boolean;
+  canEditAdminLevel?: (user: UserManagementUser) => boolean;
 }
 
-type SortField = 'name' | 'email' | 'role' | 'createdAt';
+type SortField = 'name' | 'email' | 'role' | 'createdAt' | 'adminLevel';
 type SortDirection = 'asc' | 'desc';
 
 const UserTable = ({ 
@@ -44,7 +47,9 @@ const UserTable = ({
   isLoading, 
   onViewUser, 
   onDeleteUser,
-  canDeleteUser = () => true
+  onEditAdminLevel,
+  canDeleteUser = () => true,
+  canEditAdminLevel = () => false
 }: UserTableProps) => {
   const [users, setUsers] = useState<UserManagementUser[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,6 +95,9 @@ const UserTable = ({
         case 'createdAt':
           comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           break;
+        case 'adminLevel':
+          comparison = a.adminLevel - b.adminLevel;
+          break;
         default:
           comparison = 0;
       }
@@ -115,7 +123,13 @@ const UserTable = ({
     setSortField('name');
     setSortDirection('asc');
   };
-  
+
+  const getAdminLevelName = (level?: number) => {
+    if (level === undefined) return '';
+    const adminLevel = ADMIN_LEVELS.find(l => l.level === level);
+    return adminLevel ? `Level ${adminLevel.level}` : '';
+  };
+
   if (isLoading) {
     return <div className="py-8 text-center text-gray-500">Loading users...</div>;
   }
@@ -155,25 +169,41 @@ const UserTable = ({
                 className={sortField === 'name' ? 'bg-accent' : ''}
                 onClick={() => handleSort('name')}
               >
-                Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                Name {sortField === 'name' && (
+                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={sortField === 'email' ? 'bg-accent' : ''}
                 onClick={() => handleSort('email')}
               >
-                Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
+                Email {sortField === 'email' && (
+                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={sortField === 'role' ? 'bg-accent' : ''}
                 onClick={() => handleSort('role')}
               >
-                Role {sortField === 'role' && (sortDirection === 'asc' ? '↑' : '↓')}
+                Role {sortField === 'role' && (
+                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                )}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={sortField === 'createdAt' ? 'bg-accent' : ''}
                 onClick={() => handleSort('createdAt')}
               >
-                Created Date {sortField === 'createdAt' && (sortDirection === 'asc' ? '↑' : '↓')}
+                Created Date {sortField === 'createdAt' && (
+                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className={sortField === 'adminLevel' ? 'bg-accent' : ''}
+                onClick={() => handleSort('adminLevel')}
+              >
+                Admin Level {sortField === 'adminLevel' && (
+                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={clearFilters}>
@@ -247,6 +277,9 @@ const UserTable = ({
                   <ArrowUpDown className="inline h-4 w-4 ml-1" />
                 )}
               </TableHead>
+              <TableHead>
+                Admin Level
+              </TableHead>
               <TableHead 
                 className="cursor-pointer hover:bg-accent/50"
                 onClick={() => handleSort('createdAt')}
@@ -272,12 +305,15 @@ const UserTable = ({
                     ) : user.role === 'teacher' ? (
                       <UserCog className="h-4 w-4 text-music-400 mr-1" />
                     ) : user.role === 'superadmin' ? (
-                      <BadgeCheck className="h-4 w-4 text-music-700 mr-1" />
+                      <ShieldAlert className="h-4 w-4 text-music-700 mr-1" />
                     ) : (
                       <UserPlus className="h-4 w-4 text-music-300 mr-1" />
                     )}
                     {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                   </div>
+                </TableCell>
+                <TableCell>
+                  {user.role === 'admin' && getAdminLevelName(user.adminLevel)}
                 </TableCell>
                 <TableCell>
                   {format(new Date(user.createdAt), 'MMM d, yyyy')}
@@ -292,6 +328,18 @@ const UserTable = ({
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">View</span>
                     </Button>
+                    
+                    {canEditAdminLevel && canEditAdminLevel(user) && onEditAdminLevel && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEditAdminLevel(user)}
+                      >
+                        <BadgeCheck className="h-4 w-4" />
+                        <span className="sr-only">Edit Permissions</span>
+                      </Button>
+                    )}
+                    
                     {canDeleteUser(user) && (
                       <Button
                         variant="ghost"
