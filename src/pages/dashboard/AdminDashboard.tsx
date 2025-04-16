@@ -21,6 +21,7 @@ import {
   updateCachedAdminRoles
 } from '@/utils/adminPermissions';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
 
@@ -43,12 +44,14 @@ const AdminDashboard = () => {
   });
   const [adminRoles, setAdminRoles] = useState<AdminLevel[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Debug output to help troubleshoot
   useEffect(() => {
     if (user) {
       console.log('[AdminDashboard] User data:', user);
       console.log('[AdminDashboard] User role:', user.role);
+      console.log('[AdminDashboard] User adminRoleName:', user.adminRoleName);
     }
   }, [user]);
 
@@ -71,14 +74,22 @@ const AdminDashboard = () => {
       console.log('[AdminDashboard] Received admin roles:', roles);
       setAdminRoles(roles);
       updateCachedAdminRoles(roles);
+      
+      // After loading roles, update permissions
+      updateUserPermissions(roles);
     } catch (error) {
       console.error('[AdminDashboard] Error loading admin roles:', error);
+      toast({
+        title: "Error loading permissions",
+        description: "Could not load permission roles from database",
+        variant: "destructive",
+      });
     } finally {
       setIsLoadingRoles(false);
     }
   };
 
-  useEffect(() => {
+  const updateUserPermissions = (roles: AdminLevel[]) => {
     if (!user) return;
     
     // Check if user is a superadmin
@@ -101,104 +112,87 @@ const AdminDashboard = () => {
       setActiveTab('courses');
       return;
     }
-    
-    // Regular admin permissions check
-    const userForPermissions = {
-      id: user.id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt || new Date().toISOString(),
-      adminRoleName: user.adminRoleName
-    };
-    
-    console.log('[AdminDashboard] Checking permissions for:', userForPermissions);
 
-    // Check permissions using the adminRoleName
-    const canViewStudents = canManageStudents(userForPermissions, 'view');
-    const canAddStudents = canManageStudents(userForPermissions, 'add');
-    const canEditStudents = canManageStudents(userForPermissions, 'edit');
-    const canDeleteStudents = canManageStudents(userForPermissions, 'delete');
+    // For regular admins, find their role in the loaded roles
+    const adminRoleName = user.adminRoleName || "Limited View";
+    console.log('[AdminDashboard] Looking for admin role:', adminRoleName);
+
+    // Find the user's role in the available roles
+    const userRole = roles.find(role => role.name === adminRoleName);
     
-    // Check teachers permissions
-    const canViewTeachers = canManageTeachers(userForPermissions, 'view');
-    const canAddTeachers = canManageTeachers(userForPermissions, 'add');
-    const canEditTeachers = canManageTeachers(userForPermissions, 'edit');
-    const canDeleteTeachers = canManageTeachers(userForPermissions, 'delete');
-    
-    // Check admins permissions
-    const canViewAdmins = canManageAdmins(userForPermissions, 'view');
-    const canAddAdmins = canManageAdmins(userForPermissions, 'add');
-    const canEditAdmins = canManageAdmins(userForPermissions, 'edit');
-    const canDeleteAdmins = canManageAdmins(userForPermissions, 'delete');
-    
-    // Check leads permissions
-    const canViewLeads = canManageLeads(userForPermissions, 'view');
-    const canAddLeads = canManageLeads(userForPermissions, 'add');
-    const canEditLeads = canManageLeads(userForPermissions, 'edit');
-    const canDeleteLeads = canManageLeads(userForPermissions, 'delete');
-    
-    // Check courses permissions
-    const canViewCourses = canManageCourses(userForPermissions, 'view');
-    const canAddCourses = canManageCourses(userForPermissions, 'add');
-    const canEditCourses = canManageCourses(userForPermissions, 'edit');
-    const canDeleteCourses = canManageCourses(userForPermissions, 'delete');
-    
-    console.log('Permission results:', {
-      students: { view: canViewStudents, add: canAddStudents, edit: canEditStudents, delete: canDeleteStudents },
-      teachers: { view: canViewTeachers, add: canAddTeachers, edit: canEditTeachers, delete: canDeleteTeachers },
-      courses: { view: canViewCourses, add: canAddCourses, edit: canEditCourses, delete: canDeleteCourses },
-    });
-    
-    setPermissionMap({
-      students: {
-        view: canViewStudents,
-        add: canAddStudents,
-        edit: canEditStudents,
-        delete: canDeleteStudents
-      },
-      teachers: {
-        view: canViewTeachers,
-        add: canAddTeachers,
-        edit: canEditTeachers,
-        delete: canDeleteTeachers
-      },
-      admins: {
-        view: canViewAdmins,
-        add: canAddAdmins,
-        edit: canEditAdmins,
-        delete: canDeleteAdmins
-      },
-      leads: {
-        view: canViewLeads,
-        add: canAddLeads,
-        edit: canEditLeads,
-        delete: canDeleteLeads
-      },
-      courses: {
-        view: canViewCourses,
-        add: canAddCourses,
-        edit: canEditCourses,
-        delete: canDeleteCourses
+    if (userRole) {
+      console.log('[AdminDashboard] Found matching role:', userRole);
+      setDebugInfo(null);
+
+      // Map the permissions from the admin role
+      setPermissionMap({
+        students: {
+          view: userRole.studentPermissions.includes('view'),
+          add: userRole.studentPermissions.includes('add'),
+          edit: userRole.studentPermissions.includes('edit'),
+          delete: userRole.studentPermissions.includes('delete')
+        },
+        teachers: {
+          view: userRole.teacherPermissions.includes('view'),
+          add: userRole.teacherPermissions.includes('add'),
+          edit: userRole.teacherPermissions.includes('edit'),
+          delete: userRole.teacherPermissions.includes('delete')
+        },
+        admins: {
+          view: userRole.adminPermissions.includes('view'),
+          add: userRole.adminPermissions.includes('add'),
+          edit: userRole.adminPermissions.includes('edit'),
+          delete: userRole.adminPermissions.includes('delete')
+        },
+        leads: {
+          view: userRole.leadPermissions.includes('view'),
+          add: userRole.leadPermissions.includes('add'),
+          edit: userRole.leadPermissions.includes('edit'),
+          delete: userRole.leadPermissions.includes('delete')
+        },
+        courses: {
+          view: userRole.coursePermissions.includes('view'),
+          add: userRole.coursePermissions.includes('add'),
+          edit: userRole.coursePermissions.includes('edit'),
+          delete: userRole.coursePermissions.includes('delete')
+        }
+      });
+
+      // Set first available tab as active
+      if (userRole.coursePermissions.includes('view')) {
+        setActiveTab('courses');
+      } else if (userRole.studentPermissions.includes('view')) {
+        setActiveTab('students');
+      } else if (userRole.teacherPermissions.includes('view')) {
+        setActiveTab('teachers');
+      } else if (userRole.adminPermissions.includes('view')) {
+        setActiveTab('admins');
+      } else if (userRole.leadPermissions.includes('view')) {
+        setActiveTab('leads');
       }
-    });
-
-    // Find first available tab to set as active
-    const firstAvailableTab = [
-      canViewCourses && 'courses',
-      canViewStudents && 'students',
-      canViewTeachers && 'teachers',
-      canViewAdmins && 'admins',
-      canViewLeads && 'leads'
-    ].find(Boolean) as ActiveTab | undefined;
-
-    console.log('First available tab:', firstAvailableTab);
-
-    if (firstAvailableTab) {
-      setActiveTab(firstAvailableTab);
+    } else {
+      console.log('[AdminDashboard] No matching role found for:', adminRoleName);
+      setDebugInfo(`No matching role found in database for: ${adminRoleName}. Available roles: ${roles.map(r => r.name).join(', ')}`);
+      
+      // Use Limited View as fallback
+      setPermissionMap({
+        students: { view: true, add: false, edit: false, delete: false },
+        teachers: { view: true, add: false, edit: false, delete: false },
+        admins: { view: false, add: false, edit: false, delete: false },
+        leads: { view: false, add: false, edit: false, delete: false },
+        courses: { view: true, add: false, edit: false, delete: false }
+      });
+      
+      // Set first tab with permissions as active
+      setActiveTab('courses');
     }
-  }, [user, adminRoles]);
+  };
+
+  useEffect(() => {
+    if (adminRoles.length > 0 && user) {
+      updateUserPermissions(adminRoles);
+    }
+  }, [adminRoles, user]);
   
   // Count how many tabs are available
   const availableTabs = [
@@ -230,118 +224,133 @@ const AdminDashboard = () => {
         <p className="mt-2 text-gray-600">
           Your role: {user?.role} {user?.adminRoleName ? `(${user.adminRoleName})` : ''}
         </p>
+        
+        {debugInfo && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertTitle>Debug Information</AlertTitle>
+            <AlertDescription>{debugInfo}</AlertDescription>
+          </Alert>
+        )}
       </div>
 
-      {/* Only show tab navigation if user has access to more than one tab */}
-      {showTabNavigation && (
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex rounded-lg border bg-card p-1 text-card-foreground shadow">
-            {permissionMap.courses.view && (
-              <Button
-                variant={activeTab === 'courses' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('courses')}
-                className="rounded-md px-3 py-1"
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                Courses
-              </Button>
+      {isLoadingRoles ? (
+        <div className="flex justify-center items-center h-48">
+          <p>Loading permissions...</p>
+        </div>
+      ) : (
+        <>
+          {/* Only show tab navigation if user has access to more than one tab */}
+          {showTabNavigation && (
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex rounded-lg border bg-card p-1 text-card-foreground shadow">
+                {permissionMap.courses.view && (
+                  <Button
+                    variant={activeTab === 'courses' ? 'default' : 'ghost'}
+                    onClick={() => setActiveTab('courses')}
+                    className="rounded-md px-3 py-1"
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Courses
+                  </Button>
+                )}
+                {permissionMap.students.view && (
+                  <Button
+                    variant={activeTab === 'students' ? 'default' : 'ghost'}
+                    onClick={() => setActiveTab('students')}
+                    className="rounded-md px-3 py-1"
+                  >
+                    <School className="h-4 w-4 mr-2" />
+                    Students
+                  </Button>
+                )}
+                {permissionMap.teachers.view && (
+                  <Button
+                    variant={activeTab === 'teachers' ? 'default' : 'ghost'}
+                    onClick={() => setActiveTab('teachers')}
+                    className="rounded-md px-3 py-1"
+                  >
+                    <GraduationCap className="h-4 w-4 mr-2" />
+                    Teachers
+                  </Button>
+                )}
+                {permissionMap.admins.view && (
+                  <Button
+                    variant={activeTab === 'admins' ? 'default' : 'ghost'}
+                    onClick={() => setActiveTab('admins')}
+                    className="rounded-md px-3 py-1"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admins
+                  </Button>
+                )}
+                {permissionMap.leads.view && (
+                  <Button
+                    variant={activeTab === 'leads' ? 'default' : 'ghost'}
+                    onClick={() => setActiveTab('leads')}
+                    className="rounded-md px-3 py-1"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Leads
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-8">
+            {activeTab === 'courses' && permissionMap.courses.view && (
+              <CourseManagement 
+                canAddCourse={permissionMap.courses.add}
+                canDeleteCourse={permissionMap.courses.delete}
+              />
             )}
-            {permissionMap.students.view && (
-              <Button
-                variant={activeTab === 'students' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('students')}
-                className="rounded-md px-3 py-1"
-              >
-                <School className="h-4 w-4 mr-2" />
-                Students
-              </Button>
+            
+            {activeTab === 'students' && permissionMap.students.view && (
+              <StudentManagement 
+                canAddUser={permissionMap.students.add}
+                canDeleteUser={permissionMap.students.delete}
+              />
             )}
-            {permissionMap.teachers.view && (
-              <Button
-                variant={activeTab === 'teachers' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('teachers')}
-                className="rounded-md px-3 py-1"
-              >
-                <GraduationCap className="h-4 w-4 mr-2" />
-                Teachers
-              </Button>
+            
+            {activeTab === 'teachers' && permissionMap.teachers.view && (
+              <TeacherManagement 
+                canAddUser={permissionMap.teachers.add}
+                canDeleteUser={permissionMap.teachers.delete}
+              />
             )}
-            {permissionMap.admins.view && (
-              <Button
-                variant={activeTab === 'admins' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('admins')}
-                className="rounded-md px-3 py-1"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Admins
-              </Button>
+            
+            {activeTab === 'admins' && permissionMap.admins.view && (
+              <AdminManagement 
+                canAddAdmin={permissionMap.admins.add}
+                canDeleteAdmin={permissionMap.admins.delete}
+                canEditAdminLevel={permissionMap.admins.edit}
+              />
             )}
-            {permissionMap.leads.view && (
-              <Button
-                variant={activeTab === 'leads' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('leads')}
-                className="rounded-md px-3 py-1"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Leads
-              </Button>
+            
+            {activeTab === 'leads' && permissionMap.leads.view && (
+              <LeadManagement 
+                canAddLead={permissionMap.leads.add}
+                canEditLead={permissionMap.leads.edit}
+                canDeleteLead={permissionMap.leads.delete}
+              />
+            )}
+
+            {!hasAnyAccess && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Limited Access</CardTitle>
+                  <CardDescription>
+                    You don't have permissions to access any admin sections.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>Please contact a super administrator to update your permissions.</p>
+                </CardContent>
+              </Card>
             )}
           </div>
-        </div>
+        </>
       )}
-
-      <div className="mb-8">
-        {activeTab === 'courses' && permissionMap.courses.view && (
-          <CourseManagement 
-            canAddCourse={permissionMap.courses.add}
-            canDeleteCourse={permissionMap.courses.delete}
-          />
-        )}
-        
-        {activeTab === 'students' && permissionMap.students.view && (
-          <StudentManagement 
-            canAddUser={permissionMap.students.add}
-            canDeleteUser={permissionMap.students.delete}
-          />
-        )}
-        
-        {activeTab === 'teachers' && permissionMap.teachers.view && (
-          <TeacherManagement 
-            canAddUser={permissionMap.teachers.add}
-            canDeleteUser={permissionMap.teachers.delete}
-          />
-        )}
-        
-        {activeTab === 'admins' && permissionMap.admins.view && (
-          <AdminManagement 
-            canAddAdmin={permissionMap.admins.add}
-            canDeleteAdmin={permissionMap.admins.delete}
-            canEditAdminLevel={permissionMap.admins.edit}
-          />
-        )}
-        
-        {activeTab === 'leads' && permissionMap.leads.view && (
-          <LeadManagement 
-            canAddLead={permissionMap.leads.add}
-            canEditLead={permissionMap.leads.edit}
-            canDeleteLead={permissionMap.leads.delete}
-          />
-        )}
-
-        {!hasAnyAccess && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Limited Access</CardTitle>
-              <CardDescription>
-                You don't have permissions to access any admin sections.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Please contact a super administrator to update your permissions.</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
     </div>
   );
 };

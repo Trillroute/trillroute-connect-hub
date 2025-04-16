@@ -30,17 +30,20 @@ const ProtectedRoute = ({
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Check for superadmin requirement (critical fix - ensure proper SuperAdmin detection)
-  if (requireSuperAdmin) {
-    console.log('[ProtectedRoute] Checking superadmin requirement:', user.role);
-    if (user.role !== 'superadmin') {
-      console.log('[ProtectedRoute] User is not superadmin, redirecting');
-      return <Navigate to={`/dashboard/${user.role}`} replace />;
-    }
+  // First check for superadmin requirement - this is a critical check
+  if (requireSuperAdmin && user.role !== 'superadmin') {
+    console.log('[ProtectedRoute] User is not superadmin, redirecting');
+    return <Navigate to={`/dashboard/${user.role}`} replace />;
+  }
+
+  // Superadmin can access any route
+  if (user.role === 'superadmin') {
+    console.log('[ProtectedRoute] User is superadmin, granting access');
+    return <>{children}</>;
   }
 
   // Check for admin requirement
-  if (requireAdmin && user.role !== 'admin' && user.role !== 'superadmin') {
+  if (requireAdmin && user.role !== 'admin') {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }

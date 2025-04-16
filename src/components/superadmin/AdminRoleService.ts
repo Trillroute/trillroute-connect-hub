@@ -17,11 +17,16 @@ export const fetchAdminRoles = async (): Promise<AdminLevel[]> => {
     throw error;
   }
 
+  if (!data || data.length === 0) {
+    console.warn('[AdminRoleService] No admin roles found in database');
+    return [];
+  }
+
   console.log('[AdminRoleService] Received admin roles from database:', data);
 
   return data.map(level => ({
     name: level.name,
-    description: level.description,
+    description: level.description || '',
     studentPermissions: Array.isArray(level.student_permissions) 
       ? level.student_permissions 
       : [],
@@ -45,6 +50,25 @@ export const fetchAdminRoles = async (): Promise<AdminLevel[]> => {
  */
 export const updateAdminLevel = async (userId: string, levelName: string): Promise<void> => {
   console.log(`[AdminRoleService] Updating admin level for user ${userId} to ${levelName}`);
+  
+  // First fetch the user to ensure they are an admin
+  const { data: user, error: userError } = await supabase
+    .from('custom_users')
+    .select('role')
+    .eq('id', userId)
+    .single();
+    
+  if (userError) {
+    console.error('[AdminRoleService] Error fetching user:', userError);
+    throw new Error('User not found');
+  }
+  
+  if (user.role !== 'admin') {
+    console.error('[AdminRoleService] Cannot update admin level for non-admin user');
+    throw new Error('User is not an admin');
+  }
+  
+  // Now update the admin level
   const { error } = await supabase
     .from('custom_users')
     .update({ admin_level_name: levelName })

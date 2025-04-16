@@ -18,6 +18,7 @@ import { UserManagementUser } from "@/types/student";
 export interface PermissionUser {
   id: string;
   role: string;
+  adminRoleName?: string;
 }
 
 export enum AdminPermission {
@@ -86,7 +87,7 @@ let cachedAdminRoles = new Map<string, AdminLevel>();
 export const hasPermission = (user: UserManagementUser | PermissionUser | null, permission: AdminPermission): boolean => {
   if (!user) return false;
   
-  // Superadmins have all permissions - critical fix
+  // Superadmins have all permissions - always return true without further checks
   if (user.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin always has permission:', permission);
     return true;
@@ -165,9 +166,15 @@ export const updateCachedAdminRoles = (adminRoles: AdminLevel[]): void => {
   console.log('[adminPermissions] Updating cached admin roles:', adminRoles);
   cachedAdminRoles.clear();
   
+  // Add all roles to the cache
   adminRoles.forEach(role => {
-    cachedAdminRoles.set(role.name, role);
+    if (role && role.name) {
+      cachedAdminRoles.set(role.name, role);
+    }
   });
+  
+  // Clear permissions cache when roles are updated
+  cachedPermissions.clear();
   
   console.log('[adminPermissions] Updated admin roles cache. Current roles:', 
     Array.from(cachedAdminRoles.keys()));
