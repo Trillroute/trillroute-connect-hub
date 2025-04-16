@@ -35,9 +35,22 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   
+  // Check if user is superadmin and override permissions
+  const isSuperAdmin = user?.role === 'superadmin';
+  const effectiveCanAddLead = isSuperAdmin ? true : canAddLead;
+  const effectiveCanEditLead = isSuperAdmin ? true : canEditLead;
+  const effectiveCanDeleteLead = isSuperAdmin ? true : canDeleteLead;
+  
   const openEditDialog = (lead: Lead) => {
+    // Always allow superadmin to edit leads
+    if (isSuperAdmin) {
+      setSelectedLead(lead);
+      setIsEditDialogOpen(true);
+      return;
+    }
+    
     // Only allow opening the edit dialog if the user has edit permissions
-    if (!canEditLead) {
+    if (!effectiveCanEditLead) {
       toast({
         title: "Permission Denied",
         description: "You don't have permission to edit leads.",
@@ -50,6 +63,22 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   };
 
   const openDeleteDialog = (lead: Lead) => {
+    // Always allow superadmin to delete leads
+    if (isSuperAdmin) {
+      setSelectedLead(lead);
+      setIsDeleteDialogOpen(true);
+      return;
+    }
+    
+    // Only allow opening the delete dialog if the user has delete permissions
+    if (!effectiveCanDeleteLead) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to delete leads.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedLead(lead);
     setIsDeleteDialogOpen(true);
   };
@@ -71,7 +100,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
               <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
-            {canAddLead && (
+            {effectiveCanAddLead && (
               <Button 
                 onClick={() => setIsCreateDialogOpen(true)}
                 className="bg-primary text-white flex items-center gap-2"
@@ -108,7 +137,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="h-4 w-4" /> 
-              Show Filters
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
             </Button>
             <Button 
               variant="outline" 
@@ -123,11 +152,11 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
         <LeadTable 
           leads={leads} 
           loading={loading} 
-          onEdit={canEditLead ? openEditDialog : undefined} 
-          onDelete={canDeleteLead ? openDeleteDialog : undefined}
+          onEdit={openEditDialog}
+          onDelete={effectiveCanDeleteLead ? openDeleteDialog : undefined}
         />
         
-        {canAddLead && (
+        {effectiveCanAddLead && (
           <CreateLeadDialog 
             open={isCreateDialogOpen} 
             onOpenChange={setIsCreateDialogOpen} 
@@ -135,22 +164,24 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
           />
         )}
         
-        {selectedLead && canEditLead && (
-          <EditLeadDialog 
-            open={isEditDialogOpen} 
-            onOpenChange={setIsEditDialogOpen} 
-            lead={selectedLead}
-            onSuccess={fetchLeads}
-          />
-        )}
-        
-        {selectedLead && canDeleteLead && (
-          <DeleteLeadDialog 
-            open={isDeleteDialogOpen} 
-            onOpenChange={setIsDeleteDialogOpen} 
-            lead={selectedLead}
-            onSuccess={fetchLeads}
-          />
+        {selectedLead && (
+          <>
+            <EditLeadDialog 
+              open={isEditDialogOpen} 
+              onOpenChange={setIsEditDialogOpen} 
+              lead={selectedLead}
+              onSuccess={fetchLeads}
+            />
+            
+            {effectiveCanDeleteLead && (
+              <DeleteLeadDialog 
+                open={isDeleteDialogOpen} 
+                onOpenChange={setIsDeleteDialogOpen} 
+                lead={selectedLead}
+                onSuccess={fetchLeads}
+              />
+            )}
+          </>
         )}
       </CardContent>
     </Card>

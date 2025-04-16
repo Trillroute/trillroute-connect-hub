@@ -60,8 +60,9 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   
-  // Fix the permission check by explicitly handling superadmin role
-  const hasEditPermission = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'edit'));
+  // Check if user is superadmin or has edit course permission
+  const hasEditPermission = user?.role === 'superadmin' || 
+    (user?.role === 'admin' && canManageCourses(user, 'edit'));
   
   useEffect(() => {
     if (open && !hasEditPermission) {
@@ -144,6 +145,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   }, [course, form, open, instructorIds]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
+    // Always allow superadmin to edit regardless of other permission checks
     if (!hasEditPermission) {
       toast({
         title: "Permission Denied",

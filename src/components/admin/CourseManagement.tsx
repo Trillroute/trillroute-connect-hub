@@ -42,6 +42,13 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const effectiveCanAddCourse = isSuperAdmin ? true : canAddCourse;
   
   const openEditDialog = (course: Course) => {
+    // Always allow superadmin to edit courses
+    if (isSuperAdmin) {
+      setSelectedCourse(course);
+      setIsEditDialogOpen(true);
+      return;
+    }
+    
     // Only allow opening the edit dialog if the user has edit permissions
     if (!effectiveCanEditCourse) {
       toast({
@@ -56,6 +63,13 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   };
 
   const openDeleteDialog = (course: Course) => {
+    // Always allow superadmin to delete courses
+    if (isSuperAdmin) {
+      setSelectedCourse(course);
+      setIsDeleteDialogOpen(true);
+      return;
+    }
+    
     // Only allow opening the delete dialog if the user has delete permissions
     if (!effectiveCanDeleteCourse) {
       toast({
@@ -123,7 +137,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="h-4 w-4" /> 
-              Show Filters
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
             </Button>
             <Button 
               variant="outline" 
@@ -139,7 +153,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
           courses={courses} 
           loading={loading} 
           // Use the effective permissions based on superadmin status
-          onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
+          onEdit={openEditDialog} 
           onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
         />
       </CardContent>
@@ -154,14 +168,12 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
 
       {selectedCourse && (
         <>
-          {effectiveCanEditCourse && (
-            <EditCourseDialog 
-              open={isEditDialogOpen} 
-              onOpenChange={setIsEditDialogOpen} 
-              course={selectedCourse}
-              onSuccess={fetchCourses}
-            />
-          )}
+          <EditCourseDialog 
+            open={isEditDialogOpen} 
+            onOpenChange={setIsEditDialogOpen} 
+            course={selectedCourse}
+            onSuccess={fetchCourses}
+          />
           
           {effectiveCanDeleteCourse && (
             <DeleteCourseDialog 

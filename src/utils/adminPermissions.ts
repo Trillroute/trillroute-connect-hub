@@ -47,16 +47,6 @@ export enum AdminPermission {
   DELETE_COURSES = 'delete_courses'
 }
 
-export interface AdminLevel {
-  name: string;
-  description: string;
-  studentPermissions: string[];
-  teacherPermissions: string[];
-  adminPermissions: string[];
-  leadPermissions: string[];
-  coursePermissions: string[];
-}
-
 // Fallback permissions mapping in case we can't fetch from database
 const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
   "Limited View": {
@@ -95,7 +85,7 @@ let cachedAdminRoles = new Map<string, AdminLevel>();
 export const hasPermission = (user: UserManagementUser | PermissionUser | null, permission: AdminPermission): boolean => {
   if (!user) return false;
   
-  // Superadmins have all permissions - always return true without further checks
+  // Superadmins have ALL permissions
   if (user.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin always has permission:', permission);
     return true;
@@ -286,6 +276,7 @@ export const canManageLeads = (user: UserManagementUser | PermissionUser | null,
  * Helper function to determine if a specific user can perform actions on courses
  */
 export const canManageCourses = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
+  // Always grant permission to superadmin
   if (user?.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin can manage courses:', action);
     return true;
