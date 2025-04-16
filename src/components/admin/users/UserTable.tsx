@@ -33,12 +33,19 @@ interface UserTableProps {
   isLoading: boolean;
   onViewUser: (user: UserManagementUser) => void;
   onDeleteUser: (user: UserManagementUser) => void;
+  canDeleteUser?: (user: UserManagementUser) => boolean;
 }
 
 type SortField = 'name' | 'email' | 'role' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
-const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }: UserTableProps) => {
+const UserTable = ({ 
+  users: initialUsers, 
+  isLoading, 
+  onViewUser, 
+  onDeleteUser,
+  canDeleteUser = () => true
+}: UserTableProps) => {
   const [users, setUsers] = useState<UserManagementUser[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');
@@ -191,6 +198,7 @@ const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }:
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="teacher">Teacher</SelectItem>
                   <SelectItem value="student">Student</SelectItem>
+                  <SelectItem value="superadmin">Superadmin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -263,6 +271,8 @@ const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }:
                       <BadgeCheck className="h-4 w-4 text-music-500 mr-1" />
                     ) : user.role === 'teacher' ? (
                       <UserCog className="h-4 w-4 text-music-400 mr-1" />
+                    ) : user.role === 'superadmin' ? (
+                      <BadgeCheck className="h-4 w-4 text-music-700 mr-1" />
                     ) : (
                       <UserPlus className="h-4 w-4 text-music-300 mr-1" />
                     )}
@@ -282,7 +292,7 @@ const UserTable = ({ users: initialUsers, isLoading, onViewUser, onDeleteUser }:
                       <Eye className="h-4 w-4" />
                       <span className="sr-only">View</span>
                     </Button>
-                    {user.role !== 'admin' && (
+                    {canDeleteUser(user) && (
                       <Button
                         variant="ghost"
                         size="sm"

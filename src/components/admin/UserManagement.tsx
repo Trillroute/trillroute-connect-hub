@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react'; // Changed import
+import { Plus, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import UserTable from './users/UserTable';
@@ -16,6 +16,7 @@ import AddUserDialog, { NewUserData } from './users/AddUserDialog';
 import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UserManagementProps {
   allowAdminCreation?: boolean;
@@ -30,6 +31,7 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
   const [userToDelete, setUserToDelete] = useState<UserManagementUser | null>(null);
   const [userToView, setUserToView] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
+  const { isAdmin, isSuperAdmin } = useAuth();
 
   const loadUsers = async () => {
     try {
@@ -122,6 +124,18 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
     setIsDeleteDialogOpen(true);
   };
 
+  // Determine which users can be deleted based on current user role
+  const canDeleteUser = (user: UserManagementUser) => {
+    if (isSuperAdmin()) {
+      // SuperAdmin can delete anyone except themselves
+      return true;
+    } else if (isAdmin()) {
+      // Admin can't delete other admins or superadmins
+      return user.role !== 'admin' && user.role !== 'superadmin';
+    }
+    return false;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -136,7 +150,7 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
               Refresh
             </Button>
             <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" /> {/* Changed icon */}
+              <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
           </div>
@@ -148,6 +162,7 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
           isLoading={isLoading}
           onViewUser={openViewDialog}
           onDeleteUser={openDeleteDialog}
+          canDeleteUser={canDeleteUser}
         />
         
         <AddUserDialog
@@ -155,7 +170,7 @@ const UserManagement = ({ allowAdminCreation = false }: UserManagementProps) => 
           onOpenChange={setIsAddDialogOpen}
           onAddUser={handleAddUser}
           isLoading={isLoading}
-          allowAdminCreation={allowAdminCreation}
+          allowAdminCreation={allowAdminCreation || isSuperAdmin()}
         />
         
         <DeleteUserDialog
