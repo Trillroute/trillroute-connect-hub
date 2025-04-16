@@ -6,6 +6,7 @@ import { AreaChart } from '@/components/ui/charts';
 import { Download, Settings, Users, BookOpen, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
+import UserManagement from '@/components/admin/UserManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -18,6 +19,7 @@ const AdminDashboard = () => {
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [activeTab, setActiveTab] = useState<'courses' | 'users'>('courses');
   
   const fetchDashboardData = async () => {
     try {
@@ -228,8 +230,30 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
+      <div className="flex justify-center mb-6">
+        <div className="inline-flex rounded-lg border bg-card p-1 text-card-foreground shadow">
+          <Button
+            variant={activeTab === 'courses' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('courses')}
+            className="rounded-md px-3 py-1"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            Courses
+          </Button>
+          <Button
+            variant={activeTab === 'users' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('users')}
+            className="rounded-md px-3 py-1"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Users
+          </Button>
+        </div>
+      </div>
+
       <div className="mb-8">
-        <CourseManagement />
+        {activeTab === 'courses' && <CourseManagement />}
+        {activeTab === 'users' && <UserManagement />}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">

@@ -117,6 +117,59 @@ export type Database = {
         }
         Relationships: []
       }
+      student_profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          date_of_birth: string | null
+          guardian_relation: string | null
+          id: string
+          id_proof: string | null
+          parent_name: string | null
+          primary_phone: string | null
+          profile_photo: string | null
+          secondary_phone: string | null
+          user_id: string
+          whatsapp_enabled: boolean | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          guardian_relation?: string | null
+          id?: string
+          id_proof?: string | null
+          parent_name?: string | null
+          primary_phone?: string | null
+          profile_photo?: string | null
+          secondary_phone?: string | null
+          user_id: string
+          whatsapp_enabled?: boolean | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          guardian_relation?: string | null
+          id?: string
+          id_proof?: string | null
+          parent_name?: string | null
+          primary_phone?: string | null
+          profile_photo?: string | null
+          secondary_phone?: string | null
+          user_id?: string
+          whatsapp_enabled?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
