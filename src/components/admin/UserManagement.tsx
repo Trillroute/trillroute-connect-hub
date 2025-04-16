@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -25,6 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -282,176 +282,178 @@ const UserManagement = () => {
                     Enter the details for the new user.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
-                  <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                      <TabsTrigger value="contact">Contact</TabsTrigger>
-                      <TabsTrigger value="documents">Documents</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="basic" className="space-y-4 pt-4">
-                      <div className="grid grid-cols-2 gap-4">
+                <ScrollArea className="max-h-[60vh]">
+                  <div className="py-4 pr-4">
+                    <Tabs defaultValue="basic" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                        <TabsTrigger value="contact">Contact</TabsTrigger>
+                        <TabsTrigger value="documents">Documents</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="basic" className="space-y-4 pt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                              id="firstName"
+                              value={newUserData.firstName}
+                              onChange={(e) =>
+                                setNewUserData({ ...newUserData, firstName: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                              id="lastName"
+                              value={newUserData.lastName}
+                              onChange={(e) =>
+                                setNewUserData({ ...newUserData, lastName: e.target.value })
+                              }
+                            />
+                          </div>
+                        </div>
                         <div className="space-y-2">
-                          <Label htmlFor="firstName">First Name</Label>
+                          <Label htmlFor="email">Email</Label>
                           <Input
-                            id="firstName"
-                            value={newUserData.firstName}
+                            id="email"
+                            type="email"
+                            value={newUserData.email}
                             onChange={(e) =>
-                              setNewUserData({ ...newUserData, firstName: e.target.value })
+                              setNewUserData({ ...newUserData, email: e.target.value })
                             }
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="lastName">Last Name</Label>
+                          <Label htmlFor="password">Password</Label>
                           <Input
-                            id="lastName"
-                            value={newUserData.lastName}
+                            id="password"
+                            type="password"
+                            value={newUserData.password}
                             onChange={(e) =>
-                              setNewUserData({ ...newUserData, lastName: e.target.value })
+                              setNewUserData({ ...newUserData, password: e.target.value })
                             }
                           />
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={newUserData.email}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, email: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          value={newUserData.password}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, password: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Select 
-                          value={newUserData.role} 
-                          onValueChange={(value) => setNewUserData({ ...newUserData, role: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="student">Student</SelectItem>
-                            <SelectItem value="teacher">Teacher</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                        <Input
-                          id="dateOfBirth"
-                          type="date"
-                          value={newUserData.dateOfBirth}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, dateOfBirth: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="parentName">Parent/Guardian Name</Label>
-                        <Input
-                          id="parentName"
-                          value={newUserData.parentName}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, parentName: e.target.value })
-                          }
-                        />
-                      </div>
-                      {newUserData.role === 'student' && (
                         <div className="space-y-2">
-                          <Label htmlFor="guardianRelation">Guardian Relation</Label>
+                          <Label htmlFor="role">Role</Label>
+                          <Select 
+                            value={newUserData.role} 
+                            onValueChange={(value) => setNewUserData({ ...newUserData, role: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="student">Student</SelectItem>
+                              <SelectItem value="teacher">Teacher</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="dateOfBirth">Date of Birth</Label>
                           <Input
-                            id="guardianRelation"
-                            value={newUserData.guardianRelation}
+                            id="dateOfBirth"
+                            type="date"
+                            value={newUserData.dateOfBirth}
                             onChange={(e) =>
-                              setNewUserData({ ...newUserData, guardianRelation: e.target.value })
+                              setNewUserData({ ...newUserData, dateOfBirth: e.target.value })
                             }
                           />
                         </div>
-                      )}
-                    </TabsContent>
-                    
-                    <TabsContent value="contact" className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="primaryPhone">Primary Phone</Label>
-                        <Input
-                          id="primaryPhone"
-                          value={newUserData.primaryPhone}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, primaryPhone: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="secondaryPhone">Secondary Phone</Label>
-                        <Input
-                          id="secondaryPhone"
-                          value={newUserData.secondaryPhone}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, secondaryPhone: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="whatsapp"
-                          checked={newUserData.whatsappEnabled}
-                          onCheckedChange={(checked) =>
-                            setNewUserData({ ...newUserData, whatsappEnabled: checked })
-                          }
-                        />
-                        <Label htmlFor="whatsapp">WhatsApp enabled on primary phone</Label>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="address">Address</Label>
-                        <Input
-                          id="address"
-                          value={newUserData.address}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, address: e.target.value })
-                          }
-                        />
-                      </div>
-                    </TabsContent>
-                    
-                    <TabsContent value="documents" className="space-y-4 pt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="profilePhoto">Profile Photo URL</Label>
-                        <Input
-                          id="profilePhoto"
-                          value={newUserData.profilePhoto}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, profilePhoto: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="idProof">ID Proof URL</Label>
-                        <Input
-                          id="idProof"
-                          value={newUserData.idProof}
-                          onChange={(e) =>
-                            setNewUserData({ ...newUserData, idProof: e.target.value })
-                          }
-                        />
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="parentName">Parent/Guardian Name</Label>
+                          <Input
+                            id="parentName"
+                            value={newUserData.parentName}
+                            onChange={(e) =>
+                              setNewUserData({ ...newUserData, parentName: e.target.value })
+                            }
+                          />
+                        </div>
+                        {newUserData.role === 'student' && (
+                          <div className="space-y-2">
+                            <Label htmlFor="guardianRelation">Guardian Relation</Label>
+                            <Input
+                              id="guardianRelation"
+                              value={newUserData.guardianRelation}
+                              onChange={(e) =>
+                                setNewUserData({ ...newUserData, guardianRelation: e.target.value })
+                              }
+                            />
+                          </div>
+                        )}
+                      </TabsContent>
+                      
+                      <TabsContent value="contact" className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="primaryPhone">Primary Phone</Label>
+                          <Input
+                            id="primaryPhone"
+                            value={newUserData.primaryPhone}
+                            onChange={(e) =>
+                              setNewUserData({ ...newUserData, primaryPhone: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="secondaryPhone">Secondary Phone</Label>
+                          <Input
+                            id="secondaryPhone"
+                            value={newUserData.secondaryPhone}
+                            onChange={(e) =>
+                              setNewUserData({ ...newUserData, secondaryPhone: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="whatsapp"
+                            checked={newUserData.whatsappEnabled}
+                            onCheckedChange={(checked) =>
+                              setNewUserData({ ...newUserData, whatsappEnabled: checked })
+                            }
+                          />
+                          <Label htmlFor="whatsapp">WhatsApp enabled on primary phone</Label>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="address">Address</Label>
+                          <Input
+                            id="address"
+                            value={newUserData.address}
+                            onChange={(e) =>
+                              setNewUserData({ ...newUserData, address: e.target.value })
+                            }
+                          />
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="documents" className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="profilePhoto">Profile Photo URL</Label>
+                          <Input
+                            id="profilePhoto"
+                            value={newUserData.profilePhoto}
+                            onChange={(e) =>
+                              setNewUserData({ ...newUserData, profilePhoto: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="idProof">ID Proof URL</Label>
+                          <Input
+                            id="idProof"
+                            value={newUserData.idProof}
+                            onChange={(e) =>
+                              setNewUserData({ ...newUserData, idProof: e.target.value })
+                            }
+                          />
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                </ScrollArea>
                 <DialogFooter>
                   <Button 
                     type="submit" 
@@ -578,104 +580,106 @@ const UserManagement = () => {
               </DialogDescription>
             </DialogHeader>
             {userToView && (
-              <div className="py-4">
-                <Tabs defaultValue="basic" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                    <TabsTrigger value="contact">Contact</TabsTrigger>
-                    <TabsTrigger value="documents">Documents</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="basic" className="pt-4">
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <span className="font-semibold block">First Name:</span>
-                          <span>{userToView.firstName}</span>
-                        </div>
-                        <div>
-                          <span className="font-semibold block">Last Name:</span>
-                          <span>{userToView.lastName}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="font-semibold block">Email:</span>
-                        <span>{userToView.email}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold block">Role:</span>
-                        <span>{userToView.role.charAt(0).toUpperCase() + userToView.role.slice(1)}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold block">Date of Birth:</span>
-                        <span>{userToView.dateOfBirth || 'Not provided'}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold block">Parent/Guardian Name:</span>
-                        <span>{userToView.parentName || 'Not provided'}</span>
-                      </div>
-                      {userToView.role === 'student' && (
-                        <div>
-                          <span className="font-semibold block">Guardian Relation:</span>
-                          <span>{userToView.guardianRelation || 'Not provided'}</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="font-semibold block">Created:</span>
-                        <span>{format(new Date(userToView.createdAt), 'MMM d, yyyy')}</span>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="contact" className="pt-4">
-                    <div className="space-y-3">
-                      <div>
-                        <span className="font-semibold block">Primary Phone:</span>
-                        <span>{userToView.primaryPhone || 'Not provided'}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold block">Secondary Phone:</span>
-                        <span>{userToView.secondaryPhone || 'Not provided'}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold block">WhatsApp Enabled:</span>
-                        <span>{userToView.whatsappEnabled ? 'Yes' : 'No'}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold block">Address:</span>
-                        <span>{userToView.address || 'Not provided'}</span>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="documents" className="pt-4">
-                    <div className="space-y-3">
-                      <div>
-                        <span className="font-semibold block">Profile Photo:</span>
-                        {userToView.profilePhoto ? (
-                          <div className="mt-2">
-                            <img 
-                              src={userToView.profilePhoto} 
-                              alt="Profile" 
-                              className="w-32 h-32 object-cover rounded-full"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = 'https://via.placeholder.com/150?text=No+Image';
-                              }}
-                            />
+              <ScrollArea className="max-h-[60vh]">
+                <div className="py-4 pr-4">
+                  <Tabs defaultValue="basic" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                      <TabsTrigger value="contact">Contact</TabsTrigger>
+                      <TabsTrigger value="documents">Documents</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="basic" className="pt-4">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="font-semibold block">First Name:</span>
+                            <span>{userToView.firstName}</span>
                           </div>
-                        ) : (
-                          <span>No profile photo</span>
+                          <div>
+                            <span className="font-semibold block">Last Name:</span>
+                            <span>{userToView.lastName}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <span className="font-semibold block">Email:</span>
+                          <span>{userToView.email}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold block">Role:</span>
+                          <span>{userToView.role.charAt(0).toUpperCase() + userToView.role.slice(1)}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold block">Date of Birth:</span>
+                          <span>{userToView.dateOfBirth || 'Not provided'}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold block">Parent/Guardian Name:</span>
+                          <span>{userToView.parentName || 'Not provided'}</span>
+                        </div>
+                        {userToView.role === 'student' && (
+                          <div>
+                            <span className="font-semibold block">Guardian Relation:</span>
+                            <span>{userToView.guardianRelation || 'Not provided'}</span>
+                          </div>
                         )}
+                        <div>
+                          <span className="font-semibold block">Created:</span>
+                          <span>{format(new Date(userToView.createdAt), 'MMM d, yyyy')}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-semibold block">ID Proof:</span>
-                        <span>{userToView.idProof || 'Not provided'}</span>
+                    </TabsContent>
+                    
+                    <TabsContent value="contact" className="pt-4">
+                      <div className="space-y-3">
+                        <div>
+                          <span className="font-semibold block">Primary Phone:</span>
+                          <span>{userToView.primaryPhone || 'Not provided'}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold block">Secondary Phone:</span>
+                          <span>{userToView.secondaryPhone || 'Not provided'}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold block">WhatsApp Enabled:</span>
+                          <span>{userToView.whatsappEnabled ? 'Yes' : 'No'}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold block">Address:</span>
+                          <span>{userToView.address || 'Not provided'}</span>
+                        </div>
                       </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="documents" className="pt-4">
+                      <div className="space-y-3">
+                        <div>
+                          <span className="font-semibold block">Profile Photo:</span>
+                          {userToView.profilePhoto ? (
+                            <div className="mt-2">
+                              <img 
+                                src={userToView.profilePhoto} 
+                                alt="Profile" 
+                                className="w-32 h-32 object-cover rounded-full"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = 'https://via.placeholder.com/150?text=No+Image';
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <span>No profile photo</span>
+                          )}
+                        </div>
+                        <div>
+                          <span className="font-semibold block">ID Proof:</span>
+                          <span>{userToView.idProof || 'Not provided'}</span>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </ScrollArea>
             )}
             <DialogFooter>
               <Button 
