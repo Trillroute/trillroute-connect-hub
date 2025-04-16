@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -21,6 +22,7 @@ interface UserData {
   address?: string;
   idProof?: string;
   adminLevel?: number;
+  adminRoleName?: string; // Added adminRoleName property
   createdAt: string;
 }
 
@@ -154,7 +156,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         address: userData.address,
         idProof: userData.id_proof,
         createdAt: userData.created_at,
-        adminLevel: userData.admin_level
+        adminLevel: userData.admin_level,
+        adminRoleName: userData.admin_level_name // Added adminRoleName from userData
       };
       
       setUser(authUser);
