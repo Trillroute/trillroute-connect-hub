@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import CourseManagement from '@/components/admin/CourseManagement';
-import UserManagement from '@/components/admin/UserManagement';
+import StudentManagement from '@/components/admin/StudentManagement';
+import TeacherManagement from '@/components/admin/TeacherManagement';
+import AdminManagement from '@/components/admin/AdminManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
-import { Users, BookOpen, UserPlus } from 'lucide-react';
+import { Users, BookOpen, UserPlus, School, GraduationCap, Shield } from 'lucide-react';
 import { 
   canManageStudents, 
   canManageTeachers, 
@@ -17,22 +19,38 @@ import {
   clearPermissionsCache
 } from '@/utils/adminPermissions';
 
+type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'courses' | 'users' | 'leads'>('courses');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
   const [permissionMap, setPermissionMap] = useState<{
-    viewUsers: boolean;
-    addUsers: boolean;
-    removeUsers: boolean;
+    viewStudents: boolean;
+    addStudents: boolean;
+    removeStudents: boolean;
+    viewTeachers: boolean;
+    addTeachers: boolean;
+    removeTeachers: boolean;
+    viewAdmins: boolean;
+    addAdmins: boolean;
+    removeAdmins: boolean;
+    editAdminLevel: boolean;
     viewCourses: boolean;
     addCourses: boolean;
     removeCourses: boolean;
     viewLeads: boolean;
   }>({
-    viewUsers: false,
-    addUsers: false,
-    removeUsers: false,
+    viewStudents: false,
+    addStudents: false,
+    removeStudents: false,
+    viewTeachers: false,
+    addTeachers: false,
+    removeTeachers: false,
+    viewAdmins: false,
+    addAdmins: false,
+    removeAdmins: false,
+    editAdminLevel: false,
     viewCourses: false,
     addCourses: false,
     removeCourses: false,
@@ -65,10 +83,23 @@ const AdminDashboard = () => {
       const canRemoveStudents = canManageStudents(userForPermissions, 'remove');
       const canRemoveTeachers = canManageTeachers(userForPermissions, 'remove');
       
+      // Only superadmins can manage other admins
+      const canViewAdmins = user.role === 'superadmin';
+      const canAddAdmins = user.role === 'superadmin';
+      const canRemoveAdmins = user.role === 'superadmin';
+      const canEditAdminLevel = user.role === 'superadmin';
+      
       setPermissionMap({
-        viewUsers: canViewStudents || canViewTeachers,
-        addUsers: canAddStudents || canAddTeachers,
-        removeUsers: canRemoveStudents || canRemoveTeachers,
+        viewStudents: canViewStudents,
+        addStudents: canAddStudents,
+        removeStudents: canRemoveStudents,
+        viewTeachers: canViewTeachers,
+        addTeachers: canAddTeachers,
+        removeTeachers: canRemoveTeachers,
+        viewAdmins: canViewAdmins,
+        addAdmins: canAddAdmins,
+        removeAdmins: canRemoveAdmins,
+        editAdminLevel: canEditAdminLevel,
         viewCourses: canManageCourses(userForPermissions, 'view'),
         addCourses: canManageCourses(userForPermissions, 'add'),
         removeCourses: canManageCourses(userForPermissions, 'remove'),
@@ -78,8 +109,12 @@ const AdminDashboard = () => {
       // Ensure the active tab matches available permissions
       if (canManageCourses(userForPermissions, 'view')) {
         setActiveTab('courses');
-      } else if (canViewStudents || canViewTeachers) {
-        setActiveTab('users');
+      } else if (canViewStudents) {
+        setActiveTab('students');
+      } else if (canViewTeachers) {
+        setActiveTab('teachers');
+      } else if (canViewAdmins) {
+        setActiveTab('admins');
       } else {
         setActiveTab('leads');
       }
@@ -103,6 +138,17 @@ const AdminDashboard = () => {
     }
   }
 
+  // Count how many tabs are available
+  const availableTabs = [
+    permissionMap.viewCourses && 'courses',
+    permissionMap.viewStudents && 'students',
+    permissionMap.viewTeachers && 'teachers',
+    permissionMap.viewAdmins && 'admins',
+    permissionMap.viewLeads && 'leads',
+  ].filter(Boolean);
+
+  const showTabNavigation = availableTabs.length > 1;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -113,11 +159,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Only show tab navigation if user has access to more than one tab */}
-      {(
-        (permissionMap.viewUsers && permissionMap.viewCourses) || 
-        (permissionMap.viewUsers && permissionMap.viewLeads) || 
-        (permissionMap.viewCourses && permissionMap.viewLeads)
-      ) && (
+      {showTabNavigation && (
         <div className="flex justify-center mb-6">
           <div className="inline-flex rounded-lg border bg-card p-1 text-card-foreground shadow">
             {permissionMap.viewCourses && (
@@ -130,14 +172,34 @@ const AdminDashboard = () => {
                 Courses
               </Button>
             )}
-            {permissionMap.viewUsers && (
+            {permissionMap.viewStudents && (
               <Button
-                variant={activeTab === 'users' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('users')}
+                variant={activeTab === 'students' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('students')}
                 className="rounded-md px-3 py-1"
               >
-                <Users className="h-4 w-4 mr-2" />
-                Users
+                <School className="h-4 w-4 mr-2" />
+                Students
+              </Button>
+            )}
+            {permissionMap.viewTeachers && (
+              <Button
+                variant={activeTab === 'teachers' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('teachers')}
+                className="rounded-md px-3 py-1"
+              >
+                <GraduationCap className="h-4 w-4 mr-2" />
+                Teachers
+              </Button>
+            )}
+            {permissionMap.viewAdmins && (
+              <Button
+                variant={activeTab === 'admins' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('admins')}
+                className="rounded-md px-3 py-1"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Admins
               </Button>
             )}
             {permissionMap.viewLeads && (
@@ -159,11 +221,25 @@ const AdminDashboard = () => {
           <CourseManagement />
         )}
         
-        {activeTab === 'users' && permissionMap.viewUsers && (
-          <UserManagement 
-            allowAdminCreation={false} // Regular admins can't create other admins
-            canAddUser={permissionMap.addUsers}
-            canDeleteUser={permissionMap.removeUsers}
+        {activeTab === 'students' && permissionMap.viewStudents && (
+          <StudentManagement 
+            canAddUser={permissionMap.addStudents}
+            canDeleteUser={permissionMap.removeStudents}
+          />
+        )}
+        
+        {activeTab === 'teachers' && permissionMap.viewTeachers && (
+          <TeacherManagement 
+            canAddUser={permissionMap.addTeachers}
+            canDeleteUser={permissionMap.removeTeachers}
+          />
+        )}
+        
+        {activeTab === 'admins' && permissionMap.viewAdmins && (
+          <AdminManagement 
+            canAddAdmin={permissionMap.addAdmins}
+            canDeleteAdmin={permissionMap.removeAdmins}
+            canEditAdminLevel={permissionMap.editAdminLevel}
           />
         )}
         
@@ -171,7 +247,9 @@ const AdminDashboard = () => {
           <LeadManagement />
         )}
 
-        {(!permissionMap.viewCourses && !permissionMap.viewUsers && !permissionMap.viewLeads) && (
+        {(!permissionMap.viewCourses && !permissionMap.viewStudents && 
+          !permissionMap.viewTeachers && !permissionMap.viewAdmins && 
+          !permissionMap.viewLeads) && (
           <Card>
             <CardHeader>
               <CardTitle>Limited Access</CardTitle>

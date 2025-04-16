@@ -37,6 +37,7 @@ interface UserTableProps {
   onEditAdminLevel?: (user: UserManagementUser) => void;
   canDeleteUser?: (user: UserManagementUser) => boolean;
   canEditAdminLevel?: (user: UserManagementUser) => boolean;
+  roleFilter?: string;
 }
 
 type SortField = 'name' | 'email' | 'role' | 'createdAt' | 'adminLevel';
@@ -49,13 +50,14 @@ const UserTable = ({
   onDeleteUser,
   onEditAdminLevel,
   canDeleteUser = () => true,
-  canEditAdminLevel = () => false
+  canEditAdminLevel = () => false,
+  roleFilter
 }: UserTableProps) => {
   const [users, setUsers] = useState<UserManagementUser[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>(roleFilter || 'all');
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
@@ -75,8 +77,10 @@ const UserTable = ({
       );
     }
     
-    if (roleFilter !== 'all') {
+    if (roleFilter) {
       filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
+    } else if (selectedRoleFilter !== 'all') {
+      filteredUsers = filteredUsers.filter(user => user.role === selectedRoleFilter);
     }
     
     filteredUsers.sort((a, b) => {
@@ -106,7 +110,7 @@ const UserTable = ({
     });
     
     setUsers(filteredUsers);
-  }, [initialUsers, searchQuery, sortField, sortDirection, roleFilter]);
+  }, [initialUsers, searchQuery, sortField, sortDirection, selectedRoleFilter, roleFilter]);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -119,7 +123,9 @@ const UserTable = ({
 
   const clearFilters = () => {
     setSearchQuery('');
-    setRoleFilter('all');
+    if (!roleFilter) {
+      setSelectedRoleFilter('all');
+    }
     setSortField('name');
     setSortDirection('asc');
   };
@@ -158,14 +164,16 @@ const UserTable = ({
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4 mr-2" /> 
-            {showFilters ? "Hide Filters" : "Show Filters"}
-          </Button>
+          {!roleFilter && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4 mr-2" /> 
+              {showFilters ? "Hide Filters" : "Show Filters"}
+            </Button>
+          )}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -190,14 +198,16 @@ const UserTable = ({
                   <ArrowUpDown className="inline h-4 w-4 ml-1" />
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className={sortField === 'role' ? 'bg-accent' : ''}
-                onClick={() => handleSort('role')}
-              >
-                Role {sortField === 'role' && (
-                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                )}
-              </DropdownMenuItem>
+              {!roleFilter && (
+                <DropdownMenuItem
+                  className={sortField === 'role' ? 'bg-accent' : ''}
+                  onClick={() => handleSort('role')}
+                >
+                  Role {sortField === 'role' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 className={sortField === 'createdAt' ? 'bg-accent' : ''}
                 onClick={() => handleSort('createdAt')}
@@ -206,14 +216,16 @@ const UserTable = ({
                   <ArrowUpDown className="inline h-4 w-4 ml-1" />
                 )}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className={sortField === 'adminLevel' ? 'bg-accent' : ''}
-                onClick={() => handleSort('adminLevel')}
-              >
-                Admin Level {sortField === 'adminLevel' && (
-                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                )}
-              </DropdownMenuItem>
+              {(roleFilter === 'admin' || selectedRoleFilter === 'admin') && (
+                <DropdownMenuItem
+                  className={sortField === 'adminLevel' ? 'bg-accent' : ''}
+                  onClick={() => handleSort('adminLevel')}
+                >
+                  Admin Level {sortField === 'adminLevel' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={clearFilters}>
                 <X className="h-4 w-4 mr-2" /> Clear Filters
@@ -223,12 +235,12 @@ const UserTable = ({
         </div>
       </div>
       
-      {showFilters && (
+      {showFilters && !roleFilter && (
         <div className="p-4 bg-muted/40 rounded-md border">
           <div className="flex flex-wrap gap-4 items-center">
             <div>
               <p className="text-sm font-medium mb-1">Filter by Role</p>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <Select value={selectedRoleFilter} onValueChange={setSelectedRoleFilter}>
                 <SelectTrigger className="w-36">
                   <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
@@ -237,7 +249,7 @@ const UserTable = ({
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="teacher">Teacher</SelectItem>
                   <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="superadmin">Superadmin</SelectItem>
+                  <SelectItem value="superadmin">Super Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -278,17 +290,21 @@ const UserTable = ({
                   <ArrowUpDown className="inline h-4 w-4 ml-1" />
                 )}
               </TableHead>
-              <TableHead 
-                className="cursor-pointer hover:bg-accent/50"
-                onClick={() => handleSort('role')}
-              >
-                Role {sortField === 'role' && (
-                  <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                )}
-              </TableHead>
-              <TableHead>
-                Admin Level
-              </TableHead>
+              {!roleFilter && (
+                <TableHead 
+                  className="cursor-pointer hover:bg-accent/50"
+                  onClick={() => handleSort('role')}
+                >
+                  Role {sortField === 'role' && (
+                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                  )}
+                </TableHead>
+              )}
+              {(roleFilter === 'admin' || selectedRoleFilter === 'admin') && (
+                <TableHead>
+                  Admin Level
+                </TableHead>
+              )}
               <TableHead 
                 className="cursor-pointer hover:bg-accent/50"
                 onClick={() => handleSort('createdAt')}
@@ -307,23 +323,27 @@ const UserTable = ({
                   {`${user.firstName} ${user.lastName}`}
                 </TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    {user.role === 'admin' ? (
-                      <BadgeCheck className="h-4 w-4 text-music-500 mr-1" />
-                    ) : user.role === 'teacher' ? (
-                      <UserCog className="h-4 w-4 text-music-400 mr-1" />
-                    ) : user.role === 'superadmin' ? (
-                      <ShieldAlert className="h-4 w-4 text-music-700 mr-1" />
-                    ) : (
-                      <UserPlus className="h-4 w-4 text-music-300 mr-1" />
-                    )}
-                    {user.role === 'superadmin' ? 'Super Admin' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {user.role === 'admin' && getAdminLevelName(user.adminLevel)}
-                </TableCell>
+                {!roleFilter && (
+                  <TableCell>
+                    <div className="flex items-center">
+                      {user.role === 'admin' ? (
+                        <BadgeCheck className="h-4 w-4 text-music-500 mr-1" />
+                      ) : user.role === 'teacher' ? (
+                        <UserCog className="h-4 w-4 text-music-400 mr-1" />
+                      ) : user.role === 'superadmin' ? (
+                        <ShieldAlert className="h-4 w-4 text-music-700 mr-1" />
+                      ) : (
+                        <UserPlus className="h-4 w-4 text-music-300 mr-1" />
+                      )}
+                      {user.role === 'superadmin' ? 'Super Admin' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </div>
+                  </TableCell>
+                )}
+                {(roleFilter === 'admin' || selectedRoleFilter === 'admin') && (
+                  <TableCell>
+                    {getAdminLevelName(user.adminLevel)}
+                  </TableCell>
+                )}
                 <TableCell>
                   {format(new Date(user.createdAt), 'MMM d, yyyy')}
                 </TableCell>

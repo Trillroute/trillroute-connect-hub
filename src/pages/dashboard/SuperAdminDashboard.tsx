@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/ui/charts';
-import { Download, Settings, Users, BookOpen, GraduationCap, UserPlus, Shield } from 'lucide-react';
+import { Download, Settings, School, BookOpen, GraduationCap, UserPlus, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
-import UserManagement from '@/components/admin/UserManagement';
+import StudentManagement from '@/components/admin/StudentManagement';
+import TeacherManagement from '@/components/admin/TeacherManagement';
+import AdminManagement from '@/components/admin/AdminManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+
+type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
 
 const SuperAdminDashboard = () => {
   const { user } = useAuth();
@@ -20,7 +24,7 @@ const SuperAdminDashboard = () => {
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number; Admins: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [activeTab, setActiveTab] = useState<'courses' | 'users' | 'leads'>('courses');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
   
   const fetchDashboardData = async () => {
     try {
@@ -198,7 +202,7 @@ const SuperAdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-music-500 mr-3" />
+              <School className="h-8 w-8 text-music-500 mr-3" />
               <div>
                 <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
                 <p className="text-sm text-gray-500 mt-1">
@@ -275,12 +279,28 @@ const SuperAdminDashboard = () => {
             Courses
           </Button>
           <Button
-            variant={activeTab === 'users' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('users')}
+            variant={activeTab === 'students' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('students')}
             className="rounded-md px-3 py-1"
           >
-            <Users className="h-4 w-4 mr-2" />
-            Users
+            <School className="h-4 w-4 mr-2" />
+            Students
+          </Button>
+          <Button
+            variant={activeTab === 'teachers' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('teachers')}
+            className="rounded-md px-3 py-1"
+          >
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Teachers
+          </Button>
+          <Button
+            variant={activeTab === 'admins' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('admins')}
+            className="rounded-md px-3 py-1"
+          >
+            <Shield className="h-4 w-4 mr-2" />
+            Admins
           </Button>
           <Button
             variant={activeTab === 'leads' ? 'default' : 'ghost'}
@@ -295,7 +315,9 @@ const SuperAdminDashboard = () => {
 
       <div className="mb-8">
         {activeTab === 'courses' && <CourseManagement />}
-        {activeTab === 'users' && <UserManagement allowAdminCreation={true} />}
+        {activeTab === 'students' && <StudentManagement />}
+        {activeTab === 'teachers' && <TeacherManagement />}
+        {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}
         {activeTab === 'leads' && <LeadManagement />}
       </div>
 
