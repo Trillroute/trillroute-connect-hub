@@ -12,12 +12,11 @@ export function useCourses() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      console.log('Fetching courses...');
       const { data, error } = await supabase
         .from('courses')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) {
         console.error('Error fetching courses:', error);
         toast({
@@ -27,26 +26,24 @@ export function useCourses() {
         });
         return;
       }
-      
-      console.log('Courses data fetched:', data);
-      
-      // Process and standardize all courses - handle instructor_ids
-      const typedCourses = (data || []).map(course => {
-        // Create a properly typed course object with default values where needed
-        const processedCourse: Course = {
-          ...course,
-          status: course.status === 'Active' || course.status === 'Draft' 
-            ? course.status 
-            : 'Draft',
-          instructor_ids: Array.isArray(course.instructor_ids) ? course.instructor_ids : [],
-          skill: course.skill || ''
-        };
-        return processedCourse;
-      });
-      
-      setCourses(typedCourses);
+
+      if (data) {
+        // Ensure all courses have the correct shape and required fields
+        const formattedCourses = data.map(item => ({
+          ...item,
+          instructor_ids: item.instructor_ids || [],
+          classes_count: item.classes_count || 0,
+          classes_duration: item.classes_duration || 0,
+          studio_sessions_count: item.studio_sessions_count || 0,
+          studio_sessions_duration: item.studio_sessions_duration || 0,
+          practical_sessions_count: item.practical_sessions_count || 0,
+          practical_sessions_duration: item.practical_sessions_duration || 0,
+        }));
+
+        setCourses(formattedCourses);
+      }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error('Unexpected error fetching courses:', error);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred.',
@@ -60,16 +57,16 @@ export function useCourses() {
   useEffect(() => {
     fetchCourses();
     
-    const coursesSubscription = supabase
-      .channel('public:courses')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
-        console.log('Change received in courses:', payload);
+    // Add subscription to refresh when course data changes
+    const subscription = supabase
+      .channel('courses_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, () => {
         fetchCourses();
       })
       .subscribe();
       
     return () => {
-      coursesSubscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 

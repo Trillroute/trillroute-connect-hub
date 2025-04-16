@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/ui/charts';
-import { Download, Settings } from 'lucide-react';
+import { Download, Settings, Users, BookOpen, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,13 +53,71 @@ const AdminDashboard = () => {
         setTeachersCount(totalTeachers || 0);
       }
       
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-      setUserActivityData(months.map(month => ({ name: month, Students: 0, Teachers: 0 })));
-      setRevenueData(months.map(month => ({ name: month, Revenue: 0 })));
+      // Fetch monthly user growth data (last 7 months)
+      await fetchUserGrowthData();
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const fetchUserGrowthData = async () => {
+    try {
+      // Get current date and calculate date 6 months ago
+      const now = new Date();
+      const monthLabels = [];
+      const monthDataPoints = [];
+      
+      // Generate last 7 months (including current)
+      for (let i = 6; i >= 0; i--) {
+        const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthLabel = monthDate.toLocaleString('default', { month: 'short' });
+        monthLabels.push(monthLabel);
+        
+        const startOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toISOString();
+        const endOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).toISOString();
+        
+        // Count students registered in this month
+        const { count: monthlyStudents, error: studentsError } = await supabase
+          .from('custom_users')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'student')
+          .gte('created_at', startOfMonth)
+          .lte('created_at', endOfMonth);
+          
+        if (studentsError) {
+          console.error(`Error fetching students for ${monthLabel}:`, studentsError);
+        }
+        
+        // Count teachers registered in this month
+        const { count: monthlyTeachers, error: teachersError } = await supabase
+          .from('custom_users')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'teacher')
+          .gte('created_at', startOfMonth)
+          .lte('created_at', endOfMonth);
+          
+        if (teachersError) {
+          console.error(`Error fetching teachers for ${monthLabel}:`, teachersError);
+        }
+        
+        monthDataPoints.push({
+          name: monthLabel,
+          Students: monthlyStudents || 0,
+          Teachers: monthlyTeachers || 0
+        });
+      }
+      
+      setUserActivityData(monthDataPoints);
+      
+      // Mock revenue data for now
+      setRevenueData(monthLabels.map(month => ({ 
+        name: month, 
+        Revenue: Math.floor(Math.random() * 10000) + 1000 
+      })));
+    } catch (error) {
+      console.error('Error fetching user growth data:', error);
     }
   };
   
@@ -74,8 +132,17 @@ const AdminDashboard = () => {
       })
       .subscribe();
       
+    const userSubscription = supabase
+      .channel('custom_users_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_users' }, () => {
+        console.log('Dashboard detected change in users');
+        fetchDashboardData();
+      })
+      .subscribe();
+      
     return () => {
       subscription.unsubscribe();
+      userSubscription.unsubscribe();
     };
   }, []);
   
@@ -105,10 +172,15 @@ const AdminDashboard = () => {
             <CardDescription>Enrolled students</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
-            <p className="text-sm text-gray-500 mt-1">
-              {studentsCount === 0 ? "No students enrolled yet" : `${studentsCount} enrolled students`}
-            </p>
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-music-500 mr-3" />
+              <div>
+                <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
+                <p className="text-sm text-gray-500 mt-1">
+                  {studentsCount === 0 ? "No students enrolled yet" : `${studentsCount} enrolled students`}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
@@ -118,10 +190,15 @@ const AdminDashboard = () => {
             <CardDescription>Active instructors</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
-            <p className="text-sm text-gray-500 mt-1">
-              {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
-            </p>
+            <div className="flex items-center">
+              <GraduationCap className="h-8 w-8 text-music-500 mr-3" />
+              <div>
+                <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
+                <p className="text-sm text-gray-500 mt-1">
+                  {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
@@ -131,10 +208,15 @@ const AdminDashboard = () => {
             <CardDescription>All courses</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-music-500">{coursesCount}</div>
-            <p className="text-sm text-gray-500 mt-1">
-              {coursesCount === 0 ? "No courses created yet" : `${coursesCount} total courses`}
-            </p>
+            <div className="flex items-center">
+              <BookOpen className="h-8 w-8 text-music-500 mr-3" />
+              <div>
+                <div className="text-3xl font-bold text-music-500">{coursesCount}</div>
+                <p className="text-sm text-gray-500 mt-1">
+                  {coursesCount === 0 ? "No courses created yet" : `${coursesCount} total courses`}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -147,7 +229,7 @@ const AdminDashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle>User Growth</CardTitle>
-            <CardDescription>Students and teachers over time</CardDescription>
+            <CardDescription>Students and teachers registered by month</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
             {userActivityData.length > 0 ? (
@@ -161,7 +243,7 @@ const AdminDashboard = () => {
               />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
-                <p>No user activity data available</p>
+                <p>Loading user growth data...</p>
               </div>
             )}
           </CardContent>
