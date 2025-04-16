@@ -13,7 +13,7 @@ import { UserManagementUser } from '@/types/student';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchAdminRoles } from '@/components/superadmin/AdminService';
+import { fetchAdminLevels } from '@/components/superadmin/AdminService';
 import { AdminLevel, updateCachedAdminRoles } from '@/utils/adminPermissions';
 
 interface EditAdminLevelDialogProps {
@@ -127,7 +127,7 @@ const EditAdminLevelDialog = ({
   const loadAdminLevels = async () => {
     try {
       setIsLoadingLevels(true);
-      const levels = await fetchAdminRoles();
+      const levels = await fetchAdminLevels();
       setAdminLevels(levels);
       updateCachedAdminRoles(levels);
     } catch (error) {

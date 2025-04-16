@@ -49,6 +49,7 @@ const ProtectedRoute = ({
 
   // Check for specific permissions if user is an admin
   if (requiredPermissions.length > 0 && user.role === 'admin') {
+    // Use optional chaining to access adminRoleName or provide a fallback
     const userForPermissionCheck = {
       id: user.id,
       role: user.role,
@@ -56,7 +57,7 @@ const ProtectedRoute = ({
       lastName: user.lastName,
       email: user.email,
       createdAt: user.createdAt || new Date().toISOString(),
-      adminRoleName: user.adminRoleName // Use adminRoleName instead of adminLevel
+      adminRoleName: user.adminRoleName || "Limited View" // Provide a default role if missing
     };
 
     const hasAllRequiredPermissions = requiredPermissions.every(permission => 
