@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock, User, UserPlus, Phone, Home, Calendar, Upload } from 'lucide-react';
@@ -228,18 +229,8 @@ const Register = () => {
                     </div>
                   </div>
                   
-                  {role === 'student' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="parentName">Parent/Guardian Name</Label>
-                      <Input
-                        id="parentName"
-                        type="text"
-                        placeholder="Parent/Guardian Name"
-                        value={parentName}
-                        onChange={(e) => setParentName(e.target.value)}
-                      />
-                    </div>
-                  )}
+                  {/* Note: Since we only render this component for non-student roles,
+                      we don't need the conditional for parent name anymore */}
                 </TabsContent>
                 
                 <TabsContent value="contact" className="space-y-4 pt-4">
