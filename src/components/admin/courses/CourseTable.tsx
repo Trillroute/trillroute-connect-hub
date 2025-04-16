@@ -9,7 +9,7 @@ import { Eye, Pencil, Trash2 } from 'lucide-react';
 interface CourseTableProps {
   courses: Course[];
   loading: boolean;
-  onEdit: (course: Course) => void;
+  onEdit?: (course: Course) => void;
   onDelete?: (course: Course) => void;
 }
 
@@ -80,13 +80,15 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onEdit(course)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                {onEdit && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onEdit(course)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
                 {onDelete && (
                   <Button
                     variant="outline"

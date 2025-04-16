@@ -17,11 +17,13 @@ import { Input } from '@/components/ui/input';
 interface CourseManagementProps {
   canAddCourse?: boolean;
   canDeleteCourse?: boolean;
+  canEditCourse?: boolean;
 }
 
 const CourseManagement: React.FC<CourseManagementProps> = ({ 
   canAddCourse = true, 
-  canDeleteCourse = true 
+  canDeleteCourse = true,
+  canEditCourse = true
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -34,11 +36,13 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   
   const openEditDialog = (course: Course) => {
+    if (!canEditCourse) return;
     setSelectedCourse(course);
     setIsEditDialogOpen(true);
   };
 
   const openDeleteDialog = (course: Course) => {
+    if (!canDeleteCourse) return;
     setSelectedCourse(course);
     setIsDeleteDialogOpen(true);
   };
@@ -112,7 +116,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         <CourseTable 
           courses={courses} 
           loading={loading} 
-          onEdit={openEditDialog} 
+          onEdit={canEditCourse ? openEditDialog : undefined} 
           onDelete={canDeleteCourse ? openDeleteDialog : undefined}
         />
       </CardContent>
@@ -127,12 +131,14 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
 
       {selectedCourse && (
         <>
-          <EditCourseDialog 
-            open={isEditDialogOpen} 
-            onOpenChange={setIsEditDialogOpen} 
-            course={selectedCourse}
-            onSuccess={fetchCourses}
-          />
+          {canEditCourse && (
+            <EditCourseDialog 
+              open={isEditDialogOpen} 
+              onOpenChange={setIsEditDialogOpen} 
+              course={selectedCourse}
+              onSuccess={fetchCourses}
+            />
+          )}
           
           {canDeleteCourse && (
             <DeleteCourseDialog 

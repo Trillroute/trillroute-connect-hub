@@ -48,13 +48,21 @@ export const fetchAdminLevels = async (): Promise<AdminLevel[]> => {
     level: level.id,
     name: level.name,
     description: level.description,
-    permissions: Array.isArray(level.permissions) 
-      ? level.permissions
-      : typeof level.permissions === 'string'
-        ? JSON.parse(level.permissions)
-        : Array.isArray(level.permissions) 
-          ? level.permissions 
-          : []
+    studentPermissions: Array.isArray(level.student_permissions) 
+      ? level.student_permissions 
+      : [],
+    teacherPermissions: Array.isArray(level.teacher_permissions) 
+      ? level.teacher_permissions 
+      : [],
+    adminPermissions: Array.isArray(level.admin_permissions) 
+      ? level.admin_permissions 
+      : [],
+    leadPermissions: Array.isArray(level.lead_permissions) 
+      ? level.lead_permissions 
+      : [],
+    coursePermissions: Array.isArray(level.course_permissions) 
+      ? level.course_permissions 
+      : []
   }));
 };
 

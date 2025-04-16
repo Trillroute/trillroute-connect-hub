@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -315,10 +314,10 @@ const SuperAdminDashboard = () => {
 
       <div className="mb-8">
         {activeTab === 'courses' && <CourseManagement canAddCourse={true} canDeleteCourse={true} />}
-        {activeTab === 'students' && <StudentManagement />}
-        {activeTab === 'teachers' && <TeacherManagement />}
+        {activeTab === 'students' && <StudentManagement canAddUser={true} canDeleteUser={true} />}
+        {activeTab === 'teachers' && <TeacherManagement canAddUser={true} canDeleteUser={true} />}
         {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}
-        {activeTab === 'leads' && <LeadManagement />}
+        {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mb-8">

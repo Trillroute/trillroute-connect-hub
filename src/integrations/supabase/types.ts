@@ -11,22 +11,34 @@ export type Database = {
     Tables: {
       admin_levels: {
         Row: {
+          admin_permissions: string[] | null
+          course_permissions: string[] | null
           description: string
           id: number
+          lead_permissions: string[] | null
           name: string
-          permissions: Json
+          student_permissions: string[] | null
+          teacher_permissions: string[] | null
         }
         Insert: {
+          admin_permissions?: string[] | null
+          course_permissions?: string[] | null
           description: string
           id: number
+          lead_permissions?: string[] | null
           name: string
-          permissions: Json
+          student_permissions?: string[] | null
+          teacher_permissions?: string[] | null
         }
         Update: {
+          admin_permissions?: string[] | null
+          course_permissions?: string[] | null
           description?: string
           id?: number
+          lead_permissions?: string[] | null
           name?: string
-          permissions?: Json
+          student_permissions?: string[] | null
+          teacher_permissions?: string[] | null
         }
         Relationships: []
       }
