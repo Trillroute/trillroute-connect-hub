@@ -52,7 +52,6 @@ const ProtectedRoute = ({
     const userForPermissionCheck = {
       id: user.id,
       role: user.role,
-      adminLevel: user.adminLevel,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,9 +18,9 @@ import {
   canManageLeads,
   clearPermissionsCache,
   AdminLevel,
-  updateCachedAdminLevels
+  updateCachedAdminRoles
 } from '@/utils/adminPermissions';
-import { fetchAdminLevels as fetchAdminLevelsFromAPI } from '@/components/superadmin/AdminService';
+import { fetchAdminRoles } from '@/components/superadmin/AdminService';
 
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
 
@@ -40,29 +41,29 @@ const AdminDashboard = () => {
     leads: { view: false, add: false, edit: false, delete: false },
     courses: { view: false, add: false, edit: false, delete: false }
   });
-  const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
-  const [isLoadingLevels, setIsLoadingLevels] = useState(false);
+  const [adminRoles, setAdminRoles] = useState<AdminLevel[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
 
   // Clear permissions cache to ensure fresh checks
   useEffect(() => {
     if (user) {
       clearPermissionsCache(user.id);
-      loadAdminLevels();
+      loadAdminRoles();
     }
   }, [user]);
 
-  const loadAdminLevels = async () => {
+  const loadAdminRoles = async () => {
     if (!user) return;
     
     try {
-      setIsLoadingLevels(true);
-      const levels = await fetchAdminLevelsFromAPI();
-      setAdminLevels(levels);
-      updateCachedAdminLevels(levels);
+      setIsLoadingRoles(true);
+      const roles = await fetchAdminRoles();
+      setAdminRoles(roles);
+      updateCachedAdminRoles(roles);
     } catch (error) {
-      console.error('Error loading admin levels:', error);
+      console.error('Error loading admin roles:', error);
     } finally {
-      setIsLoadingLevels(false);
+      setIsLoadingRoles(false);
     }
   };
 
@@ -75,7 +76,6 @@ const AdminDashboard = () => {
         email: user.email,
         role: user.role,
         createdAt: user.createdAt || new Date().toISOString(),
-        adminLevel: user.adminLevel
       };
 
       // Check students permissions
@@ -154,29 +154,8 @@ const AdminDashboard = () => {
         setActiveTab(firstAvailableTab);
       }
     }
-  }, [user, adminLevels]);
-
-  const adminLevel = user?.adminLevel || 8; // Default to most restrictive level (8) if undefined
+  }, [user, adminRoles]);
   
-  const getAdminLevelName = (level: number): string => {
-    const adminLevel = adminLevels.find(al => al.level === level);
-    if (adminLevel) {
-      return adminLevel.name;
-    }
-    
-    switch (level) {
-      case 0: return 'Super Admin Equivalent';
-      case 1: return 'Level 1';
-      case 2: return 'Level 2';
-      case 3: return 'Level 3';
-      case 4: return 'Level 4';
-      case 5: return 'Level 5';
-      case 6: return 'Level 6';
-      case 8: return 'Level 8';
-      default: return `Level ${level}`;
-    }
-  };
-
   // Count how many tabs are available
   const availableTabs = [
     permissionMap.courses.view && 'courses',
@@ -200,7 +179,7 @@ const AdminDashboard = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
         <p className="mt-2 text-gray-600">
-          Your permission level: {getAdminLevelName(adminLevel)} (Level {adminLevel})
+          Your role: {user?.role}
         </p>
       </div>
 

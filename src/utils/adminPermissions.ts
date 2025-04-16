@@ -1,3 +1,4 @@
+
 /**
  * Admin Permission Level Utility
  * 
@@ -18,7 +19,6 @@ import { supabase } from '@/integrations/supabase/client';
 export interface PermissionUser {
   id: string;
   role: string;
-  adminLevel?: number;
 }
 
 export enum AdminPermission {
@@ -49,7 +49,6 @@ export enum AdminPermission {
 }
 
 export interface AdminLevel {
-  level: number;
   name: string;
   description: string;
   studentPermissions: string[];
@@ -60,20 +59,18 @@ export interface AdminLevel {
 }
 
 // Fallback permissions mapping in case we can't fetch from database
-const FALLBACK_ADMIN_LEVELS: Record<number, AdminLevel> = {
-  0: {
-    level: 0,
-    name: "Super Admin Equivalent",
-    description: "All permissions and functionality as the super admins",
+const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
+  "superadmin": {
+    name: "Super Admin",
+    description: "All permissions and functionality",
     studentPermissions: ["view", "add", "edit", "delete"],
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view", "add", "edit", "delete"],
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"]
   },
-  1: {
-    level: 1,
-    name: "Level 1",
+  "admin": {
+    name: "Admin",
     description: "High-level administrator",
     studentPermissions: ["view", "add", "edit", "delete"],
     teacherPermissions: ["view", "add", "edit", "delete"],
@@ -81,9 +78,8 @@ const FALLBACK_ADMIN_LEVELS: Record<number, AdminLevel> = {
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"]
   },
-  2: {
-    level: 2,
-    name: "Level 2",
+  "manager": {
+    name: "Manager",
     description: "Mid-level administrator",
     studentPermissions: ["view", "add"],
     teacherPermissions: ["view", "add"],
@@ -91,54 +87,13 @@ const FALLBACK_ADMIN_LEVELS: Record<number, AdminLevel> = {
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"]
   },
-  3: {
-    level: 3,
-    name: "Level 3",
-    description: "Mid-level administrator",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add"]
-  },
-  4: {
-    level: 4,
-    name: "Level 4",
+  "assistant": {
+    name: "Assistant",
     description: "Limited administrator",
-    studentPermissions: ["view", "add"],
-    teacherPermissions: ["view", "add"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add"]
-  },
-  5: {
-    level: 5,
-    name: "Level 5",
-    description: "View-only administrator with limited add capabilities",
     studentPermissions: ["view"],
     teacherPermissions: ["view"],
     adminPermissions: [],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add"]
-  },
-  6: {
-    level: 6,
-    name: "Level 6",
-    description: "Limited administrator",
-    studentPermissions: ["view", "add"],
-    teacherPermissions: ["view", "add"],
-    adminPermissions: [],
-    leadPermissions: [],
-    coursePermissions: ["view"]
-  },
-  8: {
-    level: 8,
-    name: "Level 8",
-    description: "View-only administrator",
-    studentPermissions: ["view"],
-    teacherPermissions: ["view"],
-    adminPermissions: [],
-    leadPermissions: [],
+    leadPermissions: ["view"],
     coursePermissions: ["view"]
   }
 };
@@ -151,7 +106,7 @@ function getPermissionKey(module: string, operation: string): AdminPermission | 
 
 // Add a cached permissions map to avoid re-calculating permissions
 let cachedPermissions = new Map<string, boolean>();
-let cachedAdminLevels = new Map<number, AdminLevel>();
+let cachedAdminRoles = new Map<string, AdminLevel>();
 
 /**
  * Check if a user has a specific permission
@@ -165,33 +120,30 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
   // Only admins can have these permissions
   if (user.role !== 'admin') return false;
   
-  // Get the user's admin level, default to level 8 (most restrictive)
-  const adminLevel = user.adminLevel ?? 8;
-  
   // Use cache for better performance
   const cacheKey = `${user.id}:${permission}`;
   if (cachedPermissions.has(cacheKey)) {
     return cachedPermissions.get(cacheKey) || false;
   }
   
-  // Get the user's permission level
-  const levelInfo = cachedAdminLevels.get(adminLevel) || FALLBACK_ADMIN_LEVELS[adminLevel] || FALLBACK_ADMIN_LEVELS[8];
+  // Get the user's admin role permissions
+  const roleInfo = cachedAdminRoles.get(user.role) || FALLBACK_ADMIN_ROLES[user.role] || FALLBACK_ADMIN_ROLES["assistant"];
   
   let hasPermission = false;
   
   // Map permission enum to module and operation
   if (permission.startsWith('VIEW_')) {
     const module = permission.substring(5).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(levelInfo, module, 'view');
+    hasPermission = checkModulePermission(roleInfo, module, 'view');
   } else if (permission.startsWith('ADD_')) {
     const module = permission.substring(4).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(levelInfo, module, 'add');
+    hasPermission = checkModulePermission(roleInfo, module, 'add');
   } else if (permission.startsWith('EDIT_')) {
     const module = permission.substring(5).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(levelInfo, module, 'edit');
+    hasPermission = checkModulePermission(roleInfo, module, 'edit');
   } else if (permission.startsWith('DELETE_')) {
     const module = permission.substring(7).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(levelInfo, module, 'delete');
+    hasPermission = checkModulePermission(roleInfo, module, 'delete');
   }
   
   // Cache the result
@@ -201,19 +153,19 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
 };
 
 // Helper function to check if a specific module permission exists
-function checkModulePermission(levelInfo: AdminLevel, module: string, operation: string): boolean {
+function checkModulePermission(roleInfo: AdminLevel, module: string, operation: string): boolean {
   const permissionsKey = `${module}Permissions` as keyof AdminLevel;
-  const permissions = levelInfo[permissionsKey] as string[];
+  const permissions = roleInfo[permissionsKey] as string[];
   
   return Array.isArray(permissions) && permissions.includes(operation);
 }
 
-// Function to update cached admin levels from database
-export const updateCachedAdminLevels = (adminLevels: AdminLevel[]): void => {
-  cachedAdminLevels.clear();
+// Function to update cached admin roles from database
+export const updateCachedAdminRoles = (adminRoles: AdminLevel[]): void => {
+  cachedAdminRoles.clear();
   
-  adminLevels.forEach(level => {
-    cachedAdminLevels.set(level.level, level);
+  adminRoles.forEach(role => {
+    cachedAdminRoles.set(role.name, role);
   });
 };
 

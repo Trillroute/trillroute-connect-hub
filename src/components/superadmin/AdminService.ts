@@ -30,11 +30,10 @@ export const fetchAdmins = async (): Promise<UserManagementUser[]> => {
     whatsappEnabled: user.whatsapp_enabled,
     address: user.address,
     idProof: user.id_proof,
-    adminLevel: user.admin_level
   }));
 };
 
-export const fetchAdminLevels = async (): Promise<AdminLevel[]> => {
+export const fetchAdminRoles = async (): Promise<AdminLevel[]> => {
   const { data, error } = await supabase
     .from('admin_levels')
     .select('*')
@@ -45,7 +44,6 @@ export const fetchAdminLevels = async (): Promise<AdminLevel[]> => {
   }
 
   return data.map(level => ({
-    level: level.id,
     name: level.name,
     description: level.description,
     studentPermissions: Array.isArray(level.student_permissions) 
