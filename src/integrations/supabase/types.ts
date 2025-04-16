@@ -72,6 +72,7 @@ export type Database = {
       custom_users: {
         Row: {
           address: string | null
+          admin_level: number | null
           created_at: string
           date_of_birth: string | null
           email: string
@@ -90,6 +91,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          admin_level?: number | null
           created_at?: string
           date_of_birth?: string | null
           email: string
@@ -108,6 +110,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          admin_level?: number | null
           created_at?: string
           date_of_birth?: string | null
           email?: string

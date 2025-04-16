@@ -28,7 +28,8 @@ export const fetchAdmins = async (): Promise<UserManagementUser[]> => {
     secondaryPhone: user.secondary_phone,
     whatsappEnabled: user.whatsapp_enabled,
     address: user.address,
-    idProof: user.id_proof
+    idProof: user.id_proof,
+    adminLevel: user.admin_level
   }));
 };
 
