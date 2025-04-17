@@ -7,12 +7,14 @@ import StudentManagement from '@/components/admin/StudentManagement';
 import TeacherManagement from '@/components/admin/TeacherManagement';
 import AdminManagement from '@/components/admin/AdminManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
+import LevelManagement from '@/components/admin/levels/LevelManagement';
 import { 
   canManageStudents, 
   canManageTeachers,
   canManageCourses,
   canManageAdmins,
   canManageLeads,
+  canManageLevels,
   clearPermissionsCache,
   AdminLevel,
   updateCachedAdminRoles
@@ -22,7 +24,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
-type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
+type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
 const AdminDashboard = () => {
   const { toast } = useToast();
@@ -34,12 +36,14 @@ const AdminDashboard = () => {
     admins: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
     leads: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
     courses: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
+    levels: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
   }>({
     students: { view: false, add: false, edit: false, delete: false },
     teachers: { view: false, add: false, edit: false, delete: false },
     admins: { view: false, add: false, edit: false, delete: false },
     leads: { view: false, add: false, edit: false, delete: false },
-    courses: { view: false, add: false, edit: false, delete: false }
+    courses: { view: false, add: false, edit: false, delete: false },
+    levels: { view: false, add: false, edit: false, delete: false }
   });
   const [adminRoles, setAdminRoles] = useState<AdminLevel[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
@@ -99,7 +103,8 @@ const AdminDashboard = () => {
         teachers: { view: true, add: true, edit: true, delete: true },
         admins: { view: true, add: true, edit: true, delete: true },
         leads: { view: true, add: true, edit: true, delete: true },
-        courses: { view: true, add: true, edit: true, delete: true }
+        courses: { view: true, add: true, edit: true, delete: true },
+        levels: { view: true, add: true, edit: true, delete: true }
       });
       
       setActiveTab('courses');
@@ -145,6 +150,12 @@ const AdminDashboard = () => {
           add: userRole.coursePermissions.includes('add'),
           edit: userRole.coursePermissions.includes('edit'),
           delete: userRole.coursePermissions.includes('delete')
+        },
+        levels: {
+          view: userRole.levelPermissions?.includes('view') || false,
+          add: userRole.levelPermissions?.includes('add') || false,
+          edit: userRole.levelPermissions?.includes('edit') || false,
+          delete: userRole.levelPermissions?.includes('delete') || false
         }
       });
 
@@ -158,6 +169,8 @@ const AdminDashboard = () => {
         setActiveTab('admins');
       } else if (userRole.leadPermissions.includes('view')) {
         setActiveTab('leads');
+      } else if (userRole.levelPermissions?.includes('view')) {
+        setActiveTab('levels');
       }
     } else {
       console.log('[AdminDashboard] No matching role found for:', adminRoleName);
@@ -168,7 +181,8 @@ const AdminDashboard = () => {
         teachers: { view: true, add: false, edit: false, delete: false },
         admins: { view: false, add: false, edit: false, delete: false },
         leads: { view: false, add: false, edit: false, delete: false },
-        courses: { view: true, add: false, edit: false, delete: false }
+        courses: { view: true, add: false, edit: false, delete: false },
+        levels: { view: false, add: false, edit: false, delete: false }
       });
       
       setActiveTab('courses');
@@ -187,6 +201,7 @@ const AdminDashboard = () => {
     permissionMap.teachers.view && 'teachers',
     permissionMap.admins.view && 'admins',
     permissionMap.leads.view && 'leads',
+    permissionMap.levels.view && 'levels',
   ].filter(Boolean);
 
   console.log('[AdminDashboard] Available tabs:', availableTabs);
@@ -196,7 +211,8 @@ const AdminDashboard = () => {
                        permissionMap.students.view || 
                        permissionMap.teachers.view || 
                        permissionMap.admins.view || 
-                       permissionMap.leads.view;
+                       permissionMap.leads.view ||
+                       permissionMap.levels.view;
 
   return (
     <SidebarProvider>
@@ -209,7 +225,8 @@ const AdminDashboard = () => {
             students: { view: permissionMap.students.view },
             teachers: { view: permissionMap.teachers.view },
             admins: { view: permissionMap.admins.view },
-            leads: { view: permissionMap.leads.view }
+            leads: { view: permissionMap.leads.view },
+            levels: { view: permissionMap.levels.view }
           }}
         />
         
@@ -269,6 +286,14 @@ const AdminDashboard = () => {
                   canAddLead={permissionMap.leads.add}
                   canEditLead={permissionMap.leads.edit}
                   canDeleteLead={permissionMap.leads.delete}
+                />
+              )}
+              
+              {activeTab === 'levels' && permissionMap.levels.view && (
+                <LevelManagement 
+                  canAddLevel={permissionMap.levels.add}
+                  canEditLevel={permissionMap.levels.edit}
+                  canDeleteLevel={permissionMap.levels.delete}
                 />
               )}
 

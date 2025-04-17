@@ -10,7 +10,7 @@ import {
   SidebarTrigger,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { BookOpen, School, GraduationCap, Shield, UserPlus, User } from 'lucide-react';
+import { BookOpen, School, GraduationCap, Shield, UserPlus, User, Layers } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface AdminSidebarProps {
@@ -22,6 +22,7 @@ interface AdminSidebarProps {
     teachers: { view: boolean };
     admins: { view: boolean };
     leads: { view: boolean };
+    levels?: { view: boolean };
   };
 }
 
@@ -103,6 +104,19 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
               >
                 <UserPlus className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
                 <span>Leads</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          {permissionMap.levels?.view && (
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={activeTab === 'levels'} 
+                onClick={() => onTabChange('levels')}
+                tooltip="Admin Levels"
+                className="flex items-center group-data-[collapsible=icon]:justify-center"
+              >
+                <Layers className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
+                <span>Admin Levels</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}

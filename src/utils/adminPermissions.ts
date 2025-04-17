@@ -1,4 +1,3 @@
-
 /**
  * Admin Permission Level Utility
  * 
@@ -8,6 +7,7 @@
  * - Admin management
  * - Lead management
  * - Course management
+ * - Level management
  * 
  * Each module can have these permissions: view, add, edit, delete
  */
@@ -45,7 +45,12 @@ export enum AdminPermission {
   VIEW_COURSES = 'view_courses',
   ADD_COURSES = 'add_courses',
   EDIT_COURSES = 'edit_courses',
-  DELETE_COURSES = 'delete_courses'
+  DELETE_COURSES = 'delete_courses',
+  
+  VIEW_LEVELS = 'view_levels',
+  ADD_LEVELS = 'add_levels',
+  EDIT_LEVELS = 'edit_levels',
+  DELETE_LEVELS = 'delete_levels'
 }
 
 // Export the AdminLevel interface
@@ -57,6 +62,7 @@ export interface AdminLevel {
   adminPermissions: string[];
   leadPermissions: string[];
   coursePermissions: string[];
+  levelPermissions: string[];
 }
 
 // Fallback permissions mapping in case we can't fetch from database
@@ -68,7 +74,8 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     teacherPermissions: ["view"],
     adminPermissions: [],
     leadPermissions: [],
-    coursePermissions: ["view"]
+    coursePermissions: ["view"],
+    levelPermissions: []
   },
   "SuperAdmin": {
     name: "SuperAdmin",
@@ -77,7 +84,8 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view", "add", "edit", "delete"],
     leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
+    coursePermissions: ["view", "add", "edit", "delete"],
+    levelPermissions: ["view", "add", "edit", "delete"]
   },
   "Super Admin": {
     name: "Super Admin",
@@ -86,7 +94,8 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view", "add", "edit", "delete"],
     leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
+    coursePermissions: ["view", "add", "edit", "delete"],
+    levelPermissions: ["view", "add", "edit", "delete"]
   },
   "Upper Manager": {
     name: "Upper Manager",
@@ -95,7 +104,8 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view"],
     leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
+    coursePermissions: ["view", "add", "edit", "delete"],
+    levelPermissions: ["view"]
   }
 }
 
@@ -361,6 +371,25 @@ export const canManageCourses = (user: UserManagementUser | PermissionUser | nul
 };
 
 /**
+ * Helper function to determine if a specific user can perform actions on levels
+ */
+export const canManageLevels = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
+  if (action === 'view') {
+    return hasPermission(user, AdminPermission.VIEW_LEVELS);
+  } else if (action === 'add') {
+    return hasPermission(user, AdminPermission.ADD_LEVELS);
+  } else if (action === 'edit') {
+    return hasPermission(user, AdminPermission.EDIT_LEVELS);
+  } else {
+    return hasPermission(user, AdminPermission.DELETE_LEVELS);
+  }
+};
+
+/**
  * Helper to check if user has access to any user management features
  */
 export const hasUserManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
@@ -396,4 +425,16 @@ export const hasLeadManagementAccess = (user: UserManagementUser | PermissionUse
   
   return canManageLeads(user, 'view') ||
          canManageLeads(user, 'add');
+};
+
+/**
+ * Helper to check if user has access to any level management features
+ */
+export const hasLevelManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
+  return canManageLevels(user, 'view') ||
+         canManageLevels(user, 'add');
 };

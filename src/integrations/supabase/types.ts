@@ -16,6 +16,7 @@ export type Database = {
           description: string
           id: number
           lead_permissions: string[] | null
+          level_permissions: string[] | null
           name: string
           student_permissions: string[] | null
           teacher_permissions: string[] | null
@@ -26,6 +27,7 @@ export type Database = {
           description: string
           id: number
           lead_permissions?: string[] | null
+          level_permissions?: string[] | null
           name: string
           student_permissions?: string[] | null
           teacher_permissions?: string[] | null
@@ -36,6 +38,7 @@ export type Database = {
           description?: string
           id?: number
           lead_permissions?: string[] | null
+          level_permissions?: string[] | null
           name?: string
           student_permissions?: string[] | null
           teacher_permissions?: string[] | null

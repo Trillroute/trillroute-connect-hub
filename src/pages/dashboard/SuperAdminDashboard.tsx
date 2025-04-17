@@ -9,12 +9,14 @@ import StudentManagement from '@/components/admin/StudentManagement';
 import TeacherManagement from '@/components/admin/TeacherManagement';
 import AdminManagement from '@/components/admin/AdminManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
+import LevelManagement from '@/components/admin/levels/LevelManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { canManageLevels } from '@/utils/adminPermissions';
 
-type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads';
+type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
 const SuperAdminDashboard = () => {
   const { user } = useAuth();
@@ -182,7 +184,8 @@ const SuperAdminDashboard = () => {
     students: { view: true, add: true, edit: true, delete: true },
     teachers: { view: true, add: true, edit: true, delete: true },
     admins: { view: true, add: true, edit: true, delete: true },
-    leads: { view: true, add: true, edit: true, delete: true }
+    leads: { view: true, add: true, edit: true, delete: true },
+    levels: { view: true, add: true, edit: true, delete: true }
   };
   
   return (
@@ -196,7 +199,8 @@ const SuperAdminDashboard = () => {
             students: { view: true },
             teachers: { view: true },
             admins: { view: true },
-            leads: { view: true }
+            leads: { view: true },
+            levels: { view: true }
           }}
         />
         
@@ -297,6 +301,7 @@ const SuperAdminDashboard = () => {
             {activeTab === 'teachers' && <TeacherManagement canAddUser={true} canDeleteUser={true} />}
             {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}
             {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
+            {activeTab === 'levels' && <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />}
           </div>
 
           <div className="grid grid-cols-1 gap-6 mt-8">
