@@ -112,11 +112,11 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
               <SidebarMenuButton 
                 isActive={activeTab === 'levels'} 
                 onClick={() => onTabChange('levels')}
-                tooltip="Admin Levels"
+                tooltip="Levels"
                 className="flex items-center group-data-[collapsible=icon]:justify-center"
               >
                 <Layers className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Admin Levels</span>
+                <span>Levels</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
