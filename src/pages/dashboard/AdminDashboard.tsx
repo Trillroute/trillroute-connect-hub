@@ -230,7 +230,7 @@ const AdminDashboard = () => {
           }}
         />
         
-        <div className="flex-1 p-4 md:p-6 overflow-auto">
+        <div className="flex-1 p-4 md:p-6 overflow-auto w-full">
           <div className="mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             
