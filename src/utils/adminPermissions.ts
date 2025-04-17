@@ -1,4 +1,3 @@
-
 /**
  * Admin Permission Level Utility
  * 
@@ -97,7 +96,7 @@ let cachedAdminRoles = new Map<string, AdminLevel>();
 export const hasPermission = (user: UserManagementUser | PermissionUser | null, permission: AdminPermission): boolean => {
   if (!user) return false;
   
-  // Always check for superadmin first
+  // Always check for superadmin first - superadmins have all permissions
   if (user.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin always has permission:', permission);
     return true;
@@ -120,6 +119,13 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
   // Use adminRoleName to get the role info
   const adminRoleName = 'adminRoleName' in user ? user.adminRoleName : undefined;
   console.log('[adminPermissions] Checking permissions with adminRoleName:', adminRoleName);
+  
+  // If the adminRoleName is "SuperAdmin", grant all permissions
+  if (adminRoleName === "SuperAdmin") {
+    console.log('[adminPermissions] User has SuperAdmin role name, granting permission');
+    cachedPermissions.set(cacheKey, true);
+    return true;
+  }
   
   const roleInfo = adminRoleName ? cachedAdminRoles.get(adminRoleName) : undefined;
   
@@ -291,6 +297,12 @@ export const canManageCourses = (user: UserManagementUser | PermissionUser | nul
   // Always grant permission to superadmin first
   if (user?.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin can manage courses:', action);
+    return true;
+  }
+  
+  // Special check for SuperAdmin level admin role
+  if (user?.role === 'admin' && user?.adminRoleName === 'SuperAdmin') {
+    console.log('[adminPermissions] Admin with SuperAdmin role can manage courses:', action);
     return true;
   }
   

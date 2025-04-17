@@ -27,7 +27,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   canEditCourse = true
 }) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -35,15 +35,14 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const { courses, loading, fetchCourses } = useCourses();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Update this check to explicitly handle superadmin role
-  const isSuperAdmin = user?.role === 'superadmin';
-  const effectiveCanEditCourse = isSuperAdmin ? true : canEditCourse;
-  const effectiveCanDeleteCourse = isSuperAdmin ? true : canDeleteCourse;
-  const effectiveCanAddCourse = isSuperAdmin ? true : canAddCourse;
+  // Always grant access to superadmin users
+  const effectiveCanEditCourse = isSuperAdmin() ? true : canEditCourse;
+  const effectiveCanDeleteCourse = isSuperAdmin() ? true : canDeleteCourse;
+  const effectiveCanAddCourse = isSuperAdmin() ? true : canAddCourse;
   
   console.log('CourseManagement - User:', user);
   console.log('CourseManagement - User role:', user?.role);
-  console.log('CourseManagement - isSuperAdmin:', isSuperAdmin);
+  console.log('CourseManagement - isSuperAdmin:', isSuperAdmin());
   console.log('CourseManagement - effectiveCanEditCourse:', effectiveCanEditCourse);
   console.log('CourseManagement - admin role name:', user?.adminRoleName);
   console.log('CourseManagement - can edit courses permission:', 
@@ -51,7 +50,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   
   const openEditDialog = (course: Course) => {
     // Always allow superadmin to edit courses
-    if (isSuperAdmin) {
+    if (isSuperAdmin()) {
       console.log('CourseManagement - Superadmin opening edit dialog');
       setSelectedCourse(course);
       setIsEditDialogOpen(true);
@@ -63,51 +62,46 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
       const hasPermission = canManageCourses(user, 'edit');
       console.log('CourseManagement - Admin has edit permission:', hasPermission);
       
-      if (!hasPermission) {
-        toast({
-          title: "Permission Denied",
-          description: "You don't have permission to edit courses.",
-          variant: "destructive",
-        });
+      if (hasPermission) {
+        setSelectedCourse(course);
+        setIsEditDialogOpen(true);
         return;
       }
     }
     
-    // Only allow opening the edit dialog if the user has edit permissions
-    if (!effectiveCanEditCourse) {
-      console.log('CourseManagement - No edit permission, showing toast');
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to edit courses.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    console.log('CourseManagement - Opening edit dialog');
-    setSelectedCourse(course);
-    setIsEditDialogOpen(true);
+    // Show permission denied message
+    toast({
+      title: "Permission Denied",
+      description: "You don't have permission to edit courses.",
+      variant: "destructive",
+    });
   };
 
   const openDeleteDialog = (course: Course) => {
     // Always allow superadmin to delete courses
-    if (isSuperAdmin) {
+    if (isSuperAdmin()) {
       setSelectedCourse(course);
       setIsDeleteDialogOpen(true);
       return;
     }
     
-    // Only allow opening the delete dialog if the user has delete permissions
-    if (!effectiveCanDeleteCourse) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to delete courses.",
-        variant: "destructive",
-      });
-      return;
+    // Check if admin has delete permission
+    if (user?.role === 'admin') {
+      const hasPermission = canManageCourses(user, 'delete');
+      
+      if (hasPermission) {
+        setSelectedCourse(course);
+        setIsDeleteDialogOpen(true);
+        return;
+      }
     }
-    setSelectedCourse(course);
-    setIsDeleteDialogOpen(true);
+    
+    // Show permission denied message
+    toast({
+      title: "Permission Denied",
+      description: "You don't have permission to delete courses.",
+      variant: "destructive",
+    });
   };
 
   return (
@@ -160,7 +154,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
           courses={courses} 
           loading={loading} 
           // Use the effective permissions based on superadmin status
-          onEdit={openEditDialog} 
+          onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
           onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
         />
 
