@@ -1,4 +1,5 @@
 
+// Define user roles
 export type UserRole = 'student' | 'teacher' | 'admin' | 'superadmin';
 
 export interface UserData {

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Filter, ArrowUpDown, Pencil } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,7 +33,6 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const { leads, loading, fetchLeads } = useFetchLeads();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   
   // Check if user is superadmin and override permissions
   const isSuperAdmin = user?.role === 'superadmin';
@@ -113,39 +112,19 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-          <div className="relative w-full sm:w-auto flex-1">
-            <Input
-              type="search"
-              placeholder="Search leads..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </div>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4" /> 
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-            >
-              <ArrowUpDown className="h-4 w-4" /> 
-              Sort
-            </Button>
+        <div className="relative w-full mb-4">
+          <Input
+            type="search"
+            placeholder="Search leads..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
           </div>
         </div>
         

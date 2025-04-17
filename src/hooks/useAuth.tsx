@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: userData.email,
         firstName: userData.first_name,
         lastName: userData.last_name,
-        role: userData.role,
+        role: userData.role as UserRole,
         dateOfBirth: userData.date_of_birth,
         profilePhoto: userData.profile_photo,
         parentName: userData.parent_name,
@@ -252,7 +252,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isSuperAdmin = () => {
-    return user?.role === 'superadmin' || false;
+    return user?.role === 'superadmin';
   };
 
   const value = {

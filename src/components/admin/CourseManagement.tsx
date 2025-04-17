@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, RefreshCw, Filter, ArrowUpDown } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import CourseTable from './courses/CourseTable';
@@ -33,7 +33,6 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { courses, loading, fetchCourses } = useCourses();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
 
   // Check if the user is a superadmin and override permissions
   const isSuperAdmin = user?.role === 'superadmin';
@@ -113,39 +112,19 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
-          <div className="relative w-full sm:w-auto flex-1">
-            <Input
-              type="search"
-              placeholder="Search courses..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </div>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4" /> 
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-            >
-              <ArrowUpDown className="h-4 w-4" /> 
-              Sort
-            </Button>
+        <div className="relative w-full mb-4">
+          <Input
+            type="search"
+            placeholder="Search courses..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
           </div>
         </div>
 
@@ -156,35 +135,35 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
           onEdit={openEditDialog} 
           onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
         />
-      </CardContent>
 
-      {effectiveCanAddCourse && (
-        <CreateCourseDialog 
-          open={isCreateDialogOpen} 
-          onOpenChange={setIsCreateDialogOpen} 
-          onSuccess={fetchCourses}
-        />
-      )}
-
-      {selectedCourse && (
-        <>
-          <EditCourseDialog 
-            open={isEditDialogOpen} 
-            onOpenChange={setIsEditDialogOpen} 
-            course={selectedCourse}
+        {effectiveCanAddCourse && (
+          <CreateCourseDialog 
+            open={isCreateDialogOpen} 
+            onOpenChange={setIsCreateDialogOpen} 
             onSuccess={fetchCourses}
           />
-          
-          {effectiveCanDeleteCourse && (
-            <DeleteCourseDialog 
-              open={isDeleteDialogOpen} 
-              onOpenChange={setIsDeleteDialogOpen} 
+        )}
+
+        {selectedCourse && (
+          <>
+            <EditCourseDialog 
+              open={isEditDialogOpen} 
+              onOpenChange={setIsEditDialogOpen} 
               course={selectedCourse}
               onSuccess={fetchCourses}
             />
-          )}
-        </>
-      )}
+            
+            {effectiveCanDeleteCourse && (
+              <DeleteCourseDialog 
+                open={isDeleteDialogOpen} 
+                onOpenChange={setIsDeleteDialogOpen} 
+                course={selectedCourse}
+                onSuccess={fetchCourses}
+              />
+            )}
+          </>
+        )}
+      </CardContent>
     </Card>
   );
 };

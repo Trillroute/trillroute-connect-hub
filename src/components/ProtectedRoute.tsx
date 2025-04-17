@@ -43,13 +43,13 @@ const ProtectedRoute = ({
   }
 
   // Check for admin requirement
-  if (requireAdmin && user.role !== 'admin') {
+  if (requireAdmin && user.role !== 'admin' && user.role !== 'superadmin') {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
   // Check for specific role requirement
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (allowedRoles && !allowedRoles.includes(user.role) && user.role !== 'superadmin') {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }

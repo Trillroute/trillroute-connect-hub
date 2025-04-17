@@ -1,3 +1,4 @@
+
 /**
  * Admin Permission Level Utility
  * 
@@ -45,6 +46,17 @@ export enum AdminPermission {
   ADD_COURSES = 'add_courses',
   EDIT_COURSES = 'edit_courses',
   DELETE_COURSES = 'delete_courses'
+}
+
+// Export the AdminLevel interface
+export interface AdminLevel {
+  name: string;
+  description: string;
+  studentPermissions: string[];
+  teacherPermissions: string[];
+  adminPermissions: string[];
+  leadPermissions: string[];
+  coursePermissions: string[];
 }
 
 // Fallback permissions mapping in case we can't fetch from database
