@@ -13,21 +13,23 @@ import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import { fetchAdmins, updateUserRole, deleteUser } from './AdminService';
 import { updateUser } from '../admin/users/UserServiceExtended';
+import { updateAdminLevel } from './AdminRoleService';
 import AdminTable from './AdminTable';
-import EditAdminDialog from './EditAdminDialog';
 import DeleteAdminDialog from './DeleteAdminDialog';
 import EditUserDialog from '../admin/users/EditUserDialog';
+import { useAuth } from '@/hooks/useAuth';
 
 const AdminManagement = () => {
   const [admins, setAdmins] = useState<UserManagementUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
   const [adminToEdit, setAdminToEdit] = useState<UserManagementUser | null>(null);
   const [adminToDelete, setAdminToDelete] = useState<UserManagementUser | null>(null);
   const [userToEdit, setUserToEdit] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
+  const { isSuperAdmin } = useAuth();
 
   const loadAdmins = async () => {
     try {
@@ -60,7 +62,7 @@ const AdminManagement = () => {
         description: `User role updated to ${newRole}.`,
       });
       
-      setIsEditDialogOpen(false);
+      setIsRoleDialogOpen(false);
       setAdminToEdit(null);
       loadAdmins();
     } catch (error: any) {
@@ -85,14 +87,36 @@ const AdminManagement = () => {
         description: 'Administrator details updated successfully.',
       });
       
-      setIsEditUserDialogOpen(false);
-      setUserToEdit(null);
       loadAdmins();
     } catch (error: any) {
       console.error('Error updating admin details:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to update administrator details. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateAdminLevel = async (userId: string, newLevelName: string) => {
+    try {
+      setIsLoading(true);
+      console.log(`[SuperadminAdminManagement] Updating admin level for ${userId} to ${newLevelName}`);
+      await updateAdminLevel(userId, newLevelName);
+
+      toast({
+        title: 'Success',
+        description: 'Administrator permission level updated successfully.',
+      });
+      
+      loadAdmins();
+    } catch (error: any) {
+      console.error('Error updating admin level:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update permission level. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -127,11 +151,6 @@ const AdminManagement = () => {
     }
   };
 
-  const openEditDialog = (admin: UserManagementUser) => {
-    setAdminToEdit(admin);
-    setIsEditDialogOpen(true);
-  };
-
   const openEditUserDialog = (admin: UserManagementUser) => {
     setUserToEdit(admin);
     setIsEditUserDialogOpen(true);
@@ -141,6 +160,18 @@ const AdminManagement = () => {
     setAdminToDelete(admin);
     setIsDeleteDialogOpen(true);
   };
+
+  // Only superadmins can manage admins
+  if (!isSuperAdmin()) {
+    return (
+      <Card>
+        <CardContent className="p-8">
+          <h3 className="text-lg font-medium">Permission Denied</h3>
+          <p className="text-gray-500">You don't have permission to manage administrators.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -162,17 +193,9 @@ const AdminManagement = () => {
         <AdminTable 
           admins={admins} 
           isLoading={isLoading}
-          onEditAdmin={openEditDialog}
+          onEditAdmin={() => {}} // This is no longer used
           onDeleteAdmin={openDeleteDialog}
           onEditUserDetails={openEditUserDialog}
-        />
-        
-        <EditAdminDialog
-          admin={adminToEdit}
-          isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onUpdateRole={handleUpdateRole}
-          isLoading={isLoading}
         />
         
         <DeleteAdminDialog
@@ -188,8 +211,10 @@ const AdminManagement = () => {
           isOpen={isEditUserDialogOpen}
           onOpenChange={setIsEditUserDialogOpen}
           onUpdateUser={handleUpdateUserDetails}
+          onUpdateLevel={handleUpdateAdminLevel}
           isLoading={isLoading}
           userRole="Administrator"
+          showAdminLevelSelector={true}
         />
       </CardContent>
     </Card>

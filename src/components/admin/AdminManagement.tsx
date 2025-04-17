@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -15,7 +16,6 @@ import AddUserDialog, { NewUserData } from './users/AddUserDialog';
 import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
 import EditUserDialog from './users/EditUserDialog';
-import EditAdminLevelDialog from './users/EditAdminLevelDialog';
 import { fetchAllUsers, addUser, deleteUser, updateAdminLevel } from './users/UserService';
 import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,12 +39,14 @@ const AdminManagement = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isEditAdminLevelDialogOpen, setIsEditAdminLevelDialogOpen] = useState(false);
   const [adminToEdit, setAdminToEdit] = useState<UserManagementUser | null>(null);
   const [adminToDelete, setAdminToDelete] = useState<UserManagementUser | null>(null);
   const [adminToView, setAdminToView] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
   const { isAdmin, isSuperAdmin } = useAuth();
+
+  // Override permissions for superadmin
+  const effectiveCanEditAdminLevel = isSuperAdmin() ? true : canEditAdminLevel;
 
   const loadAdmins = async () => {
     try {
@@ -157,6 +159,7 @@ const AdminManagement = ({
   const handleUpdateAdminLevel = async (userId: string, newLevelName: string) => {
     try {
       setIsLoading(true);
+      console.log(`[AdminManagement] Updating admin level for ${userId} to ${newLevelName}`);
       await updateAdminLevel(userId, newLevelName);
 
       toast({
@@ -164,8 +167,6 @@ const AdminManagement = ({
         description: 'Admin permission level updated successfully.',
       });
       
-      setIsEditAdminLevelDialogOpen(false);
-      setAdminToEdit(null);
       loadAdmins();
     } catch (error: any) {
       console.error('Error updating admin level:', error);
@@ -180,7 +181,7 @@ const AdminManagement = ({
   };
 
   const openEditDialog = (admin: UserManagementUser) => {
-    if (!canEditAdmin) {
+    if (!canEditAdmin && !isSuperAdmin()) {
       toast({
         title: "Permission Denied",
         description: "You don't have permission to edit administrators.",
@@ -198,21 +199,24 @@ const AdminManagement = ({
   };
 
   const openDeleteDialog = (admin: UserManagementUser) => {
+    if (!canDeleteAdmin && !isSuperAdmin()) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to delete administrators.",
+        variant: "destructive",
+      });
+      return;
+    }
     setAdminToDelete(admin);
     setIsDeleteDialogOpen(true);
   };
 
-  const openEditAdminLevelDialog = (admin: UserManagementUser) => {
-    setAdminToEdit(admin);
-    setIsEditAdminLevelDialogOpen(true);
-  };
-
   const canAdminBeDeleted = (admin: UserManagementUser) => {
-    return canDeleteAdmin;
+    return isSuperAdmin() || canDeleteAdmin;
   };
 
-  const canEditLevel = (admin: UserManagementUser) => {
-    return canEditAdminLevel;
+  const canEditAdmin = (admin: UserManagementUser) => {
+    return isSuperAdmin() || canEditAdmin;
   };
 
   return (
@@ -228,7 +232,7 @@ const AdminManagement = ({
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            {canAddAdmin && (
+            {(canAddAdmin || isSuperAdmin()) && (
               <Button onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Administrator
@@ -242,16 +246,14 @@ const AdminManagement = ({
           users={admins} 
           isLoading={isLoading}
           onViewUser={openViewDialog}
-          onEditUser={canEditAdmin ? openEditDialog : undefined}
+          onEditUser={openEditDialog}
           onDeleteUser={openDeleteDialog}
-          onEditAdminLevel={openEditAdminLevelDialog}
           canDeleteUser={canAdminBeDeleted}
-          canEditUser={canEditAdmin ? () => true : undefined}
-          canEditAdminLevel={canEditLevel}
+          canEditUser={canEditAdmin}
           roleFilter="admin"
         />
         
-        {canAddAdmin && (
+        {(canAddAdmin || isSuperAdmin()) && (
           <AddUserDialog
             isOpen={isAddDialogOpen}
             onOpenChange={setIsAddDialogOpen}
@@ -268,8 +270,10 @@ const AdminManagement = ({
           isOpen={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onUpdateUser={handleUpdateAdmin}
+          onUpdateLevel={effectiveCanEditAdminLevel ? handleUpdateAdminLevel : undefined}
           isLoading={isLoading}
           userRole="Administrator"
+          showAdminLevelSelector={effectiveCanEditAdminLevel}
         />
         
         <DeleteUserDialog
@@ -285,14 +289,6 @@ const AdminManagement = ({
           user={adminToView}
           isOpen={isViewDialogOpen}
           onOpenChange={setIsViewDialogOpen}
-        />
-
-        <EditAdminLevelDialog
-          admin={adminToEdit}
-          isOpen={isEditAdminLevelDialogOpen}
-          onOpenChange={setIsEditAdminLevelDialogOpen}
-          onUpdateLevel={handleUpdateAdminLevel}
-          isLoading={isLoading}
         />
       </CardContent>
     </Card>
