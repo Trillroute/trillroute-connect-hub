@@ -186,7 +186,7 @@ const SuperAdminDashboard = () => {
   };
   
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex min-h-screen bg-background">
         <AdminSidebar 
           activeTab={activeTab} 
