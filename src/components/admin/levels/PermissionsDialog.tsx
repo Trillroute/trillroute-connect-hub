@@ -115,13 +115,17 @@ const PermissionsDialog = ({
 
         <ScrollArea className="h-[500px] pr-4">
           <Tabs defaultValue="student">
-            <TabsList className="mb-4">
-              {Object.keys(moduleLabels).map((module) => (
-                <TabsTrigger key={module} value={module}>
-                  {moduleLabels[module as PermissionModuleType]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <div className="relative overflow-x-auto mb-4">
+              <ScrollArea orientation="horizontal" className="w-full">
+                <TabsList className="inline-flex w-max">
+                  {Object.keys(moduleLabels).map((module) => (
+                    <TabsTrigger key={module} value={module}>
+                      {moduleLabels[module as PermissionModuleType]}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </ScrollArea>
+            </div>
 
             {Object.keys(moduleLabels).map((moduleKey) => {
               const module = moduleKey as PermissionModuleType;

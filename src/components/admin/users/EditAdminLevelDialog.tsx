@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -35,7 +34,8 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     teacherPermissions: ["view"],
     adminPermissions: [],
     leadPermissions: [],
-    coursePermissions: ["view"]
+    coursePermissions: ["view"],
+    levelPermissions: []
   },
   {
     name: "Standard Admin",
@@ -44,7 +44,8 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     teacherPermissions: ["view", "add"],
     adminPermissions: [],
     leadPermissions: ["view", "add", "edit"],
-    coursePermissions: ["view", "edit"]
+    coursePermissions: ["view", "edit"],
+    levelPermissions: ["view"]
   },
   {
     name: "Full Access",
@@ -53,7 +54,8 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view"],
     leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"]
+    coursePermissions: ["view", "add", "edit", "delete"],
+    levelPermissions: ["view", "add", "edit", "delete"]
   }
 ];
 

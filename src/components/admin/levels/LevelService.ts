@@ -1,112 +1,113 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { AdminLevelBasic, AdminLevelDetailed } from '@/types/adminLevel';
+import { AdminLevelDetailed, AdminLevelBasic } from '@/types/adminLevel';
 
-export const fetchLevels = async (): Promise<AdminLevelDetailed[]> => {
-  const { data, error } = await supabase
-    .from('admin_levels')
-    .select('*')
-    .order('id', { ascending: true });
-
-  if (error) {
-    console.error('[LevelService] Error fetching admin levels:', error);
-    throw error;
-  }
-
-  return data.map(level => ({
+// Mapper function to convert from Supabase data format to our app's format
+const mapToAdminLevel = (level: any): AdminLevelDetailed => {
+  return {
     id: level.id,
     name: level.name,
-    description: level.description || '',
-    studentPermissions: Array.isArray(level.student_permissions) ? level.student_permissions : [],
-    teacherPermissions: Array.isArray(level.teacher_permissions) ? level.teacher_permissions : [],
-    adminPermissions: Array.isArray(level.admin_permissions) ? level.admin_permissions : [],
-    leadPermissions: Array.isArray(level.lead_permissions) ? level.lead_permissions : [],
-    coursePermissions: Array.isArray(level.course_permissions) ? level.course_permissions : [],
-    levelPermissions: Array.isArray(level.level_permissions) ? level.level_permissions : []
-  }));
-};
-
-export const addLevel = async (levelData: Omit<AdminLevelDetailed, 'id'>): Promise<AdminLevelDetailed> => {
-  const { data, error } = await supabase
-    .from('admin_levels')
-    .insert({
-      name: levelData.name,
-      description: levelData.description,
-      student_permissions: levelData.studentPermissions,
-      teacher_permissions: levelData.teacherPermissions,
-      admin_permissions: levelData.adminPermissions,
-      lead_permissions: levelData.leadPermissions,
-      course_permissions: levelData.coursePermissions,
-      level_permissions: levelData.levelPermissions
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('[LevelService] Error adding admin level:', error);
-    throw error;
-  }
-
-  return {
-    id: data.id,
-    name: data.name,
-    description: data.description,
-    studentPermissions: data.student_permissions || [],
-    teacherPermissions: data.teacher_permissions || [],
-    adminPermissions: data.admin_permissions || [],
-    leadPermissions: data.lead_permissions || [],
-    coursePermissions: data.course_permissions || [],
-    levelPermissions: data.level_permissions || []
+    description: level.description,
+    studentPermissions: level.student_permissions || [],
+    teacherPermissions: level.teacher_permissions || [],
+    adminPermissions: level.admin_permissions || [],
+    leadPermissions: level.lead_permissions || [],
+    coursePermissions: level.course_permissions || [],
+    levelPermissions: level.level_permissions || [],
   };
 };
 
-export const updateLevel = async (id: number, levelData: Partial<AdminLevelDetailed>): Promise<void> => {
-  const updateData: Record<string, any> = {};
-  
-  if (levelData.name !== undefined) updateData.name = levelData.name;
-  if (levelData.description !== undefined) updateData.description = levelData.description;
-  if (levelData.studentPermissions !== undefined) updateData.student_permissions = levelData.studentPermissions;
-  if (levelData.teacherPermissions !== undefined) updateData.teacher_permissions = levelData.teacherPermissions;
-  if (levelData.adminPermissions !== undefined) updateData.admin_permissions = levelData.adminPermissions;
-  if (levelData.leadPermissions !== undefined) updateData.lead_permissions = levelData.leadPermissions;
-  if (levelData.coursePermissions !== undefined) updateData.course_permissions = levelData.coursePermissions;
-  if (levelData.levelPermissions !== undefined) updateData.level_permissions = levelData.levelPermissions;
+// Mapper function to convert from our app's format to Supabase data format
+const mapToSupabaseLevel = (level: Omit<AdminLevelDetailed, 'id'>): any => {
+  return {
+    name: level.name,
+    description: level.description,
+    student_permissions: level.studentPermissions,
+    teacher_permissions: level.teacherPermissions,
+    admin_permissions: level.adminPermissions,
+    lead_permissions: level.leadPermissions,
+    course_permissions: level.coursePermissions,
+    level_permissions: level.levelPermissions,
+  };
+};
 
-  const { error } = await supabase
-    .from('admin_levels')
-    .update(updateData)
-    .eq('id', id);
+export const createAdminLevel = async (level: Omit<AdminLevelDetailed, 'id'>): Promise<AdminLevelDetailed | null> => {
+  try {
+    const supabaseLevel = mapToSupabaseLevel(level);
+    
+    const { data, error } = await supabase
+      .from('admin_levels')
+      .insert(supabaseLevel)
+      .select('*')
+      .single();
 
-  if (error) {
-    console.error('[LevelService] Error updating admin level:', error);
-    throw error;
+    if (error) {
+      console.error('Error creating admin level:', error);
+      return null;
+    }
+
+    return mapToAdminLevel(data);
+  } catch (error) {
+    console.error('Error creating admin level:', error);
+    return null;
   }
 };
 
-export const deleteLevel = async (id: number): Promise<void> => {
-  // First check if there are any users using this level
-  const { data: users, error: usersError } = await supabase
-    .from('custom_users')
-    .select('id')
-    .eq('admin_level_name', id.toString())
-    .limit(1);
+export const fetchAdminLevels = async (): Promise<AdminLevelDetailed[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('admin_levels')
+      .select('*');
 
-  if (usersError) {
-    console.error('[LevelService] Error checking if level is in use:', usersError);
-    throw usersError;
+    if (error) {
+      console.error('Error fetching admin levels:', error);
+      return [];
+    }
+
+    return data.map(mapToAdminLevel);
+  } catch (error) {
+    console.error('Error fetching admin levels:', error);
+    return [];
   }
+};
 
-  if (users && users.length > 0) {
-    throw new Error('Cannot delete level because it is assigned to one or more users');
+export const updateAdminLevel = async (id: number, updates: Partial<Omit<AdminLevelDetailed, 'id'>>): Promise<AdminLevelDetailed | null> => {
+  try {
+    const supabaseUpdates = mapToSupabaseLevel(updates as Omit<AdminLevelDetailed, 'id'>);
+
+    const { data, error } = await supabase
+      .from('admin_levels')
+      .update(supabaseUpdates)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error updating admin level:', error);
+      return null;
+    }
+
+    return mapToAdminLevel(data);
+  } catch (error) {
+    console.error('Error updating admin level:', error);
+    return null;
   }
+};
 
-  const { error } = await supabase
-    .from('admin_levels')
-    .delete()
-    .eq('id', id);
+export const deleteAdminLevel = async (id: number): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('admin_levels')
+      .delete()
+      .eq('id', id);
 
-  if (error) {
-    console.error('[LevelService] Error deleting admin level:', error);
-    throw error;
+    if (error) {
+      console.error('Error deleting admin level:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting admin level:', error);
+    return false;
   }
 };
