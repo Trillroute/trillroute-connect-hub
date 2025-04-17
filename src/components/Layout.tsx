@@ -19,7 +19,11 @@ const Layout = ({ children }: LayoutProps) => {
       <main className={`flex-grow ${isAdminPage ? 'p-0 md:pl-[3rem]' : ''}`}>
         {children}
       </main>
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && (
+        <div className="relative z-10">
+          <Footer />
+        </div>
+      )}
     </div>
   );
 };

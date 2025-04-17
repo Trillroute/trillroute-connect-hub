@@ -32,7 +32,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
     <Sidebar 
       variant="sidebar" 
       collapsible="icon" 
-      className="h-full min-h-screen transition-all duration-300 hover:w-64 mt-16 pb-16" // Added mt-16 to push down the sidebar and pb-16 for bottom spacing
+      className="h-full min-h-screen transition-all duration-300 hover:w-64 mt-16 mb-16 py-16" // Added mt-16, mb-16 and py-16 for top and bottom spacing
     >
       <SidebarHeader className="p-3">
         <div className="flex items-center justify-center">
