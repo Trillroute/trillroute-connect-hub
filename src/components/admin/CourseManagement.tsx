@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, RefreshCw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import CourseTable from './courses/CourseTable';
 import CreateCourseDialog from './courses/CreateCourseDialog';
 import EditCourseDialog from './courses/EditCourseDialog';
 import DeleteCourseDialog from './courses/DeleteCourseDialog';
+import ViewCourseDialog from './courses/ViewCourseDialog';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { courses, loading, fetchCourses } = useCourses();
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,16 +45,15 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const effectiveCanDeleteCourse = canDeleteCourse && userCanDelete;
   const effectiveCanAddCourse = canAddCourse && userCanAdd;
   
-  console.log('CourseManagement - User:', user);
-  console.log('CourseManagement - User role:', user?.role);
-  console.log('CourseManagement - isSuperAdmin:', isSuperAdmin());
-  console.log('CourseManagement - effectiveCanEditCourse:', effectiveCanEditCourse);
-  console.log('CourseManagement - admin role name:', user?.adminRoleName);
-  
   // Debug log the permission check for admin users 
   if (user?.role === 'admin') {
     console.log('CourseManagement - can edit courses permission:', canManageCourses(user, 'edit'));
   }
+  
+  const openViewDialog = (course: Course) => {
+    setSelectedCourse(course);
+    setIsViewDialogOpen(true);
+  };
   
   const openEditDialog = (course: Course) => {
     if (effectiveCanEditCourse) {
@@ -79,6 +79,11 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         variant: "destructive",
       });
     }
+  };
+
+  // Enhanced row click handler to view course details
+  const handleRowClick = (course: Course) => {
+    openViewDialog(course);
   };
 
   // Filter courses based on search query
@@ -137,12 +142,35 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
           </div>
         </div>
 
-        <CourseTable 
-          courses={filteredCourses} 
-          loading={loading} 
-          onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
-          onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
-        />
+        <div className="relative">
+          <CourseTable 
+            courses={filteredCourses} 
+            loading={loading} 
+            onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
+            onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
+          />
+          
+          {/* Add a transparent overlay to capture row clicks for view */}
+          {!loading && (
+            <div 
+              className="absolute inset-0 z-10" 
+              onClick={(e) => {
+                // Find the closest row element
+                const row = (e.target as HTMLElement).closest('tr[data-course-id]');
+                if (row) {
+                  const courseId = row.getAttribute('data-course-id');
+                  const course = filteredCourses.find(c => c.id === courseId);
+                  if (course) {
+                    // Don't trigger on button clicks (edit/delete)
+                    if (!(e.target as HTMLElement).closest('button')) {
+                      openViewDialog(course);
+                    }
+                  }
+                }
+              }}
+            />
+          )}
+        </div>
 
         {effectiveCanAddCourse && (
           <CreateCourseDialog 
@@ -154,6 +182,12 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
 
         {selectedCourse && (
           <>
+            <ViewCourseDialog
+              isOpen={isViewDialogOpen}
+              onOpenChange={setIsViewDialogOpen}
+              course={selectedCourse}
+            />
+            
             <EditCourseDialog 
               open={isEditDialogOpen} 
               onOpenChange={setIsEditDialogOpen} 
