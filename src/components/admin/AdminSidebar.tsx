@@ -32,10 +32,10 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
     <Sidebar 
       variant="sidebar" 
       collapsible="icon" 
-      className="h-full min-h-screen transition-all duration-300 hover:w-64 mt-16 mb-16 py-16" // Added mt-16, mb-16 and py-16 for top and bottom spacing
+      className="h-full min-h-screen transition-all duration-300 hover:w-64 mt-16 mb-16 py-16"
     >
       <SidebarHeader className="p-3">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center">
           <SidebarTrigger />
         </div>
       </SidebarHeader>
@@ -47,7 +47,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'courses'} 
                 onClick={() => onTabChange('courses')}
                 tooltip="Courses"
-                className="flex items-center justify-center group-data-[collapsible=icon]:justify-center"
+                className="flex items-center group-data-[collapsible=icon]:justify-center"
               >
                 <BookOpen className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
                 <span>Courses</span>
@@ -60,7 +60,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'students'} 
                 onClick={() => onTabChange('students')}
                 tooltip="Students"
-                className="flex items-center justify-center group-data-[collapsible=icon]:justify-center"
+                className="flex items-center group-data-[collapsible=icon]:justify-center"
               >
                 <School className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
                 <span>Students</span>
@@ -73,7 +73,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'teachers'} 
                 onClick={() => onTabChange('teachers')}
                 tooltip="Teachers"
-                className="flex items-center justify-center group-data-[collapsible=icon]:justify-center"
+                className="flex items-center group-data-[collapsible=icon]:justify-center"
               >
                 <GraduationCap className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
                 <span>Teachers</span>
@@ -86,7 +86,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'admins'} 
                 onClick={() => onTabChange('admins')}
                 tooltip="Admins"
-                className="flex items-center justify-center group-data-[collapsible=icon]:justify-center"
+                className="flex items-center group-data-[collapsible=icon]:justify-center"
               >
                 <Shield className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
                 <span>Admins</span>
@@ -99,7 +99,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'leads'} 
                 onClick={() => onTabChange('leads')}
                 tooltip="Leads"
-                className="flex items-center justify-center group-data-[collapsible=icon]:justify-center"
+                className="flex items-center group-data-[collapsible=icon]:justify-center"
               >
                 <UserPlus className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
                 <span>Leads</span>
@@ -110,7 +110,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
       </SidebarContent>
       <SidebarFooter>
         <div className="px-3 py-2">
-          <div className="flex items-center justify-center group-data-[collapsible=icon]:justify-center">
+          <div className="flex items-center group-data-[collapsible=icon]:justify-center">
             <User className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0 text-sidebar-foreground" />
             <span className="text-sm font-medium truncate">
               {user?.email || 'User'}
