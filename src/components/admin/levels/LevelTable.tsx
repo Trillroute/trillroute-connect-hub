@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Shield } from 'lucide-react';
+import { Pencil, Trash2, Shield } from 'lucide-react';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -81,7 +81,7 @@ const LevelTable = ({
                   size="sm"
                   onClick={() => onEditLevel(level)}
                 >
-                  <Edit className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -89,7 +89,7 @@ const LevelTable = ({
                   onClick={() => onDeleteLevel(level)}
                   className="text-destructive"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" color="#000000" />
                 </Button>
               </div>
             </TableCell>
