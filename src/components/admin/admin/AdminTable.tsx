@@ -1,0 +1,137 @@
+
+import React, { useState } from 'react';
+import { format } from 'date-fns';
+import { UserManagementUser } from '@/types/student';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { PenSquare, Trash2, Eye, Search, Shield } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+interface AdminTableProps {
+  admins: UserManagementUser[];
+  isLoading: boolean;
+  onViewAdmin: (admin: UserManagementUser) => void;
+  onEditAdmin: (admin: UserManagementUser) => void;
+  onDeleteAdmin: (admin: UserManagementUser) => void;
+  canDeleteAdmin: (admin: UserManagementUser) => boolean;
+  canEditAdmin: (admin: UserManagementUser) => boolean;
+}
+
+const AdminTable = ({ 
+  admins, 
+  isLoading, 
+  onViewAdmin, 
+  onEditAdmin, 
+  onDeleteAdmin,
+  canDeleteAdmin,
+  canEditAdmin
+}: AdminTableProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const filteredAdmins = admins.filter(admin => 
+    admin.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    admin.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    admin.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  if (isLoading) {
+    return <div className="py-8 text-center text-gray-500">Loading administrators...</div>;
+  }
+  
+  return (
+    <div className="space-y-4">
+      <div className="relative w-full">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          type="search"
+          placeholder="Search administrators..."
+          className="pl-9 w-full"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      
+      {filteredAdmins.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">
+          {admins.length === 0 ? "No administrators found." : "No administrators match your search."}
+        </div>
+      ) : (
+        <ScrollArea className="h-[calc(100vh-16rem)] rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Admin Level</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAdmins.map((admin) => (
+                <TableRow key={admin.id}>
+                  <TableCell className="font-medium flex items-center">
+                    <Shield className="h-4 w-4 text-amber-500 mr-2" />
+                    {`${admin.firstName} ${admin.lastName}`}
+                  </TableCell>
+                  <TableCell>{admin.email}</TableCell>
+                  <TableCell>{admin.adminRoleName || "Limited View"}</TableCell>
+                  <TableCell>
+                    {format(new Date(admin.createdAt), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewAdmin(admin)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View</span>
+                      </Button>
+                      
+                      {canEditAdmin(admin) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEditAdmin(admin)}
+                        >
+                          <PenSquare className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                      )}
+                      
+                      {canDeleteAdmin(admin) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDeleteAdmin(admin)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      )}
+      <div className="text-sm text-muted-foreground pt-2">
+        Showing {filteredAdmins.length} of {admins.length} administrators
+      </div>
+    </div>
+  );
+};
+
+export default AdminTable;
