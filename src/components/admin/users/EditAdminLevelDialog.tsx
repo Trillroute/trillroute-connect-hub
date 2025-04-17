@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -16,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { AdminLevel, updateCachedAdminRoles } from '@/utils/adminPermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface EditAdminLevelDialogProps {
   admin: UserManagementUser | null;
@@ -68,6 +67,7 @@ const EditAdminLevelDialog = ({
   const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
   const [isLoadingLevels, setIsLoadingLevels] = useState<boolean>(false);
   const { user, isSuperAdmin } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (admin) {
@@ -110,6 +110,7 @@ const EditAdminLevelDialog = ({
     try {
       if (!admin) return;
       
+      // Check if the current user is a superadmin
       if (!isSuperAdmin()) {
         toast({
           title: "Permission Denied",
@@ -138,6 +139,7 @@ const EditAdminLevelDialog = ({
 
   console.log('[EditAdminLevelDialog] Display levels:', displayLevels);
   console.log('[EditAdminLevelDialog] Current selected level:', selectedLevelName);
+  console.log('[EditAdminLevelDialog] Current user is superadmin:', isSuperAdmin());
 
   const renderPermissionBadges = (permissions: string[], moduleType: string) => {
     const colors: Record<string, string> = {
