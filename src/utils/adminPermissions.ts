@@ -87,8 +87,17 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     adminPermissions: ["view", "add", "edit", "delete"],
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"]
+  },
+  "Upper Manager": {
+    name: "Upper Manager",
+    description: "Management access",
+    studentPermissions: ["view", "add", "edit", "delete"],
+    teacherPermissions: ["view", "add", "edit", "delete"],
+    adminPermissions: ["view"],
+    leadPermissions: ["view", "add", "edit", "delete"],
+    coursePermissions: ["view", "add", "edit", "delete"]
   }
-};
+}
 
 // Helper function to map module and operation to AdminPermission enum
 function getPermissionKey(module: string, operation: string): AdminPermission | null {
@@ -145,6 +154,7 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
     return true;
   }
   
+  // Check if we have the role cached first
   const roleInfo = adminRoleName ? cachedAdminRoles.get(adminRoleName) : undefined;
   
   // Fall back to default roles if no specific role found
@@ -319,11 +329,26 @@ export const canManageCourses = (user: UserManagementUser | PermissionUser | nul
   }
   
   // Special check for SuperAdmin level admin role (both "SuperAdmin" and "Super Admin" formats)
-  if (user?.role === 'admin' && user?.adminRoleName && isSuperAdminLevel(user.adminRoleName)) {
-    console.log('[adminPermissions] Admin with SuperAdmin role can manage courses:', action);
-    return true;
+  if (user?.role === 'admin' && user?.adminRoleName) {
+    // Check if user has SuperAdmin role name (case and space insensitive)
+    if (isSuperAdminLevel(user.adminRoleName)) {
+      console.log('[adminPermissions] Admin with SuperAdmin role can manage courses:', action);
+      return true;
+    }
+    
+    // For regular admins with defined roles, check the specific permissions
+    // Check if we have the role in our cache or fallbacks
+    const roleName = user.adminRoleName;
+    const role = cachedAdminRoles.get(roleName) || FALLBACK_ADMIN_ROLES[roleName];
+    
+    if (role && Array.isArray(role.coursePermissions)) {
+      const hasPermission = role.coursePermissions.includes(action);
+      console.log(`[adminPermissions] Admin with role ${roleName} checking course ${action} permission:`, hasPermission);
+      return hasPermission;
+    }
   }
   
+  // Use the standard permission check as fallback
   if (action === 'view') {
     return hasPermission(user, AdminPermission.VIEW_COURSES);
   } else if (action === 'add') {

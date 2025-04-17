@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,10 +35,14 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const { courses, loading, fetchCourses } = useCourses();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Always grant access to superadmin users
-  const effectiveCanEditCourse = isSuperAdmin() ? true : canEditCourse;
-  const effectiveCanDeleteCourse = isSuperAdmin() ? true : canDeleteCourse;
-  const effectiveCanAddCourse = isSuperAdmin() ? true : canAddCourse;
+  // Calculate effective permissions based on both prop values and user's actual permissions
+  const userCanEdit = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'edit'));
+  const userCanDelete = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'delete'));
+  const userCanAdd = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'add'));
+  
+  const effectiveCanEditCourse = canEditCourse && userCanEdit;
+  const effectiveCanDeleteCourse = canDeleteCourse && userCanDelete;
+  const effectiveCanAddCourse = canAddCourse && userCanAdd;
   
   console.log('CourseManagement - User:', user);
   console.log('CourseManagement - User role:', user?.role);
@@ -51,60 +56,40 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   }
   
   const openEditDialog = (course: Course) => {
-    // Check if user is superadmin or has 'SuperAdmin' level
-    if (isSuperAdmin()) {
-      console.log('CourseManagement - Superadmin opening edit dialog');
+    if (effectiveCanEditCourse) {
       setSelectedCourse(course);
       setIsEditDialogOpen(true);
-      return;
+    } else {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit courses.",
+        variant: "destructive",
+      });
     }
-    
-    // Check if admin has edit permission
-    if (user?.role === 'admin') {
-      const hasPermission = canManageCourses(user, 'edit');
-      console.log('CourseManagement - Admin has edit permission:', hasPermission);
-      
-      if (hasPermission) {
-        setSelectedCourse(course);
-        setIsEditDialogOpen(true);
-        return;
-      }
-    }
-    
-    // Show permission denied message
-    toast({
-      title: "Permission Denied",
-      description: "You don't have permission to edit courses.",
-      variant: "destructive",
-    });
   };
 
   const openDeleteDialog = (course: Course) => {
-    // Check if user is superadmin or has 'SuperAdmin' level
-    if (isSuperAdmin()) {
+    if (effectiveCanDeleteCourse) {
       setSelectedCourse(course);
       setIsDeleteDialogOpen(true);
-      return;
+    } else {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to delete courses.",
+        variant: "destructive",
+      });
     }
-    
-    // Check if admin has delete permission
-    if (user?.role === 'admin') {
-      const hasPermission = canManageCourses(user, 'delete');
-      
-      if (hasPermission) {
-        setSelectedCourse(course);
-        setIsDeleteDialogOpen(true);
-        return;
-      }
-    }
-    
-    // Show permission denied message
-    toast({
-      title: "Permission Denied",
-      description: "You don't have permission to delete courses.",
-      variant: "destructive",
-    });
   };
+
+  // Filter courses based on search query
+  const filteredCourses = searchQuery 
+    ? courses.filter(course => 
+        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.level.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        course.skill.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : courses;
 
   return (
     <Card className="w-full">
@@ -153,9 +138,8 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         </div>
 
         <CourseTable 
-          courses={courses} 
+          courses={filteredCourses} 
           loading={loading} 
-          // Use the effective permissions based on superadmin status
           onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
           onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
         />

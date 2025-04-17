@@ -20,7 +20,7 @@ const ProtectedRoute = ({
   requireSuperAdmin = false,
   requiredPermissions = [],
 }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isSuperAdmin } = useAuth();
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
@@ -31,8 +31,8 @@ const ProtectedRoute = ({
   }
 
   // Superadmin can access any route - explicit check before any other checks
-  if (user.role === 'superadmin') {
-    console.log('[ProtectedRoute] User is superadmin, granting access');
+  if (user.role === 'superadmin' || isSuperAdmin()) {
+    console.log('[ProtectedRoute] User is superadmin or has SuperAdmin level, granting access');
     return <>{children}</>;
   }
 
