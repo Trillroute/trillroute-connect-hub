@@ -42,6 +42,14 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const effectiveCanEditLead = isSuperAdmin ? true : canEditLead;
   const effectiveCanDeleteLead = isSuperAdmin ? true : canDeleteLead;
 
+  // Debug logging
+  console.log('LeadManagement - User:', user);
+  console.log('LeadManagement - isSuperAdmin:', isSuperAdmin);
+  console.log('LeadManagement - effectiveCanEditLead:', effectiveCanEditLead);
+  console.log('LeadManagement - admin role name:', user?.adminRoleName);
+  console.log('LeadManagement - can edit leads permission:', 
+    user?.role === 'admin' ? canManageLeads(user, 'edit') : 'N/A');
+
   // Filter leads based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -66,20 +74,27 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const openEditDialog = (lead: Lead) => {
     // Always allow superadmin to edit leads
     if (isSuperAdmin) {
+      console.log('LeadManagement - Superadmin opening edit dialog');
       setSelectedLead(lead);
       setIsEditDialogOpen(true);
       return;
     }
     
-    // Only allow opening the edit dialog if the user has edit permissions
-    if (!effectiveCanEditLead) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to edit leads.",
-        variant: "destructive",
-      });
-      return;
+    // Check if admin has edit permission
+    if (user?.role === 'admin') {
+      const hasPermission = canManageLeads(user, 'edit');
+      console.log('LeadManagement - Admin has edit permission:', hasPermission);
+      
+      if (!hasPermission) {
+        toast({
+          title: "Permission Denied",
+          description: "You don't have permission to edit leads.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
+    
     setSelectedLead(lead);
     setIsEditDialogOpen(true);
   };
@@ -87,20 +102,27 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const openDeleteDialog = (lead: Lead) => {
     // Always allow superadmin to delete leads
     if (isSuperAdmin) {
+      console.log('LeadManagement - Superadmin opening delete dialog');
       setSelectedLead(lead);
       setIsDeleteDialogOpen(true);
       return;
     }
     
-    // Only allow opening the delete dialog if the user has delete permissions
-    if (!effectiveCanDeleteLead) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to delete leads.",
-        variant: "destructive",
-      });
-      return;
+    // Check if admin has delete permission
+    if (user?.role === 'admin') {
+      const hasPermission = canManageLeads(user, 'delete');
+      console.log('LeadManagement - Admin has delete permission:', hasPermission);
+      
+      if (!hasPermission) {
+        toast({
+          title: "Permission Denied",
+          description: "You don't have permission to delete leads.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
+    
     setSelectedLead(lead);
     setIsDeleteDialogOpen(true);
   };

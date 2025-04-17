@@ -13,6 +13,7 @@ import DeleteCourseDialog from './courses/DeleteCourseDialog';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
 import { Input } from '@/components/ui/input';
+import { canManageCourses } from '@/utils/adminPermissions';
 
 interface CourseManagementProps {
   canAddCourse?: boolean;
@@ -40,16 +41,40 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const effectiveCanDeleteCourse = isSuperAdmin ? true : canDeleteCourse;
   const effectiveCanAddCourse = isSuperAdmin ? true : canAddCourse;
   
+  console.log('CourseManagement - User:', user);
+  console.log('CourseManagement - isSuperAdmin:', isSuperAdmin);
+  console.log('CourseManagement - effectiveCanEditCourse:', effectiveCanEditCourse);
+  console.log('CourseManagement - admin role name:', user?.adminRoleName);
+  console.log('CourseManagement - can edit courses permission:', 
+    user?.role === 'admin' ? canManageCourses(user, 'edit') : 'N/A');
+  
   const openEditDialog = (course: Course) => {
     // Always allow superadmin to edit courses
     if (isSuperAdmin) {
+      console.log('CourseManagement - Superadmin opening edit dialog');
       setSelectedCourse(course);
       setIsEditDialogOpen(true);
       return;
     }
     
+    // Check if admin has edit permission
+    if (user?.role === 'admin') {
+      const hasPermission = canManageCourses(user, 'edit');
+      console.log('CourseManagement - Admin has edit permission:', hasPermission);
+      
+      if (!hasPermission) {
+        toast({
+          title: "Permission Denied",
+          description: "You don't have permission to edit courses.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     // Only allow opening the edit dialog if the user has edit permissions
     if (!effectiveCanEditCourse) {
+      console.log('CourseManagement - No edit permission, showing toast');
       toast({
         title: "Permission Denied",
         description: "You don't have permission to edit courses.",
@@ -57,6 +82,8 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
       });
       return;
     }
+    
+    console.log('CourseManagement - Opening edit dialog');
     setSelectedCourse(course);
     setIsEditDialogOpen(true);
   };

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -60,12 +59,19 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   
-  // Check if user is superadmin or has edit course permission
-  const hasEditPermission = user?.role === 'superadmin' || 
-    (user?.role === 'admin' && canManageCourses(user, 'edit'));
+  const hasEditPermission = user && (
+    user.role === 'superadmin' || 
+    (user.role === 'admin' && canManageCourses(user, 'edit'))
+  );
   
+  console.log('EditCourseDialog - User:', user);
+  console.log('EditCourseDialog - hasEditPermission:', hasEditPermission);
+  console.log('EditCourseDialog - admin role:', user?.adminRoleName);
+  console.log('EditCourseDialog - Can manage courses check:', user && user.role === 'admin' ? canManageCourses(user, 'edit') : 'N/A');
+
   useEffect(() => {
     if (open && !hasEditPermission) {
+      console.log('EditCourseDialog - Permission denied, closing dialog');
       toast({
         title: "Permission Denied",
         description: "You don't have permission to edit courses.",
@@ -145,8 +151,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   }, [course, form, open, instructorIds]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
-    // Always allow superadmin to edit regardless of other permission checks
     if (!hasEditPermission) {
+      console.log('EditCourseDialog - Update attempt without permission');
       toast({
         title: "Permission Denied",
         description: "You don't have permission to edit courses.",
