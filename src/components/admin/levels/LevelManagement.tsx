@@ -174,8 +174,8 @@ const LevelManagement = ({
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Admin Level Management</CardTitle>
-            <CardDescription>Manage admin permission levels</CardDescription>
+            <CardTitle>Level Management</CardTitle>
+            <CardDescription>Manage permission levels</CardDescription>
           </div>
           <div className="flex space-x-2">
             <Button variant="outline" onClick={loadLevels}>
