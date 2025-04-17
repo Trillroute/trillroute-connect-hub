@@ -13,6 +13,8 @@ import { UserManagementUser } from '@/types/student';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { fetchAdminRoles } from './AdminRoleService';
+import { AdminLevel } from '@/utils/adminPermissions';
 
 interface EditAdminDialogProps {
   admin: UserManagementUser | null;
@@ -30,12 +32,33 @@ const EditAdminDialog = ({
   isLoading,
 }: EditAdminDialogProps) => {
   const [selectedRole, setSelectedRole] = useState<'admin' | 'teacher'>('admin');
+  const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
+  const [isLoadingLevels, setIsLoadingLevels] = useState(false);
 
   useEffect(() => {
     if (admin) {
       setSelectedRole(admin.role as 'admin' | 'teacher');
     }
   }, [admin]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadAdminLevels();
+    }
+  }, [isOpen]);
+
+  const loadAdminLevels = async () => {
+    try {
+      setIsLoadingLevels(true);
+      const levels = await fetchAdminRoles();
+      setAdminLevels(levels);
+      console.log('Loaded admin levels:', levels);
+    } catch (error) {
+      console.error('Error loading admin levels:', error);
+    } finally {
+      setIsLoadingLevels(false);
+    }
+  };
 
   const handleSave = async () => {
     if (admin) {
@@ -70,6 +93,27 @@ const EditAdminDialog = ({
                 <Label htmlFor="teacher" className="font-medium">Teacher</Label>
               </div>
             </RadioGroup>
+
+            {selectedRole === 'admin' && adminLevels.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium mb-2">Admin Permission Level</h3>
+                <div className="text-sm text-muted-foreground mb-3">
+                  Select the permission level for this administrator
+                </div>
+                <ScrollArea className="max-h-[200px] pr-4">
+                  {isLoadingLevels ? (
+                    <div className="py-2 text-sm text-muted-foreground">Loading admin levels...</div>
+                  ) : (
+                    adminLevels.map((level) => (
+                      <div key={level.name} className="mb-2 p-2 border rounded hover:bg-muted cursor-pointer">
+                        <div className="font-medium">{level.name}</div>
+                        <div className="text-xs text-muted-foreground">{level.description}</div>
+                      </div>
+                    ))
+                  )}
+                </ScrollArea>
+              </div>
+            )}
           </div>
         </ScrollArea>
         <DialogFooter>

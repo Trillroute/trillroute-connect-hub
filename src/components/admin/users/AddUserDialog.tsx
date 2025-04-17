@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface NewUserData {
   firstName: string;
@@ -24,7 +25,7 @@ export interface NewUserData {
   email: string;
   password: string;
   role: 'student' | 'teacher' | 'admin' | 'superadmin';
-  adminLevel?: number;
+  adminLevelName?: string;
   dateOfBirth?: string;
   profilePhoto?: string;
   parentName?: string;
@@ -60,7 +61,46 @@ const AddUserDialog = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'student' | 'teacher' | 'admin'>(defaultRole || 'student');
-  const [adminLevel, setAdminLevel] = useState<number>(8);
+  const [adminLevelName, setAdminLevelName] = useState<string>('Limited View');
+  const [adminLevels, setAdminLevels] = useState<{name: string, description: string}[]>([]);
+  const [isLoadingLevels, setIsLoadingLevels] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && (role === 'admin' || defaultRole === 'admin')) {
+      loadAdminLevels();
+    }
+  }, [isOpen, role, defaultRole]);
+
+  const loadAdminLevels = async () => {
+    try {
+      setIsLoadingLevels(true);
+      const { data, error } = await supabase
+        .from('admin_levels')
+        .select('name, description')
+        .order('id', { ascending: true });
+        
+      if (error) {
+        console.error('Error loading admin levels:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        setAdminLevels(data);
+        setAdminLevelName(data[0].name); // Select the first level by default
+      } else {
+        // Fallback default levels
+        setAdminLevels([
+          { name: 'Limited View', description: 'View-only administrator' },
+          { name: 'Standard Admin', description: 'Regular administrator permissions' },
+          { name: 'Full Access', description: 'Complete administrative access' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading admin levels:', error);
+    } finally {
+      setIsLoadingLevels(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +111,7 @@ const AddUserDialog = ({
       email,
       password,
       role,
-      ...(role === 'admin' ? { adminLevel } : {})
+      ...(role === 'admin' ? { adminLevelName } : {})
     });
   };
 
@@ -81,7 +121,7 @@ const AddUserDialog = ({
     setEmail('');
     setPassword('');
     setRole(defaultRole || 'student');
-    setAdminLevel(8);
+    setAdminLevelName('Limited View');
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -165,24 +205,26 @@ const AddUserDialog = ({
           
           {(role === 'admin' && allowAdminCreation) && (
             <div className="space-y-2">
-              <Label htmlFor="adminLevel">Admin Permission Level</Label>
+              <Label htmlFor="adminLevelName">Admin Permission Level</Label>
               <Select 
-                value={adminLevel.toString()} 
-                onValueChange={(value: string) => setAdminLevel(parseInt(value))}
+                value={adminLevelName} 
+                onValueChange={(value: string) => setAdminLevelName(value)}
+                disabled={isLoadingLevels}
               >
-                <SelectTrigger id="adminLevel">
-                  <SelectValue placeholder="Select admin level" />
+                <SelectTrigger id="adminLevelName">
+                  <SelectValue placeholder={isLoadingLevels ? "Loading..." : "Select admin level"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Level 1 (Highest)</SelectItem>
-                  <SelectItem value="2">Level 2</SelectItem>
-                  <SelectItem value="3">Level 3</SelectItem>
-                  <SelectItem value="4">Level 4</SelectItem>
-                  <SelectItem value="5">Level 5</SelectItem>
-                  <SelectItem value="6">Level 6</SelectItem>
-                  <SelectItem value="8">Level 8 (Lowest)</SelectItem>
+                  {adminLevels.map(level => (
+                    <SelectItem key={level.name} value={level.name}>
+                      {level.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              {isLoadingLevels && (
+                <div className="text-xs text-muted-foreground mt-1">Loading admin levels...</div>
+              )}
             </div>
           )}
           
