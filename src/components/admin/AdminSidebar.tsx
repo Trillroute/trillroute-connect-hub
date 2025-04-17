@@ -32,13 +32,11 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
     <Sidebar 
       variant="sidebar" 
       collapsible="icon" 
-      className="h-full min-h-screen transition-all duration-300 hover:w-64 mt-16" // Added mt-16 to push down the sidebar
+      className="h-full min-h-screen transition-all duration-300 hover:w-64 mt-16 pb-16" // Added mt-16 to push down the sidebar and pb-16 for bottom spacing
     >
       <SidebarHeader className="p-3">
-        <div className="flex items-center">
-          <div className="ml-auto">
-            <SidebarTrigger />
-          </div>
+        <div className="flex items-center justify-center">
+          <SidebarTrigger />
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -49,9 +47,10 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'courses'} 
                 onClick={() => onTabChange('courses')}
                 tooltip="Courses"
+                className="flex items-center justify-center md:justify-start"
               >
-                <BookOpen className="h-5 w-5 mr-2" />
-                <span>Courses</span>
+                <BookOpen className="h-5 w-5 mx-auto md:mx-0 md:mr-2" />
+                <span className="hidden md:inline">Courses</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -61,9 +60,10 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'students'} 
                 onClick={() => onTabChange('students')}
                 tooltip="Students"
+                className="flex items-center justify-center md:justify-start"
               >
-                <School className="h-5 w-5 mr-2" />
-                <span>Students</span>
+                <School className="h-5 w-5 mx-auto md:mx-0 md:mr-2" />
+                <span className="hidden md:inline">Students</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -73,9 +73,10 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'teachers'} 
                 onClick={() => onTabChange('teachers')}
                 tooltip="Teachers"
+                className="flex items-center justify-center md:justify-start"
               >
-                <GraduationCap className="h-5 w-5 mr-2" />
-                <span>Teachers</span>
+                <GraduationCap className="h-5 w-5 mx-auto md:mx-0 md:mr-2" />
+                <span className="hidden md:inline">Teachers</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -85,9 +86,10 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'admins'} 
                 onClick={() => onTabChange('admins')}
                 tooltip="Admins"
+                className="flex items-center justify-center md:justify-start"
               >
-                <Shield className="h-5 w-5 mr-2" />
-                <span>Admins</span>
+                <Shield className="h-5 w-5 mx-auto md:mx-0 md:mr-2" />
+                <span className="hidden md:inline">Admins</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -97,9 +99,10 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
                 isActive={activeTab === 'leads'} 
                 onClick={() => onTabChange('leads')}
                 tooltip="Leads"
+                className="flex items-center justify-center md:justify-start"
               >
-                <UserPlus className="h-5 w-5 mr-2" />
-                <span>Leads</span>
+                <UserPlus className="h-5 w-5 mx-auto md:mx-0 md:mr-2" />
+                <span className="hidden md:inline">Leads</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
@@ -107,9 +110,9 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
       </SidebarContent>
       <SidebarFooter>
         <div className="px-3 py-2">
-          <div className="flex items-center">
-            <User className="h-5 w-5 mr-2 text-sidebar-foreground" />
-            <span className="text-sm font-medium truncate">
+          <div className="flex items-center justify-center md:justify-start">
+            <User className="h-5 w-5 mx-auto md:mx-0 md:mr-2 text-sidebar-foreground" />
+            <span className="hidden md:inline text-sm font-medium truncate">
               {user?.email || 'User'}
             </span>
           </div>
