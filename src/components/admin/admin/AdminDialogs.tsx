@@ -50,6 +50,15 @@ const AdminDialogs = ({
 }: AdminDialogsProps) => {
   const { isSuperAdmin } = useAuth();
 
+  // Wrapper functions to convert Promise<boolean> to Promise<void>
+  const handleUpdateAdminWrapper = async (userId: string, userData: Partial<UserManagementUser>): Promise<void> => {
+    await handleUpdateAdmin(userId, userData);
+  };
+
+  const handleUpdateAdminLevelWrapper = async (userId: string, newLevelName: string): Promise<void> => {
+    await handleUpdateAdminLevel(userId, newLevelName);
+  };
+
   return (
     <>
       {(canAddAdmin || isSuperAdmin()) && (
@@ -68,8 +77,8 @@ const AdminDialogs = ({
         user={adminToEdit}
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        onUpdateUser={handleUpdateAdmin}
-        onUpdateLevel={effectiveCanEditAdminLevel ? handleUpdateAdminLevel : undefined}
+        onUpdateUser={handleUpdateAdminWrapper}
+        onUpdateLevel={effectiveCanEditAdminLevel ? handleUpdateAdminLevelWrapper : undefined}
         isLoading={isLoading}
         userRole="Administrator"
         showAdminLevelSelector={effectiveCanEditAdminLevel}
