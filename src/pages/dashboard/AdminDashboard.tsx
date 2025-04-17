@@ -200,7 +200,7 @@ const AdminDashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen bg-background">
         <AdminSidebar 
           activeTab={activeTab} 
           onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
@@ -213,9 +213,9 @@ const AdminDashboard = () => {
           }}
         />
         
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4 md:p-6 overflow-auto">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             
             {debugInfo && (
               <Alert variant="destructive" className="mt-4">

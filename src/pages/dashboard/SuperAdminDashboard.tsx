@@ -187,7 +187,7 @@ const SuperAdminDashboard = () => {
   
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen bg-background">
         <AdminSidebar 
           activeTab={activeTab} 
           onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
@@ -200,12 +200,12 @@ const SuperAdminDashboard = () => {
           }}
         />
         
-        <div className="flex-1 p-6">
-          <div className="mb-6 flex justify-between items-center">
+        <div className="flex-1 p-4 md:p-6 overflow-auto">
+          <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
                 <Download className="h-4 w-4 mr-2" />
                 Download Reports
@@ -217,7 +217,7 @@ const SuperAdminDashboard = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Total Students</CardTitle>
@@ -299,14 +299,14 @@ const SuperAdminDashboard = () => {
             {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-8">
+          <div className="grid grid-cols-1 gap-6 mt-8">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2">
                 <div>
                   <CardTitle>User Growth {currentYear}</CardTitle>
                   <CardDescription>All users registered by month</CardDescription>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 mt-2 md:mt-0">
                   <Button 
                     variant="outline" 
                     size="sm" 
