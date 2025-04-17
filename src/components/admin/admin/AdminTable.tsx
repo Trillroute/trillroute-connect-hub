@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { UserManagementUser } from '@/types/student';
@@ -11,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PenSquare, Trash2, Eye, Search, Shield } from 'lucide-react';
+import { PenSquare, Trash2, Eye, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -78,8 +77,7 @@ const AdminTable = ({
             <TableBody>
               {filteredAdmins.map((admin) => (
                 <TableRow key={admin.id}>
-                  <TableCell className="font-medium flex items-center">
-                    <Shield className="h-4 w-4 text-amber-500 mr-2" />
+                  <TableCell className="font-medium">
                     {`${admin.firstName} ${admin.lastName}`}
                   </TableCell>
                   <TableCell>{admin.email}</TableCell>
