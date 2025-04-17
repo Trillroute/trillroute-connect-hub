@@ -15,6 +15,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminManagement } from './hooks/useAdminManagement';
 import AdminTable from './admin/AdminTable';
 import AdminDialogs from './admin/AdminDialogs';
+import { updateCachedAdminRoles } from '@/utils/adminPermissions';
+import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 
 interface AdminManagementProps {
   canAddAdmin?: boolean;
@@ -63,7 +65,20 @@ const AdminManagement = ({
     toast
   });
 
+  // Load admin roles for permission checks when component mounts
   useEffect(() => {
+    const loadAdminRoles = async () => {
+      try {
+        const roles = await fetchAdminRoles();
+        if (roles && roles.length > 0) {
+          updateCachedAdminRoles(roles);
+        }
+      } catch (error) {
+        console.error('Error loading admin roles:', error);
+      }
+    };
+    
+    loadAdminRoles();
     loadAdmins();
   }, [loadAdmins]);
 
