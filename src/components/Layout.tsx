@@ -15,11 +15,11 @@ const Layout = ({ children }: LayoutProps) => {
   
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {!isAuthPage && !isAdminPage && <Navbar />}
+      {!isAuthPage && <Navbar />}
       <main className={`flex-grow ${isAdminPage ? 'p-0' : ''}`}>
         {children}
       </main>
-      {!isAdminPage && <Footer />}
+      {!isAuthPage && <Footer />}
     </div>
   );
 };
