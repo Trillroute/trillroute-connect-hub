@@ -20,7 +20,7 @@ const Layout = ({ children }: LayoutProps) => {
         {children}
       </main>
       {!isAuthPage && (
-        <div className="relative z-10">
+        <div className="relative z-30">
           <Footer />
         </div>
       )}

@@ -33,7 +33,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
     <Sidebar 
       variant="floating" 
       collapsible="icon" 
-      className="h-full min-h-screen transition-all duration-300 mt-16 fixed left-0 z-50"
+      className="h-full min-h-screen transition-all duration-300 mt-16 fixed left-0 z-40"
     >
       <SidebarHeader className="p-3">
         <div className="flex items-center">
