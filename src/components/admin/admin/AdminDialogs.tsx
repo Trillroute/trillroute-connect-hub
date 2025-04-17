@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UserManagementUser } from '@/types/student';
 import AddUserDialog, { NewUserData } from '../users/AddUserDialog';
 import DeleteUserDialog from '../users/DeleteUserDialog';
@@ -59,8 +59,14 @@ const AdminDialogs = ({
     await handleUpdateAdminLevel(userId, newLevelName);
   };
 
-  console.log('AdminDialogs: effectiveCanEditAdminLevel =', effectiveCanEditAdminLevel);
-  console.log('AdminDialogs: adminToEdit =', adminToEdit);
+  useEffect(() => {
+    if (isEditDialogOpen && adminToEdit) {
+      console.log('AdminDialogs: Edit dialog opened with admin:', adminToEdit);
+      console.log('AdminDialogs: effectiveCanEditAdminLevel =', effectiveCanEditAdminLevel);
+      console.log('AdminDialogs: Is super admin =', isSuperAdmin());
+      console.log('AdminDialogs: Using onUpdateLevel =', Boolean(effectiveCanEditAdminLevel));
+    }
+  }, [isEditDialogOpen, adminToEdit, effectiveCanEditAdminLevel, isSuperAdmin]);
 
   return (
     <>

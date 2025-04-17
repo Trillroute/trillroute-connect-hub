@@ -101,8 +101,13 @@ const EditUserDialog = ({
   // Determine if admin level editing is allowed
   const canEditAdminLevel = showAdminLevelSelector && 
     user?.role === 'admin' && 
-    isSuperAdmin() && 
     onUpdateLevel !== undefined;
+
+  console.log('EditUserDialog: showAdminLevelSelector =', showAdminLevelSelector);
+  console.log('EditUserDialog: user role =', user?.role);
+  console.log('EditUserDialog: isSuperAdmin =', isSuperAdmin());
+  console.log('EditUserDialog: onUpdateLevel =', Boolean(onUpdateLevel));
+  console.log('EditUserDialog: canEditAdminLevel =', canEditAdminLevel);
 
   useEffect(() => {
     if (user) {
@@ -119,12 +124,13 @@ const EditUserDialog = ({
         adminRoleName: user.adminRoleName || '',
       });
       
-      // If this is an admin and we can edit admin levels, load the admin roles
-      if (canEditAdminLevel && isOpen) {
+      // If this is an admin user and admin level selector should be shown, load the admin roles
+      if ((user.role === 'admin' && showAdminLevelSelector) && isOpen) {
+        console.log('EditUserDialog: Loading admin levels for admin user');
         loadAdminLevels();
       }
     }
-  }, [user, isOpen, canEditAdminLevel]);
+  }, [user, isOpen, showAdminLevelSelector]);
 
   const loadAdminLevels = async () => {
     try {
@@ -171,6 +177,7 @@ const EditUserDialog = ({
                           formData.adminRoleName;
                           
       if (levelChanged && onUpdateLevel) {
+        console.log(`[EditUserDialog] Updating admin level from ${user.adminRoleName} to ${formData.adminRoleName}`);
         await onUpdateLevel(user.id, formData.adminRoleName as string);
       }
       
@@ -196,6 +203,7 @@ const EditUserDialog = ({
   };
   
   const handleAdminLevelChange = (value: string) => {
+    console.log(`[EditUserDialog] Admin level changed to: ${value}`);
     setFormData(prev => ({ ...prev, adminRoleName: value }));
   };
 
@@ -371,12 +379,12 @@ const EditUserDialog = ({
             )}
 
             {/* Admin Level Selector for Admin users */}
-            {canEditAdminLevel && (
+            {showAdminLevelSelector && user.role === 'admin' && (
               <div className="border-t pt-4 mt-4">
                 <h3 className="font-medium mb-2">Administrator Permission Level</h3>
                 {isLoadingLevels ? (
                   <p className="text-sm text-gray-500">Loading permission levels...</p>
-                ) : (
+                ) : adminLevels.length > 0 ? (
                   <RadioGroup
                     value={formData.adminRoleName || ""}
                     onValueChange={handleAdminLevelChange}
@@ -404,6 +412,8 @@ const EditUserDialog = ({
                       </div>
                     ))}
                   </RadioGroup>
+                ) : (
+                  <p className="text-sm text-red-500">No admin levels available. Please create some admin roles first.</p>
                 )}
               </div>
             )}
