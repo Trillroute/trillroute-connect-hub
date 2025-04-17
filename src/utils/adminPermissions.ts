@@ -1,3 +1,4 @@
+
 /**
  * Admin Permission Level Utility
  * 
@@ -77,6 +78,15 @@ const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     adminPermissions: ["view", "add", "edit", "delete"],
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"]
+  },
+  "Super Admin": {
+    name: "Super Admin",
+    description: "Full access to all features",
+    studentPermissions: ["view", "add", "edit", "delete"],
+    teacherPermissions: ["view", "add", "edit", "delete"],
+    adminPermissions: ["view", "add", "edit", "delete"],
+    leadPermissions: ["view", "add", "edit", "delete"],
+    coursePermissions: ["view", "add", "edit", "delete"]
   }
 };
 
@@ -89,6 +99,14 @@ function getPermissionKey(module: string, operation: string): AdminPermission | 
 // Add a cached permissions map to avoid re-calculating permissions
 let cachedPermissions = new Map<string, boolean>();
 let cachedAdminRoles = new Map<string, AdminLevel>();
+
+// Helper function to check if an admin level name is a SuperAdmin equivalent
+function isSuperAdminLevel(levelName: string | undefined): boolean {
+  if (!levelName) return false;
+  // Normalize the level name for comparison
+  const normalizedName = levelName.toLowerCase().replace(/\s+/g, '');
+  return normalizedName === 'superadmin' || normalizedName === 'super admin';
+}
 
 /**
  * Check if a user has a specific permission
@@ -120,8 +138,8 @@ export const hasPermission = (user: UserManagementUser | PermissionUser | null, 
   const adminRoleName = 'adminRoleName' in user ? user.adminRoleName : undefined;
   console.log('[adminPermissions] Checking permissions with adminRoleName:', adminRoleName);
   
-  // If the adminRoleName is "SuperAdmin", grant all permissions
-  if (adminRoleName === "SuperAdmin") {
+  // If the adminRoleName is a SuperAdmin equivalent, grant all permissions
+  if (isSuperAdminLevel(adminRoleName)) {
     console.log('[adminPermissions] User has SuperAdmin role name, granting permission');
     cachedPermissions.set(cacheKey, true);
     return true;
@@ -300,8 +318,8 @@ export const canManageCourses = (user: UserManagementUser | PermissionUser | nul
     return true;
   }
   
-  // Special check for SuperAdmin level admin role
-  if (user?.role === 'admin' && user?.adminRoleName === 'SuperAdmin') {
+  // Special check for SuperAdmin level admin role (both "SuperAdmin" and "Super Admin" formats)
+  if (user?.role === 'admin' && user?.adminRoleName && isSuperAdminLevel(user.adminRoleName)) {
     console.log('[adminPermissions] Admin with SuperAdmin role can manage courses:', action);
     return true;
   }

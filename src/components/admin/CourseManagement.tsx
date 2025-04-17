@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,11 +44,14 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   console.log('CourseManagement - isSuperAdmin:', isSuperAdmin());
   console.log('CourseManagement - effectiveCanEditCourse:', effectiveCanEditCourse);
   console.log('CourseManagement - admin role name:', user?.adminRoleName);
-  console.log('CourseManagement - can edit courses permission:', 
-    user?.role === 'admin' ? canManageCourses(user, 'edit') : 'N/A');
+  
+  // Debug log the permission check for admin users 
+  if (user?.role === 'admin') {
+    console.log('CourseManagement - can edit courses permission:', canManageCourses(user, 'edit'));
+  }
   
   const openEditDialog = (course: Course) => {
-    // Always allow superadmin to edit courses
+    // Check if user is superadmin or has 'SuperAdmin' level
     if (isSuperAdmin()) {
       console.log('CourseManagement - Superadmin opening edit dialog');
       setSelectedCourse(course);
@@ -78,7 +80,7 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   };
 
   const openDeleteDialog = (course: Course) => {
-    // Always allow superadmin to delete courses
+    // Check if user is superadmin or has 'SuperAdmin' level
     if (isSuperAdmin()) {
       setSelectedCourse(course);
       setIsDeleteDialogOpen(true);

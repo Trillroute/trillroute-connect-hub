@@ -254,8 +254,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isSuperAdmin = () => {
     console.log('[useAuth] isSuperAdmin check, current role:', user?.role);
-    return user?.role === 'superadmin' || 
-           (user?.role === 'admin' && user?.adminRoleName === 'SuperAdmin');
+    
+    if (user?.role === 'superadmin') {
+      return true;
+    }
+    
+    if (user?.role === 'admin' && user?.adminRoleName) {
+      const normalizedRoleName = user.adminRoleName.toLowerCase().replace(/\s+/g, '');
+      return normalizedRoleName === 'superadmin' || normalizedRoleName === 'super admin';
+    }
+    
+    return false;
   };
 
   const value = {
