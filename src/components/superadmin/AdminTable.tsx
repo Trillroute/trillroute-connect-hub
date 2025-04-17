@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { UserManagementUser } from '@/types/student';
@@ -11,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PenSquare, Trash2, Shield, Search } from 'lucide-react';
+import { Pencil, Trash2, Shield, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -20,7 +19,7 @@ interface AdminTableProps {
   isLoading: boolean;
   onEditAdmin: (admin: UserManagementUser) => void;
   onDeleteAdmin: (admin: UserManagementUser) => void;
-  onEditUserDetails?: (admin: UserManagementUser) => void; // New prop for editing user details
+  onEditUserDetails?: (admin: UserManagementUser) => void;
 }
 
 const AdminTable = ({ 
@@ -90,7 +89,7 @@ const AdminTable = ({
                           onClick={() => onEditUserDetails(admin)}
                           title="Edit user details"
                         >
-                          <PenSquare className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           <span className="sr-only">Edit Details</span>
                         </Button>
                       )}
