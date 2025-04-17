@@ -29,10 +29,14 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
   const { user } = useAuth();
   
   return (
-    <Sidebar variant="sidebar" collapsible="icon" className="h-full min-h-screen">
+    <Sidebar 
+      variant="sidebar" 
+      collapsible="icon" 
+      className="h-full min-h-screen transition-all duration-300 hover:w-64 group"
+      hoverExpand
+    >
       <SidebarHeader className="p-3">
         <div className="flex items-center">
-          <div className="text-lg font-semibold">Admin Panel</div>
           <div className="ml-auto">
             <SidebarTrigger />
           </div>
