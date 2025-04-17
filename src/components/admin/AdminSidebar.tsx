@@ -31,8 +31,8 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
   return (
     <Sidebar 
       variant="sidebar" 
-      collapsible="offcanvas" 
-      className="h-full min-h-screen transition-all duration-300 hover:w-64 mt-16"
+      collapsible="icon" 
+      className="h-full min-h-screen transition-all duration-300 mt-16"
     >
       <SidebarHeader className="p-3">
         <div className="flex items-center">
@@ -112,7 +112,7 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
         <div className="px-3 py-2">
           <div className="flex items-center group-data-[collapsible=icon]:justify-center">
             <User className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0 text-sidebar-foreground" />
-            <span className="text-sm font-medium truncate">
+            <span className="text-sm font-medium truncate group-data-[collapsible=icon]:hidden">
               {user?.email || 'User'}
             </span>
           </div>
