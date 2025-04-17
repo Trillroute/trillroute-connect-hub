@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +13,7 @@ import DeleteLeadDialog from './leads/DeleteLeadDialog';
 import { useFetchLeads } from '@/hooks/useFetchLeads';
 import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
+import { canManageLeads } from '@/utils/adminPermissions';
 
 interface LeadManagementProps {
   canAddLead?: boolean;
@@ -33,12 +34,34 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const { leads, loading, fetchLeads } = useFetchLeads();
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   
   // Check if user is superadmin and override permissions
   const isSuperAdmin = user?.role === 'superadmin';
   const effectiveCanAddLead = isSuperAdmin ? true : canAddLead;
   const effectiveCanEditLead = isSuperAdmin ? true : canEditLead;
   const effectiveCanDeleteLead = isSuperAdmin ? true : canDeleteLead;
+
+  // Filter leads based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredLeads(leads);
+      return;
+    }
+    
+    const filtered = leads.filter(lead => {
+      const query = searchQuery.toLowerCase();
+      return (
+        lead.name.toLowerCase().includes(query) ||
+        lead.email.toLowerCase().includes(query) ||
+        (lead.phone && lead.phone.toLowerCase().includes(query)) ||
+        (lead.status && lead.status.toLowerCase().includes(query)) ||
+        (lead.source && lead.source.toLowerCase().includes(query))
+      );
+    });
+    
+    setFilteredLeads(filtered);
+  }, [leads, searchQuery]);
   
   const openEditDialog = (lead: Lead) => {
     // Always allow superadmin to edit leads
@@ -83,18 +106,19 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
+    <Card className="shadow-sm">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>
             <CardTitle>Lead Management</CardTitle>
             <CardDescription>Manage prospective students</CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
               onClick={fetchLeads}
               className="flex items-center gap-2"
+              size="sm"
             >
               <RefreshCw className="h-4 w-4" />
               Refresh
@@ -103,6 +127,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
               <Button 
                 onClick={() => setIsCreateDialogOpen(true)}
                 className="bg-primary text-white flex items-center gap-2"
+                size="sm"
               >
                 <Plus className="h-4 w-4" />
                 Add Lead
@@ -112,27 +137,22 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full mb-4">
+        <div className="relative w-full max-w-md mb-4">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             type="search"
             placeholder="Search leads..."
-            className="pl-9"
+            className="pl-9 w-full"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </div>
         </div>
         
         <LeadTable 
-          leads={leads} 
+          leads={filteredLeads} 
           loading={loading} 
           onEdit={openEditDialog}
-          onDelete={effectiveCanDeleteLead ? openDeleteDialog : undefined}
+          onDelete={openDeleteDialog}
         />
         
         {effectiveCanAddLead && (
@@ -152,14 +172,12 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
               onSuccess={fetchLeads}
             />
             
-            {effectiveCanDeleteLead && (
-              <DeleteLeadDialog 
-                open={isDeleteDialogOpen} 
-                onOpenChange={setIsDeleteDialogOpen} 
-                lead={selectedLead}
-                onSuccess={fetchLeads}
-              />
-            )}
+            <DeleteLeadDialog 
+              open={isDeleteDialogOpen} 
+              onOpenChange={setIsDeleteDialogOpen} 
+              lead={selectedLead}
+              onSuccess={fetchLeads}
+            />
           </>
         )}
       </CardContent>

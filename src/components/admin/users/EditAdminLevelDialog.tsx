@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { AdminLevel, updateCachedAdminRoles } from '@/utils/adminPermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from '@/hooks/use-toast';
 
 interface EditAdminLevelDialogProps {
   admin: UserManagementUser | null;
@@ -35,6 +36,24 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
     adminPermissions: [],
     leadPermissions: [],
     coursePermissions: ["view"]
+  },
+  {
+    name: "Standard Admin",
+    description: "Regular administrator permissions",
+    studentPermissions: ["view", "add", "edit"],
+    teacherPermissions: ["view", "add"],
+    adminPermissions: [],
+    leadPermissions: ["view", "add", "edit"],
+    coursePermissions: ["view", "edit"]
+  },
+  {
+    name: "Full Access",
+    description: "Complete administrative access",
+    studentPermissions: ["view", "add", "edit", "delete"],
+    teacherPermissions: ["view", "add", "edit", "delete"],
+    adminPermissions: ["view"],
+    leadPermissions: ["view", "add", "edit", "delete"],
+    coursePermissions: ["view", "add", "edit", "delete"]
   }
 ];
 
@@ -48,7 +67,7 @@ const EditAdminLevelDialog = ({
   const [selectedLevelName, setSelectedLevelName] = useState<string>("Limited View");
   const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
   const [isLoadingLevels, setIsLoadingLevels] = useState<boolean>(false);
-  const { isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
 
   useEffect(() => {
     if (admin) {
@@ -68,8 +87,15 @@ const EditAdminLevelDialog = ({
       console.log('[EditAdminLevelDialog] Loading admin levels from database');
       const levels = await fetchAdminRoles();
       console.log('[EditAdminLevelDialog] Received admin levels:', levels);
-      setAdminLevels(levels);
-      updateCachedAdminRoles(levels);
+      
+      if (levels && levels.length > 0) {
+        setAdminLevels(levels);
+        updateCachedAdminRoles(levels);
+      } else {
+        console.log('[EditAdminLevelDialog] No admin levels received, using defaults');
+        setAdminLevels(DEFAULT_ADMIN_LEVELS);
+        updateCachedAdminRoles(DEFAULT_ADMIN_LEVELS);
+      }
     } catch (error) {
       console.error('[EditAdminLevelDialog] Error loading admin levels:', error);
       // Fallback to default levels if the fetch fails
@@ -81,18 +107,37 @@ const EditAdminLevelDialog = ({
   };
 
   const handleSave = async () => {
-    if (admin && isSuperAdmin()) {
+    try {
+      if (!admin) return;
+      
+      if (!isSuperAdmin()) {
+        toast({
+          title: "Permission Denied",
+          description: "Only superadmins can change admin permission levels.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       await onUpdateLevel(admin.id, selectedLevelName);
+    } catch (error) {
+      console.error('[EditAdminLevelDialog] Error saving admin level:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update admin permission level.",
+        variant: "destructive"
+      });
     }
   };
 
-  if (!admin || !isSuperAdmin()) return null;
+  if (!admin) return null;
 
   const displayLevels = adminLevels.length > 0 
     ? adminLevels 
     : DEFAULT_ADMIN_LEVELS;
 
   console.log('[EditAdminLevelDialog] Display levels:', displayLevels);
+  console.log('[EditAdminLevelDialog] Current selected level:', selectedLevelName);
 
   const renderPermissionBadges = (permissions: string[], moduleType: string) => {
     const colors: Record<string, string> = {
