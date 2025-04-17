@@ -59,6 +59,9 @@ const AdminDialogs = ({
     await handleUpdateAdminLevel(userId, newLevelName);
   };
 
+  console.log('AdminDialogs: effectiveCanEditAdminLevel =', effectiveCanEditAdminLevel);
+  console.log('AdminDialogs: adminToEdit =', adminToEdit);
+
   return (
     <>
       {(canAddAdmin || isSuperAdmin()) && (
@@ -81,7 +84,7 @@ const AdminDialogs = ({
         onUpdateLevel={effectiveCanEditAdminLevel ? handleUpdateAdminLevelWrapper : undefined}
         isLoading={isLoading}
         userRole="Administrator"
-        showAdminLevelSelector={effectiveCanEditAdminLevel}
+        showAdminLevelSelector={true} // Force show the admin level selector
       />
       
       <DeleteUserDialog

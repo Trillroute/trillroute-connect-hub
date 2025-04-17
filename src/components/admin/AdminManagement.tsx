@@ -69,7 +69,9 @@ const AdminManagement = ({
   useEffect(() => {
     const loadAdminRoles = async () => {
       try {
+        console.log('[AdminManagement] Loading admin roles');
         const roles = await fetchAdminRoles();
+        console.log('[AdminManagement] Received admin roles:', roles);
         if (roles && roles.length > 0) {
           updateCachedAdminRoles(roles);
         }
@@ -81,6 +83,9 @@ const AdminManagement = ({
     loadAdminRoles();
     loadAdmins();
   }, [loadAdmins]);
+
+  console.log('[AdminManagement] effectiveCanEditAdminLevel =', effectiveCanEditAdminLevel);
+  console.log('[AdminManagement] isSuperAdmin =', isSuperAdmin());
 
   return (
     <Card>
@@ -133,7 +138,7 @@ const AdminManagement = ({
           handleUpdateAdminLevel={handleUpdateAdminLevel}
           isLoading={isLoading}
           canAddAdmin={canAddAdmin}
-          effectiveCanEditAdminLevel={effectiveCanEditAdminLevel}
+          effectiveCanEditAdminLevel={effectiveCanEditAdminLevel || isSuperAdmin()} 
         />
       </CardContent>
     </Card>
