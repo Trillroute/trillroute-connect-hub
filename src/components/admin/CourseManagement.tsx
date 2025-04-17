@@ -81,11 +81,6 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
     }
   };
 
-  // Enhanced row click handler to view course details
-  const handleRowClick = (course: Course) => {
-    openViewDialog(course);
-  };
-
   // Filter courses based on search query
   const filteredCourses = searchQuery 
     ? courses.filter(course => 
@@ -148,28 +143,8 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
             loading={loading} 
             onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
             onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
+            onView={openViewDialog}
           />
-          
-          {/* Add a transparent overlay to capture row clicks for view */}
-          {!loading && (
-            <div 
-              className="absolute inset-0 z-10" 
-              onClick={(e) => {
-                // Find the closest row element
-                const row = (e.target as HTMLElement).closest('tr[data-course-id]');
-                if (row) {
-                  const courseId = row.getAttribute('data-course-id');
-                  const course = filteredCourses.find(c => c.id === courseId);
-                  if (course) {
-                    // Don't trigger on button clicks (edit/delete)
-                    if (!(e.target as HTMLElement).closest('button')) {
-                      openViewDialog(course);
-                    }
-                  }
-                }
-              }}
-            />
-          )}
         </div>
 
         {effectiveCanAddCourse && (

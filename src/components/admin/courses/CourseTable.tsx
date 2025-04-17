@@ -11,13 +11,19 @@ interface CourseTableProps {
   loading: boolean;
   onEdit?: (course: Course) => void;
   onDelete?: (course: Course) => void;
+  onView?: (course: Course) => void;
 }
 
-const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onDelete }) => {
+const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onDelete, onView }) => {
   const navigate = useNavigate();
 
-  const viewCourse = (courseId: string) => {
-    navigate(`/courses/${courseId}`);
+  const viewCourse = (event: React.MouseEvent, course: Course) => {
+    event.stopPropagation();
+    if (onView) {
+      onView(course);
+    } else {
+      navigate(`/courses/${course.id}`);
+    }
   };
 
   if (loading) {
@@ -50,7 +56,12 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
       </TableHeader>
       <TableBody>
         {courses.map((course) => (
-          <TableRow key={course.id}>
+          <TableRow 
+            key={course.id}
+            data-course-id={course.id}
+            onClick={() => onView && onView(course)}
+            className={onView ? "cursor-pointer" : ""}
+          >
             <TableCell className="font-medium">
               <div className="flex items-center gap-3">
                 {course.image && (
@@ -76,7 +87,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => viewCourse(course.id)}
+                  onClick={(e) => viewCourse(e, course)}
                 >
                   <Eye className="h-4 w-4" />
                   <span className="sr-only">View</span>
@@ -86,7 +97,10 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEdit(course)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(course);
+                    }}
                   >
                     <Pencil className="h-4 w-4" />
                     <span className="sr-only">Edit</span>
@@ -97,7 +111,10 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onDelete(course)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(course);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                     <span className="sr-only">Delete</span>
