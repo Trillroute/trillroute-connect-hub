@@ -81,7 +81,7 @@ const App = () => (
               <Route 
                 path="/dashboard/superadmin" 
                 element={
-                  <ProtectedRoute allowedRoles={['superadmin']}>
+                  <ProtectedRoute requireSuperAdmin={true}>
                     <SuperAdminDashboard />
                   </ProtectedRoute>
                 } 
