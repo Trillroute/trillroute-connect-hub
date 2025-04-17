@@ -47,7 +47,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
       <TableCaption>A list of all courses in the system.</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead>Course</TableHead>
+          <TableHead className="w-[250px]">Course</TableHead>
           <TableHead className="hidden md:table-cell">Level</TableHead>
           <TableHead className="hidden md:table-cell">Skill</TableHead>
           <TableHead className="hidden md:table-cell">Duration</TableHead>
@@ -62,26 +62,26 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             onClick={() => onView && onView(course)}
             className={onView ? "cursor-pointer" : ""}
           >
-            <TableCell className="font-medium">
+            <TableCell className="font-medium max-w-[250px]">
               <div className="flex items-center gap-3">
                 {course.image && (
                   <img
                     src={course.image}
                     alt={course.title}
-                    className="h-10 w-10 rounded object-cover"
+                    className="h-10 w-10 rounded object-cover flex-shrink-0"
                   />
                 )}
-                <div>
-                  <div className="font-semibold">{course.title}</div>
-                  <div className="text-xs text-gray-500 md:hidden">
+                <div className="overflow-hidden">
+                  <div className="font-semibold truncate">{course.title}</div>
+                  <div className="text-xs text-gray-500 md:hidden truncate">
                     {course.level} • {course.skill}
                   </div>
                 </div>
               </div>
             </TableCell>
-            <TableCell className="hidden md:table-cell">{course.level}</TableCell>
-            <TableCell className="hidden md:table-cell">{course.skill}</TableCell>
-            <TableCell className="hidden md:table-cell">{course.duration}</TableCell>
+            <TableCell className="hidden md:table-cell truncate">{course.level}</TableCell>
+            <TableCell className="hidden md:table-cell truncate">{course.skill}</TableCell>
+            <TableCell className="hidden md:table-cell truncate">{course.duration}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end space-x-2">
                 <Button
