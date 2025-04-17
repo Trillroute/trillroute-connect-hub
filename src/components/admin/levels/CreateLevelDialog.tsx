@@ -51,7 +51,8 @@ const CreateLevelDialog = ({
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     const levelData: Omit<AdminLevelDetailed, 'id'> = {
-      ...values,
+      name: values.name, // Ensure name is provided
+      description: values.description, // Ensure description is provided
       studentPermissions: ['view'],
       teacherPermissions: ['view'],
       adminPermissions: ['view'],

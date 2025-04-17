@@ -41,6 +41,9 @@ export const fetchAdminRoles = async (): Promise<AdminLevel[]> => {
       : [],
     coursePermissions: Array.isArray(level.course_permissions) 
       ? level.course_permissions 
+      : [],
+    levelPermissions: Array.isArray(level.level_permissions)
+      ? level.level_permissions
       : []
   }));
 };

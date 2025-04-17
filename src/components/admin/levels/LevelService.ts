@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLevelDetailed, AdminLevelBasic } from '@/types/adminLevel';
 
@@ -52,6 +53,7 @@ export const createAdminLevel = async (level: Omit<AdminLevelDetailed, 'id'>): P
   }
 };
 
+// Export with different names for backward compatibility
 export const fetchAdminLevels = async (): Promise<AdminLevelDetailed[]> => {
   try {
     const { data, error } = await supabase
@@ -111,3 +113,9 @@ export const deleteAdminLevel = async (id: number): Promise<boolean> => {
     return false;
   }
 };
+
+// Add the function aliases needed by LevelManagement.tsx
+export const fetchLevels = fetchAdminLevels;
+export const addLevel = createAdminLevel;
+export const updateLevel = updateAdminLevel;
+export const deleteLevel = deleteAdminLevel;

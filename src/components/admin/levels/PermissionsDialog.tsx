@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -73,9 +72,8 @@ const PermissionsDialog = ({
     const currentPermissions = [...permissions[permissionKey]];
     
     if (currentPermissions.includes(permission)) {
-      // Remove permission, but don't allow removing view if other permissions exist
       if (permission === 'view' && currentPermissions.some(p => p !== 'view')) {
-        return; // Can't remove view while other permissions exist
+        return;
       }
       const updatedPermissions = currentPermissions.filter(p => p !== permission);
       setPermissions({
@@ -83,7 +81,6 @@ const PermissionsDialog = ({
         [permissionKey]: updatedPermissions,
       });
     } else {
-      // Add permission - if adding any permission, ensure view is also added
       const updatedPermissions = [...currentPermissions];
       if (!updatedPermissions.includes(permission)) {
         updatedPermissions.push(permission);
@@ -116,7 +113,7 @@ const PermissionsDialog = ({
         <ScrollArea className="h-[500px] pr-4">
           <Tabs defaultValue="student">
             <div className="relative overflow-x-auto mb-4">
-              <ScrollArea orientation="horizontal" className="w-full">
+              <ScrollArea className="w-full">
                 <TabsList className="inline-flex w-max">
                   {Object.keys(moduleLabels).map((module) => (
                     <TabsTrigger key={module} value={module}>
