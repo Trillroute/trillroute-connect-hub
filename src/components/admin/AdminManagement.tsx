@@ -215,7 +215,8 @@ const AdminManagement = ({
     return isSuperAdmin() || canDeleteAdmin;
   };
 
-  const canEditAdmin = (admin: UserManagementUser) => {
+  // Rename this function to avoid conflict with the prop name
+  const isAdminEditable = (admin: UserManagementUser) => {
     return isSuperAdmin() || canEditAdmin;
   };
 
@@ -249,7 +250,7 @@ const AdminManagement = ({
           onEditUser={openEditDialog}
           onDeleteUser={openDeleteDialog}
           canDeleteUser={canAdminBeDeleted}
-          canEditUser={canEditAdmin}
+          canEditUser={isAdminEditable}
           roleFilter="admin"
         />
         
