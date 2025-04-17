@@ -97,7 +97,7 @@ let cachedAdminRoles = new Map<string, AdminLevel>();
 export const hasPermission = (user: UserManagementUser | PermissionUser | null, permission: AdminPermission): boolean => {
   if (!user) return false;
   
-  // Superadmins have ALL permissions
+  // Always check for superadmin first
   if (user.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin always has permission:', permission);
     return true;
@@ -288,7 +288,7 @@ export const canManageLeads = (user: UserManagementUser | PermissionUser | null,
  * Helper function to determine if a specific user can perform actions on courses
  */
 export const canManageCourses = (user: UserManagementUser | PermissionUser | null, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
-  // Always grant permission to superadmin
+  // Always grant permission to superadmin first
   if (user?.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin can manage courses:', action);
     return true;

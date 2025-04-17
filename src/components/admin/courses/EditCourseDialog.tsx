@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -59,15 +60,19 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   
+  // Update this check to explicitly handle superadmin case first
   const hasEditPermission = user && (
     user.role === 'superadmin' || 
     (user.role === 'admin' && canManageCourses(user, 'edit'))
   );
   
   console.log('EditCourseDialog - User:', user);
+  console.log('EditCourseDialog - User role:', user?.role);
+  console.log('EditCourseDialog - Is superadmin?', user?.role === 'superadmin');
   console.log('EditCourseDialog - hasEditPermission:', hasEditPermission);
-  console.log('EditCourseDialog - admin role:', user?.adminRoleName);
-  console.log('EditCourseDialog - Can manage courses check:', user && user.role === 'admin' ? canManageCourses(user, 'edit') : 'N/A');
+  console.log('EditCourseDialog - admin role name:', user?.adminRoleName);
+  console.log('EditCourseDialog - Can manage courses check:', 
+    user && user.role === 'admin' ? canManageCourses(user, 'edit') : 'N/A');
 
   useEffect(() => {
     if (open && !hasEditPermission) {

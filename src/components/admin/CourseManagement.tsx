@@ -35,13 +35,14 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const { courses, loading, fetchCourses } = useCourses();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Check if the user is a superadmin and override permissions
+  // Update this check to explicitly handle superadmin role
   const isSuperAdmin = user?.role === 'superadmin';
   const effectiveCanEditCourse = isSuperAdmin ? true : canEditCourse;
   const effectiveCanDeleteCourse = isSuperAdmin ? true : canDeleteCourse;
   const effectiveCanAddCourse = isSuperAdmin ? true : canAddCourse;
   
   console.log('CourseManagement - User:', user);
+  console.log('CourseManagement - User role:', user?.role);
   console.log('CourseManagement - isSuperAdmin:', isSuperAdmin);
   console.log('CourseManagement - effectiveCanEditCourse:', effectiveCanEditCourse);
   console.log('CourseManagement - admin role name:', user?.adminRoleName);
