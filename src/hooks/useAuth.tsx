@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -248,10 +249,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAdmin = () => {
+    console.log('[useAuth] isAdmin check, current role:', user?.role);
     return user?.role === 'admin' || user?.role === 'superadmin';
   };
 
   const isSuperAdmin = () => {
+    console.log('[useAuth] isSuperAdmin check, current role:', user?.role);
     return user?.role === 'superadmin';
   };
 

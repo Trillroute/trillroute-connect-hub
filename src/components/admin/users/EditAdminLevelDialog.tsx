@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -110,8 +111,13 @@ const EditAdminLevelDialog = ({
     try {
       if (!admin) return;
       
+      console.log('[EditAdminLevelDialog] Current user role:', user?.role);
+      // Debugging the superadmin check
+      const isSuperAdminResult = isSuperAdmin();
+      console.log('[EditAdminLevelDialog] isSuperAdmin() result:', isSuperAdminResult);
+      
       // Check if the current user is a superadmin
-      if (!isSuperAdmin()) {
+      if (!isSuperAdminResult) {
         toast({
           title: "Permission Denied",
           description: "Only superadmins can change admin permission levels.",
@@ -140,6 +146,7 @@ const EditAdminLevelDialog = ({
   console.log('[EditAdminLevelDialog] Display levels:', displayLevels);
   console.log('[EditAdminLevelDialog] Current selected level:', selectedLevelName);
   console.log('[EditAdminLevelDialog] Current user is superadmin:', isSuperAdmin());
+  console.log('[EditAdminLevelDialog] Current user role:', user?.role);
 
   const renderPermissionBadges = (permissions: string[], moduleType: string) => {
     const colors: Record<string, string> = {
