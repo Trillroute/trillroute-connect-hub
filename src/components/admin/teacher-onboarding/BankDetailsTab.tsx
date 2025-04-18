@@ -6,12 +6,14 @@ import { Card } from '@/components/ui/card';
 
 interface BankDetailsTabProps {
   formData: {
-    accountHolderName: string;
-    bankName: string;
-    accountNumber: string;
-    ifscCode: string;
-    upiId: string;
-    bankProof: string;
+    bank: {
+      accountHolderName: string;
+      bankName: string;
+      accountNumber: string;
+      ifscCode: string;
+      upiId: string;
+      bankProof: string;
+    }
   };
   handleInputChange: (section: string, field: string, value: any) => void;
 }
@@ -26,7 +28,7 @@ const BankDetailsTab = ({ formData, handleInputChange }: BankDetailsTabProps) =>
             <Label htmlFor="accountHolderName">Account Holder's Name *</Label>
             <Input
               id="accountHolderName"
-              value={formData.accountHolderName}
+              value={formData.bank.accountHolderName}
               onChange={(e) => handleInputChange('bank', 'accountHolderName', e.target.value)}
               required
             />
@@ -36,7 +38,7 @@ const BankDetailsTab = ({ formData, handleInputChange }: BankDetailsTabProps) =>
             <Label htmlFor="bankName">Bank Name *</Label>
             <Input
               id="bankName"
-              value={formData.bankName}
+              value={formData.bank.bankName}
               onChange={(e) => handleInputChange('bank', 'bankName', e.target.value)}
               required
             />
@@ -46,7 +48,7 @@ const BankDetailsTab = ({ formData, handleInputChange }: BankDetailsTabProps) =>
             <Label htmlFor="accountNumber">Account Number *</Label>
             <Input
               id="accountNumber"
-              value={formData.accountNumber}
+              value={formData.bank.accountNumber}
               onChange={(e) => handleInputChange('bank', 'accountNumber', e.target.value)}
               required
             />
@@ -56,7 +58,7 @@ const BankDetailsTab = ({ formData, handleInputChange }: BankDetailsTabProps) =>
             <Label htmlFor="ifscCode">IFSC Code *</Label>
             <Input
               id="ifscCode"
-              value={formData.ifscCode}
+              value={formData.bank.ifscCode}
               onChange={(e) => handleInputChange('bank', 'ifscCode', e.target.value)}
               required
             />
@@ -66,7 +68,7 @@ const BankDetailsTab = ({ formData, handleInputChange }: BankDetailsTabProps) =>
             <Label htmlFor="upiId">UPI ID (optional)</Label>
             <Input
               id="upiId"
-              value={formData.upiId}
+              value={formData.bank.upiId}
               onChange={(e) => handleInputChange('bank', 'upiId', e.target.value)}
             />
           </div>

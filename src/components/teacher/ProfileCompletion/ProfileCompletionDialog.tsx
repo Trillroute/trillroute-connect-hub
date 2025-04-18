@@ -2,9 +2,9 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EducationalInfoTab } from '@/components/admin/teacher-onboarding/EducationalInfoTab';
-import { ProfessionalInfoTab } from '@/components/admin/teacher-onboarding/ProfessionalInfoTab';
-import { BankDetailsTab } from '@/components/admin/teacher-onboarding/BankDetailsTab';
+import EducationalInfoTab from '@/components/admin/teacher-onboarding/EducationalInfoTab';
+import ProfessionalInfoTab from '@/components/admin/teacher-onboarding/ProfessionalInfoTab';
+import BankDetailsTab from '@/components/admin/teacher-onboarding/BankDetailsTab';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 

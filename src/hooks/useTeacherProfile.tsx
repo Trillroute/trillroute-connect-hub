@@ -11,12 +11,13 @@ export const useTeacherProfile = () => {
     qualifications: [{ qualification: '', specialization: '', institution: '', graduationYear: '', additionalCertifications: '' }],
     previousInstitutes: [],
     classExperience: [],
-    bankDetails: {
+    bank: {
       accountHolderName: '',
       bankName: '',
       accountNumber: '',
       ifscCode: '',
       upiId: '',
+      bankProof: '',
     }
   });
 
@@ -31,7 +32,7 @@ export const useTeacherProfile = () => {
       setLoading(true);
       
       // Fetch qualifications
-      const { data: qualifications } = await supabase
+      const { data: qualificationsData } = await supabase
         .from('teacher_qualifications')
         .select('*')
         .eq('user_id', user?.id);
@@ -52,24 +53,64 @@ export const useTeacherProfile = () => {
 
       // Calculate progress
       let progressCount = 0;
-      if (qualifications && qualifications.length > 0) progressCount++;
+      if (qualificationsData && qualificationsData.length > 0) progressCount++;
       if (professional) progressCount++;
       if (bankDetails) progressCount++;
       
       setProgress((progressCount / 3) * 100);
 
+      // Map database fields (snake_case) to application fields (camelCase)
+      const mappedQualifications = qualificationsData 
+        ? qualificationsData.map(q => ({
+            qualification: q.qualification || '',
+            specialization: q.specialization || '',
+            institution: q.institution || '',
+            graduationYear: q.graduation_year ? String(q.graduation_year) : '',
+            additionalCertifications: q.additional_certifications || '',
+            qualifyingCertificate: q.qualifying_certificate || '',
+          }))
+        : [{ 
+            qualification: '', 
+            specialization: '', 
+            institution: '', 
+            graduationYear: '', 
+            additionalCertifications: '' 
+          }];
+      
+      // Map professional data 
+      const previousInstitutes = professional?.previous_institutes 
+        ? (typeof professional.previous_institutes === 'string' 
+            ? JSON.parse(professional.previous_institutes) 
+            : professional.previous_institutes)
+        : [];
+
+      const classExperience = professional?.class_experience || [];
+
+      // Map bank details
+      const mappedBankDetails = bankDetails 
+        ? {
+            accountHolderName: bankDetails.account_holder_name || '',
+            bankName: bankDetails.bank_name || '',
+            accountNumber: bankDetails.account_number || '',
+            ifscCode: bankDetails.ifsc_code || '',
+            upiId: bankDetails.upi_id || '',
+            bankProof: bankDetails.bank_proof || '',
+          }
+        : {
+            accountHolderName: '',
+            bankName: '',
+            accountNumber: '',
+            ifscCode: '',
+            upiId: '',
+            bankProof: '',
+          };
+
       // Update form data
       setFormData({
-        qualifications: qualifications || [{ qualification: '', specialization: '', institution: '', graduationYear: '', additionalCertifications: '' }],
-        previousInstitutes: professional?.previous_institutes || [],
-        classExperience: professional?.class_experience || [],
-        bankDetails: bankDetails || {
-          accountHolderName: '',
-          bankName: '',
-          accountNumber: '',
-          ifscCode: '',
-          upiId: '',
-        }
+        qualifications: mappedQualifications,
+        previousInstitutes: previousInstitutes,
+        classExperience: Array.isArray(classExperience) ? classExperience : [],
+        bank: mappedBankDetails
       });
 
     } catch (error) {
@@ -145,15 +186,21 @@ export const useTeacherProfile = () => {
   const saveProfile = async () => {
     if (!user?.id) return;
 
+    // Map application fields (camelCase) back to database fields (snake_case) for qualifications
+    const dbQualifications = formData.qualifications.map(q => ({
+      user_id: user.id,
+      qualification: q.qualification,
+      specialization: q.specialization,
+      institution: q.institution,
+      graduation_year: q.graduationYear ? parseInt(q.graduationYear) : null,
+      additional_certifications: q.additionalCertifications,
+      qualifying_certificate: q.qualifyingCertificate
+    }));
+
     // Save qualifications
     const { error: qualError } = await supabase
       .from('teacher_qualifications')
-      .upsert(
-        formData.qualifications.map(q => ({
-          user_id: user.id,
-          ...q
-        }))
-      );
+      .upsert(dbQualifications);
 
     if (qualError) throw qualError;
 
@@ -168,13 +215,21 @@ export const useTeacherProfile = () => {
 
     if (profError) throw profError;
 
+    // Map application fields (camelCase) back to database fields (snake_case) for bank details
+    const dbBankDetails = {
+      user_id: user.id,
+      account_holder_name: formData.bank.accountHolderName,
+      bank_name: formData.bank.bankName,
+      account_number: formData.bank.accountNumber,
+      ifsc_code: formData.bank.ifscCode,
+      upi_id: formData.bank.upiId,
+      bank_proof: formData.bank.bankProof
+    };
+
     // Save bank details
     const { error: bankError } = await supabase
       .from('teacher_bank_details')
-      .upsert({
-        user_id: user.id,
-        ...formData.bankDetails
-      });
+      .upsert(dbBankDetails);
 
     if (bankError) throw bankError;
 
