@@ -23,7 +23,6 @@ interface PreviousInstitute {
 }
 
 interface TeacherOnboardingFormData {
-  // Personal Info
   firstName: string;
   lastName: string;
   dateOfBirth: string;
@@ -43,10 +42,8 @@ interface TeacherOnboardingFormData {
   profilePhoto: string;
   nationality: string;
 
-  // Educational Info
   qualifications: Qualification[];
 
-  // Professional Info
   teachingExperienceYears: number;
   primaryInstrument: string;
   primaryInstrumentLevel: string;
@@ -67,20 +64,20 @@ interface TeacherOnboardingFormData {
   pay_slips_files: string[];
   relieving_letter: string;
 
-  // Bank Info
-  accountHolderName: string;
-  bankName: string;
-  accountNumber: string;
-  ifscCode: string;
-  upiId: string;
-  bankProof: string;
+  bank: {
+    accountHolderName: string;
+    bankName: string;
+    accountNumber: string;
+    ifscCode: string;
+    upiId: string;
+    bankProof: string;
+  }
 }
 
 const TeacherOnboarding = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('personal');
   const [formData, setFormData] = useState<TeacherOnboardingFormData>({
-    // Personal Info
     firstName: '',
     lastName: '',
     dateOfBirth: '',
@@ -100,7 +97,6 @@ const TeacherOnboarding = () => {
     profilePhoto: '',
     nationality: '',
 
-    // Educational Info
     qualifications: [
       {
         qualification: '',
@@ -111,7 +107,6 @@ const TeacherOnboarding = () => {
       }
     ],
 
-    // Professional Info
     teachingExperienceYears: 0,
     primaryInstrument: '',
     primaryInstrumentLevel: '',
@@ -132,20 +127,31 @@ const TeacherOnboarding = () => {
     pay_slips_files: [],
     relieving_letter: '',
 
-    // Bank Info
-    accountHolderName: '',
-    bankName: '',
-    accountNumber: '',
-    ifscCode: '',
-    upiId: '',
-    bankProof: ''
+    bank: {
+      accountHolderName: '',
+      bankName: '',
+      accountNumber: '',
+      ifscCode: '',
+      upiId: '',
+      bankProof: ''
+    }
   });
 
   const handleInputChange = (section: string, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (section === 'bank') {
+      setFormData(prev => ({
+        ...prev,
+        bank: {
+          ...prev.bank,
+          [field]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   const handleQualificationChange = (index: number, field: string, value: string) => {

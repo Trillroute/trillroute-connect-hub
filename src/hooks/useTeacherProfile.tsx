@@ -8,7 +8,14 @@ export const useTeacherProfile = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
-    qualifications: [{ qualification: '', specialization: '', institution: '', graduationYear: '', additionalCertifications: '' }],
+    qualifications: [{ 
+      qualification: '', 
+      specialization: '', 
+      institution: '', 
+      graduationYear: '', 
+      additionalCertifications: '',
+      qualifyingCertificate: '' // Added this field to match the expected type
+    }],
     previousInstitutes: [],
     classExperience: [],
     bank: {
@@ -74,7 +81,8 @@ export const useTeacherProfile = () => {
             specialization: '', 
             institution: '', 
             graduationYear: '', 
-            additionalCertifications: '' 
+            additionalCertifications: '',
+            qualifyingCertificate: ''  // Added this field
           }];
       
       // Map professional data 
@@ -158,7 +166,14 @@ export const useTeacherProfile = () => {
   const addQualification = () => {
     setFormData(prev => ({
       ...prev,
-      qualifications: [...prev.qualifications, { qualification: '', specialization: '', institution: '', graduationYear: '', additionalCertifications: '' }]
+      qualifications: [...prev.qualifications, { 
+        qualification: '', 
+        specialization: '', 
+        institution: '', 
+        graduationYear: '', 
+        additionalCertifications: '',
+        qualifyingCertificate: ''  // Added this field
+      }]
     }));
   };
 
