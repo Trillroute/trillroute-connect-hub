@@ -378,6 +378,7 @@ export type Database = {
           id: string
           institution: string | null
           qualification: string
+          qualifying_certificate: string | null
           specialization: string | null
           user_id: string | null
         }
@@ -388,6 +389,7 @@ export type Database = {
           id?: string
           institution?: string | null
           qualification: string
+          qualifying_certificate?: string | null
           specialization?: string | null
           user_id?: string | null
         }
@@ -398,6 +400,7 @@ export type Database = {
           id?: string
           institution?: string | null
           qualification?: string
+          qualifying_certificate?: string | null
           specialization?: string | null
           user_id?: string | null
         }

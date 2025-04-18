@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface EducationalInfoTabProps {
   formData: {
@@ -14,6 +15,7 @@ interface EducationalInfoTabProps {
       institution: string;
       graduationYear: string;
       additionalCertifications: string;
+      qualifyingCertificate?: string;
     }[];
   };
   handleQualificationChange: (index: number, field: string, value: string) => void;
@@ -27,6 +29,28 @@ const EducationalInfoTab = ({
   addQualification, 
   removeQualification 
 }: EducationalInfoTabProps) => {
+  const { toast } = useToast();
+
+  const handleFileUpload = async (index: number, file: File) => {
+    try {
+      if (file) {
+        // For now, just store the file name - in a real app, you'd upload to storage
+        handleQualificationChange(index, 'qualifyingCertificate', file.name);
+        
+        toast({
+          title: "File selected",
+          description: `${file.name} will be uploaded when you submit the form.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-4">
@@ -96,13 +120,43 @@ const EducationalInfoTab = ({
                 />
               </div>
               
-              <div className="space-y-2 md:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor={`additionalCertifications-${index}`}>Additional Certifications</Label>
                 <Input
                   id={`additionalCertifications-${index}`}
                   value={qualification.additionalCertifications}
                   onChange={(e) => handleQualificationChange(index, 'additionalCertifications', e.target.value)}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`qualifyingCertificate-${index}`}>Qualifying Certificate</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id={`qualifyingCertificate-${index}`}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileUpload(index, e.target.files[0]);
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                </div>
+                {qualification.qualifyingCertificate && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Selected: {qualification.qualifyingCertificate}
+                  </p>
+                )}
               </div>
             </div>
           </div>
