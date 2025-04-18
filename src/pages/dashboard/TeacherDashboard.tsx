@@ -1,18 +1,73 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/hooks/useAuth';
 import { Calendar, Users, BookOpen } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
+import { ProfileCompletionDialog } from '@/components/teacher/ProfileCompletion/ProfileCompletionDialog';
+import { useTeacherProfile } from '@/hooks/useTeacherProfile';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const {
+    loading,
+    progress,
+    formData,
+    handleInputChange,
+    handleQualificationChange,
+    handleArrayChange,
+    handleInstituteChange,
+    addQualification,
+    removeQualification,
+    addInstitute,
+    removeInstitute,
+    saveProfile
+  } = useTeacherProfile();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto py-10">
       <div className="mb-8">
         <h1 className="text-3xl font-semibold">Teacher Dashboard</h1>
         <p className="text-gray-500">Welcome, {user?.firstName} {user?.lastName}!</p>
+        
+        {progress < 100 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium">Profile Completion</p>
+              <p className="text-sm font-medium">{Math.round(progress)}%</p>
+            </div>
+            <div 
+              className="cursor-pointer" 
+              onClick={() => setDialogOpen(true)}
+            >
+              <Progress value={progress} className="h-2" />
+              <p className="text-sm text-muted-foreground mt-1">
+                Click to complete your profile
+              </p>
+            </div>
+          </div>
+        )}
       </div>
+
+      <ProfileCompletionDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleQualificationChange={handleQualificationChange}
+        handleArrayChange={handleArrayChange}
+        handleInstituteChange={handleInstituteChange}
+        addQualification={addQualification}
+        removeQualification={removeQualification}
+        addInstitute={addInstitute}
+        removeInstitute={removeInstitute}
+        onSubmit={saveProfile}
+      />
 
       <Tabs defaultValue="classes" className="w-full">
         <TabsList>
