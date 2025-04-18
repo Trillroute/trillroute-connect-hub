@@ -305,18 +305,16 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => onEdit(lead)}
                       >
                         <Pencil className="h-4 w-4" />
                         <span className="sr-only">Edit lead</span>
                       </Button>
                       <Button
-                        variant="outline" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 text-black border-black hover:bg-red-50"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => onDelete(lead)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -330,6 +328,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
           </Table>
         </div>
       )}
+      
       <div className="text-sm text-muted-foreground pt-2">
         Showing {leads.length} of {initialLeads.length} leads
       </div>
