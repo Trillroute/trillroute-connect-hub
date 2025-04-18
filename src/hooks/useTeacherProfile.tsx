@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +26,42 @@ export const useTeacherProfile = () => {
       bankProof: '',
     }
   });
+
+  const calculateProgress = (data: any) => {
+    const fields = [
+      // Personal fields
+      data.teachingExperienceYears,
+      data.primaryInstrument,
+      data.primaryInstrumentLevel,
+      data.secondaryInstrument,
+      data.secondaryInstrumentLevel,
+      // Professional fields
+      data.performances,
+      data.curriculumExperience,
+      data.musicalProjects,
+      data.teachingPhilosophy,
+      data.bio,
+      // Bank details
+      data.bank?.accountHolderName,
+      data.bank?.bankName,
+      data.bank?.accountNumber,
+      data.bank?.ifscCode,
+      // Arrays (check if they have items)
+      ...(data.qualifications || []).map(q => q.qualification),
+      ...(data.previousInstitutes || []).map(i => i.name),
+      ...(data.classExperience || []),
+      ...(data.comfortableGenres || [])
+    ];
+
+    const nonEmptyFields = fields.filter(field => {
+      if (Array.isArray(field)) {
+        return field.length > 0;
+      }
+      return field !== undefined && field !== null && field !== '';
+    });
+
+    return (nonEmptyFields.length / fields.length) * 100;
+  };
 
   useEffect(() => {
     if (user) {
@@ -57,14 +92,6 @@ export const useTeacherProfile = () => {
         .select('*')
         .eq('user_id', user?.id)
         .single();
-
-      // Calculate progress
-      let progressCount = 0;
-      if (qualificationsData && qualificationsData.length > 0) progressCount++;
-      if (professional) progressCount++;
-      if (bankDetails) progressCount++;
-      
-      setProgress((progressCount / 3) * 100);
 
       // Map database fields (snake_case) to application fields (camelCase)
       const mappedQualifications = qualificationsData 
@@ -120,6 +147,17 @@ export const useTeacherProfile = () => {
         classExperience: Array.isArray(classExperience) ? classExperience : [],
         bank: mappedBankDetails
       });
+
+      // After fetching all data, calculate progress
+      const combinedData = {
+        ...professional,
+        ...bankDetails,
+        qualifications: qualificationsData,
+        bank: bankDetails
+      };
+      
+      setFormData(combinedData);
+      setProgress(calculateProgress(combinedData));
 
     } catch (error) {
       console.error('Error fetching profile data:', error);
