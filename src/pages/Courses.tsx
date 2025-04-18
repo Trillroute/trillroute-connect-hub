@@ -10,9 +10,15 @@ import { useSkills } from '@/hooks/useSkills';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Toggle } from '@/components/ui/toggle';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [levelFilter, setLevelFilter] = useState<string | null>(null);
+  const [durationFilter, setDurationFilter] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const { toast } = useToast();
   const { skills = [] } = useSkills();
   const { teachers = [] } = useTeachers();
@@ -30,12 +36,25 @@ const Courses = () => {
     }).join(', ');
   };
   
-  // Filter courses based on search term
-  const filteredCourses = (courses || []).filter(course => 
-    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getInstructorNames(course).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter courses based on search term and filters
+  const filteredCourses = (courses || []).filter(course => {
+    // Apply search filter
+    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getInstructorNames(course).toLowerCase().includes(searchTerm.toLowerCase());
+      
+    // Apply level filter if selected
+    const matchesLevel = !levelFilter || course.level === levelFilter;
+    
+    // Apply duration filter if selected
+    const matchesDuration = !durationFilter || course.duration.includes(durationFilter);
+    
+    return matchesSearch && matchesLevel && matchesDuration;
+  });
+  
+  // Extract unique levels and durations for filters
+  const uniqueLevels = [...new Set((courses || []).map(course => course.level))];
+  const uniqueDurations = [...new Set((courses || []).map(course => course.duration.split(' ')[0]))];
   
   // Get all unique skills from courses
   const uniqueSkills = [...new Set((courses || []).map(course => course.skill))];
@@ -51,6 +70,11 @@ const Courses = () => {
     )
   };
   
+  const clearFilters = () => {
+    setLevelFilter(null);
+    setDurationFilter(null);
+  };
+  
   // Render a course card
   const CourseCard = ({ course }) => (
     <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg">
@@ -64,7 +88,7 @@ const Courses = () => {
           }}
         />
         <div className="absolute top-2 right-2 bg-white rounded-full px-2 py-1 text-xs font-bold">
-          {course.status}
+          {course.status || 'Active'}
         </div>
       </div>
       <CardHeader>
@@ -116,15 +140,67 @@ const Courses = () => {
         </div>
         
         <div className="flex space-x-2">
-          <Button variant="outline" className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center space-x-2"
+            onClick={() => setShowFilters(!showFilters)}
+          >
             <Filter className="h-4 w-4" />
             <span>Filter</span>
           </Button>
-          <Button variant="outline">Level</Button>
-          <Button variant="outline">Duration</Button>
-          <Button variant="outline">Rating</Button>
+          
+          <Select value={levelFilter || ''} onValueChange={value => setLevelFilter(value || null)}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Levels</SelectItem>
+              {uniqueLevels.map(level => (
+                <SelectItem key={level} value={level}>{level}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={durationFilter || ''} onValueChange={value => setDurationFilter(value || null)}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Duration" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Any Duration</SelectItem>
+              {uniqueDurations.map(duration => (
+                <SelectItem key={duration} value={duration}>{duration}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {(levelFilter || durationFilter) && (
+            <Button variant="ghost" onClick={clearFilters}>Clear</Button>
+          )}
         </div>
       </div>
+      
+      {showFilters && (
+        <div className="mb-8 p-4 border rounded-md">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Level</h3>
+              <ToggleGroup type="single" value={levelFilter || ''} onValueChange={value => setLevelFilter(value || null)}>
+                {uniqueLevels.map(level => (
+                  <ToggleGroupItem key={level} value={level} size="sm">{level}</ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Duration</h3>
+              <ToggleGroup type="single" value={durationFilter || ''} onValueChange={value => setDurationFilter(value || null)}>
+                {uniqueDurations.map(duration => (
+                  <ToggleGroupItem key={duration} value={duration} size="sm">{duration}</ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Course Categories Tabs */}
       <Tabs defaultValue="all">
