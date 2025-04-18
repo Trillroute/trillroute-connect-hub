@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Minus, Plus, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { uploadFile } from '@/utils/fileUpload';
 
 interface EducationalInfoTabProps {
   formData: {
@@ -34,18 +34,27 @@ const EducationalInfoTab = ({
   const handleFileUpload = async (index: number, file: File) => {
     try {
       if (file) {
-        // For now, just store the file name - in a real app, you'd upload to storage
-        handleQualificationChange(index, 'qualifyingCertificate', file.name);
-        
         toast({
-          title: "File selected",
-          description: `${file.name} will be uploaded when you submit the form.`,
+          title: "Uploading file",
+          description: "Please wait while we upload your file...",
         });
+
+        const publicUrl = await uploadFile(file, 'qualifications');
+        
+        if (publicUrl) {
+          handleQualificationChange(index, 'qualifyingCertificate', publicUrl);
+          toast({
+            title: "Success",
+            description: "File uploaded successfully",
+          });
+        } else {
+          throw new Error("Failed to upload file");
+        }
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to process the file. Please try again.",
+        description: "Failed to upload file. Please try again.",
         variant: "destructive",
       });
     }
@@ -143,18 +152,21 @@ const EducationalInfoTab = ({
                     }}
                     className="flex-1"
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="shrink-0"
-                  >
-                    <Upload className="h-4 w-4" />
-                  </Button>
+                  {qualification.qualifyingCertificate && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => window.open(qualification.qualifyingCertificate, '_blank')}
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 {qualification.qualifyingCertificate && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Selected: {qualification.qualifyingCertificate}
+                    File uploaded successfully
                   </p>
                 )}
               </div>
