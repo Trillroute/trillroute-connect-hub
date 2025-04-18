@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import PersonalInfoTab from '@/components/admin/teacher-onboarding/PersonalInfoTab';
 import EducationalInfoTab from '@/components/admin/teacher-onboarding/EducationalInfoTab';
 import BankDetailsTab from '@/components/admin/teacher-onboarding/BankDetailsTab';
 import ProfessionalInfoTab from '@/components/admin/teacher-onboarding/ProfessionalInfoTab';
+import FormHeader from '@/components/admin/teacher-onboarding/form/FormHeader';
+import TabButtons from '@/components/admin/teacher-onboarding/form/TabButtons';
 
 interface Qualification {
   qualification: string;
@@ -250,10 +250,7 @@ const TeacherOnboarding = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Teacher Onboarding</h1>
-        <p className="text-gray-500">Onboard new teachers with complete profile information</p>
-      </div>
+      <FormHeader />
       
       <form onSubmit={handleSubmit}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -266,12 +263,7 @@ const TeacherOnboarding = () => {
           
           <TabsContent value="personal" className="space-y-4">
             <PersonalInfoTab formData={formData} handleInputChange={handleInputChange} />
-            
-            <div className="flex justify-end">
-              <Button type="button" onClick={() => setActiveTab('education')}>
-                Next: Educational Info
-              </Button>
-            </div>
+            <TabButtons currentTab="personal" setActiveTab={setActiveTab} />
           </TabsContent>
           
           <TabsContent value="education" className="space-y-4">
@@ -281,15 +273,7 @@ const TeacherOnboarding = () => {
               addQualification={addQualification}
               removeQualification={removeQualification}
             />
-            
-            <div className="flex justify-between">
-              <Button type="button" variant="outline" onClick={() => setActiveTab('personal')}>
-                Previous
-              </Button>
-              <Button type="button" onClick={() => setActiveTab('professional')}>
-                Next: Professional Info
-              </Button>
-            </div>
+            <TabButtons currentTab="education" setActiveTab={setActiveTab} />
           </TabsContent>
           
           <TabsContent value="professional" className="space-y-4">
@@ -301,28 +285,12 @@ const TeacherOnboarding = () => {
               addInstitute={addInstitute}
               removeInstitute={removeInstitute}
             />
-            
-            <div className="flex justify-between">
-              <Button type="button" variant="outline" onClick={() => setActiveTab('education')}>
-                Previous
-              </Button>
-              <Button type="button" onClick={() => setActiveTab('bank')}>
-                Next: Bank Details
-              </Button>
-            </div>
+            <TabButtons currentTab="professional" setActiveTab={setActiveTab} />
           </TabsContent>
           
           <TabsContent value="bank" className="space-y-4">
             <BankDetailsTab formData={formData} handleInputChange={handleInputChange} />
-            
-            <div className="flex justify-between">
-              <Button type="button" variant="outline" onClick={() => setActiveTab('professional')}>
-                Previous
-              </Button>
-              <Button type="submit" className="bg-music-500 hover:bg-music-600">
-                Register Teacher
-              </Button>
-            </div>
+            <TabButtons currentTab="bank" setActiveTab={setActiveTab} isLastTab />
           </TabsContent>
         </Tabs>
       </form>
