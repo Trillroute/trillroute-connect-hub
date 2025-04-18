@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Music, Mail, Lock, User } from 'lucide-react';
@@ -100,7 +99,7 @@ const RegisterForm = () => {
         formData.password, 
         formData.firstName, 
         formData.lastName, 
-        role, 
+        'student', // Fixed role as student
         {
           date_of_birth: formData.dateOfBirth,
           profile_photo: formData.profilePhoto,
@@ -169,19 +168,7 @@ const RegisterForm = () => {
                 />
               </Tabs>
               
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-gray-700">I am registering as:</div>
-                <RadioGroup defaultValue="teacher" className="grid grid-cols-2 gap-2" value={role} onValueChange={handleRoleChange}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="student" id="student" />
-                    <Label htmlFor="student">Student</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="teacher" id="teacher" />
-                    <Label htmlFor="teacher">Teacher</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+              
               
               <div className="flex items-center">
                 <input
@@ -215,6 +202,13 @@ const RegisterForm = () => {
             </CardFooter>
           </form>
         </Card>
+
+        <div className="text-center text-sm">
+          <span className="text-gray-600">Are you a teacher?</span>{" "}
+          <Link to="/contact" className="font-medium text-music-500 hover:text-music-600">
+            Contact us
+          </Link>
+        </div>
       </div>
     </div>
   );
