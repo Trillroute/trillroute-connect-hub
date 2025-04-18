@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -93,11 +92,7 @@ const App = () => (
               {/* Admin Pages */}
               <Route
                 path="/admin/teacher-registration"
-                element={
-                  <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
-                    <TeacherRegistration />
-                  </ProtectedRoute>
-                }
+                element={<TeacherRegistration />}
               />
               
               {/* Profile Page */}
