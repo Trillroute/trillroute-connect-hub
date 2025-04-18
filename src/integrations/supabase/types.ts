@@ -294,11 +294,13 @@ export type Database = {
           id: string
           instagram_link: string | null
           musical_projects: string | null
+          pay_slips_files: string[] | null
           performance_photo: string | null
           performances: string | null
           previous_institutes: Json | null
           primary_instrument: string | null
           primary_instrument_level: string | null
+          relieving_letter: string | null
           secondary_instrument: string | null
           secondary_instrument_level: string | null
           signature_strength: string | null
@@ -316,11 +318,13 @@ export type Database = {
           id?: string
           instagram_link?: string | null
           musical_projects?: string | null
+          pay_slips_files?: string[] | null
           performance_photo?: string | null
           performances?: string | null
           previous_institutes?: Json | null
           primary_instrument?: string | null
           primary_instrument_level?: string | null
+          relieving_letter?: string | null
           secondary_instrument?: string | null
           secondary_instrument_level?: string | null
           signature_strength?: string | null
@@ -338,11 +342,13 @@ export type Database = {
           id?: string
           instagram_link?: string | null
           musical_projects?: string | null
+          pay_slips_files?: string[] | null
           performance_photo?: string | null
           performances?: string | null
           previous_institutes?: Json | null
           primary_instrument?: string | null
           primary_instrument_level?: string | null
+          relieving_letter?: string | null
           secondary_instrument?: string | null
           secondary_instrument_level?: string | null
           signature_strength?: string | null

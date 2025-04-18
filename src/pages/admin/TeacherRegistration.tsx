@@ -61,6 +61,8 @@ const TeacherRegistration = () => {
     bio: '',
     instagramLink: '',
     youtubeLink: '',
+    pay_slips_files: [], // New field
+    relieving_letter: '', // New field
 
     // Bank Info
     accountHolderName: '',
