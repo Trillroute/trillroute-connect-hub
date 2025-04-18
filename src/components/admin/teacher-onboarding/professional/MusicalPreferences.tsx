@@ -7,9 +7,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 interface MusicalPreferencesProps {
   formData: {
-    comfortableGenres: string[];
-    signatureStrength: string;
-    performancePhoto: string;
+    comfortableGenres?: string[]; // Make this property optional with '?'
+    signatureStrength?: string;
+    performancePhoto?: string;
   };
   handleInputChange: (section: string, field: string, value: any) => void;
   handleArrayChange: (field: string, value: string[]) => void;
@@ -27,10 +27,13 @@ const genreOptions = [
 ];
 
 const MusicalPreferences = ({ formData, handleInputChange, handleArrayChange }: MusicalPreferencesProps) => {
+  // Ensure comfortableGenres is always an array, even if it's undefined in formData
+  const genres = formData.comfortableGenres || [];
+  
   const handleGenreChange = (value: string) => {
-    const updated = formData.comfortableGenres.includes(value)
-      ? formData.comfortableGenres.filter(v => v !== value)
-      : [...formData.comfortableGenres, value];
+    const updated = genres.includes(value)
+      ? genres.filter(v => v !== value)
+      : [...genres, value];
     handleArrayChange('comfortableGenres', updated);
   };
 
@@ -45,7 +48,7 @@ const MusicalPreferences = ({ formData, handleInputChange, handleArrayChange }: 
               <div key={option.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`genre-${option.id}`}
-                  checked={formData.comfortableGenres.includes(option.id)}
+                  checked={genres.includes(option.id)}
                   onCheckedChange={() => handleGenreChange(option.id)}
                 />
                 <Label htmlFor={`genre-${option.id}`}>{option.label}</Label>
@@ -59,7 +62,7 @@ const MusicalPreferences = ({ formData, handleInputChange, handleArrayChange }: 
           <Input
             id="signatureStrength"
             placeholder="Ex: Reharmonisation"
-            value={formData.signatureStrength}
+            value={formData.signatureStrength || ''}
             onChange={(e) => handleInputChange('professional', 'signatureStrength', e.target.value)}
           />
         </div>
