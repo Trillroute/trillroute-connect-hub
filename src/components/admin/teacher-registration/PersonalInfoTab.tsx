@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +9,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import CountrySelect from './CountrySelect';
 
 interface PersonalInfoTabProps {
   formData: any;
@@ -117,6 +117,14 @@ const PersonalInfoTab = ({ formData, handleInputChange }: PersonalInfoTabProps) 
               id="secondaryPhone"
               value={formData.secondaryPhone}
               onChange={(e) => handleInputChange('personal', 'secondaryPhone', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="nationality">Nationality</Label>
+            <CountrySelect
+              value={formData.nationality || ""}
+              onValueChange={(value) => handleInputChange('personal', 'nationality', value)}
             />
           </div>
         </div>

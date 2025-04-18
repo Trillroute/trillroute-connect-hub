@@ -123,6 +123,7 @@ export type Database = {
           id_proof_aadhaar: string | null
           id_proof_pan: string | null
           last_name: string
+          nationality: string | null
           parent_name: string | null
           password_hash: string
           permanent_address: string | null
@@ -150,6 +151,7 @@ export type Database = {
           id_proof_aadhaar?: string | null
           id_proof_pan?: string | null
           last_name: string
+          nationality?: string | null
           parent_name?: string | null
           password_hash: string
           permanent_address?: string | null
@@ -177,6 +179,7 @@ export type Database = {
           id_proof_aadhaar?: string | null
           id_proof_pan?: string | null
           last_name?: string
+          nationality?: string | null
           parent_name?: string | null
           password_hash?: string
           permanent_address?: string | null

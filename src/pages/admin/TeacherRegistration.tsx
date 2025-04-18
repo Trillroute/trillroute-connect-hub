@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -31,6 +30,7 @@ const TeacherRegistration = () => {
     idProofPan: '',
     idProofAadhaar: '',
     profilePhoto: '',
+    nationality: '',
 
     // Educational Info
     qualifications: [
@@ -61,8 +61,8 @@ const TeacherRegistration = () => {
     bio: '',
     instagramLink: '',
     youtubeLink: '',
-    pay_slips_files: [], // New field
-    relieving_letter: '', // New field
+    pay_slips_files: [],
+    relieving_letter: '',
 
     // Bank Info
     accountHolderName: '',
@@ -119,7 +119,6 @@ const TeacherRegistration = () => {
     }));
   };
 
-  // Previous Institute handlers
   const handleInstituteChange = (index, field, value) => {
     const updatedInstitutes = [...formData.previousInstitutes];
     updatedInstitutes[index] = {
@@ -153,7 +152,6 @@ const TeacherRegistration = () => {
     }));
   };
 
-  // Add this new function to handle array field changes
   const handleArrayChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -165,7 +163,6 @@ const TeacherRegistration = () => {
     e.preventDefault();
     
     try {
-      // Here we'd implement the API calls to save the teacher data
       console.log('Submitting teacher registration data:', formData);
       
       toast({
@@ -173,7 +170,6 @@ const TeacherRegistration = () => {
         description: "Teacher account has been created successfully",
       });
       
-      // Reset form or redirect
     } catch (error) {
       console.error('Error registering teacher:', error);
       toast({
