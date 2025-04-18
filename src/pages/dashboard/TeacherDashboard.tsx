@@ -35,23 +35,21 @@ const TeacherDashboard = () => {
         <h1 className="text-3xl font-semibold">Teacher Dashboard</h1>
         <p className="text-gray-500">Welcome, {user?.firstName} {user?.lastName}!</p>
         
-        {progress < 100 && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium">Profile Completion</p>
-              <p className="text-sm font-medium">{Math.round(progress)}%</p>
-            </div>
-            <div 
-              className="cursor-pointer" 
-              onClick={() => setDialogOpen(true)}
-            >
-              <Progress value={progress} className="h-2" />
-              <p className="text-sm text-muted-foreground mt-1">
-                Click to complete your profile
-              </p>
-            </div>
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium">Profile Completion</p>
+            <p className="text-sm font-medium">{Math.round(progress)}%</p>
           </div>
-        )}
+          <div 
+            className="cursor-pointer" 
+            onClick={() => setDialogOpen(true)}
+          >
+            <Progress value={progress} className="h-2" />
+            <p className="text-sm text-muted-foreground mt-1">
+              Click to complete your profile
+            </p>
+          </div>
+        </div>
       </div>
 
       <ProfileCompletionDialog
