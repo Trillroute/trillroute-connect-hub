@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +14,7 @@ export const useTeacherProfile = () => {
       institution: '', 
       graduationYear: '', 
       additionalCertifications: '',
-      qualifyingCertificate: '' // Added this field to match the expected type
+      qualifyingCertificate: '' 
     }],
     previousInstitutes: [],
     classExperience: [],
@@ -109,7 +110,7 @@ export const useTeacherProfile = () => {
             institution: '', 
             graduationYear: '', 
             additionalCertifications: '',
-            qualifyingCertificate: ''  // Added this field
+            qualifyingCertificate: ''
           }];
       
       // Map professional data 
@@ -120,6 +121,17 @@ export const useTeacherProfile = () => {
         : [];
 
       const classExperience = professional?.class_experience || [];
+      const comfortableGenres = professional?.comfortable_genres || [];
+      const teachingExperienceYears = professional?.teaching_experience_years;
+      const primaryInstrument = professional?.primary_instrument;
+      const primaryInstrumentLevel = professional?.primary_instrument_level;
+      const secondaryInstrument = professional?.secondary_instrument;
+      const secondaryInstrumentLevel = professional?.secondary_instrument_level;
+      const performances = professional?.performances;
+      const curriculumExperience = professional?.curriculum_experience;
+      const musicalProjects = professional?.musical_projects;
+      const teachingPhilosophy = professional?.teaching_philosophy;
+      const bio = professional?.bio;
 
       // Map bank details
       const mappedBankDetails = bankDetails 
@@ -141,23 +153,26 @@ export const useTeacherProfile = () => {
           };
 
       // Update form data
-      setFormData({
+      const updatedFormData = {
         qualifications: mappedQualifications,
         previousInstitutes: previousInstitutes,
         classExperience: Array.isArray(classExperience) ? classExperience : [],
-        bank: mappedBankDetails
-      });
-
-      // After fetching all data, calculate progress
-      const combinedData = {
-        ...professional,
-        ...bankDetails,
-        qualifications: qualificationsData,
-        bank: bankDetails
+        bank: mappedBankDetails,
+        teachingExperienceYears,
+        primaryInstrument,
+        primaryInstrumentLevel,
+        secondaryInstrument,
+        secondaryInstrumentLevel,
+        performances,
+        curriculumExperience,
+        musicalProjects,
+        teachingPhilosophy,
+        bio,
+        comfortableGenres
       };
       
-      setFormData(combinedData);
-      setProgress(calculateProgress(combinedData));
+      setFormData(updatedFormData);
+      setProgress(calculateProgress(updatedFormData));
 
     } catch (error) {
       console.error('Error fetching profile data:', error);
