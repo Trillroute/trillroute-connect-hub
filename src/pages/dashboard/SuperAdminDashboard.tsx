@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/ui/charts';
-import { Download, Settings, School, BookOpen, GraduationCap, UserPlus, Shield } from 'lucide-react';
+import { Download, Settings, School, BookOpen, GraduationCap, UserPlus, Shield, PlusCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
 import StudentManagement from '@/components/admin/StudentManagement';
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { canManageLevels } from '@/utils/adminPermissions';
+import { Link } from 'react-router-dom';
 
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
@@ -296,6 +298,18 @@ const SuperAdminDashboard = () => {
           </div>
 
           <div className="space-y-6">
+            {activeTab === 'teachers' && (
+              <div className="mb-4">
+                <Link 
+                  to="/admin/teacher-registration" 
+                  className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-music-500 text-white hover:bg-music-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-music-500 focus-visible:ring-offset-2"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Register New Teacher
+                </Link>
+              </div>
+            )}
+            
             {activeTab === 'courses' && <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />}
             {activeTab === 'students' && <StudentManagement canAddUser={true} canDeleteUser={true} />}
             {activeTab === 'teachers' && <TeacherManagement canAddUser={true} canDeleteUser={true} />}

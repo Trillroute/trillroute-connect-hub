@@ -112,13 +112,21 @@ export type Database = {
           created_at: string
           date_of_birth: string | null
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_number: string | null
+          emergency_contact_relation: string | null
           first_name: string
+          gender: string | null
           guardian_relation: string | null
           id: string
           id_proof: string | null
+          id_proof_aadhaar: string | null
+          id_proof_pan: string | null
           last_name: string
           parent_name: string | null
           password_hash: string
+          permanent_address: string | null
+          personal_email: string | null
           primary_phone: string | null
           profile_photo: string | null
           role: string
@@ -131,13 +139,21 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_number?: string | null
+          emergency_contact_relation?: string | null
           first_name: string
+          gender?: string | null
           guardian_relation?: string | null
           id?: string
           id_proof?: string | null
+          id_proof_aadhaar?: string | null
+          id_proof_pan?: string | null
           last_name: string
           parent_name?: string | null
           password_hash: string
+          permanent_address?: string | null
+          personal_email?: string | null
           primary_phone?: string | null
           profile_photo?: string | null
           role: string
@@ -150,13 +166,21 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_number?: string | null
+          emergency_contact_relation?: string | null
           first_name?: string
+          gender?: string | null
           guardian_relation?: string | null
           id?: string
           id_proof?: string | null
+          id_proof_aadhaar?: string | null
+          id_proof_pan?: string | null
           last_name?: string
           parent_name?: string | null
           password_hash?: string
+          permanent_address?: string | null
+          personal_email?: string | null
           primary_phone?: string | null
           profile_photo?: string | null
           role?: string
@@ -215,6 +239,168 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      teacher_bank_details: {
+        Row: {
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          bank_proof: string | null
+          created_at: string | null
+          id: string
+          ifsc_code: string
+          upi_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          bank_proof?: string | null
+          created_at?: string | null
+          id?: string
+          ifsc_code: string
+          upi_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_holder_name?: string
+          account_number?: string
+          bank_name?: string
+          bank_proof?: string | null
+          created_at?: string | null
+          id?: string
+          ifsc_code?: string
+          upi_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_bank_details_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_professional: {
+        Row: {
+          bio: string | null
+          class_experience: string[] | null
+          comfortable_genres: string[] | null
+          created_at: string | null
+          curriculum_experience: string | null
+          id: string
+          instagram_link: string | null
+          musical_projects: string | null
+          performance_photo: string | null
+          performances: string | null
+          previous_institutes: Json | null
+          primary_instrument: string | null
+          primary_instrument_level: string | null
+          secondary_instrument: string | null
+          secondary_instrument_level: string | null
+          signature_strength: string | null
+          teaching_experience_years: number | null
+          teaching_philosophy: string | null
+          user_id: string | null
+          youtube_link: string | null
+        }
+        Insert: {
+          bio?: string | null
+          class_experience?: string[] | null
+          comfortable_genres?: string[] | null
+          created_at?: string | null
+          curriculum_experience?: string | null
+          id?: string
+          instagram_link?: string | null
+          musical_projects?: string | null
+          performance_photo?: string | null
+          performances?: string | null
+          previous_institutes?: Json | null
+          primary_instrument?: string | null
+          primary_instrument_level?: string | null
+          secondary_instrument?: string | null
+          secondary_instrument_level?: string | null
+          signature_strength?: string | null
+          teaching_experience_years?: number | null
+          teaching_philosophy?: string | null
+          user_id?: string | null
+          youtube_link?: string | null
+        }
+        Update: {
+          bio?: string | null
+          class_experience?: string[] | null
+          comfortable_genres?: string[] | null
+          created_at?: string | null
+          curriculum_experience?: string | null
+          id?: string
+          instagram_link?: string | null
+          musical_projects?: string | null
+          performance_photo?: string | null
+          performances?: string | null
+          previous_institutes?: Json | null
+          primary_instrument?: string | null
+          primary_instrument_level?: string | null
+          secondary_instrument?: string | null
+          secondary_instrument_level?: string | null
+          signature_strength?: string | null
+          teaching_experience_years?: number | null
+          teaching_philosophy?: string | null
+          user_id?: string | null
+          youtube_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_professional_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_qualifications: {
+        Row: {
+          additional_certifications: string | null
+          created_at: string | null
+          graduation_year: number | null
+          id: string
+          institution: string | null
+          qualification: string
+          specialization: string | null
+          user_id: string | null
+        }
+        Insert: {
+          additional_certifications?: string | null
+          created_at?: string | null
+          graduation_year?: number | null
+          id?: string
+          institution?: string | null
+          qualification: string
+          specialization?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          additional_certifications?: string | null
+          created_at?: string | null
+          graduation_year?: number | null
+          id?: string
+          institution?: string | null
+          qualification?: string
+          specialization?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_qualifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

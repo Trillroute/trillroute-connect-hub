@@ -26,6 +26,9 @@ import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 
+// Admin Pages
+import TeacherRegistration from "./pages/admin/TeacherRegistration";
+
 // Profile Page
 import Profile from "./pages/profile/Profile";
 
@@ -85,6 +88,16 @@ const App = () => (
                     <SuperAdminDashboard />
                   </ProtectedRoute>
                 } 
+              />
+              
+              {/* Admin Pages */}
+              <Route
+                path="/admin/teacher-registration"
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
+                    <TeacherRegistration />
+                  </ProtectedRoute>
+                }
               />
               
               {/* Profile Page */}

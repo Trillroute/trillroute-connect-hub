@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +24,8 @@ import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import { Link } from 'react-router-dom';
+import { PlusCircle } from 'lucide-react';
 
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
@@ -248,6 +251,18 @@ const AdminDashboard = () => {
             </div>
           ) : (
             <div className="space-y-6">
+              {activeTab === 'teachers' && permissionMap.teachers.view && (
+                <div className="mb-4">
+                  <Link 
+                    to="/admin/teacher-registration" 
+                    className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-music-500 text-white hover:bg-music-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-music-500 focus-visible:ring-offset-2"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Register New Teacher
+                  </Link>
+                </div>
+              )}
+
               {activeTab === 'courses' && permissionMap.courses.view && (
                 <CourseManagement 
                   canAddCourse={permissionMap.courses.add}
