@@ -44,7 +44,7 @@ const TeacherRegistration = () => {
     ],
 
     // Professional Info
-    teachingExperience: '',
+    teachingExperienceYears: 0,
     primaryInstrument: '',
     primaryInstrumentLevel: '',
     secondaryInstrument: '',
@@ -151,6 +151,14 @@ const TeacherRegistration = () => {
     }));
   };
 
+  // Add this new function to handle array field changes
+  const handleArrayChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -222,6 +230,7 @@ const TeacherRegistration = () => {
             <ProfessionalInfoTab 
               formData={formData} 
               handleInputChange={handleInputChange}
+              handleArrayChange={handleArrayChange}
               handleInstituteChange={handleInstituteChange}
               addInstitute={addInstitute}
               removeInstitute={removeInstitute}
