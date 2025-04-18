@@ -4,10 +4,8 @@ import { Music, Mail, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth, UserRole } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BasicInfoTab } from './register-tabs/BasicInfoTab';
 import { ContactInfoTab } from './register-tabs/ContactInfoTab';
@@ -46,7 +44,7 @@ const RegisterForm = () => {
     idProof: '',
   });
   
-  const [role, setRole] = useState<UserRole>('teacher');
+  const [role, setRole] = useState('teacher');
   const [isLoading, setIsLoading] = useState(false);
   
   const { register } = useAuth();
@@ -68,7 +66,7 @@ const RegisterForm = () => {
   };
 
   const handleRoleChange = (value: string) => {
-    setRole(value as UserRole);
+    setRole(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,7 +97,7 @@ const RegisterForm = () => {
         formData.password, 
         formData.firstName, 
         formData.lastName, 
-        'student', // Fixed role as student
+        'student', 
         {
           date_of_birth: formData.dateOfBirth,
           profile_photo: formData.profilePhoto,
@@ -168,8 +166,6 @@ const RegisterForm = () => {
                 />
               </Tabs>
               
-              
-              
               <div className="flex items-center">
                 <input
                   id="terms"
@@ -202,13 +198,6 @@ const RegisterForm = () => {
             </CardFooter>
           </form>
         </Card>
-
-        <div className="text-center text-sm">
-          <span className="text-gray-600">Are you a teacher?</span>{" "}
-          <Link to="/contact" className="font-medium text-music-500 hover:text-music-600">
-            Contact us
-          </Link>
-        </div>
       </div>
     </div>
   );
