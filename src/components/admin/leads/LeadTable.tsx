@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, UserPlus, ArrowUpDown, Search, Filter, X } from 'lucide-react';
+import { Pencil, Trash2, UserPlus, ArrowUpDown, Filter, X } from 'lucide-react';
 import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
 import { 
@@ -137,7 +137,6 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
           <Input
             type="search"
             placeholder="Search leads..."
@@ -311,13 +310,13 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
                         className="h-8 w-8 p-0"
                         onClick={() => onEdit(lead)}
                       >
-                        <Edit className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                         <span className="sr-only">Edit lead</span>
                       </Button>
                       <Button
                         variant="outline" 
                         size="sm" 
-                        className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50"
+                        className="h-8 w-8 p-0 text-black border-black hover:bg-red-50"
                         onClick={() => onDelete(lead)}
                       >
                         <Trash2 className="h-4 w-4" />
