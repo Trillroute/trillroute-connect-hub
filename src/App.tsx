@@ -26,7 +26,7 @@ import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
 
 // Admin Pages
-import TeacherRegistration from "./pages/admin/TeacherRegistration";
+import TeacherOnboarding from "./pages/admin/TeacherOnboarding";
 
 // Profile Page
 import Profile from "./pages/profile/Profile";
@@ -91,8 +91,8 @@ const App = () => (
               
               {/* Admin Pages */}
               <Route
-                path="/admin/teacher-registration"
-                element={<TeacherRegistration />}
+                path="/admin/teacher-onboarding"
+                element={<TeacherOnboarding />}
               />
               
               {/* Profile Page */}

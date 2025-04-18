@@ -3,15 +3,83 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import PersonalInfoTab from '@/components/admin/teacher-registration/PersonalInfoTab';
-import EducationalInfoTab from '@/components/admin/teacher-registration/EducationalInfoTab';
-import BankDetailsTab from '@/components/admin/teacher-registration/BankDetailsTab';
-import ProfessionalInfoTab from '@/components/admin/teacher-registration/ProfessionalInfoTab';
+import PersonalInfoTab from '@/components/admin/teacher-onboarding/PersonalInfoTab';
+import EducationalInfoTab from '@/components/admin/teacher-onboarding/EducationalInfoTab';
+import BankDetailsTab from '@/components/admin/teacher-onboarding/BankDetailsTab';
+import ProfessionalInfoTab from '@/components/admin/teacher-onboarding/ProfessionalInfoTab';
 
-const TeacherRegistration = () => {
+interface Qualification {
+  qualification: string;
+  specialization: string;
+  institution: string;
+  graduationYear: string;
+  additionalCertifications: string;
+}
+
+interface PreviousInstitute {
+  name: string;
+  location: string;
+  years: string;
+}
+
+interface TeacherOnboardingFormData {
+  // Personal Info
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: string;
+  email: string;
+  password: string;
+  personalEmail: string;
+  primaryPhone: string;
+  secondaryPhone: string;
+  address: string;
+  permanentAddress: string;
+  emergencyContactName: string;
+  emergencyContactRelation: string;
+  emergencyContactNumber: string;
+  idProofPan: string;
+  idProofAadhaar: string;
+  profilePhoto: string;
+  nationality: string;
+
+  // Educational Info
+  qualifications: Qualification[];
+
+  // Professional Info
+  teachingExperienceYears: number;
+  primaryInstrument: string;
+  primaryInstrumentLevel: string;
+  secondaryInstrument: string;
+  secondaryInstrumentLevel: string;
+  previousInstitutes: PreviousInstitute[];
+  classExperience: string[];
+  performances: string;
+  curriculumExperience: string;
+  musicalProjects: string;
+  comfortableGenres: string[];
+  signatureStrength: string;
+  performancePhoto: string;
+  teachingPhilosophy: string;
+  bio: string;
+  instagramLink: string;
+  youtubeLink: string;
+  pay_slips_files: string[];
+  relieving_letter: string;
+
+  // Bank Info
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  upiId: string;
+  bankProof: string;
+}
+
+const TeacherOnboarding = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('personal');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TeacherOnboardingFormData>({
     // Personal Info
     firstName: '',
     lastName: '',
@@ -73,14 +141,14 @@ const TeacherRegistration = () => {
     bankProof: ''
   });
 
-  const handleInputChange = (section, field, value) => {
+  const handleInputChange = (section: string, field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleQualificationChange = (index, field, value) => {
+  const handleQualificationChange = (index: number, field: string, value: string) => {
     const updatedQualifications = [...formData.qualifications];
     updatedQualifications[index] = {
       ...updatedQualifications[index],
@@ -119,7 +187,7 @@ const TeacherRegistration = () => {
     }));
   };
 
-  const handleInstituteChange = (index, field, value) => {
+  const handleInstituteChange = (index: number, field: string, value: string) => {
     const updatedInstitutes = [...formData.previousInstitutes];
     updatedInstitutes[index] = {
       ...updatedInstitutes[index],
@@ -152,14 +220,14 @@ const TeacherRegistration = () => {
     }));
   };
 
-  const handleArrayChange = (field, value) => {
+  const handleArrayChange = (field: string, value: string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
@@ -183,8 +251,8 @@ const TeacherRegistration = () => {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Teacher Registration</h1>
-        <p className="text-gray-500">Register new teachers with complete profile information</p>
+        <h1 className="text-3xl font-bold">Teacher Onboarding</h1>
+        <p className="text-gray-500">Onboard new teachers with complete profile information</p>
       </div>
       
       <form onSubmit={handleSubmit}>
@@ -262,4 +330,4 @@ const TeacherRegistration = () => {
   );
 };
 
-export default TeacherRegistration;
+export default TeacherOnboarding;
