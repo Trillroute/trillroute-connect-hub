@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTeacherProfile } from '@/hooks/useTeacherProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import { ReadOnlyFields } from './ReadOnlyFields';
 import EducationalInfoTab from '@/components/admin/teacher-onboarding/EducationalInfoTab';
 import ProfessionalInfoTab from '@/components/admin/teacher-onboarding/ProfessionalInfoTab';
 import BankDetailsTab from '@/components/admin/teacher-onboarding/BankDetailsTab';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Form,
   FormControl,
@@ -41,6 +42,7 @@ export function ProfileForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const isTeacher = role === 'teacher';
+  const isStudent = role === 'student';
 
   const {
     formData: teacherFormData,
