@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Globe } from "lucide-react";
 
+// Add a placeholder entry at the beginning of the array
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
   "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana",
@@ -40,8 +41,9 @@ const CountrySelect = ({ value, onValueChange }: CountrySelectProps) => {
       </SelectTrigger>
       <SelectContent>
         <ScrollArea className="h-80">
+          {/* Ensure every country has a non-empty value */}
           {countries.map((country) => (
-            <SelectItem key={country} value={country}>
+            <SelectItem key={country} value={country || "unknown"}>
               {country}
             </SelectItem>
           ))}
