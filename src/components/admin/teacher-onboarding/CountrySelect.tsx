@@ -41,12 +41,15 @@ const CountrySelect = ({ value, onValueChange }: CountrySelectProps) => {
       </SelectTrigger>
       <SelectContent>
         <ScrollArea className="h-80">
-          {/* Ensure every country has a non-empty value */}
-          {countries.map((country) => (
-            <SelectItem key={country} value={country || "unknown"}>
-              {country}
-            </SelectItem>
-          ))}
+          {countries.map((country) => {
+            // Ensure country name is never an empty string
+            const countryValue = country?.trim() || "unknown";
+            return (
+              <SelectItem key={countryValue} value={countryValue}>
+                {country || "Unknown Country"}
+              </SelectItem>
+            );
+          })}
         </ScrollArea>
       </SelectContent>
     </Select>
