@@ -5,7 +5,7 @@ import { useTeacherProfile } from '@/hooks/useTeacherProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, User, GraduationCap, Briefcase, Wallet } from 'lucide-react';
 import EducationalInfoTab from '@/components/admin/teacher-onboarding/EducationalInfoTab';
 import ProfessionalInfoTab from '@/components/admin/teacher-onboarding/ProfessionalInfoTab';
 import BankDetailsTab from '@/components/admin/teacher-onboarding/BankDetailsTab';
@@ -122,48 +122,66 @@ export function ProfileForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 lg:grid-cols-4">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-2 lg:grid-cols-4 mb-6">
+            <TabsTrigger value="basic" className="data-[state=active]:bg-music-100 data-[state=active]:text-music-800">
+              <User className="mr-2 h-4 w-4" />
+              Basic Info
+            </TabsTrigger>
             {isTeacher && (
               <>
-                <TabsTrigger value="education">Educational Info</TabsTrigger>
-                <TabsTrigger value="professional">Professional Info</TabsTrigger>
-                <TabsTrigger value="bank">Bank Details</TabsTrigger>
+                <TabsTrigger value="education" className="data-[state=active]:bg-music-100 data-[state=active]:text-music-800">
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  Educational Info
+                </TabsTrigger>
+                <TabsTrigger value="professional" className="data-[state=active]:bg-music-100 data-[state=active]:text-music-800">
+                  <Briefcase className="mr-2 h-4 w-4" />
+                  Professional Info
+                </TabsTrigger>
+                <TabsTrigger value="bank" className="data-[state=active]:bg-music-100 data-[state=active]:text-music-800">
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Bank Details
+                </TabsTrigger>
               </>
             )}
           </TabsList>
 
-          <TabsContent value="basic" className="space-y-6">
+          <TabsContent value="basic" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
             <BasicInfoFields form={form} isStudent={isStudent} />
           </TabsContent>
 
           {isTeacher && (
             <>
-              <TabsContent value="education">
-                <EducationalInfoTab
-                  formData={teacherFormData}
-                  handleQualificationChange={handleQualificationChange}
-                  addQualification={addQualification}
-                  removeQualification={removeQualification}
-                />
+              <TabsContent value="education" className="focus-visible:outline-none focus-visible:ring-0">
+                <div className="border border-border/40 shadow-sm rounded-lg p-6 bg-card">
+                  <EducationalInfoTab
+                    formData={teacherFormData}
+                    handleQualificationChange={handleQualificationChange}
+                    addQualification={addQualification}
+                    removeQualification={removeQualification}
+                  />
+                </div>
               </TabsContent>
 
-              <TabsContent value="professional">
-                <ProfessionalInfoTab
-                  formData={teacherFormData}
-                  handleInputChange={handleInputChange}
-                  handleArrayChange={handleArrayChange}
-                  handleInstituteChange={handleInstituteChange}
-                  addInstitute={addInstitute}
-                  removeInstitute={removeInstitute}
-                />
+              <TabsContent value="professional" className="focus-visible:outline-none focus-visible:ring-0">
+                <div className="border border-border/40 shadow-sm rounded-lg p-6 bg-card">
+                  <ProfessionalInfoTab
+                    formData={teacherFormData}
+                    handleInputChange={handleInputChange}
+                    handleArrayChange={handleArrayChange}
+                    handleInstituteChange={handleInstituteChange}
+                    addInstitute={addInstitute}
+                    removeInstitute={removeInstitute}
+                  />
+                </div>
               </TabsContent>
 
-              <TabsContent value="bank">
-                <BankDetailsTab
-                  formData={teacherFormData}
-                  handleInputChange={handleInputChange}
-                />
+              <TabsContent value="bank" className="focus-visible:outline-none focus-visible:ring-0">
+                <div className="border border-border/40 shadow-sm rounded-lg p-6 bg-card">
+                  <BankDetailsTab
+                    formData={teacherFormData}
+                    handleInputChange={handleInputChange}
+                  />
+                </div>
               </TabsContent>
             </>
           )}
@@ -171,7 +189,7 @@ export function ProfileForm() {
 
         <Button 
           type="submit" 
-          className="w-full sm:w-auto" 
+          className="w-full sm:w-auto bg-music-500 hover:bg-music-600 text-white" 
           disabled={isLoading}
         >
           {isLoading ? (

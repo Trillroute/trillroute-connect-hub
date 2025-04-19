@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { ReadOnlyFields } from './ReadOnlyFields';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface BasicInfoFieldsProps {
   form: UseFormReturn<ProfileFormValues>;
@@ -21,100 +22,21 @@ interface BasicInfoFieldsProps {
 
 export function BasicInfoFields({ form, isStudent }: BasicInfoFieldsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <ReadOnlyFields />
-      <div className="space-y-2">
-        <FormField
-          control={form.control}
-          name="dateOfBirth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date of Birth</FormLabel>
-              <FormControl>
-                <Input
-                  type="date"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <FormField
-          control={form.control}
-          name="primaryPhone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Primary Phone</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your phone number"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <FormField
-          control={form.control}
-          name="secondaryPhone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Secondary Phone</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter alternate phone number"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter your address"
-                  {...field}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {isStudent && (
-        <>
-          <div className="space-y-2">
+    <Card className="border border-border/40 shadow-sm">
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ReadOnlyFields />
+          <div>
             <FormField
               control={form.control}
-              name="parentName"
+              name="dateOfBirth"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Parent/Guardian Name</FormLabel>
+                  <FormLabel className="text-foreground/80 font-medium">Date of Birth</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter parent/guardian name"
+                      type="date"
+                      className="border-input/60 focus-visible:ring-music-300/50"
                       {...field}
                       value={field.value || ''}
                     />
@@ -125,16 +47,17 @@ export function BasicInfoFields({ form, isStudent }: BasicInfoFieldsProps) {
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <FormField
               control={form.control}
-              name="guardianRelation"
+              name="primaryPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Relation to Guardian</FormLabel>
+                  <FormLabel className="text-foreground/80 font-medium">Primary Phone</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="E.g. Father, Mother, etc."
+                      placeholder="Enter your phone number"
+                      className="border-input/60 focus-visible:ring-music-300/50"
                       {...field}
                       value={field.value || ''}
                     />
@@ -144,33 +67,122 @@ export function BasicInfoFields({ form, isStudent }: BasicInfoFieldsProps) {
               )}
             />
           </div>
-        </>
-      )}
 
-      <div className="flex items-center space-x-2 md:col-span-2">
-        <FormField
-          control={form.control}
-          name="whatsappEnabled"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
+          <div>
+            <FormField
+              control={form.control}
+              name="secondaryPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground/80 font-medium">Secondary Phone</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter alternate phone number"
+                      className="border-input/60 focus-visible:ring-music-300/50"
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div>
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground/80 font-medium">Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your address"
+                      className="border-input/60 focus-visible:ring-music-300/50"
+                      {...field}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {isStudent && (
+            <>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="parentName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground/80 font-medium">Parent/Guardian Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter parent/guardian name"
+                          className="border-input/60 focus-visible:ring-music-300/50"
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>
-                  Enable WhatsApp notifications on primary number
-                </FormLabel>
-                <FormDescription>
-                  We'll send important updates to your WhatsApp number.
-                </FormDescription>
               </div>
-            </FormItem>
+
+              <div>
+                <FormField
+                  control={form.control}
+                  name="guardianRelation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground/80 font-medium">Relation to Guardian</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="E.g. Father, Mother, etc."
+                          className="border-input/60 focus-visible:ring-music-300/50"
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </>
           )}
-        />
-      </div>
-    </div>
+
+          <div className="md:col-span-2 pt-2">
+            <FormField
+              control={form.control}
+              name="whatsappEnabled"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-music-300 data-[state=checked]:border-music-400"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-foreground/80 font-medium">
+                      Enable WhatsApp notifications on primary number
+                    </FormLabel>
+                    <FormDescription>
+                      We'll send important updates to your WhatsApp number.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
