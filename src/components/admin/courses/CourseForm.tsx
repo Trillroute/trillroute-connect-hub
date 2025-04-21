@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -181,8 +182,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <Button
                         variant="outline"
                         role="combobox"
+                        type="button" // Set type to button to prevent form submission
                         className="w-full justify-between"
-                        onClick={(e) => e.preventDefault()}
                       >
                         {field.value?.length > 0
                           ? `${field.value.length} instructor${field.value.length > 1 ? 's' : ''} selected`
@@ -194,42 +195,54 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   <PopoverContent className="w-full p-0" align="start">
                     <ScrollArea className="h-60">
                       <div className="p-1">
-                        {teachers.map((teacher) => {
-                          const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
-                          console.log(`Teacher ${teacher.id} selected:`, isSelected);
-                          
-                          return (
-                            <div
-                              key={teacher.id}
-                              className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
-                              onClick={() => {
-                                const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                                const updatedValues = isSelected
-                                  ? currentValues.filter(id => id !== teacher.id)
-                                  : [...currentValues, teacher.id];
-                                
-                                console.log('Updating instructors to:', updatedValues);
-                                field.onChange(updatedValues);
-                              }}
-                            >
+                        {teachers.length === 0 ? (
+                          <div className="p-2 text-center text-muted-foreground">
+                            No teachers available
+                          </div>
+                        ) : (
+                          teachers.map((teacher) => {
+                            const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
+                            console.log(`Teacher ${teacher.id} selected:`, isSelected);
+                            
+                            return (
                               <div
-                                className={cn(
-                                  "h-4 w-4 rounded-sm border flex items-center justify-center",
-                                  isSelected
-                                    ? "bg-primary border-primary text-primary-foreground"
-                                    : "border-input"
-                                )}
+                                key={teacher.id}
+                                className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
+                                onClick={() => {
+                                  const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                                  let updatedValues;
+                                  
+                                  if (isSelected) {
+                                    // Remove the ID if already selected
+                                    updatedValues = currentValues.filter(id => id !== teacher.id);
+                                  } else {
+                                    // Add the ID if not already selected
+                                    updatedValues = [...currentValues, teacher.id];
+                                  }
+                                  
+                                  console.log('Updating instructors to:', updatedValues);
+                                  field.onChange(updatedValues);
+                                }}
                               >
-                                {isSelected && (
-                                  <Check className="h-3 w-3" />
-                                )}
+                                <div
+                                  className={cn(
+                                    "h-4 w-4 rounded-sm border flex items-center justify-center",
+                                    isSelected
+                                      ? "bg-primary border-primary text-primary-foreground"
+                                      : "border-input"
+                                  )}
+                                >
+                                  {isSelected && (
+                                    <Check className="h-3 w-3" />
+                                  )}
+                                </div>
+                                <span>
+                                  {teacher.first_name} {teacher.last_name}
+                                </span>
                               </div>
-                              <span>
-                                {teacher.first_name} {teacher.last_name}
-                              </span>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                       </div>
                     </ScrollArea>
                   </PopoverContent>
@@ -257,8 +270,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       <Button
                         variant="outline"
                         role="combobox"
+                        type="button" // Set type to button to prevent form submission
                         className="w-full justify-between"
-                        onClick={(e) => e.preventDefault()}
                       >
                         {field.value?.length > 0
                           ? `${field.value.length} student${field.value.length > 1 ? 's' : ''} enrolled`
@@ -276,6 +289,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                           </div>
                         ) : (
                           students.map((student) => {
+                            // Safely check if the student ID is in the field value array
                             const isSelected = Array.isArray(field.value) && field.value.includes(student.id);
                             console.log(`Student ${student.id} selected:`, isSelected);
                             
@@ -284,10 +298,17 @@ const CourseForm: React.FC<CourseFormProps> = ({
                                 key={student.id}
                                 className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
                                 onClick={() => {
+                                  // Create a copy of the current values or initialize an empty array
                                   const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                                  const updatedValues = isSelected
-                                    ? currentValues.filter(id => id !== student.id)
-                                    : [...currentValues, student.id];
+                                  let updatedValues;
+                                  
+                                  if (isSelected) {
+                                    // Remove the ID if already selected
+                                    updatedValues = currentValues.filter(id => id !== student.id);
+                                  } else {
+                                    // Add the ID if not already selected
+                                    updatedValues = [...currentValues, student.id];
+                                  }
                                   
                                   console.log('Updating students to:', updatedValues);
                                   field.onChange(updatedValues);

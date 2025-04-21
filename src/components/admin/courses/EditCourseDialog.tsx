@@ -154,26 +154,17 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   useEffect(() => {
     if (open) {
-      // Ensure the duration type is properly cast to the literal type
-      const typedDurationType: "fixed" | "recurring" = 
-        (course.duration_type === "fixed" || course.duration_type === "recurring") 
-          ? course.duration_type as "fixed" | "recurring"
-          : "fixed";
-          
-      // Debug logs for initial form values
-      console.log('Initializing form with instructors:', instructorIds);
-      console.log('Initializing form with students:', studentIds);
-          
+      // Force reset the form every time the dialog opens to ensure latest data
       form.reset({
         title: course.title,
         description: course.description,
-        instructors: instructorIds,
-        students: studentIds,
+        instructors: [...instructorIds], // Create new array to ensure reactivity
+        students: [...studentIds], // Create new array to ensure reactivity
         level: course.level,
         skill: course.skill,
         durationValue: durationValue,
         durationMetric: durationMetric,
-        durationType: typedDurationType,
+        durationType: durationType,
         image: course.image,
         classesCount: course.classes_count?.toString() || '0',
         classesDuration: course.classes_duration?.toString() || '0',
@@ -182,8 +173,13 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         practicalSessionsCount: course.practical_sessions_count?.toString() || '0',
         practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
       });
+      
+      console.log('EditCourseDialog - Form reset with values:', {
+        instructors: instructorIds,
+        students: studentIds
+      });
     }
-  }, [course, form, open, instructorIds, studentIds, durationValue, durationMetric]);
+  }, [course, open, instructorIds, studentIds, durationValue, durationMetric, durationType, form]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     if (!hasEditPermission) {
@@ -213,7 +209,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       // Calculate the number of students based on the student_ids array length
       const studentCount = studentArray.length;
       
-      // Debug logs
+      // Debug logs before update
       console.log('Updating course with students:', studentArray);
       console.log('Student count:', studentCount);
       console.log('Updating course with instructors:', data.instructors);
