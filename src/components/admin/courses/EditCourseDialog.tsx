@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -9,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course, DurationMetric } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
+import { useStudents } from '@/hooks/useStudents';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { useAuth } from '@/hooks/useAuth';
 import { canManageCourses } from '@/utils/adminPermissions';
@@ -25,6 +27,7 @@ const courseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
+  students: z.array(z.string()).optional(),
   level: z.string().min(1, { message: "Level is required" }),
   skill: z.string().min(1, { message: "Skill is required" }),
   durationType: z.enum(["fixed", "recurring"]),
@@ -56,6 +59,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
+  const { students = [] } = useStudents();
   const [isLoading, setIsLoading] = useState(false);
   const { user, isSuperAdmin } = useAuth();
   
@@ -87,6 +91,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   }, [open, hasEditPermission, onOpenChange, toast]);
 
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
+  const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
 
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
     if (durationType !== 'fixed' || !duration) {
@@ -118,6 +123,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       title: course.title,
       description: course.description,
       instructors: instructorIds,
+      students: studentIds,
       level: course.level,
       skill: course.skill,
       durationValue: durationValue,
@@ -139,6 +145,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         title: course.title,
         description: course.description,
         instructors: instructorIds,
+        students: studentIds,
         level: course.level,
         skill: course.skill,
         durationValue: durationValue,
@@ -153,7 +160,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
       });
     }
-  }, [course, form, open, instructorIds]);
+  }, [course, form, open, instructorIds, studentIds]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     if (!hasEditPermission) {
@@ -177,6 +184,9 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         duration = 'Recurring';
       }
       
+      // Calculate the number of students based on the student_ids array length
+      const studentCount = data.students ? data.students.length : 0;
+      
       const { error: courseError } = await supabase
         .from('courses')
         .update({
@@ -188,6 +198,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration_type: data.durationType,
           image: data.image,
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
+          student_ids: Array.isArray(data.students) ? data.students : [],
+          students: studentCount, // Update the student count to match the array length
           classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
           classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
           studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
@@ -212,7 +224,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       
       toast({
         title: "Course Updated",
-        description: `${data.title} has been successfully updated`,
+        description: `${data.title} has been successfully updated with ${studentCount} students enrolled`,
         duration: 3000,
       });
     } catch (error) {
@@ -248,6 +260,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
               onSubmit={handleUpdateCourse} 
               teachers={teachers}
               skills={skills}
+              students={students}
               submitButtonText="Update Course"
               cancelAction={() => onOpenChange(false)}
             />
