@@ -117,6 +117,12 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     course.duration_type
   );
 
+  // Convert the duration_type to the proper literal type
+  const durationType: "fixed" | "recurring" = 
+    (course.duration_type === "fixed" || course.duration_type === "recurring") 
+      ? course.duration_type 
+      : "fixed";
+
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -128,7 +134,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       skill: course.skill,
       durationValue: durationValue,
       durationMetric: durationMetric,
-      durationType: course.duration_type || 'fixed',
+      durationType: durationType,
       image: course.image,
       classesCount: course.classes_count?.toString() || '0',
       classesDuration: course.classes_duration?.toString() || '0',
@@ -141,6 +147,12 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   useEffect(() => {
     if (open) {
+      // Ensure the duration type is properly cast to the literal type
+      const typedDurationType: "fixed" | "recurring" = 
+        (course.duration_type === "fixed" || course.duration_type === "recurring") 
+          ? course.duration_type 
+          : "fixed";
+          
       form.reset({
         title: course.title,
         description: course.description,
@@ -150,7 +162,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         skill: course.skill,
         durationValue: durationValue,
         durationMetric: durationMetric,
-        durationType: course.duration_type || 'fixed',
+        durationType: typedDurationType,
         image: course.image,
         classesCount: course.classes_count?.toString() || '0',
         classesDuration: course.classes_duration?.toString() || '0',
