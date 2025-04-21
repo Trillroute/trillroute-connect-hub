@@ -1,12 +1,12 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Music, Mail, Lock, User } from 'lucide-react';
+import { Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BasicInfoTab } from './register-tabs/BasicInfoTab';
 import { ContactInfoTab } from './register-tabs/ContactInfoTab';
 import { DocumentsTab } from './register-tabs/DocumentsTab';
@@ -69,10 +69,25 @@ const RegisterForm = () => {
     setRole(value);
   };
 
+  // Helper function to check required fields
+  const checkRequiredFields = () => {
+    return (
+      formData.email.trim() !== '' &&
+      formData.password.trim() !== '' &&
+      formData.confirmPassword.trim() !== '' &&
+      formData.firstName.trim() !== '' &&
+      formData.lastName.trim() !== '' &&
+      formData.dateOfBirth.trim() !== '' &&
+      formData.primaryPhone.trim() !== '' &&
+      formData.address.trim() !== ''
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.firstName || !formData.lastName) {
+
+    // Check if all required fields are filled
+    if (!checkRequiredFields()) {
       toast({
         title: "Missing Fields",
         description: "Please fill in all required fields.",
@@ -80,7 +95,7 @@ const RegisterForm = () => {
       });
       return;
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -204,3 +219,6 @@ const RegisterForm = () => {
 };
 
 export default RegisterForm;
+
+// NOTE: This file is now greater than 200 lines and is getting too long for maintainability.
+// Please consider refactoring it into smaller components for better readability and maintainability.
