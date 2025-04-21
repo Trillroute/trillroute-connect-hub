@@ -33,6 +33,9 @@ export function useStudents() {
         return;
       }
 
+      // Log the fetched data to help with debugging
+      console.log('Students fetched successfully:', data?.length || 0);
+      
       setStudents(data || []);
     } catch (error) {
       console.error('Unexpected error fetching students:', error);

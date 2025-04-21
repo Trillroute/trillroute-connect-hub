@@ -90,8 +90,15 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     }
   }, [open, hasEditPermission, onOpenChange, toast]);
 
+  // Ensure we have arrays for instructors and students
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
   const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
+
+  // Debug logs to check loaded student data
+  useEffect(() => {
+    console.log('EditCourseDialog - Course student_ids:', studentIds);
+    console.log('EditCourseDialog - Available students:', students.length);
+  }, [studentIds, students]);
 
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
     if (durationType !== 'fixed' || !duration) {
@@ -120,7 +127,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   // Convert the duration_type to the proper literal type
   const durationType: "fixed" | "recurring" = 
     (course.duration_type === "fixed" || course.duration_type === "recurring") 
-      ? course.duration_type 
+      ? course.duration_type as "fixed" | "recurring" 
       : "fixed";
 
   const form = useForm<CourseFormValues>({
@@ -150,7 +157,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       // Ensure the duration type is properly cast to the literal type
       const typedDurationType: "fixed" | "recurring" = 
         (course.duration_type === "fixed" || course.duration_type === "recurring") 
-          ? course.duration_type 
+          ? course.duration_type as "fixed" | "recurring"
           : "fixed";
           
       form.reset({
@@ -196,8 +203,15 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         duration = 'Recurring';
       }
       
+      // Ensure students array is handled properly
+      const studentArray = Array.isArray(data.students) ? data.students : [];
+      
       // Calculate the number of students based on the student_ids array length
-      const studentCount = data.students ? data.students.length : 0;
+      const studentCount = studentArray.length;
+      
+      // Debug logs
+      console.log('Updating course with students:', studentArray);
+      console.log('Student count:', studentCount);
       
       const { error: courseError } = await supabase
         .from('courses')
@@ -210,7 +224,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration_type: data.durationType,
           image: data.image,
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-          student_ids: Array.isArray(data.students) ? data.students : [],
+          student_ids: studentArray,
           students: studentCount, // Update the student count to match the array length
           classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
           classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
