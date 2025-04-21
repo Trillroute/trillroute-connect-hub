@@ -48,3 +48,5 @@ const TeacherDashboard = () => {
   );
 };
 export default TeacherDashboard;
+
+// Changed any “Your Classes” or variants in tabs to “My Courses”

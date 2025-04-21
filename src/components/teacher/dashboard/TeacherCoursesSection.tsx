@@ -12,7 +12,7 @@ const TeacherCoursesSection = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your Courses</CardTitle>
+        <CardTitle>My Courses</CardTitle>
         <CardDescription>Manage your active courses and assignments.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,6 +67,7 @@ const TeacherCoursesSection = () => {
             onOpenChange={(open) => open ? null : setEditingCourse(null)}
             course={editingCourse}
             afterSave={() => setEditingCourse(null)}
+            fetchOnOpen // tell dialog to always fetch fresh student data
           />
         )}
       </CardContent>
@@ -75,3 +76,5 @@ const TeacherCoursesSection = () => {
 };
 
 export default TeacherCoursesSection;
+
+// Updated text for “My Courses”, passed `fetchOnOpen` to dialog
