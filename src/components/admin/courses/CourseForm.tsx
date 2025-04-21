@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -11,20 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { 
-  Popover, PopoverContent, PopoverTrigger 
-} from '@/components/ui/popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Teacher } from '@/types/course';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Student } from '@/hooks/useStudents';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
 
 export interface CourseFormValues {
   title: string;
   description: string;
   instructors: string[];
-  students?: string[];  // New field for student selection
+  students?: string[];
   level: string;
   skill: string;
   durationType: "fixed" | "recurring";
@@ -44,7 +42,7 @@ interface CourseFormProps {
   onSubmit: (values: CourseFormValues) => void;
   teachers: Teacher[];
   skills: { id: string; name: string }[];
-  students?: Student[];  // New prop for students list
+  students?: Student[];
   submitButtonText?: string;
   cancelAction?: () => void;
 }
@@ -54,7 +52,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
   onSubmit,
   teachers,
   skills,
-  students = [], // Default to empty array if not provided
+  students = [],
   submitButtonText = "Submit",
   cancelAction
 }) => {
@@ -171,179 +169,107 @@ const CourseForm: React.FC<CourseFormProps> = ({
         <FormField
           control={form.control}
           name="instructors"
-          render={({ field }) => {
-            console.log('Instructors field value:', field.value);
-            return (
-              <FormItem>
-                <FormLabel>Instructors</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        type="button" // Set type to button to prevent form submission
-                        className="w-full justify-between"
-                      >
-                        {field.value?.length > 0
-                          ? `${field.value.length} instructor${field.value.length > 1 ? 's' : ''} selected`
-                          : "Select instructors"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <ScrollArea className="h-60">
-                      <div className="p-1">
-                        {teachers.length === 0 ? (
-                          <div className="p-2 text-center text-muted-foreground">
-                            No teachers available
-                          </div>
-                        ) : (
-                          teachers.map((teacher) => {
-                            const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
-                            console.log(`Teacher ${teacher.id} selected:`, isSelected);
-                            
-                            return (
-                              <div
-                                key={teacher.id}
-                                className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
-                                onClick={() => {
-                                  const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                                  let updatedValues;
-                                  
-                                  if (isSelected) {
-                                    // Remove the ID if already selected
-                                    updatedValues = currentValues.filter(id => id !== teacher.id);
-                                  } else {
-                                    // Add the ID if not already selected
-                                    updatedValues = [...currentValues, teacher.id];
-                                  }
-                                  
-                                  console.log('Updating instructors to:', updatedValues);
-                                  field.onChange(updatedValues);
-                                }}
-                              >
-                                <div
-                                  className={cn(
-                                    "h-4 w-4 rounded-sm border flex items-center justify-center",
-                                    isSelected
-                                      ? "bg-primary border-primary text-primary-foreground"
-                                      : "border-input"
-                                  )}
-                                >
-                                  {isSelected && (
-                                    <Check className="h-3 w-3" />
-                                  )}
-                                </div>
-                                <span>
-                                  {teacher.first_name} {teacher.last_name}
-                                </span>
-                              </div>
-                            );
-                          })
-                        )}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Instructors</FormLabel>
+              <FormDescription>
+                Select the instructors for this course
+              </FormDescription>
+              <Card>
+                <ScrollArea className="h-60">
+                  <CardContent className="pt-4 space-y-2">
+                    {teachers.length === 0 ? (
+                      <div className="text-center text-muted-foreground">
+                        No teachers available
                       </div>
-                    </ScrollArea>
-                  </PopoverContent>
-                </Popover>
-                <FormDescription>
-                  Select the instructors for this course
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
+                    ) : (
+                      teachers.map((teacher) => (
+                        <div key={teacher.id} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`teacher-${teacher.id}`}
+                            checked={field.value?.includes(teacher.id)}
+                            onCheckedChange={(checked) => {
+                              const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                              
+                              if (checked) {
+                                // Add to selection
+                                if (!currentValues.includes(teacher.id)) {
+                                  field.onChange([...currentValues, teacher.id]);
+                                }
+                              } else {
+                                // Remove from selection
+                                field.onChange(currentValues.filter(id => id !== teacher.id));
+                              }
+                            }}
+                          />
+                          <Label 
+                            htmlFor={`teacher-${teacher.id}`}
+                            className="cursor-pointer"
+                          >
+                            {teacher.first_name} {teacher.last_name}
+                          </Label>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <FormField
           control={form.control}
           name="students"
-          render={({ field }) => {
-            console.log('Students field value:', field.value);
-            return (
-              <FormItem>
-                <FormLabel>Students</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        type="button" // Set type to button to prevent form submission
-                        className="w-full justify-between"
-                      >
-                        {field.value?.length > 0
-                          ? `${field.value.length} student${field.value.length > 1 ? 's' : ''} enrolled`
-                          : "Select students to enroll"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <ScrollArea className="h-60">
-                      <div className="p-1">
-                        {students.length === 0 ? (
-                          <div className="p-2 text-center text-muted-foreground">
-                            No students available
-                          </div>
-                        ) : (
-                          students.map((student) => {
-                            // Safely check if the student ID is in the field value array
-                            const isSelected = Array.isArray(field.value) && field.value.includes(student.id);
-                            console.log(`Student ${student.id} selected:`, isSelected);
-                            
-                            return (
-                              <div
-                                key={student.id}
-                                className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
-                                onClick={() => {
-                                  // Create a copy of the current values or initialize an empty array
-                                  const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                                  let updatedValues;
-                                  
-                                  if (isSelected) {
-                                    // Remove the ID if already selected
-                                    updatedValues = currentValues.filter(id => id !== student.id);
-                                  } else {
-                                    // Add the ID if not already selected
-                                    updatedValues = [...currentValues, student.id];
-                                  }
-                                  
-                                  console.log('Updating students to:', updatedValues);
-                                  field.onChange(updatedValues);
-                                }}
-                              >
-                                <div
-                                  className={cn(
-                                    "h-4 w-4 rounded-sm border flex items-center justify-center",
-                                    isSelected
-                                      ? "bg-primary border-primary text-primary-foreground"
-                                      : "border-input"
-                                  )}
-                                >
-                                  {isSelected && (
-                                    <Check className="h-3 w-3" />
-                                  )}
-                                </div>
-                                <span>
-                                  {student.first_name} {student.last_name}
-                                </span>
-                              </div>
-                            );
-                          })
-                        )}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Students</FormLabel>
+              <FormDescription>
+                Select the students who should be enrolled in this course
+              </FormDescription>
+              <Card>
+                <ScrollArea className="h-60">
+                  <CardContent className="pt-4 space-y-2">
+                    {students.length === 0 ? (
+                      <div className="text-center text-muted-foreground">
+                        No students available
                       </div>
-                    </ScrollArea>
-                  </PopoverContent>
-                </Popover>
-                <FormDescription>
-                  Select the students who should be enrolled in this course
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
+                    ) : (
+                      students.map((student) => (
+                        <div key={student.id} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`student-${student.id}`}
+                            checked={field.value?.includes(student.id)}
+                            onCheckedChange={(checked) => {
+                              const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                              
+                              if (checked) {
+                                // Add to selection
+                                if (!currentValues.includes(student.id)) {
+                                  field.onChange([...currentValues, student.id]);
+                                }
+                              } else {
+                                // Remove from selection
+                                field.onChange(currentValues.filter(id => id !== student.id));
+                              }
+                            }}
+                          />
+                          <Label 
+                            htmlFor={`student-${student.id}`} 
+                            className="cursor-pointer"
+                          >
+                            {student.first_name} {student.last_name}
+                          </Label>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

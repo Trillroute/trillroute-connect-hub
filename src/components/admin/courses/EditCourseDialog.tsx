@@ -93,6 +93,9 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   // Ensure we have arrays for instructors and students
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
   const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
+  
+  console.log('EditCourseDialog - Initial instructorIds:', instructorIds);
+  console.log('EditCourseDialog - Initial studentIds:', studentIds);
 
   // Debug logs to check loaded student data
   useEffect(() => {
@@ -152,8 +155,14 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     }
   });
 
+  // This will ensure the form values are correctly reset every time the dialog opens
+  // or whenever the course object changes
   useEffect(() => {
     if (open) {
+      console.log('EditCourseDialog - Form resetting with course:', course);
+      console.log('EditCourseDialog - Reset instructor_ids:', instructorIds);
+      console.log('EditCourseDialog - Reset student_ids:', studentIds);
+      
       // Force reset the form every time the dialog opens to ensure latest data
       form.reset({
         title: course.title,
@@ -174,12 +183,17 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
       });
       
-      console.log('EditCourseDialog - Form reset with values:', {
-        instructors: instructorIds,
-        students: studentIds
-      });
+      console.log('EditCourseDialog - Form reset complete');
     }
   }, [course, open, instructorIds, studentIds, durationValue, durationMetric, durationType, form]);
+
+  // Monitor form values for debugging
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      console.log('EditCourseDialog - Form values updated:', value);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     if (!hasEditPermission) {
@@ -293,24 +307,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
             />
           </ScrollArea>
         )}
-        
-        <DialogFooter className="pt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="submit"
-            className="bg-music-500 hover:bg-music-600"
-            onClick={form.handleSubmit(handleUpdateCourse)}
-            disabled={isLoading || !hasEditPermission}
-          >
-            Update Course
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
