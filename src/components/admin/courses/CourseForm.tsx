@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
   FormField, FormItem, FormLabel, FormControl, 
@@ -61,6 +61,13 @@ const CourseForm: React.FC<CourseFormProps> = ({
     e.preventDefault();
     form.handleSubmit(onSubmit)(e);
   };
+
+  useEffect(() => {
+    const instructorsValue = form.watch('instructors');
+    const studentsValue = form.watch('students');
+    console.log('CourseForm - instructors value:', instructorsValue);
+    console.log('CourseForm - students value:', studentsValue);
+  }, [form]);
 
   return (
     <FormProvider {...form}>
@@ -163,139 +170,159 @@ const CourseForm: React.FC<CourseFormProps> = ({
         <FormField
           control={form.control}
           name="instructors"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Instructors</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="w-full justify-between"
-                    >
-                      {field.value?.length > 0
-                        ? `${field.value.length} instructor${field.value.length > 1 ? 's' : ''} selected`
-                        : "Select instructors"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
-                  <ScrollArea className="h-60">
-                    <div className="p-1">
-                      {teachers.map((teacher) => (
-                        <div
-                          key={teacher.id}
-                          className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
-                          onClick={() => {
-                            const currentValues = new Set(field.value || []);
-                            if (currentValues.has(teacher.id)) {
-                              currentValues.delete(teacher.id);
-                            } else {
-                              currentValues.add(teacher.id);
-                            }
-                            field.onChange(Array.from(currentValues));
-                          }}
-                        >
-                          <div
-                            className={cn(
-                              "h-4 w-4 rounded-sm border flex items-center justify-center",
-                              field.value?.includes(teacher.id)
-                                ? "bg-primary border-primary text-primary-foreground"
-                                : "border-input"
-                            )}
-                          >
-                            {field.value?.includes(teacher.id) && (
-                              <Check className="h-3 w-3" />
-                            )}
-                          </div>
-                          <span>
-                            {teacher.first_name} {teacher.last_name}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            console.log('Instructors field value:', field.value);
+            return (
+              <FormItem>
+                <FormLabel>Instructors</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        {field.value?.length > 0
+                          ? `${field.value.length} instructor${field.value.length > 1 ? 's' : ''} selected`
+                          : "Select instructors"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <ScrollArea className="h-60">
+                      <div className="p-1">
+                        {teachers.map((teacher) => {
+                          const isSelected = Array.isArray(field.value) && field.value.includes(teacher.id);
+                          console.log(`Teacher ${teacher.id} selected:`, isSelected);
+                          
+                          return (
+                            <div
+                              key={teacher.id}
+                              className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
+                              onClick={() => {
+                                const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                                const updatedValues = isSelected
+                                  ? currentValues.filter(id => id !== teacher.id)
+                                  : [...currentValues, teacher.id];
+                                
+                                console.log('Updating instructors to:', updatedValues);
+                                field.onChange(updatedValues);
+                              }}
+                            >
+                              <div
+                                className={cn(
+                                  "h-4 w-4 rounded-sm border flex items-center justify-center",
+                                  isSelected
+                                    ? "bg-primary border-primary text-primary-foreground"
+                                    : "border-input"
+                                )}
+                              >
+                                {isSelected && (
+                                  <Check className="h-3 w-3" />
+                                )}
+                              </div>
+                              <span>
+                                {teacher.first_name} {teacher.last_name}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+                <FormDescription>
+                  Select the instructors for this course
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
-        {/* New field for student selection */}
         <FormField
           control={form.control}
           name="students"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Students</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="w-full justify-between"
-                    >
-                      {field.value?.length > 0
-                        ? `${field.value.length} student${field.value.length > 1 ? 's' : ''} enrolled`
-                        : "Select students to enroll"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
-                  <ScrollArea className="h-60">
-                    <div className="p-1">
-                      {students.length === 0 ? (
-                        <div className="p-2 text-center text-muted-foreground">
-                          No students available
-                        </div>
-                      ) : (
-                        students.map((student) => (
-                          <div
-                            key={student.id}
-                            className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
-                            onClick={() => {
-                              const currentValues = new Set(field.value || []);
-                              if (currentValues.has(student.id)) {
-                                currentValues.delete(student.id);
-                              } else {
-                                currentValues.add(student.id);
-                              }
-                              field.onChange(Array.from(currentValues));
-                            }}
-                          >
-                            <div
-                              className={cn(
-                                "h-4 w-4 rounded-sm border flex items-center justify-center",
-                                field.value?.includes(student.id)
-                                  ? "bg-primary border-primary text-primary-foreground"
-                                  : "border-input"
-                              )}
-                            >
-                              {field.value?.includes(student.id) && (
-                                <Check className="h-3 w-3" />
-                              )}
-                            </div>
-                            <span>
-                              {student.first_name} {student.last_name}
-                            </span>
+          render={({ field }) => {
+            console.log('Students field value:', field.value);
+            return (
+              <FormItem>
+                <FormLabel>Students</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        {field.value?.length > 0
+                          ? `${field.value.length} student${field.value.length > 1 ? 's' : ''} enrolled`
+                          : "Select students to enroll"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <ScrollArea className="h-60">
+                      <div className="p-1">
+                        {students.length === 0 ? (
+                          <div className="p-2 text-center text-muted-foreground">
+                            No students available
                           </div>
-                        ))
-                      )}
-                    </div>
-                  </ScrollArea>
-                </PopoverContent>
-              </Popover>
-              <FormDescription>
-                Select the students who should be enrolled in this course
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+                        ) : (
+                          students.map((student) => {
+                            const isSelected = Array.isArray(field.value) && field.value.includes(student.id);
+                            console.log(`Student ${student.id} selected:`, isSelected);
+                            
+                            return (
+                              <div
+                                key={student.id}
+                                className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
+                                onClick={() => {
+                                  const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                                  const updatedValues = isSelected
+                                    ? currentValues.filter(id => id !== student.id)
+                                    : [...currentValues, student.id];
+                                  
+                                  console.log('Updating students to:', updatedValues);
+                                  field.onChange(updatedValues);
+                                }}
+                              >
+                                <div
+                                  className={cn(
+                                    "h-4 w-4 rounded-sm border flex items-center justify-center",
+                                    isSelected
+                                      ? "bg-primary border-primary text-primary-foreground"
+                                      : "border-input"
+                                  )}
+                                >
+                                  {isSelected && (
+                                    <Check className="h-3 w-3" />
+                                  )}
+                                </div>
+                                <span>
+                                  {student.first_name} {student.last_name}
+                                </span>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+                <FormDescription>
+                  Select the students who should be enrolled in this course
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

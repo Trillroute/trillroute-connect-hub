@@ -160,6 +160,10 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           ? course.duration_type as "fixed" | "recurring"
           : "fixed";
           
+      // Debug logs for initial form values
+      console.log('Initializing form with instructors:', instructorIds);
+      console.log('Initializing form with students:', studentIds);
+          
       form.reset({
         title: course.title,
         description: course.description,
@@ -179,7 +183,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
       });
     }
-  }, [course, form, open, instructorIds, studentIds]);
+  }, [course, form, open, instructorIds, studentIds, durationValue, durationMetric]);
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     if (!hasEditPermission) {
@@ -212,6 +216,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       // Debug logs
       console.log('Updating course with students:', studentArray);
       console.log('Student count:', studentCount);
+      console.log('Updating course with instructors:', data.instructors);
       
       const { error: courseError } = await supabase
         .from('courses')
