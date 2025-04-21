@@ -25,7 +25,13 @@ export function useTeacherCourses() {
           setMyCoursesLoading(false);
           return;
         }
-        setMyCourses(data || []);
+        // Ensure student_ids is always present
+        setMyCourses(
+          (data || []).map((c) => ({
+            ...c,
+            student_ids: c.student_ids || [],
+          }))
+        );
       } catch (err) {
         console.error('Unexpected error fetching my classes:', err);
         setMyCourses([]);

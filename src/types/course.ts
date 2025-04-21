@@ -17,6 +17,7 @@ export interface Course {
   studio_sessions_duration?: number;
   practical_sessions_count?: number;
   practical_sessions_duration?: number;
+  student_ids?: string[]; // <-- added for enrolled students
 }
 
 export interface Teacher {
