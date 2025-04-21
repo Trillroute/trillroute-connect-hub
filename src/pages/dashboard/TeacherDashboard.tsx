@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/hooks/useAuth';
@@ -6,10 +7,15 @@ import { Calendar, Users, BookOpen } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { ProfileCompletionDialog } from '@/components/teacher/ProfileCompletion/ProfileCompletionDialog';
 import { useTeacherProfile } from '@/hooks/useTeacherProfile';
+import { supabase } from '@/integrations/supabase/client';
+import { Course } from '@/types/course';
 
 const TeacherDashboard = () => {
   const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [myCourses, setMyCourses] = useState<Course[]>([]);
+  const [myCoursesLoading, setMyCoursesLoading] = useState(true);
+
   const {
     loading,
     progress,
@@ -24,6 +30,35 @@ const TeacherDashboard = () => {
     removeInstitute,
     saveProfile
   } = useTeacherProfile();
+
+  useEffect(() => {
+    // Fetch only if user is logged in and is a teacher
+    if (!user || user.role !== "teacher") return;
+    const fetchMyCourses = async () => {
+      setMyCoursesLoading(true);
+      try {
+        // Get all courses where instructor_ids contains the teacher's id
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*')
+          .contains('instructor_ids', [user.id]); // use array contains for matching teacher
+
+        if (error) {
+          console.error('Error fetching my classes:', error);
+          setMyCourses([]);
+          setMyCoursesLoading(false);
+          return;
+        }
+        setMyCourses(data || []);
+      } catch (err) {
+        console.error('Unexpected error fetching my classes:', err);
+        setMyCourses([]);
+      } finally {
+        setMyCoursesLoading(false);
+      }
+    };
+    fetchMyCourses();
+  }, [user]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -80,7 +115,32 @@ const TeacherDashboard = () => {
               <CardDescription>Manage your active classes and assignments.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Here you can view and manage the classes you are teaching.</p>
+              {myCoursesLoading ? (
+                <p>Loading classes...</p>
+              ) : myCourses.length === 0 ? (
+                <p>You are not assigned to any classes yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {myCourses.map(course => (
+                    <div key={course.id} className="border rounded px-4 py-3 flex flex-col gap-1 bg-muted">
+                      <div className="flex flex-row items-center justify-between">
+                        <div>
+                          <span className="font-semibold text-lg">{course.title}</span>
+                          {course.level && (
+                            <span className="ml-2 px-2 py-0.5 text-xs bg-secondary rounded">
+                              {course.level}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {course.duration} {course.duration_type}
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">{course.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -112,3 +172,4 @@ const TeacherDashboard = () => {
 };
 
 export default TeacherDashboard;
+
