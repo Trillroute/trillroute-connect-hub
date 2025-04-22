@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -6,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Course, DurationMetric } from '@/types/course';
+import { Course, DurationMetric, ClassTypeData } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
 import CourseForm, { CourseFormValues } from './CourseForm';
@@ -31,6 +32,10 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
+  class_types_data: z.array(z.object({
+    class_type_id: z.string(),
+    quantity: z.number()
+  })).optional(),
 }).refine((data) => {
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
@@ -62,10 +67,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   console.log('EditCourseDialog - hasEditPermission:', hasEditPermission);
   console.log('EditCourseDialog - admin role name:', user?.adminRoleName);
 
-  if (user && user.role === 'admin') {
-    console.log('EditCourseDialog - Can manage courses check:', canManageCourses(user, 'edit'));
-  }
-
   useEffect(() => {
     if (open && !hasEditPermission) {
       console.log('EditCourseDialog - Permission denied, closing dialog');
@@ -80,6 +81,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
   const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
+  const classTypesData = Array.isArray(course.class_types_data) ? course.class_types_data : [];
 
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
     if (durationType !== 'fixed' || !duration) {
@@ -119,6 +121,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       durationMetric: durationMetric,
       durationType: durationType,
       image: course.image,
+      class_types_data: classTypesData,
     }
   });
 
@@ -134,6 +137,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         durationMetric: durationMetric,
         durationType: durationType,
         image: course.image,
+        class_types_data: course.class_types_data || [],
       });
     }
   }, [course, open, instructorIds, durationValue, durationMetric, durationType, form]);
@@ -167,6 +171,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       }
       
       console.log('Updating course with instructors:', data.instructors);
+      console.log('Updating course with class types:', data.class_types_data);
 
       const { error: courseError } = await supabase
         .from('courses')
@@ -181,6 +186,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           student_ids: studentIds,
           students: studentIds.length,
+          class_types_data: data.class_types_data || [],
         })
         .eq('id', course.id);
         

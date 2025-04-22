@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/types/course";
 import { useAuth } from "@/hooks/useAuth";
+import { ClassTypeData } from '@/types/course';
 
 export function useTeacherCourses() {
   const { user } = useAuth();
@@ -25,13 +25,19 @@ export function useTeacherCourses() {
           setMyCoursesLoading(false);
           return;
         }
-        // Ensure student_ids is always present
-        setMyCourses(
-          (data || []).map((c) => ({
-            ...c,
-            student_ids: c.student_ids || [],
-          }))
-        );
+
+        const formattedCourses = data.map(course => ({
+          ...course,
+          student_ids: course.student_ids || [],
+          instructor_ids: course.instructor_ids || [],
+          class_types_data: course.class_types_data ? 
+            (Array.isArray(course.class_types_data) ? 
+              course.class_types_data as ClassTypeData[] : 
+              []) : 
+            [],
+        }));
+
+        setMyCourses(formattedCourses);
       } catch (err) {
         console.error('Unexpected error fetching my classes:', err);
         setMyCourses([]);

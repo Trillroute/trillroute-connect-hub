@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Course } from '@/types/course';
+import { Course, ClassTypeData } from '@/types/course';
 import { useToast } from '@/hooks/use-toast';
 
 export function useCourses() {
@@ -33,6 +33,11 @@ export function useCourses() {
           ...item,
           instructor_ids: item.instructor_ids || [],
           student_ids: item.student_ids || [],
+          class_types_data: item.class_types_data ? 
+            (Array.isArray(item.class_types_data) ? 
+              item.class_types_data as ClassTypeData[] : 
+              []) : 
+            [],
         }));
 
         setCourses(formattedCourses);

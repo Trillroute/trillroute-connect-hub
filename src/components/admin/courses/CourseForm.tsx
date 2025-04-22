@@ -59,6 +59,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
     console.log('CourseForm - instructors value:', instructorsValue);
   }, [form]);
 
+  useEffect(() => {
+    const classTypesValue = form.watch('class_types_data');
+    console.log('CourseForm - class_types_data value:', classTypesValue);
+  }, [form]);
+
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">

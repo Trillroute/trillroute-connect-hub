@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { CourseFormValues } from './CourseForm';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
-import CourseForm, { CourseFormValues } from './CourseForm';
-import { DurationMetric } from '@/types/course';
+import CourseForm from './CourseForm';
 import { useAuth } from '@/hooks/useAuth';
+import { canManageCourses } from '@/utils/adminPermissions';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ClassTypeData } from '@/types/course';
 
 interface CreateCourseDialogProps {
@@ -29,14 +31,10 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
-  class_types_data: z
-    .array(
-      z.object({
-        class_type_id: z.string(),
-        quantity: z.number().int().min(1)
-      })
-    )
-    .min(1, { message: "At least one class type must be selected" }),
+  class_types_data: z.array(z.object({
+    class_type_id: z.string(),
+    quantity: z.number()
+  })).optional(),
 }).refine((data) => {
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
@@ -51,7 +49,22 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
-  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { user, isSuperAdmin } = useAuth();
+
+  const hasAddPermission = isSuperAdmin() ||
+    (user?.role === 'admin' && canManageCourses(user, 'add'));
+
+  useEffect(() => {
+    if (open && !hasAddPermission) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to add courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+    }
+  }, [open, hasAddPermission, onOpenChange, toast]);
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -59,36 +72,29 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       title: '',
       description: '',
       instructors: [],
-      level: 'For Anyone',
+      level: 'Beginner',
       skill: '',
-      durationValue: '0',
-      durationMetric: 'weeks',
       durationType: 'fixed',
+      durationValue: '',
+      durationMetric: 'weeks',
       image: '',
       class_types_data: [],
     }
   });
 
-  useEffect(() => {
-    if (!open) {
-      form.reset({
-        title: '',
-        description: '',
-        instructors: [],
-        level: 'For Anyone',
-        skill: '',
-        durationValue: '0',
-        durationMetric: 'weeks',
-        durationType: 'fixed',
-        image: '',
-        class_types_data: [],
-      });
-    }
-  }, [open, form]);
-
   const handleCreateCourse = async (data: CourseFormValues) => {
+    if (!hasAddPermission) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to add courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+      return;
+    }
+    
     try {
-      console.log('Creating course with data:', data);
+      setIsLoading(true);
       
       let duration = '';
       if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
@@ -97,23 +103,24 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         duration = 'Recurring';
       }
       
+      console.log('Creating course with instructors:', data.instructors);
+      console.log('Creating course with class types:', data.class_types_data);
+      
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
-        .insert([
-          {
-            title: data.title,
-            description: data.description,
-            level: data.level,
-            skill: data.skill,
-            duration: duration,
-            duration_type: data.durationType,
-            image: data.image,
-            students: 0,
-            instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-            student_ids: [],
-            class_types_data: data.class_types_data || []
-          }
-        ])
+        .insert({
+          title: data.title,
+          description: data.description,
+          level: data.level,
+          skill: data.skill,
+          duration: duration,
+          duration_type: data.durationType,
+          image: data.image,
+          instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
+          students: 0,
+          student_ids: [],
+          class_types_data: data.class_types_data || [],
+        })
         .select()
         .single();
         
@@ -128,7 +135,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       }
       
       onOpenChange(false);
-      form.reset();
       onSuccess();
       
       toast({
@@ -143,27 +149,37 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         description: 'An unexpected error occurred.',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+    <Dialog open={open && hasAddPermission} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Add New Course</DialogTitle>
+          <DialogTitle>Create New Course</DialogTitle>
           <DialogDescription>
-            Create a new course by filling out the information below.
+            Fill in the information below to create a new course.
           </DialogDescription>
         </DialogHeader>
         
-        <CourseForm 
-          form={form} 
-          onSubmit={handleCreateCourse} 
-          teachers={teachers} 
-          skills={skills}
-          submitButtonText="Create Course"
-          cancelAction={() => onOpenChange(false)}
-        />
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-music-500"></div>
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[calc(100vh-14rem)] pr-4">
+            <CourseForm 
+              form={form} 
+              onSubmit={handleCreateCourse} 
+              teachers={teachers}
+              skills={skills}
+              submitButtonText="Create Course"
+              cancelAction={() => onOpenChange(false)}
+            />
+          </ScrollArea>
+        )}
       </DialogContent>
     </Dialog>
   );
