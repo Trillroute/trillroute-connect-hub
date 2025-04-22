@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Search } from 'lucide-react';
+import { Plus, RefreshCw, Search, LayoutGrid, Grid2x2, LayoutList } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,14 +34,13 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const { leads, loading, fetchLeads } = useFetchLeads();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
-  
-  // Check if user is superadmin and override permissions
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
+
   const isSuperAdmin = user?.role === 'superadmin';
   const effectiveCanAddLead = isSuperAdmin ? true : canAddLead;
   const effectiveCanEditLead = isSuperAdmin ? true : canEditLead;
   const effectiveCanDeleteLead = isSuperAdmin ? true : canDeleteLead;
 
-  // Debug logging
   console.log('LeadManagement - User:', user);
   console.log('LeadManagement - isSuperAdmin:', isSuperAdmin);
   console.log('LeadManagement - effectiveCanEditLead:', effectiveCanEditLead);
@@ -50,7 +48,6 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   console.log('LeadManagement - can edit leads permission:', 
     user?.role === 'admin' ? canManageLeads(user, 'edit') : 'N/A');
 
-  // Filter leads based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredLeads(leads);
@@ -72,7 +69,6 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   }, [leads, searchQuery]);
   
   const openEditDialog = (lead: Lead) => {
-    // Always allow superadmin to edit leads
     if (isSuperAdmin) {
       console.log('LeadManagement - Superadmin opening edit dialog');
       setSelectedLead(lead);
@@ -80,7 +76,6 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
       return;
     }
     
-    // Check if admin has edit permission
     if (user?.role === 'admin') {
       const hasPermission = canManageLeads(user, 'edit');
       console.log('LeadManagement - Admin has edit permission:', hasPermission);
@@ -100,7 +95,6 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   };
 
   const openDeleteDialog = (lead: Lead) => {
-    // Always allow superadmin to delete leads
     if (isSuperAdmin) {
       console.log('LeadManagement - Superadmin opening delete dialog');
       setSelectedLead(lead);
@@ -108,7 +102,6 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
       return;
     }
     
-    // Check if admin has delete permission
     if (user?.role === 'admin') {
       const hasPermission = canManageLeads(user, 'delete');
       console.log('LeadManagement - Admin has delete permission:', hasPermission);
@@ -135,7 +128,31 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
             <CardTitle>Lead Management</CardTitle>
             <CardDescription>Manage prospective students</CardDescription>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-row gap-2 items-center">
+            <Button 
+              size="sm" 
+              variant={viewMode === 'list' ? "secondary" : "outline"}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={viewMode === 'grid' ? "secondary" : "outline"}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={viewMode === 'tile' ? "secondary" : "outline"}
+              onClick={() => setViewMode('tile')}
+              title="Tile view"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
             <Button 
               variant="outline" 
               onClick={fetchLeads}
@@ -170,13 +187,51 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
           />
         </div>
         
-        <LeadTable 
-          leads={filteredLeads} 
-          loading={loading} 
-          onEdit={openEditDialog}
-          onDelete={openDeleteDialog}
-        />
-        
+        {viewMode === 'list' && (
+          <LeadTable 
+            leads={filteredLeads} 
+            loading={loading} 
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+          />
+        )}
+        {viewMode === 'grid' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredLeads.map(lead => (
+              <div key={lead.id} className="bg-muted rounded-lg shadow-sm p-4 flex flex-col">
+                <div className="font-semibold">{lead.name}</div>
+                <div className="text-sm text-gray-500">{lead.email}</div>
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => openEditDialog(lead)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(lead)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {viewMode === 'tile' && (
+          <div className="flex flex-wrap gap-4">
+            {filteredLeads.map(lead => (
+              <div key={lead.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center">
+                <div className="font-semibold">{lead.name}</div>
+                <div className="text-xs text-gray-500">{lead.email}</div>
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => openEditDialog(lead)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(lead)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {effectiveCanAddLead && (
           <CreateLeadDialog 
             open={isCreateDialogOpen} 

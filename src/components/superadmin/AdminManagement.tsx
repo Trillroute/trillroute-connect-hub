@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -8,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import { fetchAdmins, updateUserRole, deleteUser } from './AdminService';
@@ -28,6 +27,7 @@ const AdminManagement = () => {
   const [adminToEdit, setAdminToEdit] = useState<UserManagementUser | null>(null);
   const [adminToDelete, setAdminToDelete] = useState<UserManagementUser | null>(null);
   const [userToEdit, setUserToEdit] = useState<UserManagementUser | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
   const { toast } = useToast();
   const { isSuperAdmin } = useAuth();
 
@@ -161,7 +161,6 @@ const AdminManagement = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  // Only superadmins can manage admins
   if (!isSuperAdmin()) {
     return (
       <Card>
@@ -181,7 +180,31 @@ const AdminManagement = () => {
             <CardTitle>Administrator Management</CardTitle>
             <CardDescription>Manage administrator accounts and permissions</CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
+            <Button 
+              size="sm" 
+              variant={viewMode === 'list' ? "secondary" : "outline"}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={viewMode === 'grid' ? "secondary" : "outline"}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={viewMode === 'tile' ? "secondary" : "outline"}
+              onClick={() => setViewMode('tile')}
+              title="Tile view"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
             <Button variant="outline" onClick={loadAdmins}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -190,13 +213,52 @@ const AdminManagement = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <AdminTable 
-          admins={admins} 
-          isLoading={isLoading}
-          onEditAdmin={() => {}} // This is no longer used
-          onDeleteAdmin={openDeleteDialog}
-          onEditUserDetails={openEditUserDialog}
-        />
+        {viewMode === 'list' && (
+          <AdminTable 
+            admins={admins} 
+            isLoading={isLoading}
+            onEditAdmin={() => {}} // This is no longer used
+            onDeleteAdmin={openDeleteDialog}
+            onEditUserDetails={openEditUserDialog}
+          />
+        )}
+        {viewMode === 'grid' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {admins.map(admin => (
+              <div key={admin.id} className="bg-muted rounded-lg shadow-sm p-4 flex flex-col">
+                <div className="font-semibold">{admin.firstName} {admin.lastName}</div>
+                <div className="text-sm text-gray-500">{admin.email}</div>
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => onEditUserDetails && onEditUserDetails(admin)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(admin)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {viewMode === 'tile' && (
+          <div className="flex flex-wrap gap-4">
+            {admins.map(admin => (
+              <div key={admin.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center">
+                <Shield className="h-8 w-8 text-music-500 mb-2" />
+                <div className="font-semibold">{admin.firstName} {admin.lastName}</div>
+                <div className="text-xs text-gray-500">{admin.email}</div>
+                <div className="mt-2 flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => onEditUserDetails && onEditUserDetails(admin)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(admin)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         
         <DeleteAdminDialog
           admin={adminToDelete}

@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseTable from './courses/CourseTable';
 import CreateCourseDialog from './courses/CreateCourseDialog';
@@ -35,8 +34,8 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { courses, loading, fetchCourses } = useCourses();
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
 
-  // Calculate effective permissions based on both prop values and user's actual permissions
   const userCanEdit = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'edit'));
   const userCanDelete = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'delete'));
   const userCanAdd = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'add'));
@@ -45,7 +44,6 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const effectiveCanDeleteCourse = canDeleteCourse && userCanDelete;
   const effectiveCanAddCourse = canAddCourse && userCanAdd;
   
-  // Debug log the permission check for admin users 
   if (user?.role === 'admin') {
     console.log('CourseManagement - can edit courses permission:', canManageCourses(user, 'edit'));
   }
@@ -81,7 +79,6 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
     }
   };
 
-  // Filter courses based on search query
   const filteredCourses = searchQuery 
     ? courses.filter(course => 
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -99,7 +96,31 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
             <CardTitle>Course Management</CardTitle>
             <CardDescription>Manage courses and lessons</CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
+            <Button 
+              size="sm" 
+              variant={viewMode === 'list' ? "secondary" : "outline"}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={viewMode === 'grid' ? "secondary" : "outline"}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant={viewMode === 'tile' ? "secondary" : "outline"}
+              onClick={() => setViewMode('tile')}
+              title="Tile view"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
             <Button
               variant="outline"
               onClick={fetchCourses}
@@ -138,13 +159,83 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         </div>
 
         <div className="relative">
-          <CourseTable 
-            courses={filteredCourses} 
-            loading={loading} 
-            onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
-            onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
-            onView={openViewDialog}
-          />
+          {viewMode === 'list' && (
+            <CourseTable 
+              courses={filteredCourses} 
+              loading={loading} 
+              onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
+              onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
+              onView={openViewDialog}
+            />
+          )}
+          {viewMode === 'grid' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredCourses.map(course => (
+                <div key={course.id} className="bg-muted rounded-lg shadow p-4 flex flex-col">
+                  <div className="flex items-center gap-3">
+                    {course.image && (
+                      <img
+                        src={course.image}
+                        alt={course.title}
+                        className="h-10 w-10 rounded object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div>
+                      <div className="font-semibold">{course.title}</div>
+                      <div className="text-xs text-gray-500">{course.level} • {course.skill}</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => openViewDialog(course)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {effectiveCanEditCourse && (
+                      <Button size="sm" variant="ghost" onClick={() => openEditDialog(course)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {effectiveCanDeleteCourse && (
+                      <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(course)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {viewMode === 'tile' && (
+            <div className="flex flex-wrap gap-4">
+              {filteredCourses.map(course => (
+                <div key={course.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center">
+                  {course.image && (
+                    <img
+                      src={course.image}
+                      alt={course.title}
+                      className="h-10 w-10 rounded object-cover flex-shrink-0 mb-2"
+                    />
+                  )}
+                  <div className="font-semibold">{course.title}</div>
+                  <div className="text-xs text-gray-500">{course.level} • {course.skill}</div>
+                  <div className="mt-2 flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => openViewDialog(course)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {effectiveCanEditCourse && (
+                      <Button size="sm" variant="ghost" onClick={() => openEditDialog(course)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {effectiveCanDeleteCourse && (
+                      <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(course)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {effectiveCanAddCourse && (
