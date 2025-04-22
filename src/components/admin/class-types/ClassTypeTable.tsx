@@ -52,13 +52,16 @@ const ClassTypeTable = ({
   // Use either the prop searchQuery or local search state
   const searchTerm = searchQuery || localSearchTerm;
   
-  const filteredClassTypes = classTypes.filter((classType) => {
-    const searchRegex = new RegExp(searchTerm, "i");
-    return searchRegex.test(classType.name) || 
-           searchRegex.test(classType.description) || 
-           searchRegex.test(classType.duration_metric) ||
-           (classType.location && searchRegex.test(classType.location));
-  });
+  // Add defensive check to prevent filtering undefined classTypes
+  const filteredClassTypes = classTypes && classTypes.length > 0 
+    ? classTypes.filter((classType) => {
+        const searchRegex = new RegExp(searchTerm, "i");
+        return searchRegex.test(classType.name) || 
+               searchRegex.test(classType.description) || 
+               searchRegex.test(classType.duration_metric) ||
+               (classType.location && searchRegex.test(classType.location));
+      })
+    : [];
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -193,7 +196,7 @@ const ClassTypeTable = ({
           </div>
         )}
         <div className="text-sm text-muted-foreground">
-          Showing {filteredClassTypes.length} of {classTypes.length} class types
+          Showing {filteredClassTypes.length} of {classTypes ? classTypes.length : 0} class types
         </div>
       </div>
     );
@@ -293,7 +296,7 @@ const ClassTypeTable = ({
           </div>
         )}
         <div className="text-sm text-muted-foreground">
-          Showing {filteredClassTypes.length} of {classTypes.length} class types
+          Showing {filteredClassTypes.length} of {classTypes ? classTypes.length : 0} class types
         </div>
       </div>
     );
@@ -418,7 +421,7 @@ const ClassTypeTable = ({
         </ScrollArea>
       )}
       <div className="text-sm text-muted-foreground">
-        Showing {filteredClassTypes.length} of {classTypes.length} class types
+        Showing {filteredClassTypes.length} of {classTypes ? classTypes.length : 0} class types
       </div>
     </div>
   );

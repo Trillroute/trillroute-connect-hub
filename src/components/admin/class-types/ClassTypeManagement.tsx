@@ -9,12 +9,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { ClassType } from "./ClassTypeTable";
 
 const ClassTypeManagement: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { user, isAdmin, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const [canManageClassTypes, setCanManageClassTypes] = useState(false);
+  const [classTypes, setClassTypes] = useState<ClassType[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "tile">("list");
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,6 +38,53 @@ const ClassTypeManagement: React.FC = () => {
     }
   }, [user, isAdmin, isSuperAdmin]);
 
+  useEffect(() => {
+    fetchClassTypes();
+    
+    // Set up subscription for realtime updates
+    const subscription = supabase
+      .channel('class_types_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'class_types' }, () => {
+        fetchClassTypes();
+      })
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchClassTypes = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('class_types')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching class types:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load class types. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setClassTypes(data || []);
+    } catch (error) {
+      console.error("Unexpected error fetching class types:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while loading class types.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateClassType = () => {
     if (!user) {
       toast({
@@ -52,6 +103,14 @@ const ClassTypeManagement: React.FC = () => {
       return;
     }
     setDialogOpen(true);
+  };
+
+  const handleEditClassType = (classType: ClassType) => {
+    toast({
+      title: "Edit Class Type",
+      description: `Editing ${classType.name}`,
+    });
+    // Add edit functionality here
   };
 
   return (
@@ -87,7 +146,7 @@ const ClassTypeManagement: React.FC = () => {
             >
               <Grid2x2 className="w-4 h-4" />
             </Button>
-            <Button size="sm" variant="outline" className="flex items-center gap-2" onClick={() => window.location.reload()}>
+            <Button size="sm" variant="outline" className="flex items-center gap-2" onClick={fetchClassTypes}>
               <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
@@ -111,17 +170,15 @@ const ClassTypeManagement: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full max-w-md mb-4">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            type="search"
-            placeholder="Search class types..."
-            className="pl-9 w-full"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <ClassTypeTable viewMode={viewMode} searchQuery={searchQuery} />
+        <ClassTypeTable 
+          classTypes={classTypes}
+          loading={loading}
+          onEditClassType={handleEditClassType}
+          onDeleteClassType={(classType) => console.log("Delete:", classType)}
+          onViewClassType={(classType) => console.log("View:", classType)}
+          viewMode={viewMode}
+          searchQuery={searchQuery}
+        />
       </CardContent>
     </Card>
   );
