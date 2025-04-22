@@ -2,7 +2,6 @@
 import React, { useState, useRef } from 'react';
 import { 
   Sidebar, 
-  SidebarContent, 
   SidebarMenu, 
   SidebarMenuItem, 
   SidebarMenuButton 
@@ -99,100 +98,98 @@ const AdminSidebar = ({
 
   return (
     <Sidebar className={cn(
-      "border-r border-gray-200 h-screen transition-all duration-300 bg-white relative",
+      "border-r border-gray-200 h-screen transition-all duration-300 bg-white relative flex flex-col",
       collapsed ? "w-16" : "w-64"
     )}>
-      <div className="flex flex-col h-full">
-        {/* Header: Always pinned to top */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          {!collapsed && <span className="font-semibold text-lg text-music-600">Admin Panel</span>}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={onToggleCollapse}
-            className="h-8 w-8"
-            aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
-        </div>
-        
-        {/* Navigation section - this is now explicitly at the top after the header */}
-        <div className="overflow-y-auto flex-grow">
-          <SidebarMenu className="py-2">
-            {visibleItems.map((item, idx) => (
-              <SidebarMenuItem
-                key={item.key}
-                draggable
-                onDragStart={() => handleDragStart(idx)}
-                onDragOver={handleDragOver(idx)}
-                onDragEnd={handleDragEnd}
-                onDrop={handleDragEnd}
-                aria-label={`Move ${item.label}`}
-                className={cn(
-                  "transition-colors select-none group",
-                  draggingIndex.current === idx
-                    ? "bg-music-50"
-                    : ""
-                )}
-                style={{
-                  cursor: "grab",
-                  opacity: draggingIndex.current === idx ? 0.5 : 1
-                }}
-              >
-                <TooltipProvider disableHoverableContent={!collapsed}>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <SidebarMenuButton
-                        onClick={() => onTabChange(item.key)}
-                        className={cn(
-                          "flex items-center w-full p-3 rounded-md transition-colors",
-                          activeTab === item.key
-                            ? "bg-music-100 text-music-600"
-                            : "hover:bg-gray-100"
-                        )}
-                        isActive={activeTab === item.key}
-                        aria-current={activeTab === item.key ? "page" : undefined}
-                      >
-                        <span className="mr-3 flex items-center">
-                          <item.icon className="h-5 w-5" />
-                        </span>
-                        {!collapsed && <span>{item.label}</span>}
-                      </SidebarMenuButton>
-                    </TooltipTrigger>
-                    {collapsed && (
-                      <TooltipContent side="right">
-                        <p>{item.label}</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </div>
-        
-        {/* Footer: Always at the bottom */}
-        <div className="p-2 border-t border-gray-200 mt-auto">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full flex justify-center items-center"
-            onClick={onToggleCollapse}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            tabIndex={0}
-          >
-            {collapsed ? (
-              <>
-                <ChevronRight className="h-4 w-4 mr-1" /> Expand
-              </>
-            ) : (
-              <>
-                <ChevronLeft className="h-4 w-4 mr-1" /> Minimize
-              </>
-            )}
-          </Button>
-        </div>
+      {/* Header: Fixed at the top */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        {!collapsed && <span className="font-semibold text-lg text-music-600">Admin Panel</span>}
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={onToggleCollapse}
+          className="h-8 w-8"
+          aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
+      </div>
+      
+      {/* Navigation menu - explicitly positioned right after header */}
+      <div className="flex-1 overflow-y-auto">
+        <SidebarMenu className="py-2">
+          {visibleItems.map((item, idx) => (
+            <SidebarMenuItem
+              key={item.key}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={handleDragOver(idx)}
+              onDragEnd={handleDragEnd}
+              onDrop={handleDragEnd}
+              aria-label={`Move ${item.label}`}
+              className={cn(
+                "transition-colors select-none group",
+                draggingIndex.current === idx
+                  ? "bg-music-50"
+                  : ""
+              )}
+              style={{
+                cursor: "grab",
+                opacity: draggingIndex.current === idx ? 0.5 : 1
+              }}
+            >
+              <TooltipProvider disableHoverableContent={!collapsed}>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <SidebarMenuButton
+                      onClick={() => onTabChange(item.key)}
+                      className={cn(
+                        "flex items-center w-full p-3 rounded-md transition-colors",
+                        activeTab === item.key
+                          ? "bg-music-100 text-music-600"
+                          : "hover:bg-gray-100"
+                      )}
+                      isActive={activeTab === item.key}
+                      aria-current={activeTab === item.key ? "page" : undefined}
+                    >
+                      <span className="mr-3 flex items-center">
+                        <item.icon className="h-5 w-5" />
+                      </span>
+                      {!collapsed && <span>{item.label}</span>}
+                    </SidebarMenuButton>
+                  </TooltipTrigger>
+                  {collapsed && (
+                    <TooltipContent side="right">
+                      <p>{item.label}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </div>
+      
+      {/* Footer: Fixed at the bottom */}
+      <div className="p-2 border-t border-gray-200 mt-auto">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full flex justify-center items-center"
+          onClick={onToggleCollapse}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          tabIndex={0}
+        >
+          {collapsed ? (
+            <>
+              <ChevronRight className="h-4 w-4 mr-1" /> Expand
+            </>
+          ) : (
+            <>
+              <ChevronLeft className="h-4 w-4 mr-1" /> Minimize
+            </>
+          )}
+        </Button>
       </div>
     </Sidebar>
   );
