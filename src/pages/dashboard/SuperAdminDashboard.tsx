@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import { canManageLevels } from '@/utils/adminPermissions';
 import { Link } from 'react-router-dom';
+import CreateClassTypeForm from "@/components/admin/class-types/CreateClassTypeForm";
 
 type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
@@ -295,6 +295,10 @@ const SuperAdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="mb-6">
+            <CreateClassTypeForm />
           </div>
 
           <div className="space-y-6">
