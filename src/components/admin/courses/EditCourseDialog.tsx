@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,12 +31,6 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
-  classesCount: z.string().min(1, { message: "Number of classes is required" }),
-  classesDuration: z.string().min(1, { message: "Class duration is required" }),
-  studioSessionsCount: z.string().min(1, { message: "Number of studio sessions is required" }),
-  studioSessionsDuration: z.string().min(1, { message: "Studio session duration is required" }),
-  practicalSessionsCount: z.string().min(1, { message: "Number of practical sessions is required" }),
-  practicalSessionsDuration: z.string().min(1, { message: "Practical session duration is required" }),
 }).refine((data) => {
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
@@ -133,12 +127,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       durationMetric: durationMetric,
       durationType: durationType,
       image: course.image,
-      classesCount: course.classes_count?.toString() || '0',
-      classesDuration: course.classes_duration?.toString() || '0',
-      studioSessionsCount: course.studio_sessions_count?.toString() || '0',
-      studioSessionsDuration: course.studio_sessions_duration?.toString() || '0',
-      practicalSessionsCount: course.practical_sessions_count?.toString() || '0',
-      practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
     }
   });
 
@@ -160,12 +148,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         durationMetric: durationMetric,
         durationType: durationType,
         image: course.image,
-        classesCount: course.classes_count?.toString() || '0',
-        classesDuration: course.classes_duration?.toString() || '0',
-        studioSessionsCount: course.studio_sessions_count?.toString() || '0',
-        studioSessionsDuration: course.studio_sessions_duration?.toString() || '0',
-        practicalSessionsCount: course.practical_sessions_count?.toString() || '0',
-        practicalSessionsDuration: course.practical_sessions_duration?.toString() || '0',
       });
       
       console.log('EditCourseDialog - Form reset complete');
@@ -218,12 +200,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           student_ids: studentIds, // Keep existing student_ids
           students: studentIds.length, // Update the student count to match the array length
-          classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
-          classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
-          studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
-          studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
-          practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
-          practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0
         })
         .eq('id', course.id);
         
