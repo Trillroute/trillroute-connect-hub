@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/ui/charts';
-import { Download, Settings, School, BookOpen, GraduationCap, UserPlus, Shield, PlusCircle } from 'lucide-react';
+import { Download, Settings, School, BookOpen, GraduationCap, UserPlus, Shield, PlusCircle, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
 import StudentManagement from '@/components/admin/StudentManagement';
@@ -16,13 +16,15 @@ import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagement";
 
-type ActiveTab = 'courses' | 'classTypes' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
+// Add 'today' as the very first tab
+type ActiveTab = 'today' | 'courses' | 'classTypes' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
 const NAV_ITEMS: {
   key: ActiveTab;
   label: string;
   icon: React.ComponentType<{ className?: string }>
 }[] = [
+  { key: 'today', label: 'Today', icon: LayoutDashboard },
   { key: 'courses', label: 'Courses', icon: BookOpen },
   { key: 'classTypes', label: 'Class Types', icon: PlusCircle },
   { key: 'students', label: 'Students', icon: School },
@@ -42,7 +44,7 @@ const SuperAdminDashboard = () => {
   const [userActivityData, setUserActivityData] = useState<{ name: string; Students: number; Teachers: number; Admins: number }[]>([]);
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('today');
   // sidebarCollapsed state removed
 
   const fetchDashboardData = async () => {
@@ -202,7 +204,8 @@ const SuperAdminDashboard = () => {
     teachers: { view: true },
     admins: { view: true },
     leads: { view: true },
-    levels: { view: true }
+    levels: { view: true },
+    today: { view: true }
   };
 
   return (
@@ -213,14 +216,19 @@ const SuperAdminDashboard = () => {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-              <Download className="h-4 w-4 mr-2" />
-              Download Reports
-            </Button>
-            <Button className="bg-music-500 hover:bg-music-600">
-              <Settings className="h-4 w-4 mr-2" />
-              System Settings
-            </Button>
+            {/* Only show the two shortcuts in Today tab */}
+            {activeTab === 'today' && (
+              <>
+                <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Reports
+                </Button>
+                <Button className="bg-music-500 hover:bg-music-600">
+                  <Settings className="h-4 w-4 mr-2" />
+                  System Settings
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -252,79 +260,125 @@ const SuperAdminDashboard = () => {
 
       {/* Content below nav */}
       <div className="flex-grow overflow-auto p-4 md:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Students</CardTitle>
-              <CardDescription>Enrolled students</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <School className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {studentsCount === 0 ? "No students enrolled yet" : `${studentsCount} enrolled students`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Teachers</CardTitle>
-              <CardDescription>Active instructors</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <GraduationCap className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Admins</CardTitle>
-              <CardDescription>All administrators</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <Shield className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{adminsCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {adminsCount === 0 ? "No admins registered yet" : `${adminsCount} active admins`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Courses</CardTitle>
-              <CardDescription>All courses</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <BookOpen className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{coursesCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {coursesCount === 0 ? "No courses created yet" : `${coursesCount} total courses`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {activeTab === 'today' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Total Students</CardTitle>
+                  <CardDescription>Enrolled students</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <School className="h-8 w-8 text-music-500 mr-3" />
+                    <div>
+                      <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {studentsCount === 0 ? "No students enrolled yet" : `${studentsCount} enrolled students`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Total Teachers</CardTitle>
+                  <CardDescription>Active instructors</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <GraduationCap className="h-8 w-8 text-music-500 mr-3" />
+                    <div>
+                      <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Total Admins</CardTitle>
+                  <CardDescription>All administrators</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <Shield className="h-8 w-8 text-music-500 mr-3" />
+                    <div>
+                      <div className="text-3xl font-bold text-music-500">{adminsCount}</div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {adminsCount === 0 ? "No admins registered yet" : `${adminsCount} active admins`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Total Courses</CardTitle>
+                  <CardDescription>All courses</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center">
+                    <BookOpen className="h-8 w-8 text-music-500 mr-3" />
+                    <div>
+                      <div className="text-3xl font-bold text-music-500">{coursesCount}</div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {coursesCount === 0 ? "No courses created yet" : `${coursesCount} total courses`}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="grid grid-cols-1 gap-6 mt-8">
+              <Card>
+                <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2">
+                  <div>
+                    <CardTitle>User Growth {currentYear}</CardTitle>
+                    <CardDescription>All users registered by month</CardDescription>
+                  </div>
+                  <div className="flex space-x-2 mt-2 md:mt-0">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleYearChange(-1)}
+                    >
+                      Previous Year
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleYearChange(1)}
+                    >
+                      Next Year
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="h-80">
+                  {userActivityData.length > 0 ? (
+                    <AreaChart
+                      data={userActivityData}
+                      index="name"
+                      categories={["Students", "Teachers", "Admins"]}
+                      colors={["music.500", "music.300", "music.700"]}
+                      valueFormatter={(value: number) => `${value}`}
+                      className="h-full"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      <p>Loading user growth data...</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
 
         {activeTab === 'classTypes' && (
           <div className="mb-6">
@@ -352,53 +406,9 @@ const SuperAdminDashboard = () => {
           {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
           {activeTab === 'levels' && <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />}
         </div>
-
-        <div className="grid grid-cols-1 gap-6 mt-8">
-          <Card>
-            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2">
-              <div>
-                <CardTitle>User Growth {currentYear}</CardTitle>
-                <CardDescription>All users registered by month</CardDescription>
-              </div>
-              <div className="flex space-x-2 mt-2 md:mt-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleYearChange(-1)}
-                >
-                  Previous Year
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleYearChange(1)}
-                >
-                  Next Year
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="h-80">
-              {userActivityData.length > 0 ? (
-                <AreaChart
-                  data={userActivityData}
-                  index="name"
-                  categories={["Students", "Teachers", "Admins"]}
-                  colors={["music.500", "music.300", "music.700"]}
-                  valueFormatter={(value: number) => `${value}`}
-                  className="h-full"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <p>Loading user growth data...</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
 };
 
 export default SuperAdminDashboard;
-
