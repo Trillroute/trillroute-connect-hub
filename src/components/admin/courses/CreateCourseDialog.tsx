@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -12,6 +11,7 @@ import { useSkills } from '@/hooks/useSkills';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { DurationMetric } from '@/types/course';
 import { useAuth } from '@/hooks/useAuth';
+import { ClassTypeData } from '@/types/course';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -29,6 +29,14 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
+  class_types_data: z
+    .array(
+      z.object({
+        class_type_id: z.string(),
+        quantity: z.number().int().min(1)
+      })
+    )
+    .min(1, { message: "At least one class type must be selected" }),
 }).refine((data) => {
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
@@ -57,6 +65,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       durationMetric: 'weeks',
       durationType: 'fixed',
       image: '',
+      class_types_data: [],
     }
   });
 
@@ -72,6 +81,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         durationMetric: 'weeks',
         durationType: 'fixed',
         image: '',
+        class_types_data: [],
       });
     }
   }, [open, form]);
@@ -100,7 +110,8 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             image: data.image,
             students: 0,
             instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-            student_ids: []
+            student_ids: [],
+            class_types_data: data.class_types_data || []
           }
         ])
         .select()

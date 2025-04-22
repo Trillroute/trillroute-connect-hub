@@ -80,6 +80,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          class_types_data: Json | null
           created_at: string
           description: string
           duration: string
@@ -94,6 +95,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          class_types_data?: Json | null
           created_at?: string
           description: string
           duration: string
@@ -108,6 +110,7 @@ export type Database = {
           title: string
         }
         Update: {
+          class_types_data?: Json | null
           created_at?: string
           description?: string
           duration?: string

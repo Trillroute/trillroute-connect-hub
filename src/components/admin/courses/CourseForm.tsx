@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -17,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import ClassTypesSelector from './ClassTypesSelector';
+import { ClassTypeData } from '@/types/course';
 
 export interface CourseFormValues {
   title: string;
@@ -28,6 +29,7 @@ export interface CourseFormValues {
   durationValue?: string;
   durationMetric?: "days" | "weeks" | "months" | "years";
   image: string;
+  class_types_data?: ClassTypeData[];
 }
 
 interface CourseFormProps {
@@ -298,6 +300,20 @@ const CourseForm: React.FC<CourseFormProps> = ({
               <FormDescription>
                 Provide a URL for the course image.
               </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="class_types_data"
+          render={({ field }) => (
+            <FormItem>
+              <ClassTypesSelector
+                value={field.value || []}
+                onChange={field.onChange}
+              />
               <FormMessage />
             </FormItem>
           )}

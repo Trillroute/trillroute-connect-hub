@@ -6,12 +6,14 @@ export interface Course {
   level: string;
   students: number;
   image: string;
-  skill: string; // Renamed from category
+  skill: string;
   duration: string;
   duration_type: string;
   created_at: string;
   instructor_ids: string[];
   student_ids?: string[];
+  // Add the new field:
+  class_types_data?: ClassTypeData[];
 }
 
 export interface Teacher {
@@ -21,7 +23,12 @@ export interface Teacher {
   email: string;
 }
 
-// This interface is kept for backward compatibility if needed
+// For the class_types_data field.
+export interface ClassTypeData {
+  class_type_id: string;
+  quantity: number;
+}
+
 export interface CourseInstructor {
   id: string;
   course_id: string;
@@ -29,5 +36,4 @@ export interface CourseInstructor {
   created_at: string;
 }
 
-// New interface for duration metrics
 export type DurationMetric = 'days' | 'weeks' | 'months' | 'years';
