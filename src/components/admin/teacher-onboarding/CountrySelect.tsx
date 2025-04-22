@@ -23,7 +23,7 @@ const countries = [
   "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine",
   "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
   "Yemen", "Zambia", "Zimbabwe"
-];
+].filter(country => country && country.trim() !== ""); // Filter out any empty or whitespace-only strings
 
 interface CountrySelectProps {
   value: string;
@@ -42,7 +42,7 @@ const CountrySelect = ({ value, onValueChange }: CountrySelectProps) => {
       <SelectContent>
         <ScrollArea className="h-80">
           {countries.map((country) => {
-            // Ensure country name is never an empty string
+            // Ensure the country value is never empty
             const countryValue = country?.trim() || "unknown";
             return (
               <SelectItem key={countryValue} value={countryValue}>
