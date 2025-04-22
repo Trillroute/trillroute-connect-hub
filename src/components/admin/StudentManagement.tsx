@@ -46,7 +46,6 @@ const StudentManagement = ({
     try {
       setIsLoading(true);
       const usersData = await fetchAllUsers();
-      // Filter to only show students
       setStudents(usersData.filter(user => user.role === 'student'));
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -75,7 +74,6 @@ const StudentManagement = ({
         return;
       }
       
-      // Ensure we're adding a student
       userData.role = 'student';
       
       setIsLoading(true);
@@ -170,6 +168,15 @@ const StudentManagement = ({
     setIsViewDialogOpen(true);
   };
 
+  const handleEditFromView = () => {
+    if (studentToView) {
+      setIsViewDialogOpen(false);
+      setTimeout(() => {
+        openEditDialog(studentToView);
+      }, 200);
+    }
+  };
+
   const openDeleteDialog = (student: UserManagementUser) => {
     setStudentToDelete(student);
     setIsDeleteDialogOpen(true);
@@ -177,7 +184,7 @@ const StudentManagement = ({
 
   const canStudentBeDeleted = (student: UserManagementUser) => {
     if (!canDeleteUser) return false;
-    return true; // All students can be deleted if permissions allow
+    return true;
   };
 
   return (
@@ -246,6 +253,7 @@ const StudentManagement = ({
           user={studentToView}
           isOpen={isViewDialogOpen}
           onOpenChange={setIsViewDialogOpen}
+          onEditFromView={canEditUser ? handleEditFromView : undefined}
         />
       </CardContent>
     </Card>

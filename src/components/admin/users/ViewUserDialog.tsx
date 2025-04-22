@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { UserManagementUser } from '@/types/student';
@@ -21,39 +20,33 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { QualificationData, BankDetails, TeacherProfileFormData } from '@/types/teacherProfile';
 
-// Fetch onboarding info for teachers
 async function fetchTeacherProfile(userId: string): Promise<Partial<TeacherProfileFormData>> {
-  // Fetch qualifications
   const { data: qualificationsData, error: qErr } = await supabase
     .from('teacher_qualifications')
     .select('*')
     .eq('user_id', userId);
   
-  // Map qualifications to expected format
   const qualifications: QualificationData[] = Array.isArray(qualificationsData) 
     ? qualificationsData.map(q => ({
         qualification: q.qualification,
         specialization: q.specialization || '',
         institution: q.institution || '',
-        graduationYear: q.graduation_year ? String(q.graduation_year) : '', // Convert to string to match type
+        graduationYear: q.graduation_year ? String(q.graduation_year) : '',
         additionalCertifications: q.additional_certifications || '',
         qualifyingCertificate: q.qualifying_certificate || ''
       }))
     : [];
     
-  // Fetch professional info
   const { data: professionalRows, error: pErr } = await supabase
     .from('teacher_professional')
     .select('*')
     .eq('user_id', userId);
   
-  // Fetch bank details
   const { data: bankRows, error: bErr } = await supabase
     .from('teacher_bank_details')
     .select('*')
     .eq('user_id', userId);
     
-  // Map bank details to expected format
   let bank: BankDetails | undefined;
   if (Array.isArray(bankRows) && bankRows[0]) {
     bank = {
@@ -66,21 +59,18 @@ async function fetchTeacherProfile(userId: string): Promise<Partial<TeacherProfi
     };
   }
 
-  // Convert previous institutes to the expected format
   const previousInstitutes = professionalRows?.[0]?.previous_institutes
     ? Array.isArray(professionalRows[0].previous_institutes)
       ? professionalRows[0].previous_institutes
       : []
     : [];
 
-  // Convert class experience to the expected format
   const classExperience = professionalRows?.[0]?.class_experience
     ? Array.isArray(professionalRows[0].class_experience)
       ? professionalRows[0].class_experience
       : []
     : [];
     
-  // Convert comfortable genres to the expected format  
   const comfortableGenres = professionalRows?.[0]?.comfortable_genres
     ? Array.isArray(professionalRows[0].comfortable_genres)
       ? professionalRows[0].comfortable_genres
@@ -110,14 +100,14 @@ interface ViewUserDialogProps {
   user: UserManagementUser | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onEditFromView?: () => void;
 }
 
-const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => {
+const ViewUserDialog = ({ user, isOpen, onOpenChange, onEditFromView }: ViewUserDialogProps) => {
   const [onboarding, setOnboarding] = useState<Partial<TeacherProfileFormData>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Only fetch for teachers
     if (user?.role === 'teacher' && user.id && isOpen) {
       setIsLoading(true);
       fetchTeacherProfile(user.id)
@@ -162,7 +152,6 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                 )}
               </TabsList>
               
-              {/* Basic Info */}
               <TabsContent value="basic" className="pt-4">
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
@@ -204,7 +193,6 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                 </div>
               </TabsContent>
               
-              {/* Contact Info */}
               <TabsContent value="contact" className="pt-4">
                 <div className="space-y-3">
                   <div>
@@ -226,7 +214,6 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                 </div>
               </TabsContent>
               
-              {/* Documents */}
               <TabsContent value="documents" className="pt-4">
                 <div className="space-y-3">
                   <div>
@@ -254,10 +241,8 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                 </div>
               </TabsContent>
 
-              {/* Teacher Onboarding Tabs */}
               {showTeacherTabs && (
                 <>
-                  {/* Qualifications Tab */}
                   <TabsContent value="qualifications" className="pt-4">
                     {isLoading ? (
                       <div>Loading...</div>
@@ -293,7 +278,6 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                     )}
                   </TabsContent>
                   
-                  {/* Professional Info Tab */}
                   <TabsContent value="professional" className="pt-4">
                     {isLoading ? (
                       <div>Loading...</div>
@@ -376,7 +360,6 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                     )}
                   </TabsContent>
                   
-                  {/* Bank Details Tab */}
                   <TabsContent value="bank" className="pt-4">
                     {isLoading ? (
                       <div>Loading...</div>
@@ -428,6 +411,11 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
           </div>
         </ScrollArea>
         <DialogFooter>
+          {onEditFromView && (user.role === 'student' || user.role === 'teacher') && (
+            <Button variant="outline" onClick={onEditFromView}>
+              Edit
+            </Button>
+          )}
           <Button onClick={() => onOpenChange(false)}>
             Close
           </Button>
