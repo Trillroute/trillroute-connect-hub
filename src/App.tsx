@@ -24,7 +24,6 @@ import StudentDashboard from "./pages/dashboard/StudentDashboard";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import SuperAdminDashboard from "./pages/dashboard/SuperAdminDashboard";
-import LeadsKanbanPage from "./pages/dashboard/leads/LeadsKanbanPage";
 
 // Admin Pages
 import TeacherOnboarding from "./pages/admin/TeacherOnboarding";
@@ -87,7 +86,6 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              {/* Removed: Leads Kanban Cards Page */}
               
               {/* Admin Pages */}
               <Route

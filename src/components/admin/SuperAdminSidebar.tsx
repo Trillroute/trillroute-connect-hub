@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Sidebar,
@@ -198,7 +199,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                       isActive={activeTab === "leads"}
                       onClick={() => {
                         onTabChange("leads");
-                        navigate("/dashboard/superadmin"); // main leads management
+                        // No navigation needed, just change the tab
                       }}
                     >
                       <UserPlus className="h-4 w-4" />
@@ -210,7 +211,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                       isActive={activeTab === "leads-cards"}
                       onClick={() => {
                         onTabChange("leads-cards");
-                        navigate("/dashboard/superadmin/leads/cards");
+                        // No navigation needed, just change the tab
                       }}
                     >
                       <Kanban className="h-4 w-4" />
