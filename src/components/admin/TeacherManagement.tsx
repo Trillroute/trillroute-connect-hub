@@ -222,10 +222,9 @@ const TeacherManagement = ({
           users={teachers} 
           isLoading={isLoading}
           onViewUser={openViewDialog}
-          onEditUser={canEditUser ? openEditDialog : undefined}
           onDeleteUser={openDeleteDialog}
           canDeleteUser={canTeacherBeDeleted}
-          canEditUser={canEditUser ? () => true : undefined}
+          canEditUser={undefined}
           roleFilter="teacher"
         />
         

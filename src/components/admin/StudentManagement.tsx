@@ -214,10 +214,9 @@ const StudentManagement = ({
           users={students} 
           isLoading={isLoading}
           onViewUser={openViewDialog}
-          onEditUser={canEditUser ? openEditDialog : undefined}
           onDeleteUser={openDeleteDialog}
           canDeleteUser={canStudentBeDeleted}
-          canEditUser={canEditUser ? () => true : undefined}
+          canEditUser={undefined}
           roleFilter="student"
         />
         
