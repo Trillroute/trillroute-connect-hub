@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Music, ShieldCheck } from 'lucide-react';
+import { Menu, X, ShieldCheck, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -68,7 +68,11 @@ const Navbar = () => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0 flex items-center">
-                <Music className="h-8 w-8 text-music-500" />
+                <img 
+                  src="https://static.wixstatic.com/media/7ce495_06a8ff028073430581ba22c033ab586f~mv2.jpg" 
+                  alt="Trillroute Logo" 
+                  className="h-10 w-10 mr-2 rounded-full"
+                />
                 <span className="ml-2 text-xl font-bold text-music-500">Trillroute</span>
               </Link>
             </div>
@@ -122,7 +126,11 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <Music className="h-8 w-8 text-music-500" />
+              <img 
+                src="https://static.wixstatic.com/media/7ce495_06a8ff028073430581ba22c033ab586f~mv2.jpg" 
+                alt="Trillroute Logo" 
+                className="h-10 w-10 mr-2 rounded-full"
+              />
               <span className="ml-2 text-xl font-bold text-music-500">Trillroute</span>
             </Link>
           </div>
