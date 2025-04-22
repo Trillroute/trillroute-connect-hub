@@ -25,28 +25,35 @@ const LOGO_URL = "https://static.wixstatic.com/media/7ce495_c7aa45068c7743e7b27d
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+  permissionMap?: {
+    courses?: { view: boolean };
+    classTypes?: { view: boolean };
+    students?: { view: boolean };
+    teachers?: { view: boolean };
+    admins?: { view: boolean };
+    leads?: { view: boolean };
+    levels?: { view: boolean };
+  };
 }
 
 const MENU_ITEMS = [
-  { key: 'courses', label: 'Courses', icon: Menu, canView: (pm: any) => pm.courses?.view },
-  { key: 'classTypes', label: 'Class Types', icon: Menu, canView: (pm: any) => pm.classTypes?.view },
-  { key: 'students', label: 'Students', icon: Menu, canView: (pm: any) => pm.students?.view },
-  { key: 'teachers', label: 'Teachers', icon: Menu, canView: (pm: any) => pm.teachers?.view },
-  { key: 'admins', label: 'Admins', icon: Menu, canView: (pm: any) => pm.admins?.view },
-  { key: 'leads', label: 'Leads', icon: Menu, canView: (pm: any) => pm.leads?.view },
-  { key: 'levels', label: 'Levels', icon: Menu, canView: (pm: any) => pm.levels?.view },
+  { key: 'courses', label: 'Courses', icon: Menu, canView: (pm: any) => pm?.courses?.view },
+  { key: 'classTypes', label: 'Class Types', icon: Menu, canView: (pm: any) => pm?.classTypes?.view },
+  { key: 'students', label: 'Students', icon: Menu, canView: (pm: any) => pm?.students?.view },
+  { key: 'teachers', label: 'Teachers', icon: Menu, canView: (pm: any) => pm?.teachers?.view },
+  { key: 'admins', label: 'Admins', icon: Menu, canView: (pm: any) => pm?.admins?.view },
+  { key: 'leads', label: 'Leads', icon: Menu, canView: (pm: any) => pm?.leads?.view },
+  { key: 'levels', label: 'Levels', icon: Menu, canView: (pm: any) => pm?.levels?.view },
 ];
 
 const AdminSidebar = ({
   collapsed,
   onToggleCollapse,
-}: AdminSidebarProps) => {
-  const { user } = useAuth();
-  // Assume active tab and permissionMap come from route or context
-  const [activeTab, setActiveTab] = React.useState('courses');
-  // TODO: permissionMap should come from props/context
-  // For demonstration, allow all:
-  const permissionMap = {
+  activeTab = 'courses',
+  onTabChange = () => {},
+  permissionMap = {
     courses: { view: true },
     classTypes: { view: true },
     students: { view: true },
@@ -54,6 +61,14 @@ const AdminSidebar = ({
     admins: { view: true },
     leads: { view: true },
     levels: { view: true },
+  }
+}: AdminSidebarProps) => {
+  const { user } = useAuth();
+  
+  const handleTabChange = (tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
   };
 
   return (
@@ -80,7 +95,7 @@ const AdminSidebar = ({
             <SidebarMenuItem key={item.key}>
               <SidebarMenuButton
                 isActive={activeTab === item.key}
-                onClick={() => setActiveTab(item.key)}
+                onClick={() => handleTabChange(item.key)}
                 tooltip={collapsed ? item.label : undefined}
               >
                 <item.icon className="h-5 w-5 mr-2" />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -22,8 +21,6 @@ import {
 } from '@/utils/adminPermissions';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Link } from 'react-router-dom';
 import { PlusCircle } from 'lucide-react';
 
@@ -33,6 +30,7 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const { user, isSuperAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('courses');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [permissionMap, setPermissionMap] = useState<{
     students: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
     teachers: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
@@ -217,119 +215,123 @@ const AdminDashboard = () => {
                        permissionMap.leads.view ||
                        permissionMap.levels.view;
 
+  const handleSidebarToggle = () => {
+    setSidebarCollapsed(prev => !prev);
+  };
+
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
-        <AdminSidebar 
-          activeTab={activeTab} 
-          onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
-          permissionMap={{
-            courses: { view: permissionMap.courses.view },
-            students: { view: permissionMap.students.view },
-            teachers: { view: permissionMap.teachers.view },
-            admins: { view: permissionMap.admins.view },
-            leads: { view: permissionMap.leads.view },
-            levels: { view: permissionMap.levels.view }
-          }}
-        />
-        
-        <div className="flex-1 p-4 md:p-6 overflow-auto w-full">
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            
-            {debugInfo && (
-              <Alert variant="destructive" className="mt-4">
-                <AlertTitle>Debug Information</AlertTitle>
-                <AlertDescription>{debugInfo}</AlertDescription>
-              </Alert>
-            )}
-          </div>
-
-          {isLoadingRoles ? (
-            <div className="flex justify-center items-center h-48">
-              <p>Loading permissions...</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {activeTab === 'teachers' && permissionMap.teachers.view && (
-                <div className="mb-4">
-                  <Link 
-                    to="/admin/teacher-registration" 
-                    className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-music-500 text-white hover:bg-music-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-music-500 focus-visible:ring-offset-2"
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Register New Teacher
-                  </Link>
-                </div>
-              )}
-
-              {activeTab === 'courses' && permissionMap.courses.view && (
-                <CourseManagement 
-                  canAddCourse={permissionMap.courses.add}
-                  canEditCourse={permissionMap.courses.edit}
-                  canDeleteCourse={permissionMap.courses.delete}
-                />
-              )}
-              
-              {activeTab === 'students' && permissionMap.students.view && (
-                <StudentManagement 
-                  canAddUser={permissionMap.students.add}
-                  canEditUser={permissionMap.students.edit}
-                  canDeleteUser={permissionMap.students.delete}
-                />
-              )}
-              
-              {activeTab === 'teachers' && permissionMap.teachers.view && (
-                <TeacherManagement 
-                  canAddUser={permissionMap.teachers.add}
-                  canEditUser={permissionMap.teachers.edit}
-                  canDeleteUser={permissionMap.teachers.delete}
-                />
-              )}
-              
-              {activeTab === 'admins' && permissionMap.admins.view && (
-                <AdminManagement 
-                  canAddAdmin={permissionMap.admins.add}
-                  canEditAdmin={permissionMap.admins.edit}
-                  canDeleteAdmin={permissionMap.admins.delete}
-                  canEditAdminLevel={permissionMap.admins.edit}
-                />
-              )}
-              
-              {activeTab === 'leads' && permissionMap.leads.view && (
-                <LeadManagement 
-                  canAddLead={permissionMap.leads.add}
-                  canEditLead={permissionMap.leads.edit}
-                  canDeleteLead={permissionMap.leads.delete}
-                />
-              )}
-              
-              {activeTab === 'levels' && permissionMap.levels.view && (
-                <LevelManagement 
-                  canAddLevel={permissionMap.levels.add}
-                  canEditLevel={permissionMap.levels.edit}
-                  canDeleteLevel={permissionMap.levels.delete}
-                />
-              )}
-
-              {!hasAnyAccess && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Limited Access</CardTitle>
-                    <CardDescription>
-                      You don't have permissions to access any admin sections.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>Please contact a super administrator to update your permissions.</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+    <div className="flex min-h-screen bg-background">
+      <AdminSidebar 
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={handleSidebarToggle}
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
+        permissionMap={{
+          courses: { view: permissionMap.courses.view },
+          students: { view: permissionMap.students.view },
+          teachers: { view: permissionMap.teachers.view },
+          admins: { view: permissionMap.admins.view },
+          leads: { view: permissionMap.leads.view },
+          levels: { view: permissionMap.levels.view }
+        }}
+      />
+      
+      <div className="flex-1 p-4 md:p-6 overflow-auto w-full">
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          
+          {debugInfo && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTitle>Debug Information</AlertTitle>
+              <AlertDescription>{debugInfo}</AlertDescription>
+            </Alert>
           )}
         </div>
+
+        {isLoadingRoles ? (
+          <div className="flex justify-center items-center h-48">
+            <p>Loading permissions...</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {activeTab === 'teachers' && permissionMap.teachers.view && (
+              <div className="mb-4">
+                <Link 
+                  to="/admin/teacher-registration" 
+                  className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-music-500 text-white hover:bg-music-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-music-500 focus-visible:ring-offset-2"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Register New Teacher
+                </Link>
+              </div>
+            )}
+
+            {activeTab === 'courses' && permissionMap.courses.view && (
+              <CourseManagement 
+                canAddCourse={permissionMap.courses.add}
+                canEditCourse={permissionMap.courses.edit}
+                canDeleteCourse={permissionMap.courses.delete}
+              />
+            )}
+            
+            {activeTab === 'students' && permissionMap.students.view && (
+              <StudentManagement 
+                canAddUser={permissionMap.students.add}
+                canEditUser={permissionMap.students.edit}
+                canDeleteUser={permissionMap.students.delete}
+              />
+            )}
+            
+            {activeTab === 'teachers' && permissionMap.teachers.view && (
+              <TeacherManagement 
+                canAddUser={permissionMap.teachers.add}
+                canEditUser={permissionMap.teachers.edit}
+                canDeleteUser={permissionMap.teachers.delete}
+              />
+            )}
+            
+            {activeTab === 'admins' && permissionMap.admins.view && (
+              <AdminManagement 
+                canAddAdmin={permissionMap.admins.add}
+                canEditAdmin={permissionMap.admins.edit}
+                canDeleteAdmin={permissionMap.admins.delete}
+                canEditAdminLevel={permissionMap.admins.edit}
+              />
+            )}
+            
+            {activeTab === 'leads' && permissionMap.leads.view && (
+              <LeadManagement 
+                canAddLead={permissionMap.leads.add}
+                canEditLead={permissionMap.leads.edit}
+                canDeleteLead={permissionMap.leads.delete}
+              />
+            )}
+            
+            {activeTab === 'levels' && permissionMap.levels.view && (
+              <LevelManagement 
+                canAddLevel={permissionMap.levels.add}
+                canEditLevel={permissionMap.levels.edit}
+                canDeleteLevel={permissionMap.levels.delete}
+              />
+            )}
+
+            {!hasAnyAccess && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Limited Access</CardTitle>
+                  <CardDescription>
+                    You don't have permissions to access any admin sections.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>Please contact a super administrator to update your permissions.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
