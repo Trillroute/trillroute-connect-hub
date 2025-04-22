@@ -1,21 +1,53 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Course } from '@/types/course';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 
+// Add extra callback props for bulk delete
 interface CourseTableProps {
   courses: Course[];
   loading: boolean;
   onEdit?: (course: Course) => void;
   onDelete?: (course: Course) => void;
   onView?: (course: Course) => void;
+  onBulkDelete?: (ids: string[]) => void;
 }
 
-const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onDelete, onView }) => {
+const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onDelete, onView, onBulkDelete }) => {
   const navigate = useNavigate();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Deselect deleted courses from selection
+    setSelectedIds(prev => prev.filter(id => courses.some(c => c.id === id)));
+  }, [courses]);
+
+  const isAllSelected = courses.length > 0 && selectedIds.length === courses.length;
+  const isPartSelected = selectedIds.length > 0 && !isAllSelected;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(courses.map(course => course.id));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    if (onBulkDelete && selectedIds.length > 0) {
+      onBulkDelete(selectedIds);
+    }
+  };
 
   const viewCourse = (event: React.MouseEvent, course: Course) => {
     event.stopPropagation();
@@ -43,89 +75,114 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
   }
 
   return (
-    <Table>
-      <TableCaption>A list of all courses in the system.</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[250px]">Course</TableHead>
-          <TableHead className="hidden md:table-cell">Level</TableHead>
-          <TableHead className="hidden md:table-cell">Skill</TableHead>
-          <TableHead className="hidden md:table-cell">Duration</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {courses.map((course) => (
-          <TableRow 
-            key={course.id}
-            data-course-id={course.id}
-            onClick={() => onView && onView(course)}
-            className={onView ? "cursor-pointer" : ""}
-          >
-            <TableCell className="font-medium max-w-[250px]">
-              <div className="flex items-center gap-3">
-                {course.image && (
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="h-10 w-10 rounded object-cover flex-shrink-0"
-                  />
-                )}
-                <div className="overflow-hidden">
-                  <div className="font-semibold truncate">{course.title}</div>
-                  <div className="text-xs text-gray-500 md:hidden truncate">
-                    {course.level} • {course.skill}
+    <div>
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-end mb-2">
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Trash2 className="w-4 h-4 mr-1" />
+            Delete Selected ({selectedIds.length})
+          </Button>
+        </div>
+      )}
+      <Table>
+        <TableCaption>A list of all courses in the system.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              <Checkbox
+                checked={isAllSelected}
+                // Radix shadcn does not accept indeterminate prop directly
+                onCheckedChange={toggleSelectAll}
+                aria-label="Select all courses"
+              />
+            </TableHead>
+            <TableHead className="w-[250px]">Course</TableHead>
+            <TableHead className="hidden md:table-cell">Level</TableHead>
+            <TableHead className="hidden md:table-cell">Skill</TableHead>
+            <TableHead className="hidden md:table-cell">Duration</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {courses.map((course) => (
+            <TableRow
+              key={course.id}
+              data-course-id={course.id}
+              onClick={() => onView && onView(course)}
+              className={onView ? "cursor-pointer" : ""}
+            >
+              <TableCell>
+                <Checkbox
+                  checked={selectedIds.includes(course.id)}
+                  onCheckedChange={() => toggleSelectOne(course.id)}
+                  aria-label={`Select ${course.title}`}
+                />
+              </TableCell>
+              <TableCell className="font-medium max-w-[250px]">
+                <div className="flex items-center gap-3">
+                  {course.image && (
+                    <img
+                      src={course.image}
+                      alt={course.title}
+                      className="h-10 w-10 rounded object-cover flex-shrink-0"
+                    />
+                  )}
+                  <div className="overflow-hidden">
+                    <div className="font-semibold truncate">{course.title}</div>
+                    <div className="text-xs text-gray-500 md:hidden truncate">
+                      {course.level} • {course.skill}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </TableCell>
-            <TableCell className="hidden md:table-cell truncate">{course.level}</TableCell>
-            <TableCell className="hidden md:table-cell truncate">{course.skill}</TableCell>
-            <TableCell className="hidden md:table-cell truncate">{course.duration}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => viewCourse(e, course)}
-                >
-                  <Eye className="h-4 w-4" />
-                  <span className="sr-only">View</span>
-                </Button>
-                
-                {onEdit && (
+              </TableCell>
+              <TableCell className="hidden md:table-cell truncate">{course.level}</TableCell>
+              <TableCell className="hidden md:table-cell truncate">{course.skill}</TableCell>
+              <TableCell className="hidden md:table-cell truncate">{course.duration}</TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end space-x-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(course);
-                    }}
+                    onClick={(e) => viewCourse(e, course)}
                   >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View</span>
                   </Button>
-                )}
-                
-                {onDelete && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(course);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
-                )}
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(course);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                  )}
+
+                  {onDelete && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(course);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

@@ -30,6 +30,7 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedClassType, setSelectedClassType] = useState<ClassType | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -85,6 +86,10 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
     }
   }, [user, toast]);
 
+  useEffect(() => {
+    setSelectedIds(prev => prev.filter(id => filteredClassTypes.some(ct => ct.id === id)));
+  }, [filteredClassTypes]);
+
   const filteredClassTypes = useMemo(() => {
     if (!searchQuery.trim()) return classTypes;
     const q = searchQuery.toLowerCase();
@@ -103,6 +108,20 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   const openEditDialog = (ct: ClassType) => {
     setSelectedClassType(ct);
     setEditDialogOpen(true);
+  };
+
+  const allSelected = filteredClassTypes.length > 0 && selectedIds.length === filteredClassTypes.length;
+  const toggleSelectAll = () => {
+    if (allSelected) setSelectedIds([]);
+    else setSelectedIds(filteredClassTypes.map(ct => ct.id));
+  };
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+  const handleBulkDelete = () => {
+    if (selectedIds.length > 0) {
+      alert('Bulk delete for class types (implement logic):\n' + selectedIds.join(', '));
+    }
   };
 
   if (!user) {
@@ -126,10 +145,25 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   if (viewMode === "list") {
     return (
       <>
+        {selectedIds.length > 0 && (
+          <div className="flex items-center justify-end mb-2">
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete Selected ({selectedIds.length})
+            </Button>
+          </div>
+        )}
         <Table>
           <TableCaption>A list of all class types in the system.</TableCaption>
           <TableHeader>
             <TableRow>
+              <TableHead>
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all class types"
+                />
+              </TableHead>
               <TableHead className="w-[220px]">Class Type</TableHead>
               <TableHead className="hidden md:table-cell">
                 <TooltipProvider>
@@ -149,6 +183,13 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
           <TableBody>
             {filteredClassTypes.map(ct => (
               <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds.includes(ct.id)}
+                    onCheckedChange={() => toggleSelectOne(ct.id)}
+                    aria-label={`Select ${ct.name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium max-w-[220px]">
                   <div className="truncate font-semibold">{ct.name}</div>
                   <div className="text-xs text-gray-500 md:hidden truncate">
@@ -189,16 +230,35 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   if (viewMode === "grid") {
     return (
       <>
+        {selectedIds.length > 0 && (
+          <div className="flex items-center justify-end mb-2">
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete Selected ({selectedIds.length})
+            </Button>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClassTypes.map(ct => (
             <div
               key={ct.id}
-              className="bg-muted rounded-lg shadow p-4 flex flex-col h-full cursor-pointer"
+              className="bg-muted rounded-lg shadow p-4 flex flex-col h-full cursor-pointer relative"
               onClick={() => openEditDialog(ct)}
               tabIndex={0}
               role="button"
               aria-label={`Edit ${ct.name}`}
             >
+              <div className="absolute top-4 right-4">
+                <Checkbox
+                  checked={selectedIds.includes(ct.id)}
+                  onCheckedChange={e => {
+                    e?.preventDefault?.();
+                    toggleSelectOne(ct.id);
+                  }}
+                  aria-label={`Select ${ct.name}`}
+                  onClick={e => e.stopPropagation()}
+                />
+              </div>
               <div className="flex flex-col gap-1">
                 <div className="font-semibold text-lg line-clamp-1 w-full" title={ct.name}>{ct.name}</div>
                 <div className="text-xs text-gray-500">
@@ -232,19 +292,37 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
     );
   }
 
-  // tile view
   return (
     <>
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-end mb-2">
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Trash2 className="w-4 h-4 mr-1" />
+            Delete Selected ({selectedIds.length})
+          </Button>
+        </div>
+      )}
       <div className="flex flex-wrap gap-4">
         {filteredClassTypes.map(ct => (
           <div
             key={ct.id}
-            className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center h-full cursor-pointer"
+            className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center h-full cursor-pointer relative"
             onClick={() => openEditDialog(ct)}
             tabIndex={0}
             role="button"
             aria-label={`Edit ${ct.name}`}
           >
+            <div className="absolute top-4 right-4">
+              <Checkbox
+                checked={selectedIds.includes(ct.id)}
+                onCheckedChange={e => {
+                  e?.preventDefault?.();
+                  toggleSelectOne(ct.id);
+                }}
+                aria-label={`Select ${ct.name}`}
+                onClick={e => e.stopPropagation()}
+              />
+            </div>
             <div className="font-semibold text-lg line-clamp-1 text-center w-full" title={ct.name}>{ct.name}</div>
             <div className="text-xs text-gray-500 mb-2">
               {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}

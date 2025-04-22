@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type LeadTableProps = {
   leads: Lead[];
@@ -39,10 +40,15 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     setLeads(initialLeads);
   }, [initialLeads]);
+
+  useEffect(() => {
+    setSelectedIds(prev => prev.filter(id => leads.some(lead => lead.id === id)));
+  }, [leads]);
 
   useEffect(() => {
     let filteredLeads = [...initialLeads];
@@ -116,7 +122,23 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
       default: return 'bg-gray-500';
     }
   };
-  
+
+  const isAllSelected = leads.length > 0 && selectedIds.length === leads.length;
+  const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) setSelectedIds([]);
+    else setSelectedIds(leads.map(lead => lead.id));
+  };
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(lid => lid !== id) : [...prev, id]);
+  };
+  const handleBulkDelete = () => {
+    if (selectedIds.length > 0) {
+      alert('Bulk delete for leads (implement logic):\n' + selectedIds.join(', '));
+    }
+  };
+
   if (loading) {
     return <div className="py-8 text-center text-gray-500">Loading leads...</div>;
   }
@@ -135,6 +157,15 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
   
   return (
     <div className="space-y-4">
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-end mb-2">
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Trash2 className="w-4 h-4 mr-1" />
+            Delete Selected ({selectedIds.length})
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="relative w-full sm:w-64">
           <Input
@@ -243,6 +274,13 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all leads"
+                  />
+                </TableHead>
                 <TableHead 
                   className="cursor-pointer hover:bg-accent/50"
                   onClick={() => handleSort('name')}
@@ -290,6 +328,13 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
             <TableBody>
               {leads.map((lead) => (
                 <TableRow key={lead.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.includes(lead.id)}
+                      onCheckedChange={() => toggleSelectOne(lead.id)}
+                      aria-label={`Select ${lead.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{lead.name}</TableCell>
                   <TableCell>{lead.email}</TableCell>
                   <TableCell>{lead.phone || '-'}</TableCell>
