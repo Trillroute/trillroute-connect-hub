@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -14,7 +15,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { Teacher } from '@/types/course';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Checkbox } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface CourseFormValues {
@@ -69,7 +70,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="title"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Title</FormLabel>
               <FormControl>
                 <Input placeholder="Course title" {...field} />
@@ -86,7 +87,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="description"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
@@ -107,7 +108,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="instructors"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Instructors</FormLabel>
               <FormDescription>
                 Select the instructors for this course
@@ -158,7 +159,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="level"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Level</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
@@ -185,7 +186,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="skill"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Skill</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
@@ -213,7 +214,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="durationType"
           render={({ field }) => (
-            <FormItem className="space-y-3">
+            <FormItem className="flex flex-col space-y-3">
               <FormLabel>Duration Type</FormLabel>
               <FormControl>
                 <RadioGroup
@@ -249,7 +250,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
               control={form.control}
               name="durationValue"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Duration Value</FormLabel>
                   <FormControl>
                     <Input placeholder="Duration value" {...field} />
@@ -266,7 +267,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
               control={form.control}
               name="durationMetric"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Duration Metric</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
@@ -295,7 +296,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="image"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Image URL</FormLabel>
               <FormControl>
                 <Input placeholder="Image URL" {...field} />
@@ -312,7 +313,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="classesCount"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Number of Classes</FormLabel>
               <FormControl>
                 <Input placeholder="Number of classes" type="number" {...field} />
@@ -329,7 +330,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="classesDuration"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Class Duration (minutes)</FormLabel>
               <FormControl>
                 <Input placeholder="Class duration" type="number" {...field} />
@@ -346,7 +347,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="studioSessionsCount"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Number of Studio Sessions</FormLabel>
               <FormControl>
                 <Input placeholder="Number of studio sessions" type="number" {...field} />
@@ -363,7 +364,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="studioSessionsDuration"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Studio Session Duration (minutes)</FormLabel>
               <FormControl>
                 <Input placeholder="Studio session duration" type="number" {...field} />
@@ -380,7 +381,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="practicalSessionsCount"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Number of Practical Sessions</FormLabel>
               <FormControl>
                 <Input placeholder="Number of practical sessions" type="number" {...field} />
@@ -397,7 +398,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="practicalSessionsDuration"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Practical Session Duration (minutes)</FormLabel>
               <FormControl>
                 <Input placeholder="Practical session duration" type="number" {...field} />

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -11,7 +12,6 @@ import { useSkills } from '@/hooks/useSkills';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { DurationMetric } from '@/types/course';
 import { useAuth } from '@/hooks/useAuth';
-import { useStudents } from '@/hooks/useStudents';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -23,7 +23,6 @@ const courseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
-  students: z.array(z.string()).optional(),
   level: z.string().min(1, { message: "Level is required" }),
   skill: z.string().min(1, { message: "Skill is required" }),
   durationType: z.enum(["fixed", "recurring"]),
@@ -58,7 +57,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       title: '',
       description: '',
       instructors: [],
-      students: [],
       level: 'For Anyone',
       skill: '',
       durationValue: '0',
@@ -80,7 +78,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         title: '',
         description: '',
         instructors: [],
-        students: [],
         level: 'For Anyone',
         skill: '',
         durationValue: '0',
@@ -119,9 +116,9 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             duration: duration,
             duration_type: data.durationType,
             image: data.image,
-            students: data.students?.length || 0,
+            students: 0,
             instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-            student_ids: Array.isArray(data.students) ? data.students : [],
+            student_ids: [],
             classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
             classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
             studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
@@ -149,7 +146,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       
       toast({
         title: "Course Created",
-        description: `${data.title} has been successfully created with ${data.students?.length || 0} students enrolled`,
+        description: `${data.title} has been successfully created`,
         duration: 3000,
       });
     } catch (error) {

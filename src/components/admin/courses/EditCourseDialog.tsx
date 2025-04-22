@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -10,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course, DurationMetric } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
-import { useStudents } from '@/hooks/useStudents';
 import CourseForm, { CourseFormValues } from './CourseForm';
 import { useAuth } from '@/hooks/useAuth';
 import { canManageCourses } from '@/utils/adminPermissions';
@@ -27,7 +25,6 @@ const courseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
-  students: z.array(z.string()).optional(),
   level: z.string().min(1, { message: "Level is required" }),
   skill: z.string().min(1, { message: "Skill is required" }),
   durationType: z.enum(["fixed", "recurring"]),
@@ -59,7 +56,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
-  const { students = [] } = useStudents();
   const [isLoading, setIsLoading] = useState(false);
   const { user, isSuperAdmin } = useAuth();
   
@@ -92,16 +88,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   // Ensure we have arrays for instructors and students
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
+  // Keep track of student_ids for database operations but don't expose to the form
   const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
-  
-  console.log('EditCourseDialog - Initial instructorIds:', instructorIds);
-  console.log('EditCourseDialog - Initial studentIds:', studentIds);
-
-  // Debug logs to check loaded student data
-  useEffect(() => {
-    console.log('EditCourseDialog - Course student_ids:', studentIds);
-    console.log('EditCourseDialog - Available students:', students.length);
-  }, [studentIds, students]);
 
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
     if (durationType !== 'fixed' || !duration) {
@@ -139,7 +127,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       title: course.title,
       description: course.description,
       instructors: instructorIds,
-      students: studentIds,
       level: course.level,
       skill: course.skill,
       durationValue: durationValue,
@@ -161,14 +148,12 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     if (open) {
       console.log('EditCourseDialog - Form resetting with course:', course);
       console.log('EditCourseDialog - Reset instructor_ids:', instructorIds);
-      console.log('EditCourseDialog - Reset student_ids:', studentIds);
       
       // Force reset the form every time the dialog opens to ensure latest data
       form.reset({
         title: course.title,
         description: course.description,
         instructors: [...instructorIds], // Create new array to ensure reactivity
-        students: [...studentIds], // Create new array to ensure reactivity
         level: course.level,
         skill: course.skill,
         durationValue: durationValue,
@@ -185,7 +170,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       
       console.log('EditCourseDialog - Form reset complete');
     }
-  }, [course, open, instructorIds, studentIds, durationValue, durationMetric, durationType, form]);
+  }, [course, open, instructorIds, durationValue, durationMetric, durationType, form]);
 
   // Monitor form values for debugging
   useEffect(() => {
@@ -217,15 +202,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         duration = 'Recurring';
       }
       
-      // Ensure students array is handled properly
-      const studentArray = Array.isArray(data.students) ? data.students : [];
-      
-      // Calculate the number of students based on the student_ids array length
-      const studentCount = studentArray.length;
-      
       // Debug logs before update
-      console.log('Updating course with students:', studentArray);
-      console.log('Student count:', studentCount);
       console.log('Updating course with instructors:', data.instructors);
       
       const { error: courseError } = await supabase
@@ -239,8 +216,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration_type: data.durationType,
           image: data.image,
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-          student_ids: studentArray,
-          students: studentCount, // Update the student count to match the array length
+          student_ids: studentIds, // Keep existing student_ids
+          students: studentIds.length, // Update the student count to match the array length
           classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
           classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
           studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
@@ -265,7 +242,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       
       toast({
         title: "Course Updated",
-        description: `${data.title} has been successfully updated with ${studentCount} students enrolled`,
+        description: `${data.title} has been successfully updated`,
         duration: 3000,
       });
     } catch (error) {
@@ -301,7 +278,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
               onSubmit={handleUpdateCourse} 
               teachers={teachers}
               skills={skills}
-              students={students}
               submitButtonText="Update Course"
               cancelAction={() => onOpenChange(false)}
             />
