@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagement";
-import SuperAdminSidebar from "@/components/admin/SuperAdminSidebar";
+import SuperAdminSidebar, { ActiveTab } from "@/components/admin/SuperAdminSidebar";
 
 type ActiveTab = 'today' | 'courses' | 'classTypes' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
@@ -207,7 +207,7 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-row bg-background w-full">
-      <SuperAdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <SuperAdminSidebar activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} />
 
       <div className="flex-1 flex flex-col">
         <div className="p-4 md:p-6 border-b border-gray-200">
@@ -383,6 +383,7 @@ const SuperAdminDashboard = () => {
             )}
 
             {activeTab === 'courses' && <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />}
+            {activeTab === 'courseManagement' && <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />}
             {activeTab === 'students' && <StudentManagement canAddUser={true} canDeleteUser={true} />}
             {activeTab === 'teachers' && <TeacherManagement canAddUser={true} canDeleteUser={true} />}
             {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}

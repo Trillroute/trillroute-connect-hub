@@ -30,7 +30,7 @@ import {
   Settings
 } from "lucide-react";
 
-type ActiveTab =
+export type ActiveTab =
   | "today"
   | "students"
   | "courses"
@@ -301,4 +301,3 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
 };
 
 export default SuperAdminSidebar;
-
