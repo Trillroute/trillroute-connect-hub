@@ -19,7 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {!isAuthPage && <Navbar />}
-      <main className={`flex-grow ${isAdminPage ? 'p-0' : ''}`}>
+      <main className={`flex-grow ${isAdminPage ? 'p-0 md:ml-64' : ''}`}>
         {children}
       </main>
       {!isAuthPage && !isAdminPage && (
@@ -32,4 +32,3 @@ const Layout = ({ children }: LayoutProps) => {
 };
 
 export default Layout;
-
