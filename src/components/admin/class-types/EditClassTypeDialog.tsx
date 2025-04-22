@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { ClassType as ClassTypeBase } from "./ClassTypeTable";
 
-interface ClassType extends ClassTypeBase {
-  location?: string;
-  image?: string | null;
+// Create a new interface that doesn't extend ClassTypeBase but includes its properties
+interface ClassType {
+  id: string;
+  name: string;
+  description: string;
+  duration_metric: string;
+  duration_value: number | null;
+  max_students: number;
+  price_inr: number;
+  created_at: string;
+  location: string;
+  image: string | null;
 }
 
 const LOCATION_OPTIONS = [
