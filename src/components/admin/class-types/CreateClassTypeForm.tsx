@@ -69,6 +69,7 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
     };
 
     console.log("Creating class type with data:", classTypeData);
+    console.log("Current user:", user);
 
     const { error, data } = await supabase.from("class_types").insert([classTypeData]).select();
 
@@ -180,7 +181,7 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
           min="0"
         />
       </div>
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Creating..." : "Create Class Type"}
       </Button>
     </form>
