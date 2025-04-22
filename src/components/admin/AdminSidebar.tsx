@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Sidebar, 
@@ -26,19 +27,21 @@ interface AdminSidebarProps {
   };
 }
 
+/**
+ * Set collapsible="none" for always-expanded sidebar, as required.
+ * SidebarTrigger will be kept for Admin/Non-superadmin dashboards (if needed in future), but does nothing when collapsible is set to "none".
+ */
 const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarProps) => {
   const { user } = useAuth();
-  
+
   return (
     <Sidebar 
       variant="floating" 
-      collapsible="icon" 
+      collapsible="none" 
       className="h-full min-h-screen transition-all duration-300 mt-16 fixed left-0 z-40"
     >
       <SidebarHeader className="p-3">
-        <div className="flex items-center">
-          <SidebarTrigger />
-        </div>
+        {/* Optionally remove SidebarTrigger, as collapsing is disabled */}
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>

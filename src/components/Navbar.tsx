@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, Music, ChevronDown, UserCircle, ShieldCheck } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Music, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -9,23 +9,30 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout, role, isSuperAdmin } = useAuth();
+  const location = useLocation();
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  // Only show Home, Courses, SuperAdmin dashboard navigation when NOT on /dashboard/superadmin route
+  const isSuperAdminRoute = location.pathname.startsWith('/dashboard/superadmin') && isSuperAdmin();
 
+  // These links are hidden for SuperAdmin dashboard
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Courses', path: '/courses' },
-  ];
+  ].filter(() => !isSuperAdminRoute);
 
+  // Only show dashboardOption if not superadmin dashboard route
   const dashboardLink = () => {
     if (!user) return null;
-    
+
+    // Prevent showing dashboard link if on superadmin dashboard
+    if (isSuperAdmin() && isSuperAdminRoute) {
+      return null;
+    }
+
     if (isSuperAdmin()) {
       return { name: 'SuperAdmin Dashboard', path: '/dashboard/superadmin' };
     }
-    
+
     switch(role) {
       case 'student':
         return { name: 'Student Dashboard', path: '/dashboard/student' };
@@ -55,7 +62,7 @@ const Navbar = () => {
               <span className="ml-2 text-xl font-bold text-music-500">Trillroute</span>
             </Link>
           </div>
-          
+          {!isSuperAdminRoute && (
           <div className="hidden md:flex md:space-x-8 absolute left-1/2 transform -translate-x-1/2">
             {navLinks.map((link) => (
               <Link
@@ -66,7 +73,6 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            
             {dashboardOption && (
               <Link
                 to={dashboardOption.path}
@@ -77,7 +83,7 @@ const Navbar = () => {
               </Link>
             )}
           </div>
-          
+          )}
           <div className="hidden md:flex md:items-center md:space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
@@ -116,10 +122,9 @@ const Navbar = () => {
               </div>
             )}
           </div>
-          
           <div className="flex items-center md:hidden absolute right-4">
             <button
-              onClick={toggleMenu}
+              onClick={setIsMenuOpen}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-music-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-music-500"
             >
               <span className="sr-only">Open main menu</span>
@@ -128,8 +133,8 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
       {/* Mobile menu */}
+      {!isSuperAdminRoute && (
       <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
         <div className="pt-2 pb-3 space-y-1 flex flex-col items-center">
           {navLinks.map((link) => (
@@ -142,7 +147,6 @@ const Navbar = () => {
               {link.name}
             </Link>
           ))}
-          
           {dashboardOption && (
             <Link
               to={dashboardOption.path}
@@ -154,7 +158,6 @@ const Navbar = () => {
             </Link>
           )}
         </div>
-        
         <div className="pt-4 pb-3 border-t border-gray-200 flex flex-col items-center">
           {user ? (
             <div className="space-y-1 w-full text-center">
@@ -204,6 +207,7 @@ const Navbar = () => {
           )}
         </div>
       </div>
+      )}
     </nav>
   );
 };
