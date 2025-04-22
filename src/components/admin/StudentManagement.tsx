@@ -2,23 +2,17 @@ import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
-import UserTable from './users/UserTable';
-import AddUserDialog, { NewUserData } from './users/AddUserDialog';
-import DeleteUserDialog from './users/DeleteUserDialog';
-import ViewUserDialog from './users/ViewUserDialog';
-import EditUserDialog from './users/EditUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
 import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
-import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+
+import StudentHeaderControls from './students/StudentHeaderControls';
+import StudentTablePanel from './students/StudentTablePanel';
+import StudentDialogs from './students/StudentDialogs';
 
 interface StudentManagementProps {
   canAddUser?: boolean;
@@ -66,7 +60,7 @@ const StudentManagement = ({
     loadStudents();
   }, []);
 
-  const handleAddStudent = async (userData: NewUserData) => {
+  const handleAddStudent = async (userData: any) => {
     try {
       if (!userData.firstName || !userData.lastName || !userData.email || !userData.password) {
         toast({
@@ -230,115 +224,47 @@ const StudentManagement = ({
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Student Management</CardTitle>
-            <CardDescription>Manage student accounts</CardDescription>
-          </div>
-          <div className="flex space-x-2 items-center">
-            <Button size="sm"
-              variant={viewMode === 'list' ? "secondary" : "outline"}
-              onClick={() => setViewMode('list')}
-              title="List view"
-            >
-              <LayoutList className="w-4 h-4" />
-            </Button>
-            <Button size="sm"
-              variant={viewMode === 'grid' ? "secondary" : "outline"}
-              onClick={() => setViewMode('grid')}
-              title="Grid view"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button size="sm"
-              variant={viewMode === 'tile' ? "secondary" : "outline"}
-              onClick={() => setViewMode('tile')}
-              title="Tile view"
-            >
-              <Grid2x2 className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" onClick={loadStudents}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            {canAddUser && (
-              <Button onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Student
-              </Button>
-            )}
-            {selectedStudents.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={bulkDeleteStudents}
-                className="ml-2"
-                disabled={isLoading}
-              >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected ({selectedStudents.length})
-              </Button>
-            )}
-          </div>
-        </div>
+        <StudentHeaderControls
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onRefresh={loadStudents}
+          canAddUser={canAddUser}
+          onAdd={() => setIsAddDialogOpen(true)}
+          selectedCount={selectedStudents.length}
+          onBulkDelete={bulkDeleteStudents}
+          isLoading={isLoading}
+        />
       </CardHeader>
       <CardContent>
-        <ResizablePanelGroup direction="horizontal" className="w-full">
-          <ResizablePanel>
-            <UserTable 
-              users={students} 
-              isLoading={isLoading}
-              onViewUser={openViewDialog}
-              onDeleteUser={openDeleteDialog}
-              canDeleteUser={canStudentBeDeleted}
-              canEditUser={undefined}
-              roleFilter="student"
-              viewMode={viewMode}
-              selectedUserIds={selectedStudents}
-              onSelectUserId={id =>
-                setSelectedStudents(prev =>
-                  prev.includes(id)
-                    ? prev.filter(sid => sid !== id)
-                    : [...prev, id]
-                )
-              }
-              onSelectAll={ids => setSelectedStudents(ids)}
-            />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        
-        <AddUserDialog
-          isOpen={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          onAddUser={handleAddStudent}
+        <StudentTablePanel
+          students={students}
           isLoading={isLoading}
-          allowAdminCreation={false}
-          defaultRole="student"
-          title="Add Student"
+          viewMode={viewMode}
+          openViewDialog={openViewDialog}
+          openDeleteDialog={openDeleteDialog}
+          canStudentBeDeleted={canStudentBeDeleted}
+          selectedStudents={selectedStudents}
+          setSelectedStudents={setSelectedStudents}
         />
-
-        <EditUserDialog
-          user={studentToEdit}
-          isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onUpdateUser={handleUpdateStudent}
+        <StudentDialogs
+          isAddDialogOpen={isAddDialogOpen}
+          setIsAddDialogOpen={setIsAddDialogOpen}
+          handleAddStudent={handleAddStudent}
+          isEditDialogOpen={isEditDialogOpen}
+          setIsEditDialogOpen={setIsEditDialogOpen}
+          handleUpdateStudent={handleUpdateStudent}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          handleDeleteStudent={handleDeleteStudent}
+          isViewDialogOpen={isViewDialogOpen}
+          setIsViewDialogOpen={setIsViewDialogOpen}
+          studentToEdit={studentToEdit}
+          studentToDelete={studentToDelete}
+          studentToView={studentToView}
+          handleEditFromView={handleEditFromView}
+          handleDeleteFromView={handleDeleteFromView}
           isLoading={isLoading}
-          userRole="Student"
-        />
-        
-        <DeleteUserDialog
-          user={studentToDelete}
-          isOpen={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          onDelete={handleDeleteStudent}
-          isLoading={isLoading}
-          userRole="Student"
-        />
-        
-        <ViewUserDialog
-          user={studentToView}
-          isOpen={isViewDialogOpen}
-          onOpenChange={setIsViewDialogOpen}
-          onEditFromView={canEditUser ? handleEditFromView : undefined}
-          onDeleteUser={canDeleteUser ? handleDeleteFromView : undefined}
+          canEditUser={canEditUser}
           canDeleteUser={canDeleteUser}
         />
       </CardContent>
