@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Globe } from "lucide-react";
 
-// Add a placeholder entry at the beginning of the array
+// Filter out any empty or whitespace-only strings first
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
   "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana",
@@ -23,7 +23,7 @@ const countries = [
   "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine",
   "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
   "Yemen", "Zambia", "Zimbabwe"
-].filter(country => country && country.trim() !== ""); // Filter out any empty or whitespace-only strings
+].filter(country => country && typeof country === 'string' && country.trim() !== "");
 
 interface CountrySelectProps {
   value: string;
@@ -41,12 +41,16 @@ const CountrySelect = ({ value, onValueChange }: CountrySelectProps) => {
       </SelectTrigger>
       <SelectContent>
         <ScrollArea className="h-80">
-          {countries.map((country) => {
-            // Ensure the country value is never empty
-            const countryValue = country?.trim() || "unknown";
+          {countries.map((country, index) => {
+            // Skip rendering if country is empty or just whitespace
+            if (!country || country.trim() === "") return null;
+            
+            // Use a safe unique value (either the country name or its index)
+            const countryValue = country.trim() || `country-${index}`;
+            
             return (
-              <SelectItem key={countryValue} value={countryValue}>
-                {country || "Unknown Country"}
+              <SelectItem key={index} value={countryValue}>
+                {country}
               </SelectItem>
             );
           })}
