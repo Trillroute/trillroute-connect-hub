@@ -202,7 +202,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                       }}
                     >
                       <UserPlus className="h-4 w-4" />
-                      <span>Management</span>
+                      <span>Leads</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                   <SidebarMenuSubItem>
@@ -214,7 +214,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                       }}
                     >
                       <Kanban className="h-4 w-4" />
-                      <span>Cards (Kanban)</span>
+                      <span>Cards</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 </SidebarMenuSub>
