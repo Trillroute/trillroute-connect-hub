@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Table,
@@ -38,6 +37,8 @@ interface ClassTypeTableProps {
   searchQuery?: string;
 }
 
+const placeholderImage = "/placeholder.svg";
+
 const ClassTypeTable = ({
   classTypes,
   loading,
@@ -48,11 +49,8 @@ const ClassTypeTable = ({
   searchQuery = "",
 }: ClassTypeTableProps) => {
   const [localSearchTerm, setLocalSearchTerm] = useState("");
-  
-  // Use either the prop searchQuery or local search state
   const searchTerm = searchQuery || localSearchTerm;
-  
-  // Add defensive check to prevent filtering undefined classTypes
+
   const filteredClassTypes = classTypes && classTypes.length > 0 
     ? classTypes.filter((classType) => {
         const searchRegex = new RegExp(searchTerm, "i");
@@ -62,7 +60,7 @@ const ClassTypeTable = ({
                (classType.location && searchRegex.test(classType.location));
       })
     : [];
-  
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -83,7 +81,7 @@ const ClassTypeTable = ({
     );
   }
 
-  // Render grid view if viewMode is grid
+  // Enhanced Grid View
   if (viewMode === "grid") {
     return (
       <div className="space-y-4">
@@ -105,188 +103,99 @@ const ClassTypeTable = ({
             {searchTerm ? "No class types found matching your search." : "No class types available."}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredClassTypes.map((classType) => (
               <div 
-                key={classType.id} 
-                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                key={classType.id}
+                className="rounded-xl shadow-md bg-card border transition hover:shadow-lg flex flex-col overflow-hidden h-[320px]"
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium text-lg">{classType.name}</h3>
-                    <p className="text-sm text-gray-500 line-clamp-2">{classType.description}</p>
-                  </div>
-                  {classType.image && (
-                    <div className="h-12 w-12 relative">
-                      <img 
-                        src={classType.image} 
-                        alt={classType.name} 
-                        className="h-12 w-12 object-cover rounded-md border" 
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/placeholder.svg";
-                        }}
+                <div className="h-[110px] w-full flex items-center justify-center bg-muted relative border-b">
+                  {classType.image ? (
+                    <img
+                      src={classType.image}
+                      alt={classType.name}
+                      className="object-cover w-full h-full rounded-t-xl"
+                      style={{ objectFit: "cover", height: "100%", width: "100%" }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = placeholderImage;
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full text-gray-400 text-sm bg-muted-foreground/5 select-none">
+                      <img
+                        src={placeholderImage}
+                        alt="No Image"
+                        className="w-10 h-10 opacity-40"
                       />
                     </div>
                   )}
                 </div>
-                
-                <div className="mt-3 space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Duration:</span>
-                    <span className="text-sm">
-                      {classType.duration_value 
-                        ? `${classType.duration_value} ${classType.duration_metric}` 
-                        : `Unlimited ${classType.duration_metric}`}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Max Students:</span>
-                    <span className="text-sm">{classType.max_students}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Price:</span>
-                    <span className="text-sm font-medium">{formatPrice(classType.price_inr)}</span>
-                  </div>
-                  
-                  {classType.location && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Location:</span>
-                      <Badge variant="outline" className="text-xs">{classType.location}</Badge>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mt-4 flex justify-end space-x-2">
-                  {onViewClassType && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onViewClassType(classType)}
-                      title="View details"
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">View</span>
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEditClassType(classType)}
-                    title="Edit class type"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  {onDeleteClassType && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDeleteClassType(classType)}
-                      title="Delete class type"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredClassTypes.length} of {classTypes ? classTypes.length : 0} class types
-        </div>
-      </div>
-    );
-  }
-  
-  // Render tile view if viewMode is tile
-  if (viewMode === "tile") {
-    return (
-      <div className="space-y-4">
-        {!searchQuery && (
-          <div className="relative w-full">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              type="search"
-              placeholder="Search class types..."
-              className="pl-9"
-              value={localSearchTerm}
-              onChange={(e) => setLocalSearchTerm(e.target.value)}
-            />
-          </div>
-        )}
-        
-        {filteredClassTypes.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            {searchTerm ? "No class types found matching your search." : "No class types available."}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {filteredClassTypes.map((classType) => (
-              <div 
-                key={classType.id} 
-                className="border rounded-lg overflow-hidden flex flex-col h-[220px]"
-              >
-                <div 
-                  className="h-24 bg-gray-100 relative"
-                >
-                  {classType.image ? (
-                    <img 
-                      src={classType.image} 
-                      alt={classType.name} 
-                      className="h-full w-full object-cover" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder.svg";
-                      }}
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-gray-400">
-                      No Image
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-3 flex-grow flex flex-col">
+                <div className="flex flex-col flex-1 justify-between p-4 gap-3">
                   <div>
-                    <h3 className="font-medium truncate" title={classType.name}>{classType.name}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-1" title={classType.description}>{classType.description}</p>
+                    <h3 className="font-semibold text-lg truncate mb-1" title={classType.name}>
+                      {classType.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 line-clamp-2 min-h-[2em]" title={classType.description}>
+                      {classType.description}
+                    </p>
                   </div>
-                  
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-gray-500">Price:</span>
-                    <span className="text-xs font-medium">{formatPrice(classType.price_inr)}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500">Duration:</span>
+                      <span>
+                        {classType.duration_value
+                          ? `${classType.duration_value} ${classType.duration_metric}`
+                          : `Unlimited ${classType.duration_metric}`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500">Max Students:</span>
+                      <span>{classType.max_students}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-500">Price:</span>
+                      <span className="font-medium">{formatPrice(classType.price_inr)}</span>
+                    </div>
+                    {classType.location && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-500">Location:</span>
+                        <Badge variant="outline" className="text-xs truncate max-w-[120px]">{classType.location}</Badge>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className="mt-auto pt-2 flex justify-end space-x-1">
+                  <div className="flex justify-end gap-2 mt-2">
                     {onViewClassType && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onViewClassType(classType)}
-                        className="h-7 w-7 p-0"
+                        title="View details"
+                        className="h-8 w-8"
                       >
-                        <Eye className="h-3.5 w-3.5" />
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View</span>
                       </Button>
                     )}
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onEditClassType(classType)}
-                      className="h-7 w-7 p-0"
+                      title="Edit class type"
+                      className="h-8 w-8"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
                     </Button>
                     {onDeleteClassType && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onDeleteClassType(classType)}
-                        className="h-7 w-7 p-0"
+                        title="Delete class type"
+                        className="h-8 w-8"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
                       </Button>
                     )}
                   </div>
@@ -302,7 +211,108 @@ const ClassTypeTable = ({
     );
   }
 
-  // Default to list view (original implementation)
+  // Enhanced Tile View
+  if (viewMode === "tile") {
+    return (
+      <div className="space-y-4">
+        {!searchQuery && (
+          <div className="relative w-full">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              type="search"
+              placeholder="Search class types..."
+              className="pl-9"
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
+            />
+          </div>
+        )}
+
+        {filteredClassTypes.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            {searchTerm ? "No class types found matching your search." : "No class types available."}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {filteredClassTypes.map((classType) => (
+              <div
+                key={classType.id}
+                className="rounded-xl shadow-lg bg-card border transition hover:shadow-xl flex flex-col h-[250px] overflow-hidden"
+              >
+                <div className="h-[80px] w-full flex items-center justify-center bg-muted border-b relative">
+                  {classType.image ? (
+                    <img
+                      src={classType.image}
+                      alt={classType.name}
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = placeholderImage;
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full text-gray-400 text-sm bg-muted-foreground/5 select-none">
+                      <img
+                        src={placeholderImage}
+                        alt="No Image"
+                        className="w-8 h-8 opacity-50"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col flex-1 justify-between p-3 gap-2">
+                  <div>
+                    <h3 className="font-semibold truncate mb-1" title={classType.name}>{classType.name}</h3>
+                    <p className="text-xs text-gray-500 line-clamp-1 min-h-[1.25em]" title={classType.description}>{classType.description}</p>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500">Price:</span>
+                    <span className="font-medium">{formatPrice(classType.price_inr)}</span>
+                  </div>
+                  <div className="flex items-center mt-auto gap-2 justify-end pt-2">
+                    {onViewClassType && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewClassType(classType)}
+                        className="h-8 w-8"
+                        title="View"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEditClassType(classType)}
+                      className="h-8 w-8"
+                      title="Edit"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    {onDeleteClassType && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteClassType(classType)}
+                        className="h-8 w-8"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="text-sm text-muted-foreground">
+          Showing {filteredClassTypes.length} of {classTypes ? classTypes.length : 0} class types
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {!searchQuery && (
