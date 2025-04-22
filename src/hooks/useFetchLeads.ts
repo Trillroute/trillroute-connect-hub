@@ -38,12 +38,15 @@ export const useFetchLeads = () => {
   useEffect(() => {
     fetchLeads();
 
-    // Subscribe to changes on the leads table
+    // Subscribe to changes on the leads table for ALL events (insert, update, delete)
     const channel = supabase
       .channel('leads-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'leads' }, 
-        () => {
+        (payload) => {
+          console.log('Realtime update received:', payload);
+          
+          // Immediately fetch the updated data
           fetchLeads();
         }
       )

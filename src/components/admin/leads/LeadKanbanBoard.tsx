@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lead } from '@/types/lead';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Pencil, Trash2, MoveVertical } from 'lucide-react';
@@ -33,7 +32,12 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
 }) => {
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [localLeads, setLocalLeads] = useState<Lead[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalLeads(leads);
+  }, [leads]);
 
   if (loading) {
     return (
@@ -56,13 +60,11 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     );
   }
 
-  // Normalize status values to lowercase for consistency
-  const normalizedLeads = leads.map(lead => ({
+  const normalizedLeads = localLeads.map(lead => ({
     ...lead,
     status: lead.status ? lead.status.toLowerCase() : 'new'
   }));
 
-  // Bucket leads by status, leave empty arrays for missing statuses
   const leadsByStatus: { [status: string]: Lead[] } = {};
   STATUS_COLUMNS.forEach(s => leadsByStatus[s.key] = []);
   
@@ -96,11 +98,15 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
       return;
     }
     
-    // Optimistically update the UI first
-    const updatedLead = { ...draggedLead, status: newStatus };
+    setLocalLeads(prev => 
+      prev.map(lead => 
+        lead.id === draggedLead.id 
+          ? { ...lead, status: newStatus } 
+          : lead
+      )
+    );
     
     try {
-      // Update the lead status in the database
       const { error } = await supabase
         .from('leads')
         .update({ status: newStatus })
@@ -114,6 +120,9 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
       });
     } catch (error) {
       console.error('Error updating lead:', error);
+      
+      setLocalLeads(leads);
+      
       toast({
         variant: "destructive",
         title: "Error",
