@@ -95,7 +95,7 @@ const AdminManagement = ({
       const admin = admins.find(a => a.id === id);
       // Only attempt delete if allowed
       if (admin && canAdminBeDeleted(admin)) {
-        await handleDeleteAdmin({ id }); // this function might take an object or just id, adjust as needed
+        await handleDeleteAdmin(admin); // Fixed: Passing the admin object instead of just the id
       }
     }
     setSelectedIds([]);
@@ -201,4 +201,3 @@ const AdminManagement = ({
 };
 
 export default AdminManagement;
-

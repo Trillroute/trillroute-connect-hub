@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { UserManagementUser } from '@/types/student';
@@ -84,7 +83,6 @@ const AdminTable = ({
                     <div className="flex items-center justify-center">
                       <Checkbox
                         checked={allSelected}
-                        indeterminate={someSelected}
                         onCheckedChange={() => {
                           if (allSelected) setSelectedIds([]);
                           else setSelectedIds(allAdminIds);
