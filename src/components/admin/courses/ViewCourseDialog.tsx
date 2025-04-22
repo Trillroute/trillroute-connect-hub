@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { Course } from '@/types/course';
 import {
@@ -18,6 +18,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ViewCourseDialogProps {
   course: Course | null;
@@ -25,7 +26,57 @@ interface ViewCourseDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface ClassType {
+  id: string;
+  name: string;
+  description: string;
+  duration_metric: string;
+  duration_value: number | null;
+  max_students: number;
+  price_inr: number;
+}
+
 const ViewCourseDialog = ({ course, isOpen, onOpenChange }: ViewCourseDialogProps) => {
+  const [classTypes, setClassTypes] = useState<Record<string, ClassType>>({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && course?.class_types_data?.length) {
+      fetchClassTypes();
+    }
+  }, [isOpen, course]);
+
+  const fetchClassTypes = async () => {
+    if (!course?.class_types_data?.length) return;
+    
+    setLoading(true);
+    try {
+      const ids = course.class_types_data.map(ct => ct.class_type_id);
+      
+      const { data, error } = await supabase
+        .from("class_types")
+        .select("*")
+        .in("id", ids);
+        
+      if (error) {
+        console.error("Error fetching class types:", error);
+        return;
+      }
+      
+      // Convert array to dictionary for easy lookup
+      const typesDict: Record<string, ClassType> = {};
+      data.forEach(type => {
+        typesDict[type.id] = type;
+      });
+      
+      setClassTypes(typesDict);
+    } catch (error) {
+      console.error("Unexpected error fetching class types:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!course) return null;
   
   return (
@@ -107,21 +158,50 @@ const ViewCourseDialog = ({ course, isOpen, onOpenChange }: ViewCourseDialogProp
               <TabsContent value="schedule" className="pt-4">
                 <div className="space-y-3">
                   <div>
-                    <span className="font-semibold block">Classes:</span>
-                    <div className="text-sm text-muted-foreground">
-                      Class schedule is not available for this course.
-                    </div>
+                    <span className="font-semibold block">Class Types:</span>
+                    {loading ? (
+                      <div className="text-sm text-muted-foreground">Loading class details...</div>
+                    ) : course.class_types_data && course.class_types_data.length > 0 ? (
+                      <div className="mt-2 border rounded-md overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted">
+                            <tr>
+                              <th className="px-4 py-2 text-left font-medium">Class Type</th>
+                              <th className="px-4 py-2 text-left font-medium">Quantity</th>
+                              <th className="px-4 py-2 text-left font-medium">Duration</th>
+                              <th className="px-4 py-2 text-left font-medium">Max Students</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {course.class_types_data.map((classTypeData) => {
+                              const classType = classTypes[classTypeData.class_type_id];
+                              return (
+                                <tr key={classTypeData.class_type_id} className="border-t">
+                                  <td className="px-4 py-2">{classType?.name || 'Unknown Class'}</td>
+                                  <td className="px-4 py-2">{classTypeData.quantity}</td>
+                                  <td className="px-4 py-2">
+                                    {classType ? `${classType.duration_value} ${classType.duration_metric}` : 'N/A'}
+                                  </td>
+                                  <td className="px-4 py-2">{classType?.max_students || 'N/A'}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        No class types have been added to this course.
+                      </div>
+                    )}
                   </div>
+                  
                   <div>
-                    <span className="font-semibold block">Studio Sessions:</span>
-                    <div className="text-sm text-muted-foreground">
-                      Studio session data is not available.
-                    </div>
-                  </div>
-                  <div>
-                    <span className="font-semibold block">Practical Sessions:</span>
-                    <div className="text-sm text-muted-foreground">
-                      Practical session data is not available.
+                    <span className="font-semibold block">Total Sessions:</span>
+                    <div className="text-sm">
+                      {course.class_types_data && course.class_types_data.length > 0
+                        ? course.class_types_data.reduce((sum, ct) => sum + ct.quantity, 0) + " sessions"
+                        : "No sessions scheduled"}
                     </div>
                   </div>
                 </div>
