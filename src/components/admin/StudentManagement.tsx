@@ -95,7 +95,7 @@ const StudentManagement = ({
     }
   };
 
-  const handleUpdateStudent = async (userId: string, userData: Partial<UserManagementUser>) => {
+  const handleUpdateStudent = async (userId: string, userData: Partial<UserManagementUser>): Promise<void> => {
     try {
       setIsLoading(true);
       await updateUser(userId, userData);

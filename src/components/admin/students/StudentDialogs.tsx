@@ -12,7 +12,7 @@ interface StudentDialogsProps {
   handleAddStudent: (user: NewUserData) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
-  handleUpdateStudent: (id: string, userData: Partial<UserManagementUser>) => void;
+  handleUpdateStudent: (id: string, userData: Partial<UserManagementUser>) => Promise<void>;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
   handleDeleteStudent: () => void;
