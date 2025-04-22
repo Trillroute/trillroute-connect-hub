@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -7,7 +6,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Course } from '@/types/course';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 
-// Add extra callback props for bulk delete
 interface CourseTableProps {
   courses: Course[];
   loading: boolean;
@@ -22,21 +20,14 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    // Deselect deleted courses from selection
     setSelectedIds(prev => prev.filter(id => courses.some(c => c.id === id)));
   }, [courses]);
 
   const isAllSelected = courses.length > 0 && selectedIds.length === courses.length;
-  const isPartSelected = selectedIds.length > 0 && !isAllSelected;
-
   const toggleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(courses.map(course => course.id));
-    }
+    if (isAllSelected) setSelectedIds([]);
+    else setSelectedIds(courses.map(course => course.id));
   };
-
   const toggleSelectOne = (id: string) => {
     setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(cid => cid !== id) : [...prev, id]
@@ -51,11 +42,8 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
 
   const viewCourse = (event: React.MouseEvent, course: Course) => {
     event.stopPropagation();
-    if (onView) {
-      onView(course);
-    } else {
-      navigate(`/courses/${course.id}`);
-    }
+    if (onView) onView(course);
+    else navigate(`/courses/${course.id}`);
   };
 
   if (loading) {
@@ -91,7 +79,6 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             <TableHead>
               <Checkbox
                 checked={isAllSelected}
-                // Radix shadcn does not accept indeterminate prop directly
                 onCheckedChange={toggleSelectAll}
                 aria-label="Select all courses"
               />
@@ -145,37 +132,8 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                     size="sm"
                     onClick={(e) => viewCourse(e, course)}
                   >
-                    <Eye className="h-4 w-4" />
-                    <span className="sr-only">View</span>
+                    View
                   </Button>
-
-                  {onEdit && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(course);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                  )}
-
-                  {onDelete && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(course);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  )}
                 </div>
               </TableCell>
             </TableRow>

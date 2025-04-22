@@ -30,6 +30,7 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
     price_inr: classType?.price_inr || 0,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   React.useEffect(() => {
     if (classType) {
@@ -95,6 +96,41 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!classType) return;
+    setDeleteLoading(true);
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { error } = await supabase
+        .from("class_types")
+        .delete()
+        .eq("id", classType.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete class type. " + error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({
+        title: "Class Type Deleted",
+        description: "Class type deleted successfully.",
+      });
+      onSuccess();
+      onOpenChange(false);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -174,13 +210,18 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                Cancel
+            <div className="flex justify-between gap-2 pt-2">
+              <Button type="button" variant="destructive" onClick={handleDelete} disabled={isLoading || deleteLoading}>
+                {deleteLoading ? "Deleting..." : "Delete"}
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save"}
-              </Button>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading || deleteLoading}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading || deleteLoading}>
+                  {isLoading ? "Saving..." : "Save"}
+                </Button>
+              </div>
             </div>
           </form>
         )}

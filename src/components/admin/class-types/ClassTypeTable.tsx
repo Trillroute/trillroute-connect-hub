@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
@@ -122,7 +121,8 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   const toggleSelectOne = (id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
-  const handleBulkDelete = () => {
+
+  const handleBulkDelete = async () => {
     if (selectedIds.length > 0) {
       alert('Bulk delete for class types (implement logic):\n' + selectedIds.join(', '));
     }
@@ -255,12 +255,9 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
               <div className="absolute top-4 right-4">
                 <Checkbox
                   checked={selectedIds.includes(ct.id)}
-                  onCheckedChange={(e) => {
-                    e?.preventDefault?.();
-                    toggleSelectOne(ct.id);
-                  }}
+                  onCheckedChange={() => toggleSelectOne(ct.id)}
                   aria-label={`Select ${ct.name}`}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={e => e.stopPropagation()}
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -319,12 +316,9 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
             <div className="absolute top-4 right-4">
               <Checkbox
                 checked={selectedIds.includes(ct.id)}
-                onCheckedChange={(e) => {
-                  e?.preventDefault?.();
-                  toggleSelectOne(ct.id);
-                }}
+                onCheckedChange={() => toggleSelectOne(ct.id)}
                 aria-label={`Select ${ct.name}`}
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               />
             </div>
             <div className="font-semibold text-lg line-clamp-1 text-center w-full" title={ct.name}>{ct.name}</div>
