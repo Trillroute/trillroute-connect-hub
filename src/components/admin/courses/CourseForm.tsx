@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -28,12 +27,6 @@ export interface CourseFormValues {
   durationValue?: string;
   durationMetric?: "days" | "weeks" | "months" | "years";
   image: string;
-  classesCount: string;
-  classesDuration: string;
-  studioSessionsCount: string;
-  studioSessionsDuration: string;
-  practicalSessionsCount: string;
-  practicalSessionsDuration: string;
 }
 
 interface CourseFormProps {
@@ -309,108 +302,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="classesCount"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Number of Classes</FormLabel>
-              <FormControl>
-                <Input placeholder="Number of classes" type="number" {...field} />
-              </FormControl>
-              <FormDescription>
-                Enter the total number of classes in the course.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="classesDuration"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Class Duration (minutes)</FormLabel>
-              <FormControl>
-                <Input placeholder="Class duration" type="number" {...field} />
-              </FormControl>
-              <FormDescription>
-                Specify the duration of each class in minutes.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="studioSessionsCount"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Number of Studio Sessions</FormLabel>
-              <FormControl>
-                <Input placeholder="Number of studio sessions" type="number" {...field} />
-              </FormControl>
-              <FormDescription>
-                Enter the total number of studio sessions in the course.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="studioSessionsDuration"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Studio Session Duration (minutes)</FormLabel>
-              <FormControl>
-                <Input placeholder="Studio session duration" type="number" {...field} />
-              </FormControl>
-              <FormDescription>
-                Specify the duration of each studio session in minutes.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="practicalSessionsCount"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Number of Practical Sessions</FormLabel>
-              <FormControl>
-                <Input placeholder="Number of practical sessions" type="number" {...field} />
-              </FormControl>
-              <FormDescription>
-                Enter the total number of practical sessions in the course.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="practicalSessionsDuration"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Practical Session Duration (minutes)</FormLabel>
-              <FormControl>
-                <Input placeholder="Practical session duration" type="number" {...field} />
-              </FormControl>
-              <FormDescription>
-                Specify the duration of each practical session in minutes.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
         <div className="pt-4 flex justify-end gap-2">
           {cancelAction && (
             <Button type="button" variant="outline" onClick={cancelAction}>

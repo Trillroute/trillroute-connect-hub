@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -63,12 +62,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       durationMetric: 'weeks',
       durationType: 'fixed',
       image: '',
-      classesCount: '0',
-      classesDuration: '0',
-      studioSessionsCount: '0',
-      studioSessionsDuration: '0',
-      practicalSessionsCount: '0',
-      practicalSessionsDuration: '0',
     }
   });
 
@@ -84,12 +77,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         durationMetric: 'weeks',
         durationType: 'fixed',
         image: '',
-        classesCount: '0',
-        classesDuration: '0',
-        studioSessionsCount: '0',
-        studioSessionsDuration: '0',
-        practicalSessionsCount: '0',
-        practicalSessionsDuration: '0',
       });
     }
   }, [open, form]);
@@ -118,13 +105,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
             image: data.image,
             students: 0,
             instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-            student_ids: [],
-            classes_count: data.classesCount ? parseInt(data.classesCount) : 0,
-            classes_duration: data.classesDuration ? parseInt(data.classesDuration) : 0,
-            studio_sessions_count: data.studioSessionsCount ? parseInt(data.studioSessionsCount) : 0,
-            studio_sessions_duration: data.studioSessionsDuration ? parseInt(data.studioSessionsDuration) : 0,
-            practical_sessions_count: data.practicalSessionsCount ? parseInt(data.practicalSessionsCount) : 0,
-            practical_sessions_duration: data.practicalSessionsDuration ? parseInt(data.practicalSessionsDuration) : 0
+            student_ids: []
           }
         ])
         .select()
