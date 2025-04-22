@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -8,6 +9,7 @@ import TeacherManagement from '@/components/admin/TeacherManagement';
 import AdminManagement from '@/components/admin/AdminManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
 import LevelManagement from '@/components/admin/levels/LevelManagement';
+import AdminSidebar from '@/components/admin/AdminSidebar';
 import { 
   canManageStudents, 
   canManageTeachers,
