@@ -17,8 +17,9 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import { canManageLevels } from '@/utils/adminPermissions';
 import { Link } from 'react-router-dom';
 import CreateClassTypeForm from "@/components/admin/class-types/CreateClassTypeForm";
+import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagement";
 
-type ActiveTab = 'courses' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
+type ActiveTab = 'courses' | 'classTypes' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
 
 const SuperAdminDashboard = () => {
   const { user } = useAuth();
@@ -198,6 +199,7 @@ const SuperAdminDashboard = () => {
           onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
           permissionMap={{
             courses: { view: true },
+            classTypes: { view: true },
             students: { view: true },
             teachers: { view: true },
             admins: { view: true },
@@ -297,9 +299,11 @@ const SuperAdminDashboard = () => {
             </Card>
           </div>
 
-          <div className="mb-6">
-            <CreateClassTypeForm />
-          </div>
+          {activeTab === 'classTypes' && (
+            <div className="mb-6">
+              <ClassTypeManagement />
+            </div>
+          )}
 
           <div className="space-y-6">
             {activeTab === 'teachers' && (
