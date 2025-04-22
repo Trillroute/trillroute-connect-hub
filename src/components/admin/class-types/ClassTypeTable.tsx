@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Table,
@@ -27,6 +26,7 @@ export interface ClassType {
   max_students: number;
   location?: string;
   image?: string | null;
+  created_at: string;
 }
 
 interface ClassTypeTableProps {
