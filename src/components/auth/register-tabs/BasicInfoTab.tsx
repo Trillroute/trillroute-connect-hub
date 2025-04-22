@@ -3,7 +3,6 @@ import React from 'react';
 import { Calendar, Lock, Mail, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { TabsContent } from '@/components/ui/tabs';
 
 interface BasicInfoTabProps {
   formData: {
@@ -19,7 +18,7 @@ interface BasicInfoTabProps {
 
 export const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, handleInputChange }) => {
   return (
-    <TabsContent value="basic" className="space-y-4 pt-4">
+    <div className="space-y-4 pt-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name</Label>
@@ -129,6 +128,6 @@ export const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, handleInpu
           />
         </div>
       </div>
-    </TabsContent>
+    </div>
   );
 };

@@ -4,7 +4,6 @@ import { Home, Phone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { TabsContent } from '@/components/ui/tabs';
 
 interface ContactInfoTabProps {
   formData: {
@@ -23,7 +22,7 @@ export const ContactInfoTab: React.FC<ContactInfoTabProps> = ({
   handleSwitchChange
 }) => {
   return (
-    <TabsContent value="contact" className="space-y-4 pt-4">
+    <div className="space-y-4 pt-4">
       <div className="space-y-2">
         <Label htmlFor="primaryPhone">Primary Phone</Label>
         <div className="relative">
@@ -83,6 +82,6 @@ export const ContactInfoTab: React.FC<ContactInfoTabProps> = ({
           />
         </div>
       </div>
-    </TabsContent>
+    </div>
   );
 };

@@ -3,7 +3,6 @@ import React from 'react';
 import { Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { TabsContent } from '@/components/ui/tabs';
 
 interface DocumentsTabProps {
   formData: {
@@ -15,7 +14,7 @@ interface DocumentsTabProps {
 
 export const DocumentsTab: React.FC<DocumentsTabProps> = ({ formData, handleInputChange }) => {
   return (
-    <TabsContent value="documents" className="space-y-4 pt-4">
+    <div className="space-y-4 pt-4">
       <div className="space-y-2">
         <Label htmlFor="profilePhoto">Profile Photo URL (Optional)</Label>
         <div className="relative">
@@ -49,6 +48,6 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({ formData, handleInpu
           />
         </div>
       </div>
-    </TabsContent>
+    </div>
   );
 };

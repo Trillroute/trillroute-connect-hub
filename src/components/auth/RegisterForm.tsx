@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BasicInfoTab } from './register-tabs/BasicInfoTab';
 import { ContactInfoTab } from './register-tabs/ContactInfoTab';
 import { DocumentsTab } from './register-tabs/DocumentsTab';
@@ -164,21 +164,27 @@ const RegisterForm = () => {
                   <TabsTrigger value="documents">Documents</TabsTrigger>
                 </TabsList>
                 
-                <BasicInfoTab 
-                  formData={formData} 
-                  handleInputChange={handleInputChange} 
-                />
+                <TabsContent value="basic">
+                  <BasicInfoTab 
+                    formData={formData} 
+                    handleInputChange={handleInputChange} 
+                  />
+                </TabsContent>
                 
-                <ContactInfoTab 
-                  formData={formData} 
-                  handleInputChange={handleInputChange}
-                  handleSwitchChange={handleSwitchChange}
-                />
+                <TabsContent value="contact">
+                  <ContactInfoTab 
+                    formData={formData} 
+                    handleInputChange={handleInputChange}
+                    handleSwitchChange={handleSwitchChange}
+                  />
+                </TabsContent>
                 
-                <DocumentsTab 
-                  formData={formData} 
-                  handleInputChange={handleInputChange} 
-                />
+                <TabsContent value="documents">
+                  <DocumentsTab 
+                    formData={formData} 
+                    handleInputChange={handleInputChange} 
+                  />
+                </TabsContent>
               </Tabs>
               
               <div className="flex items-center">
@@ -219,6 +225,3 @@ const RegisterForm = () => {
 };
 
 export default RegisterForm;
-
-// NOTE: This file is now greater than 200 lines and is getting too long for maintainability.
-// Please consider refactoring it into smaller components for better readability and maintainability.
