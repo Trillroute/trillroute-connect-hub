@@ -18,7 +18,7 @@ import EditUserDialog from './users/EditUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
 import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
-import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable-panel';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 interface TeacherManagementProps {
   canAddUser?: boolean;
@@ -355,5 +355,3 @@ const TeacherManagement = ({
 };
 
 export default TeacherManagement;
-
-// NOTE: This file is getting long; consider refactoring into smaller components.
