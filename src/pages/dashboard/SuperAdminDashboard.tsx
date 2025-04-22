@@ -16,8 +16,6 @@ import { Link } from 'react-router-dom';
 import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagement";
 import SuperAdminSidebar, { ActiveTab } from "@/components/admin/SuperAdminSidebar";
 
-type ActiveTab = 'today' | 'courses' | 'classTypes' | 'students' | 'teachers' | 'admins' | 'leads' | 'levels';
-
 const NAV_ITEMS: {
   key: ActiveTab;
   label: string;
@@ -202,7 +200,14 @@ const SuperAdminDashboard = () => {
     admins: { view: true },
     leads: { view: true },
     levels: { view: true },
-    today: { view: true }
+    today: { view: true },
+    fees: { view: true },
+    communication: { view: true },
+    scheduling: { view: true },
+    intramural: { view: true },
+    reports: { view: true },
+    access: { view: true },
+    courseManagement: { view: true }
   };
 
   return (
