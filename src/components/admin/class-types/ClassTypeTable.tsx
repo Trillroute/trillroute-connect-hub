@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Eye } from "lucide-react";
+import { Pencil, Trash2, Eye, Image } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -81,7 +81,6 @@ const ClassTypeTable = ({
     );
   }
 
-  // Enhanced Grid View
   if (viewMode === "grid") {
     return (
       <div className="space-y-4">
@@ -103,71 +102,69 @@ const ClassTypeTable = ({
             {searchTerm ? "No class types found matching your search." : "No class types available."}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredClassTypes.map((classType) => (
               <div 
                 key={classType.id}
-                className="rounded-xl shadow-md bg-card border transition hover:shadow-lg flex flex-col overflow-hidden h-[320px]"
+                className="bg-muted rounded-lg shadow p-4 flex flex-col transition hover:shadow-md min-h-[210px] h-full"
               >
-                <div className="h-[110px] w-full flex items-center justify-center bg-muted relative border-b">
-                  {classType.image ? (
-                    <img
-                      src={classType.image}
-                      alt={classType.name}
-                      className="object-cover w-full h-full rounded-t-xl"
-                      style={{ objectFit: "cover", height: "100%", width: "100%" }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = placeholderImage;
-                      }}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full text-gray-400 text-sm bg-muted-foreground/5 select-none">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex-shrink-0 rounded overflow-hidden bg-gray-100 border w-12 h-12 flex items-center justify-center">
+                    {classType.image ? (
                       <img
-                        src={placeholderImage}
-                        alt="No Image"
-                        className="w-10 h-10 opacity-40"
+                        src={classType.image}
+                        alt={classType.name}
+                        className="object-cover w-12 h-12"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = placeholderImage;
+                        }}
                       />
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col flex-1 justify-between p-4 gap-3">
-                  <div>
-                    <h3 className="font-semibold text-lg truncate mb-1" title={classType.name}>
-                      {classType.name}
-                    </h3>
-                    <p className="text-xs text-gray-500 line-clamp-2 min-h-[2em]" title={classType.description}>
-                      {classType.description}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-500">Duration:</span>
-                      <span>
-                        {classType.duration_value
-                          ? `${classType.duration_value} ${classType.duration_metric}`
-                          : `Unlimited ${classType.duration_metric}`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-500">Max Students:</span>
-                      <span>{classType.max_students}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-gray-500">Price:</span>
-                      <span className="font-medium">{formatPrice(classType.price_inr)}</span>
-                    </div>
-                    {classType.location && (
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-gray-500">Location:</span>
-                        <Badge variant="outline" className="text-xs truncate max-w-[120px]">{classType.location}</Badge>
-                      </div>
+                    ) : (
+                      <Image className="text-gray-300 w-7 h-7" />
                     )}
                   </div>
-                  <div className="flex justify-end gap-2 mt-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate text-base" title={classType.name}>
+                      {classType.name}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate" title={classType.description}>
+                      {classType.description}
+                    </div>
+                  </div>
+                  {classType.location && (
+                    <Badge
+                      variant="outline"
+                      className="ml-1 px-2 py-0 text-xs max-w-[5rem] truncate"
+                      title={classType.location}
+                    >
+                      {classType.location}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center text-xs text-gray-600 gap-4 mb-2">
+                  <span>
+                    <span className="text-gray-500">Duration:</span>{" "}
+                    {classType.duration_value
+                      ? `${classType.duration_value} ${classType.duration_metric}`
+                      : `Unlimited ${classType.duration_metric}`}
+                  </span>
+                  <span>|</span>
+                  <span>
+                    <span className="text-gray-500">Max:</span>{" "}
+                    {classType.max_students}
+                  </span>
+                </div>
+                <div className="flex-1" />
+                <div className="flex justify-between items-end mt-2">
+                  <span className="text-sm font-semibold text-music-500">
+                    {formatPrice(classType.price_inr)}
+                  </span>
+                  <div className="flex gap-1">
                     {onViewClassType && (
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => onViewClassType(classType)}
                         title="View details"
                         className="h-8 w-8"
@@ -178,7 +175,7 @@ const ClassTypeTable = ({
                     )}
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       onClick={() => onEditClassType(classType)}
                       title="Edit class type"
                       className="h-8 w-8"
@@ -189,7 +186,7 @@ const ClassTypeTable = ({
                     {onDeleteClassType && (
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => onDeleteClassType(classType)}
                         title="Delete class type"
                         className="h-8 w-8"
@@ -211,7 +208,6 @@ const ClassTypeTable = ({
     );
   }
 
-  // Enhanced Tile View
   if (viewMode === "tile") {
     return (
       <div className="space-y-4">
@@ -233,74 +229,89 @@ const ClassTypeTable = ({
             {searchTerm ? "No class types found matching your search." : "No class types available."}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="flex flex-wrap gap-4">
             {filteredClassTypes.map((classType) => (
               <div
                 key={classType.id}
-                className="rounded-xl shadow-lg bg-card border transition hover:shadow-xl flex flex-col h-[250px] overflow-hidden"
+                className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center justify-between min-h-[200px]"
               >
-                <div className="h-[80px] w-full flex items-center justify-center bg-muted border-b relative">
-                  {classType.image ? (
-                    <img
-                      src={classType.image}
-                      alt={classType.name}
-                      className="object-cover w-full h-full"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = placeholderImage;
-                      }}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full text-gray-400 text-sm bg-muted-foreground/5 select-none">
+                <div className="mb-2 w-full flex flex-col items-center">
+                  <div className="rounded bg-gray-100 border w-12 h-12 flex items-center justify-center mb-2 overflow-hidden">
+                    {classType.image ? (
                       <img
-                        src={placeholderImage}
-                        alt="No Image"
-                        className="w-8 h-8 opacity-50"
+                        src={classType.image}
+                        alt={classType.name}
+                        className="object-cover w-12 h-12"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = placeholderImage;
+                        }}
                       />
-                    </div>
+                    ) : (
+                      <Image className="text-gray-300 w-7 h-7" />
+                    )}
+                  </div>
+                  <div className="font-semibold text-base truncate w-full text-center" title={classType.name}>
+                    {classType.name}
+                  </div>
+                  <div className="text-xs text-gray-500 text-center truncate w-full" title={classType.description}>
+                    {classType.description}
+                  </div>
+                  {classType.location && (
+                    <Badge
+                      variant="outline"
+                      className="mt-1 px-2 py-0 text-xs max-w-[8rem] truncate"
+                      title={classType.location}
+                    >
+                      {classType.location}
+                    </Badge>
                   )}
                 </div>
-                <div className="flex flex-col flex-1 justify-between p-3 gap-2">
-                  <div>
-                    <h3 className="font-semibold truncate mb-1" title={classType.name}>{classType.name}</h3>
-                    <p className="text-xs text-gray-500 line-clamp-1 min-h-[1.25em]" title={classType.description}>{classType.description}</p>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">Price:</span>
-                    <span className="font-medium">{formatPrice(classType.price_inr)}</span>
-                  </div>
-                  <div className="flex items-center mt-auto gap-2 justify-end pt-2">
-                    {onViewClassType && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onViewClassType(classType)}
-                        className="h-8 w-8"
-                        title="View"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    )}
+                <div className="flex flex-col items-center gap-1 w-full">
+                  <span className="text-xs text-gray-600">
+                    <span className="text-gray-500">Duration:</span>{" "}
+                    {classType.duration_value
+                      ? `${classType.duration_value} ${classType.duration_metric}`
+                      : `Unlimited ${classType.duration_metric}`}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Max: {classType.max_students}
+                  </span>
+                  <span className="text-sm font-semibold text-music-500">
+                    {formatPrice(classType.price_inr)}
+                  </span>
+                </div>
+                <div className="flex gap-1 justify-center mt-2 w-full">
+                  {onViewClassType && (
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => onEditClassType(classType)}
+                      size="icon"
+                      onClick={() => onViewClassType(classType)}
                       className="h-8 w-8"
-                      title="Edit"
+                      title="View"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </Button>
-                    {onDeleteClassType && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteClassType(classType)}
-                        className="h-8 w-8"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditClassType(classType)}
+                    className="h-8 w-8"
+                    title="Edit"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  {onDeleteClassType && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDeleteClassType(classType)}
+                      className="h-8 w-8"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}
