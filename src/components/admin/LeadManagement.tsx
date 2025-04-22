@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Search, LayoutGrid, Grid2x2, LayoutList, Pencil, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Search, LayoutGrid, Grid2x2, LayoutList, Pencil, Trash2, Kanban } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +13,7 @@ import { useFetchLeads } from '@/hooks/useFetchLeads';
 import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
 import { canManageLeads } from '@/utils/adminPermissions';
+import LeadKanbanBoard from './leads/LeadKanbanBoard';
 
 interface LeadManagementProps {
   canAddLead?: boolean;
@@ -34,7 +35,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const { leads, loading, fetchLeads } = useFetchLeads();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile' | 'cards'>('list');
 
   const isSuperAdmin = user?.role === 'superadmin';
   const effectiveCanAddLead = isSuperAdmin ? true : canAddLead;
@@ -154,6 +155,17 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
               <Grid2x2 className="w-4 h-4" />
             </Button>
             <Button 
+              size="sm"
+              variant={viewMode === 'cards' ? "secondary" : "outline"}
+              onClick={() => setViewMode('cards')}
+              title="Cards (Kanban) view"
+            >
+              <span className="sr-only">Cards View</span>
+              <span>
+                <Kanban className="w-4 h-4" />
+              </span>
+            </Button>
+            <Button 
               variant="outline" 
               onClick={fetchLeads}
               className="flex items-center gap-2"
@@ -230,6 +242,14 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
               </div>
             ))}
           </div>
+        )}
+        {viewMode === 'cards' && (
+          <LeadKanbanBoard
+            leads={filteredLeads}
+            loading={loading}
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+          />
         )}
 
         {effectiveCanAddLead && (
