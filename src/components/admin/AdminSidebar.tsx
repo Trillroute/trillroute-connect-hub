@@ -59,19 +59,8 @@ const AdminSidebar = ({
   return (
     <Sidebar
       variant="floating"
-      className={`
-        h-full min-h-screen transition-all duration-300 bg-sidebar border-r border-sidebar-border
-        flex flex-col 
-        ${collapsed ? 'w-[60px] items-center' : 'w-[240px]'}
-      `}
-      style={{
-        minWidth: collapsed ? 60 : 180,
-        maxWidth: 320,
-        width: collapsed ? 60 : undefined,
-        paddingTop: "0", // No extra top margin now
-      }}
-      collapsible="none"
-      // Not absolutely/fixed positioned anymore; handled by flex layout.
+      collapsible={collapsed ? "icon" : "none"}
+      className="h-full min-h-screen bg-sidebar border-r border-sidebar-border"
     >
       {/* Logo/Header */}
       <SidebarHeader className="flex items-center justify-center py-4 px-0 mb-2">
@@ -93,12 +82,9 @@ const AdminSidebar = ({
                 isActive={activeTab === item.key}
                 onClick={() => setActiveTab(item.key)}
                 tooltip={collapsed ? item.label : undefined}
-                className={`flex items-center justify-start group-data-[collapsible=icon]:justify-center
-                  ${collapsed ? 'justify-center px-1' : ''}
-                `}
               >
-                <item.icon className={`h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0 ${collapsed ? 'mr-0' : ''}`} />
-                {!collapsed && <span>{item.label}</span>}
+                <item.icon className="h-5 w-5 mr-2" />
+                <span>{item.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
@@ -131,4 +117,3 @@ const AdminSidebar = ({
 };
 
 export default AdminSidebar;
-
