@@ -73,7 +73,7 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
       return;
     }
 
-    let uploadedImageUrl = "";
+    let uploadedImageUrl = null;
     if (imageFile) {
       // @ts-ignore
       const { uploadFile } = await import("@/utils/fileUpload");
@@ -129,6 +129,8 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
         price_inr: "",
         location: LOCATION_OPTIONS[0],
       });
+      setImageFile(null);
+      setImagePreview(null);
       if (onCreated) onCreated();
     }
     setLoading(false);

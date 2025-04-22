@@ -467,5 +467,3 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
 
 export type { ClassType };
 export default ClassTypeTable;
-
-// NOTE: This file is getting long; consider refactoring into smaller components.

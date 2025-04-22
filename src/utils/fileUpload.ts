@@ -1,13 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Function to upload a file and return a public URL
 export const uploadFile = async (file: File, folder: string): Promise<string | null> => {
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
-    const { error: uploadError, data } = await supabase.storage
+    // Upload the file to the "user-uploads" bucket
+    const { error: uploadError } = await supabase.storage
       .from('user-uploads')
       .upload(filePath, file);
 
@@ -16,7 +18,7 @@ export const uploadFile = async (file: File, folder: string): Promise<string | n
       return null;
     }
 
-    // Get the public URL for the uploaded file
+    // Get the public URL after upload
     const { data: { publicUrl } } = supabase.storage
       .from('user-uploads')
       .getPublicUrl(filePath);

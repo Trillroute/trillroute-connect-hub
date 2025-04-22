@@ -4,7 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { ClassType } from "./ClassTypeTable";
+import { ClassType as ClassTypeBase } from "./ClassTypeTable";
+
+interface ClassType extends ClassTypeBase {
+  location?: string;
+  image?: string | null;
+}
+
+const LOCATION_OPTIONS = [
+  "Trill Route, Indiranagar",
+  "Online",
+];
 
 interface EditClassTypeDialogProps {
   open: boolean;
@@ -12,11 +22,6 @@ interface EditClassTypeDialogProps {
   classType: ClassType | null;
   onSuccess: () => void;
 }
-
-const LOCATION_OPTIONS = [
-  "Trill Route, Indiranagar",
-  "Online",
-];
 
 const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
   open,
