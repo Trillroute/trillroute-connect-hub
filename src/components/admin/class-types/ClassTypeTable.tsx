@@ -21,6 +21,7 @@ interface ClassType {
   max_students: number;
   price_inr: number;
   created_at: string;
+  location: string;  // Added the location field to match the database schema
 }
 
 interface ClassTypeTableProps {
