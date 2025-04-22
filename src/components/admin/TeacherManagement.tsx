@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -7,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import UserTable from './users/UserTable';
@@ -39,6 +40,8 @@ const TeacherManagement = ({
   const [teacherToEdit, setTeacherToEdit] = useState<UserManagementUser | null>(null);
   const [teacherToDelete, setTeacherToDelete] = useState<UserManagementUser | null>(null);
   const [teacherToView, setTeacherToView] = useState<UserManagementUser | null>(null);
+  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
   const { toast } = useToast();
   const { isAdmin, isSuperAdmin } = useAuth();
 
@@ -150,6 +153,33 @@ const TeacherManagement = ({
     }
   };
 
+  const bulkDeleteTeachers = async () => {
+    if (selectedTeachers.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedTeachers.length} teachers? This cannot be undone.`)) return;
+
+    setIsLoading(true);
+    try {
+      for (const id of selectedTeachers) {
+        await deleteUser(id);
+      }
+      toast({
+        title: "Success",
+        description: `Deleted ${selectedTeachers.length} teachers successfully.`,
+      });
+      setSelectedTeachers([]);
+      loadTeachers();
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to bulk delete teachers.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const openEditDialog = (teacher: UserManagementUser) => {
     if (!canEditUser) {
       toast({
@@ -213,7 +243,28 @@ const TeacherManagement = ({
             <CardTitle>Teacher Management</CardTitle>
             <CardDescription>Manage teacher accounts</CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
+            <Button size="sm"
+              variant={viewMode === 'list' ? "secondary" : "outline"}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </Button>
+            <Button size="sm"
+              variant={viewMode === 'grid' ? "secondary" : "outline"}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button size="sm"
+              variant={viewMode === 'tile' ? "secondary" : "outline"}
+              onClick={() => setViewMode('tile')}
+              title="Tile view"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
             <Button variant="outline" onClick={loadTeachers}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -222,6 +273,16 @@ const TeacherManagement = ({
               <Button onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Teacher
+              </Button>
+            )}
+            {selectedTeachers.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={bulkDeleteTeachers}
+                className="ml-2"
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected ({selectedTeachers.length})
               </Button>
             )}
           </div>
@@ -236,6 +297,16 @@ const TeacherManagement = ({
           canDeleteUser={canTeacherBeDeleted}
           canEditUser={undefined}
           roleFilter="teacher"
+          viewMode={viewMode}
+          selectedUserIds={selectedTeachers}
+          onSelectUserId={id =>
+            setSelectedTeachers(prev =>
+              prev.includes(id)
+                ? prev.filter(tid => tid !== id)
+                : [...prev, id]
+            )
+          }
+          onSelectAll={ids => setSelectedTeachers(ids)}
         />
         
         <AddUserDialog
@@ -280,3 +351,5 @@ const TeacherManagement = ({
 };
 
 export default TeacherManagement;
+
+// NOTE: This file is getting long; consider refactoring into smaller components.

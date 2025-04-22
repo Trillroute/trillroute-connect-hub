@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -7,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, GraduationCap } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import UserTable from './users/UserTable';
@@ -39,6 +40,8 @@ const StudentManagement = ({
   const [studentToEdit, setStudentToEdit] = useState<UserManagementUser | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<UserManagementUser | null>(null);
   const [studentToView, setStudentToView] = useState<UserManagementUser | null>(null);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
   const { toast } = useToast();
   const { isAdmin, isSuperAdmin } = useAuth();
 
@@ -150,6 +153,33 @@ const StudentManagement = ({
     }
   };
 
+  const bulkDeleteStudents = async () => {
+    if (selectedStudents.length === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedStudents.length} students? This cannot be undone.`)) return;
+
+    setIsLoading(true);
+    try {
+      for (const id of selectedStudents) {
+        await deleteUser(id);
+      }
+      toast({
+        title: "Success",
+        description: `Deleted ${selectedStudents.length} students successfully.`,
+      });
+      setSelectedStudents([]);
+      loadStudents();
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to bulk delete students.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const openEditDialog = (student: UserManagementUser) => {
     if (!canEditUser) {
       toast({
@@ -197,6 +227,7 @@ const StudentManagement = ({
     return true;
   };
 
+  // --- UI for view switching, bulk delete, and passing to UserTable
   return (
     <Card>
       <CardHeader>
@@ -205,7 +236,28 @@ const StudentManagement = ({
             <CardTitle>Student Management</CardTitle>
             <CardDescription>Manage student accounts</CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 items-center">
+            <Button size="sm"
+              variant={viewMode === 'list' ? "secondary" : "outline"}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </Button>
+            <Button size="sm"
+              variant={viewMode === 'grid' ? "secondary" : "outline"}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button size="sm"
+              variant={viewMode === 'tile' ? "secondary" : "outline"}
+              onClick={() => setViewMode('tile')}
+              title="Tile view"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
             <Button variant="outline" onClick={loadStudents}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -214,6 +266,16 @@ const StudentManagement = ({
               <Button onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Student
+              </Button>
+            )}
+            {selectedStudents.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={bulkDeleteStudents}
+                className="ml-2"
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected ({selectedStudents.length})
               </Button>
             )}
           </div>
@@ -228,6 +290,16 @@ const StudentManagement = ({
           canDeleteUser={canStudentBeDeleted}
           canEditUser={undefined}
           roleFilter="student"
+          viewMode={viewMode}
+          selectedUserIds={selectedStudents}
+          onSelectUserId={id =>
+            setSelectedStudents(prev =>
+              prev.includes(id)
+                ? prev.filter(sid => sid !== id)
+                : [...prev, id]
+            )
+          }
+          onSelectAll={ids => setSelectedStudents(ids)}
         />
         
         <AddUserDialog
@@ -272,3 +344,5 @@ const StudentManagement = ({
 };
 
 export default StudentManagement;
+
+// NOTE: This file is getting long; consider refactoring into smaller components.
