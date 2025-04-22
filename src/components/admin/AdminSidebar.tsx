@@ -1,33 +1,47 @@
 
 import React from 'react';
 import { 
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarFooter
+  Sidebar, 
+  SidebarContent, 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton 
 } from '@/components/ui/sidebar';
 import { 
-  // Only allowed icons per system instruction:
-  ArrowLeft, 
-  ArrowRight, 
+  BookOpen, 
+  Users, 
+  GraduationCap, 
+  ShieldCheck, 
+  UserPlus, 
+  Puzzle, 
   Menu, 
-  User
+  ChevronRight, 
+  ChevronLeft 
 } from 'lucide-react';
-
-import { useAuth } from '@/hooks/useAuth';
-
-// Add your logo
-const LOGO_URL = "https://static.wixstatic.com/media/7ce495_c7aa45068c7743e7b27d8d4fe92499d0~mv2.png";
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { useLocation } from 'react-router-dom';
 
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
-  activeTab?: string;
-  onTabChange?: (tab: string) => void;
-  permissionMap?: {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  permissionMap: {
     courses?: { view: boolean };
     classTypes?: { view: boolean };
     students?: { view: boolean };
@@ -38,96 +52,196 @@ interface AdminSidebarProps {
   };
 }
 
-const MENU_ITEMS = [
-  { key: 'courses', label: 'Courses', icon: Menu, canView: (pm: any) => pm?.courses?.view },
-  { key: 'classTypes', label: 'Class Types', icon: Menu, canView: (pm: any) => pm?.classTypes?.view },
-  { key: 'students', label: 'Students', icon: Menu, canView: (pm: any) => pm?.students?.view },
-  { key: 'teachers', label: 'Teachers', icon: Menu, canView: (pm: any) => pm?.teachers?.view },
-  { key: 'admins', label: 'Admins', icon: Menu, canView: (pm: any) => pm?.admins?.view },
-  { key: 'leads', label: 'Leads', icon: Menu, canView: (pm: any) => pm?.leads?.view },
-  { key: 'levels', label: 'Levels', icon: Menu, canView: (pm: any) => pm?.levels?.view },
-];
-
-const AdminSidebar = ({
-  collapsed,
-  onToggleCollapse,
-  activeTab = 'courses',
-  onTabChange = () => {},
-  permissionMap = {
-    courses: { view: true },
-    classTypes: { view: true },
-    students: { view: true },
-    teachers: { view: true },
-    admins: { view: true },
-    leads: { view: true },
-    levels: { view: true },
-  }
+const AdminSidebar = ({ 
+  collapsed, 
+  onToggleCollapse, 
+  activeTab, 
+  onTabChange,
+  permissionMap 
 }: AdminSidebarProps) => {
-  const { user } = useAuth();
-  
-  const handleTabChange = (tab: string) => {
-    if (onTabChange) {
-      onTabChange(tab);
-    }
+  const location = useLocation();
+
+  const renderBreadcrumbs = () => {
+    // Only render breadcrumbs if the sidebar is expanded
+    if (collapsed) return null;
+    
+    const path = location.pathname;
+    const pathSegments = path.split('/').filter(Boolean);
+    
+    return (
+      <div className="px-4 py-2">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            
+            {pathSegments.map((segment, index) => {
+              const isLast = index === pathSegments.length - 1;
+              const formattedSegment = segment.charAt(0).toUpperCase() + segment.slice(1);
+              
+              const segmentPath = `/${pathSegments.slice(0, index + 1).join('/')}`;
+              
+              return isLast ? (
+                <BreadcrumbItem key={segment}>
+                  <BreadcrumbPage>{formattedSegment}</BreadcrumbPage>
+                </BreadcrumbItem>
+              ) : (
+                <React.Fragment key={segment}>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href={segmentPath}>{formattedSegment}</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                </React.Fragment>
+              );
+            })}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+    );
   };
 
   return (
-    <Sidebar
-      variant="floating"
-      collapsible={collapsed ? "icon" : "none"}
-      className="h-full min-h-screen bg-sidebar border-r border-sidebar-border"
-    >
-      {/* Logo/Header */}
-      <SidebarHeader className="flex items-center justify-center py-4 px-0 mb-2">
-        <img
-          src={LOGO_URL}
-          alt="Logo"
-          className={`
-            transition-all duration-300
-            ${collapsed ? 'w-8 h-8' : 'w-32 h-10'}
-            object-contain
-          `}
-        />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {MENU_ITEMS.filter(item => item.canView(permissionMap)).map(item => (
-            <SidebarMenuItem key={item.key}>
-              <SidebarMenuButton
-                isActive={activeTab === item.key}
-                onClick={() => handleTabChange(item.key)}
-                tooltip={collapsed ? item.label : undefined}
-              >
-                <item.icon className="h-5 w-5 mr-2" />
-                <span>{item.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter>
-        <div className="px-3 py-2 flex flex-col items-center justify-center">
-          {!collapsed && (
-            <div className="flex items-center mb-2">
-              <User className="h-5 w-5 mr-2 text-sidebar-foreground" />
-              <span className="text-sm font-medium truncate">{user?.email || 'User'}</span>
-            </div>
-          )}
-          {/* Collapse/Expand button */}
-          <button
-            type="button"
-            className="
-              w-8 h-8 flex items-center justify-center rounded-full border bg-background text-gray-600 shadow hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all
-            "
-            onClick={onToggleCollapse}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-label="Toggle sidebar"
-          >
-            {collapsed ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-          </button>
+    <>
+      <Sidebar className={cn(
+        "border-r border-gray-200 h-screen transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
+      )}>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            {!collapsed && <span className="font-semibold text-lg text-music-600">Admin Panel</span>}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onToggleCollapse}
+              className="h-8 w-8"
+            >
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          </div>
+          
+          <SidebarContent className="flex-1">
+            <SidebarMenu>
+              {permissionMap.courses?.view && (
+                <MenuItem 
+                  icon={BookOpen} 
+                  label="Courses" 
+                  active={activeTab === 'courses'} 
+                  onClick={() => onTabChange('courses')}
+                  collapsed={collapsed}
+                />
+              )}
+
+              {permissionMap.classTypes?.view && (
+                <MenuItem 
+                  icon={Puzzle} 
+                  label="Class Types" 
+                  active={activeTab === 'classTypes'} 
+                  onClick={() => onTabChange('classTypes')}
+                  collapsed={collapsed}
+                />
+              )}
+              
+              {permissionMap.students?.view && (
+                <MenuItem 
+                  icon={Users} 
+                  label="Students" 
+                  active={activeTab === 'students'} 
+                  onClick={() => onTabChange('students')}
+                  collapsed={collapsed}
+                />
+              )}
+              
+              {permissionMap.teachers?.view && (
+                <MenuItem 
+                  icon={GraduationCap} 
+                  label="Teachers" 
+                  active={activeTab === 'teachers'} 
+                  onClick={() => onTabChange('teachers')}
+                  collapsed={collapsed}
+                />
+              )}
+              
+              {permissionMap.admins?.view && (
+                <MenuItem 
+                  icon={ShieldCheck} 
+                  label="Admins" 
+                  active={activeTab === 'admins'} 
+                  onClick={() => onTabChange('admins')}
+                  collapsed={collapsed}
+                />
+              )}
+              
+              {permissionMap.leads?.view && (
+                <MenuItem 
+                  icon={UserPlus} 
+                  label="Leads" 
+                  active={activeTab === 'leads'} 
+                  onClick={() => onTabChange('leads')}
+                  collapsed={collapsed}
+                />
+              )}
+              
+              {permissionMap.levels?.view && (
+                <MenuItem 
+                  icon={Menu} 
+                  label="Levels" 
+                  active={activeTab === 'levels'} 
+                  onClick={() => onTabChange('levels')}
+                  collapsed={collapsed}
+                />
+              )}
+            </SidebarMenu>
+          </SidebarContent>
         </div>
-      </SidebarFooter>
-    </Sidebar>
+      </Sidebar>
+      
+      {/* Render breadcrumbs outside the sidebar */}
+      {renderBreadcrumbs()}
+    </>
+  );
+};
+
+const MenuItem = ({ 
+  icon: Icon, 
+  label, 
+  active, 
+  onClick, 
+  collapsed 
+}: { 
+  icon: any; 
+  label: string; 
+  active: boolean; 
+  onClick: () => void;
+  collapsed: boolean;
+}) => {
+  return (
+    <SidebarMenuItem>
+      <TooltipProvider disableHoverableContent={!collapsed}>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <SidebarMenuButton
+              onClick={onClick}
+              className={cn(
+                "flex items-center w-full p-3 rounded-md transition-colors",
+                active 
+                  ? "bg-music-100 text-music-600" 
+                  : "hover:bg-gray-100"
+              )}
+            >
+              <Icon className="h-5 w-5 mr-3" />
+              {!collapsed && <span>{label}</span>}
+            </SidebarMenuButton>
+          </TooltipTrigger>
+          {collapsed && (
+            <TooltipContent side="right">
+              <p>{label}</p>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+    </SidebarMenuItem>
   );
 };
 
