@@ -1,7 +1,11 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import EditClassTypeDialog from "./EditClassTypeDialog";
@@ -86,10 +90,6 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
     }
   }, [user, toast]);
 
-  useEffect(() => {
-    setSelectedIds(prev => prev.filter(id => filteredClassTypes.some(ct => ct.id === id)));
-  }, [filteredClassTypes]);
-
   const filteredClassTypes = useMemo(() => {
     if (!searchQuery.trim()) return classTypes;
     const q = searchQuery.toLowerCase();
@@ -99,6 +99,10 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
       (ct.duration_metric && ct.duration_metric.toLowerCase().includes(q))
     );
   }, [classTypes, searchQuery]);
+
+  useEffect(() => {
+    setSelectedIds(prev => prev.filter(id => filteredClassTypes.some(ct => ct.id === id)));
+  }, [filteredClassTypes]);
 
   const truncateText = (text: string, maxLength: number = 50) => {
     if (text.length <= maxLength) return text;
@@ -251,12 +255,12 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
               <div className="absolute top-4 right-4">
                 <Checkbox
                   checked={selectedIds.includes(ct.id)}
-                  onCheckedChange={e => {
+                  onCheckedChange={(e) => {
                     e?.preventDefault?.();
                     toggleSelectOne(ct.id);
                   }}
                   aria-label={`Select ${ct.name}`}
-                  onClick={e => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -315,12 +319,12 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
             <div className="absolute top-4 right-4">
               <Checkbox
                 checked={selectedIds.includes(ct.id)}
-                onCheckedChange={e => {
+                onCheckedChange={(e) => {
                   e?.preventDefault?.();
                   toggleSelectOne(ct.id);
                 }}
                 aria-label={`Select ${ct.name}`}
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               />
             </div>
             <div className="font-semibold text-lg line-clamp-1 text-center w-full" title={ct.name}>{ct.name}</div>

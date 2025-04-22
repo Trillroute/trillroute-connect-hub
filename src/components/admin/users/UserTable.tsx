@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, Trash2, BadgeCheck, UserCog, UserPlus, ArrowUpDown, Search, Filter, X, ShieldAlert, Pencil, Square, SquareCheck } from 'lucide-react';
+import { Eye, Trash2, BadgeCheck, UserCog, UserPlus, ArrowUpDown, Search, Filter, X, ShieldAlert, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
   DropdownMenu,
@@ -295,7 +295,6 @@ const UserTable = ({
                   <div className="flex items-center justify-center">
                     <Checkbox
                       checked={allSelected}
-                      indeterminate={someSelected}
                       onCheckedChange={() => {
                         if (allSelected) {
                           onSelectAll?.([]);
@@ -365,11 +364,8 @@ const UserTable = ({
                     <div className="flex items-center justify-center">
                       <Checkbox
                         checked={selectedUserIds.includes(user.id)}
-                        onCheckedChange={event => {
-                          // prevent switching view when clicking the checkbox
-                          event?.stopPropagation?.();
-                          onSelectUserId?.(user.id);
-                        }}
+                        onCheckedChange={() => onSelectUserId?.(user.id)}
+                        onClick={(e) => e.stopPropagation()}
                         aria-label={`Select ${user.firstName} ${user.lastName}`}
                       />
                     </div>
@@ -452,10 +448,8 @@ const UserTable = ({
               <div className="absolute top-3 right-3">
                 <Checkbox
                   checked={selectedUserIds.includes(user.id)}
-                  onCheckedChange={event => {
-                    event?.stopPropagation?.();
-                    onSelectUserId?.(user.id);
-                  }}
+                  onCheckedChange={() => onSelectUserId?.(user.id)}
+                  onClick={(e) => e.stopPropagation()}
                   aria-label={`Select ${user.firstName} ${user.lastName}`}
                 />
               </div>
@@ -510,10 +504,8 @@ const UserTable = ({
               <div className="absolute top-3 right-3">
                 <Checkbox
                   checked={selectedUserIds.includes(user.id)}
-                  onCheckedChange={event => {
-                    event?.stopPropagation?.();
-                    onSelectUserId?.(user.id);
-                  }}
+                  onCheckedChange={() => onSelectUserId?.(user.id)}
+                  onClick={(e) => e.stopPropagation()}
                   aria-label={`Select ${user.firstName} ${user.lastName}`}
                 />
               </div>
