@@ -16,7 +16,10 @@ const useActivityLogger = () => {
   const logActivity = useCallback(
     async (action: string, component?: string, pageUrl?: string) => {
       try {
-        if (!user) return;
+        if (!user) {
+          console.log("Cannot log activity: No authenticated user");
+          return;
+        }
 
         const entry = {
           user_id: user.id,
@@ -25,15 +28,20 @@ const useActivityLogger = () => {
           page_url: pageUrl ?? window.location.pathname,
         };
 
+        console.log("Attempting to log activity:", entry);
+
         const { error } = await supabase
           .from("user_activity_logs")
           .insert(entry);
 
         if (error) {
-          // Non-intrusive log (don't throw for UI)
           console.warn("Failed to log user activity:", error);
+          // For debugging in development, uncomment if needed:
+          // toast.error(`Activity logging failed: ${error.message}`, {
+          //   id: "activity-log-error",
+          // });
         } else {
-          console.log("Activity logged:", entry);
+          console.log("Activity successfully logged:", entry);
         }
       } catch (err) {
         console.warn("Activity logging error:", err);

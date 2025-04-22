@@ -48,7 +48,8 @@ const SuperAdminDashboard = () => {
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
-    logActivity("CLICK_TAB", `Tab: ${tab}`, window.location.pathname);
+    console.log(`Tab changed to: ${tab}, logging activity...`);
+    logActivity("CLICK_TAB", `Tab: ${tab}`);
   };
 
   const fetchDashboardData = async () => {
