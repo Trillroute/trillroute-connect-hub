@@ -11,6 +11,7 @@ import {
   Menu as MenuIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Navbar from '../Navbar';
 
 import SidebarHeader from './SidebarHeader';
 import SidebarMenuSection, { SidebarItem } from './SidebarMenuSection';
@@ -49,20 +50,23 @@ const AdminSidebar = ({
   onTabChange,
   permissionMap
 }: AdminSidebarProps) => (
-  <Sidebar className={cn(
-    "border-r border-gray-200 h-screen transition-all duration-300 bg-white relative flex flex-col",
-    collapsed ? "w-16" : "w-64"
-  )}>
-    <SidebarHeader collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
-    <SidebarMenuSection
-      items={sidebarItems}
-      collapsed={collapsed}
-      activeTab={activeTab}
-      onTabChange={onTabChange}
-      permissionMap={permissionMap}
-    />
-    <SidebarFooter collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
-  </Sidebar>
+  <div className="flex flex-col h-screen">
+    <Navbar />
+    <Sidebar className={cn(
+      "border-r border-gray-200 h-[calc(100vh-4rem)] transition-all duration-300 bg-white relative flex flex-col",
+      collapsed ? "w-16" : "w-64"
+    )}>
+      <SidebarHeader collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
+      <SidebarMenuSection
+        items={sidebarItems}
+        collapsed={collapsed}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        permissionMap={permissionMap}
+      />
+      <SidebarFooter collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
+    </Sidebar>
+  </div>
 );
 
 export default AdminSidebar;

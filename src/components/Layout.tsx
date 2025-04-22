@@ -20,31 +20,33 @@ const Layout = ({ children }: LayoutProps) => {
     location.pathname.includes('/dashboard/superadmin') ||
     location.pathname.includes('/admin');
 
-  // Navbar always at top except auth pages
+  // For admin pages, use a side-by-side layout
+  if (isAdminPage) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SidebarProvider defaultOpen={true}>
+          <div className="flex h-screen">
+            {/* Admin sidebar area */}
+            <div className="flex-shrink-0">
+              {children}
+            </div>
+          </div>
+        </SidebarProvider>
+      </div>
+    );
+  }
+
+  // Regular pages as before
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {!isAuthPage && <Navbar />}
-      {isAdminPage ? (
-        // sidebar/content as row under Navbar for admin/superadmin
-        <div className="flex flex-1 min-h-0">
-          <SidebarProvider defaultOpen={true}>
-            <div className="flex w-full">
-              {children}
-            </div>
-          </SidebarProvider>
+      <main className="flex-grow">
+        {children}
+      </main>
+      {!isAuthPage && (
+        <div className="relative z-50">
+          <Footer />
         </div>
-      ) : (
-        // standard flow for regular, non-admin pages
-        <>
-          <main className="flex-grow">
-            {children}
-          </main>
-          {!isAuthPage && !isAdminPage && (
-            <div className="relative z-50">
-              <Footer />
-            </div>
-          )}
-        </>
       )}
     </div>
   );

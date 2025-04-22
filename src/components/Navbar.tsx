@@ -12,6 +12,10 @@ const Navbar = () => {
 
   // Only show Home, Courses, SuperAdmin dashboard navigation when NOT on /dashboard/superadmin route
   const isSuperAdminRoute = location.pathname.startsWith('/dashboard/superadmin') && isSuperAdmin();
+  const isAdminRoute = 
+    location.pathname.includes('/dashboard/admin') ||
+    location.pathname.includes('/dashboard/superadmin') ||
+    location.pathname.includes('/admin');
 
   // These links are hidden for SuperAdmin dashboard
   const navLinks = [
@@ -55,6 +59,62 @@ const Navbar = () => {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // If on admin route, use a different navbar styling
+  if (isAdminRoute) {
+    return (
+      <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm w-full">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link to="/" className="flex-shrink-0 flex items-center">
+                <Music className="h-8 w-8 text-music-500" />
+                <span className="ml-2 text-xl font-bold text-music-500">Trillroute</span>
+              </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <Link to="/profile" className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-music-500">
+                    <Avatar className="h-8 w-8 border border-gray-200">
+                      {user.profilePhoto ? (
+                        <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
+                      ) : (
+                        <AvatarFallback className="bg-music-100 text-music-600">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span>Profile</span>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    onClick={logout}
+                    className="border-music-300 text-music-500 hover:bg-music-50"
+                  >
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link to="/auth/login">
+                    <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/auth/register">
+                    <Button className="bg-music-500 text-white hover:bg-music-600">
+                      Register
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">

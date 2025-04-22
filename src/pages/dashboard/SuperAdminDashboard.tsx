@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -213,7 +212,7 @@ const SuperAdminDashboard = () => {
         }}
       />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-auto">
         <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
