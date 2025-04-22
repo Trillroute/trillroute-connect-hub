@@ -363,18 +363,7 @@ const UserTable = ({
                   {format(new Date(user.createdAt), 'MMM d, yyyy')}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end space-x-2">
-                    {canDeleteUser(user) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); onDeleteUser(user); }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    )}
-                  </div>
+                  
                 </TableCell>
               </TableRow>
             ))}
