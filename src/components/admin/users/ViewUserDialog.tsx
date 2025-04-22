@@ -24,26 +24,75 @@ import { QualificationData, BankDetails, TeacherProfileFormData } from '@/types/
 // Fetch onboarding info for teachers
 async function fetchTeacherProfile(userId: string): Promise<Partial<TeacherProfileFormData>> {
   // Fetch qualifications
-  const { data: qualifications, error: qErr } = await supabase
+  const { data: qualificationsData, error: qErr } = await supabase
     .from('teacher_qualifications')
     .select('*')
     .eq('user_id', userId);
+  
+  // Map qualifications to expected format
+  const qualifications: QualificationData[] = Array.isArray(qualificationsData) 
+    ? qualificationsData.map(q => ({
+        id: q.id,
+        qualification: q.qualification,
+        specialization: q.specialization || '',
+        institution: q.institution || '',
+        graduationYear: q.graduation_year || undefined,
+        additionalCertifications: q.additional_certifications || '',
+        qualifyingCertificate: q.qualifying_certificate || ''
+      }))
+    : [];
+    
   // Fetch professional info
   const { data: professionalRows, error: pErr } = await supabase
     .from('teacher_professional')
     .select('*')
     .eq('user_id', userId);
+  
   // Fetch bank details
   const { data: bankRows, error: bErr } = await supabase
     .from('teacher_bank_details')
     .select('*')
     .eq('user_id', userId);
+    
+  // Map bank details to expected format
+  let bank: BankDetails | undefined;
+  if (Array.isArray(bankRows) && bankRows[0]) {
+    bank = {
+      accountHolderName: bankRows[0].account_holder_name,
+      bankName: bankRows[0].bank_name,
+      accountNumber: bankRows[0].account_number,
+      ifscCode: bankRows[0].ifsc_code,
+      upiId: bankRows[0].upi_id || '',
+      bankProof: bankRows[0].bank_proof || ''
+    };
+  }
+
+  // Convert previous institutes to the expected format
+  const previousInstitutes = professionalRows?.[0]?.previous_institutes
+    ? Array.isArray(professionalRows[0].previous_institutes)
+      ? professionalRows[0].previous_institutes
+      : []
+    : [];
+
+  // Convert class experience to the expected format
+  const classExperience = professionalRows?.[0]?.class_experience
+    ? Array.isArray(professionalRows[0].class_experience)
+      ? professionalRows[0].class_experience
+      : []
+    : [];
+    
+  // Convert comfortable genres to the expected format  
+  const comfortableGenres = professionalRows?.[0]?.comfortable_genres
+    ? Array.isArray(professionalRows[0].comfortable_genres)
+      ? professionalRows[0].comfortable_genres
+      : []
+    : [];
 
   return {
-    qualifications: Array.isArray(qualifications) ? qualifications : [],
-    previousInstitutes: professionalRows?.[0]?.previous_institutes ?? [],
-    classExperience: professionalRows?.[0]?.class_experience ?? [],
-    bank: Array.isArray(bankRows) && bankRows[0] ? bankRows[0] : undefined,
+    qualifications: qualifications,
+    previousInstitutes: previousInstitutes,
+    classExperience: classExperience,
+    bank: bank,
     teachingExperienceYears: professionalRows?.[0]?.teaching_experience_years,
     primaryInstrument: professionalRows?.[0]?.primary_instrument,
     primaryInstrumentLevel: professionalRows?.[0]?.primary_instrument_level,
@@ -54,7 +103,7 @@ async function fetchTeacherProfile(userId: string): Promise<Partial<TeacherProfi
     musicalProjects: professionalRows?.[0]?.musical_projects,
     teachingPhilosophy: professionalRows?.[0]?.teaching_philosophy,
     bio: professionalRows?.[0]?.bio,
-    comfortableGenres: professionalRows?.[0]?.comfortable_genres,
+    comfortableGenres: comfortableGenres,
   };
 }
 
@@ -227,13 +276,13 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                               </tr>
                             </thead>
                             <tbody>
-                              {onboarding.qualifications.map((q: any, idx: number) => (
+                              {onboarding.qualifications.map((q: QualificationData, idx: number) => (
                                 <tr key={q.id || idx}>
                                   <td className="p-2 border">{q.qualification}</td>
                                   <td className="p-2 border">{q.specialization || '-'}</td>
                                   <td className="p-2 border">{q.institution || '-'}</td>
-                                  <td className="p-2 border">{q.graduation_year || '-'}</td>
-                                  <td className="p-2 border">{q.additional_certifications || '-'}</td>
+                                  <td className="p-2 border">{q.graduationYear || '-'}</td>
+                                  <td className="p-2 border">{q.additionalCertifications || '-'}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -244,6 +293,7 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                       </div>
                     )}
                   </TabsContent>
+                  
                   {/* Professional Info Tab */}
                   <TabsContent value="professional" className="pt-4">
                     {isLoading ? (
@@ -326,6 +376,7 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                       <div>No information found.</div>
                     )}
                   </TabsContent>
+                  
                   {/* Bank Details Tab */}
                   <TabsContent value="bank" className="pt-4">
                     {isLoading ? (
@@ -334,29 +385,29 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                       <div className="space-y-3">
                         <div>
                           <span className="font-semibold block">Account Holder Name:</span>
-                          <span>{onboarding.bank.account_holder_name}</span>
+                          <span>{onboarding.bank.accountHolderName}</span>
                         </div>
                         <div>
                           <span className="font-semibold block">Bank Name:</span>
-                          <span>{onboarding.bank.bank_name}</span>
+                          <span>{onboarding.bank.bankName}</span>
                         </div>
                         <div>
                           <span className="font-semibold block">Account Number:</span>
-                          <span>{onboarding.bank.account_number}</span>
+                          <span>{onboarding.bank.accountNumber}</span>
                         </div>
                         <div>
                           <span className="font-semibold block">IFSC Code:</span>
-                          <span>{onboarding.bank.ifsc_code}</span>
+                          <span>{onboarding.bank.ifscCode}</span>
                         </div>
                         <div>
                           <span className="font-semibold block">UPI ID:</span>
-                          <span>{onboarding.bank.upi_id || 'Not provided'}</span>
+                          <span>{onboarding.bank.upiId || 'Not provided'}</span>
                         </div>
                         <div>
                           <span className="font-semibold block">Bank Proof:</span>
-                          {onboarding.bank.bank_proof ? (
+                          {onboarding.bank.bankProof ? (
                             <a 
-                              href={onboarding.bank.bank_proof} 
+                              href={onboarding.bank.bankProof} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-music-500 underline"

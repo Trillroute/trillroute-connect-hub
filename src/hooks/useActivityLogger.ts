@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 /**
  * Hook to log user actions/activity in the database.
@@ -31,6 +32,8 @@ const useActivityLogger = () => {
         if (error) {
           // Non-intrusive log (don't throw for UI)
           console.warn("Failed to log user activity:", error);
+        } else {
+          console.log("Activity logged:", entry);
         }
       } catch (err) {
         console.warn("Activity logging error:", err);
