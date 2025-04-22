@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import EditClassTypeDialog from "./EditClassTypeDialog";
 
-interface ClassType {
+export interface ClassType {
   id: string;
   name: string;
   description: string;
@@ -22,7 +22,7 @@ interface ClassType {
   price_inr: number;
   created_at: string;
   location: string;
-  image?: string | null; // Make optional for backward compatibility
+  image: string | null; // Changed from optional to required but nullable
 }
 
 // Column options for table views
@@ -465,5 +465,4 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   );
 };
 
-export type { ClassType };
 export default ClassTypeTable;
