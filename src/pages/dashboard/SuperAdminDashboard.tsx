@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/ui/charts';
-import { Download, Settings, School, BookOpen, GraduationCap, UserPlus, Shield, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { Download, Settings, School, BookOpen, GraduationCap, UserPlus, Shield, PlusCircle, LayoutDashboard, Kanban } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseManagement from '@/components/admin/CourseManagement';
 import StudentManagement from '@/components/admin/StudentManagement';
@@ -17,6 +17,12 @@ import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagem
 import SuperAdminSidebar, { ActiveTab } from "@/components/admin/SuperAdminSidebar";
 import useActivityLogger from "@/hooks/useActivityLogger";
 import UserActivityReport from "@/components/admin/reports/UserActivityReport";
+import LeadKanbanBoard from "@/components/admin/leads/LeadKanbanBoard";
+import { useFetchLeads } from "@/hooks/useFetchLeads";
+import EditLeadDialog from "@/components/admin/leads/EditLeadDialog";
+import DeleteLeadDialog from "@/components/admin/leads/DeleteLeadDialog";
+import { Lead } from "@/types/lead";
+import { useToast } from "@/hooks/use-toast";
 
 const NAV_ITEMS: {
   key: ActiveTab;
@@ -31,6 +37,7 @@ const NAV_ITEMS: {
   { key: 'admins', label: 'Admins', icon: Shield },
   { key: 'leads', label: 'Leads', icon: UserPlus },
   { key: 'levels', label: 'Levels', icon: Settings },
+  { key: 'leads-cards', label: 'Leads Kanban', icon: Kanban },
 ];
 
 const SuperAdminDashboard = () => {
@@ -46,9 +53,23 @@ const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
   const logActivity = useActivityLogger();
 
+  const { leads, loading: leadsLoading, fetchLeads } = useFetchLeads();
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  const openEditDialog = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsEditDialogOpen(true);
+  };
+  const openDeleteDialog = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsDeleteDialogOpen(true);
+  };
+
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
-    console.log(`Tab changed to: ${tab}, logging activity...`);
     logActivity("CLICK_TAB", `Tab: ${tab}`);
   };
 
@@ -379,6 +400,43 @@ const SuperAdminDashboard = () => {
             {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}
             {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
             {activeTab === 'levels' && <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />}
+
+            {activeTab === 'leads-cards' && (
+              <div className="max-w-[1400px] mx-auto w-full">
+                <Card className="shadow-none border-0">
+                  <CardHeader>
+                    <CardTitle>Leads Kanban Board</CardTitle>
+                    <CardDescription>
+                      Drag and drop leads between statuses to update their progress.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <LeadKanbanBoard
+                      leads={leads}
+                      loading={leadsLoading}
+                      onEdit={openEditDialog}
+                      onDelete={openDeleteDialog}
+                    />
+                    {selectedLead && (
+                      <>
+                        <EditLeadDialog
+                          open={isEditDialogOpen}
+                          onOpenChange={setIsEditDialogOpen}
+                          lead={selectedLead}
+                          onSuccess={fetchLeads}
+                        />
+                        <DeleteLeadDialog
+                          open={isDeleteDialogOpen}
+                          onOpenChange={setIsDeleteDialogOpen}
+                          lead={selectedLead}
+                          onSuccess={fetchLeads}
+                        />
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
           {activeTab === 'reports' && (

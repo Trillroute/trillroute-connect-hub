@@ -87,15 +87,7 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              {/* NEW: SuperAdmin Leads Kanban Cards Page */}
-              <Route
-                path="/dashboard/superadmin/leads/cards"
-                element={
-                  <ProtectedRoute requireSuperAdmin={true}>
-                    <LeadsKanbanPage />
-                  </ProtectedRoute>
-                }
-              />
+              {/* Removed: Leads Kanban Cards Page */}
               
               {/* Admin Pages */}
               <Route
