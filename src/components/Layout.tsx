@@ -24,10 +24,13 @@ const Layout = ({ children }: LayoutProps) => {
   // For admin pages, use a layout with sidebar
   if (isAdminPage) {
     return (
-      <div className="min-h-screen bg-background">
-        <SidebarProvider defaultOpen={true}>
-          {children}
-        </SidebarProvider>
+      <div className="min-h-screen flex flex-col bg-background">
+        <Navbar />
+        <div className="flex-grow flex">
+          <SidebarProvider defaultOpen={true}>
+            {children}
+          </SidebarProvider>
+        </div>
       </div>
     );
   }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ import LevelManagement from '@/components/admin/levels/LevelManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
-import CreateClassTypeForm from "@/components/admin/class-types/CreateClassTypeForm";
 import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagement";
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
@@ -197,16 +195,14 @@ const SuperAdminDashboard = () => {
   };
   
   return (
-    <div className="flex h-screen">
-      <div className="flex-shrink-0">
-        <AdminSidebar 
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={handleSidebarToggle}
-          activeTab={activeTab} 
-          onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
-          permissionMap={permissionMap}
-        />
-      </div>
+    <div className="flex h-[calc(100vh-4rem)]">
+      <AdminSidebar 
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={handleSidebarToggle}
+        activeTab={activeTab} 
+        onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
+        permissionMap={permissionMap}
+      />
       
       <div className="flex-grow overflow-auto">
         <div className="p-4 md:p-6 border-b border-gray-200">
