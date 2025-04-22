@@ -213,21 +213,7 @@ const SuperAdminDashboard = () => {
         <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              {activeTab === 'today' && (
-                <>
-                  <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Reports
-                  </Button>
-                  <Button className="bg-music-500 hover:bg-music-600">
-                    <Settings className="h-4 w-4 mr-2" />
-                    System Settings
-                  </Button>
-                </>
-              )}
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin</h1>
             </div>
           </div>
 
