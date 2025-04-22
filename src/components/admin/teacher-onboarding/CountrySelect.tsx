@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Globe } from "lucide-react";
 
-// Filter out any empty or whitespace-only strings first
+// Define a clean list of countries with guaranteed valid values
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
   "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana",
@@ -23,7 +23,12 @@ const countries = [
   "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine",
   "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
   "Yemen", "Zambia", "Zimbabwe"
-].filter(country => country && typeof country === 'string' && country.trim() !== "");
+];
+
+// Make sure we have a valid list with no empty strings
+const validCountries = countries.filter(country => 
+  typeof country === 'string' && country.trim() !== ""
+);
 
 interface CountrySelectProps {
   value: string;
@@ -41,19 +46,11 @@ const CountrySelect = ({ value, onValueChange }: CountrySelectProps) => {
       </SelectTrigger>
       <SelectContent>
         <ScrollArea className="h-80">
-          {countries.map((country, index) => {
-            // Skip rendering if country is empty or just whitespace
-            if (!country || country.trim() === "") return null;
-            
-            // Use a safe unique value (either the country name or its index)
-            const countryValue = country.trim() || `country-${index}`;
-            
-            return (
-              <SelectItem key={index} value={countryValue}>
-                {country}
-              </SelectItem>
-            );
-          })}
+          {validCountries.map((country, index) => (
+            <SelectItem key={`country-${index}`} value={country}>
+              {country}
+            </SelectItem>
+          ))}
         </ScrollArea>
       </SelectContent>
     </Select>
