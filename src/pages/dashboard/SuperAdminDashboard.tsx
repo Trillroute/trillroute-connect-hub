@@ -216,30 +216,6 @@ const SuperAdminDashboard = () => {
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin</h1>
             </div>
           </div>
-
-          <nav className="mt-6 flex flex-row flex-wrap gap-2 md:gap-4">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.key;
-              return (
-                <button
-                  key={item.key}
-                  onClick={() => setActiveTab(item.key)}
-                  className={`
-                    flex items-center px-4 py-2 rounded-md text-sm font-medium transition
-                    ${isActive
-                      ? "bg-music-500 text-white shadow"
-                      : "bg-white text-music-500 border border-music-200 hover:bg-music-100 hover:text-music-700"}
-                  `}
-                  aria-current={isActive ? "page" : undefined}
-                  type="button"
-                >
-                  <Icon className="mr-2 h-5 w-5" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
         </div>
 
         <div className="flex-grow overflow-auto p-4 md:p-6">
