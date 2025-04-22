@@ -32,11 +32,10 @@ async function fetchTeacherProfile(userId: string): Promise<Partial<TeacherProfi
   // Map qualifications to expected format
   const qualifications: QualificationData[] = Array.isArray(qualificationsData) 
     ? qualificationsData.map(q => ({
-        id: q.id,
         qualification: q.qualification,
         specialization: q.specialization || '',
         institution: q.institution || '',
-        graduationYear: q.graduation_year || undefined,
+        graduationYear: q.graduation_year ? String(q.graduation_year) : '', // Convert to string to match type
         additionalCertifications: q.additional_certifications || '',
         qualifyingCertificate: q.qualifying_certificate || ''
       }))
@@ -277,7 +276,7 @@ const ViewUserDialog = ({ user, isOpen, onOpenChange }: ViewUserDialogProps) => 
                             </thead>
                             <tbody>
                               {onboarding.qualifications.map((q: QualificationData, idx: number) => (
-                                <tr key={q.id || idx}>
+                                <tr key={idx}>
                                   <td className="p-2 border">{q.qualification}</td>
                                   <td className="p-2 border">{q.specialization || '-'}</td>
                                   <td className="p-2 border">{q.institution || '-'}</td>
