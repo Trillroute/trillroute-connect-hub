@@ -1,3 +1,4 @@
+
 export interface Course {
   id: string;
   title: string;
@@ -10,7 +11,7 @@ export interface Course {
   duration_type: string;
   created_at: string;
   instructor_ids: string[];
-  student_ids?: string[]; // <-- added for enrolled students
+  student_ids?: string[];
 }
 
 export interface Teacher {

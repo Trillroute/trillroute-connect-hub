@@ -32,12 +32,7 @@ export function useCourses() {
         const formattedCourses = data.map(item => ({
           ...item,
           instructor_ids: item.instructor_ids || [],
-          classes_count: item.classes_count || 0,
-          classes_duration: item.classes_duration || 0,
-          studio_sessions_count: item.studio_sessions_count || 0,
-          studio_sessions_duration: item.studio_sessions_duration || 0,
-          practical_sessions_count: item.practical_sessions_count || 0,
-          practical_sessions_duration: item.practical_sessions_duration || 0,
+          student_ids: item.student_ids || [],
         }));
 
         setCourses(formattedCourses);

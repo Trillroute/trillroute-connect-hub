@@ -109,19 +109,19 @@ const ViewCourseDialog = ({ course, isOpen, onOpenChange }: ViewCourseDialogProp
                   <div>
                     <span className="font-semibold block">Classes:</span>
                     <div className="text-sm text-muted-foreground">
-                      {course.classes_count} classes, {course.classes_duration} minutes total
+                      Class schedule is not available for this course.
                     </div>
                   </div>
                   <div>
                     <span className="font-semibold block">Studio Sessions:</span>
                     <div className="text-sm text-muted-foreground">
-                      {course.studio_sessions_count} sessions, {course.studio_sessions_duration} minutes total
+                      Studio session data is not available.
                     </div>
                   </div>
                   <div>
                     <span className="font-semibold block">Practical Sessions:</span>
                     <div className="text-sm text-muted-foreground">
-                      {course.practical_sessions_count} sessions, {course.practical_sessions_duration} minutes total
+                      Practical session data is not available.
                     </div>
                   </div>
                 </div>
