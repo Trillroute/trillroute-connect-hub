@@ -26,15 +26,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { 
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { useLocation } from 'react-router-dom';
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -59,147 +50,95 @@ const AdminSidebar = ({
   onTabChange,
   permissionMap 
 }: AdminSidebarProps) => {
-  const location = useLocation();
-
-  const renderBreadcrumbs = () => {
-    // Only render breadcrumbs if the sidebar is expanded
-    if (collapsed) return null;
-    
-    const path = location.pathname;
-    const pathSegments = path.split('/').filter(Boolean);
-    
-    return (
-      <div className="px-4 py-2">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            
-            {pathSegments.map((segment, index) => {
-              const isLast = index === pathSegments.length - 1;
-              const formattedSegment = segment.charAt(0).toUpperCase() + segment.slice(1);
-              
-              const segmentPath = `/${pathSegments.slice(0, index + 1).join('/')}`;
-              
-              return isLast ? (
-                <BreadcrumbItem key={segment}>
-                  <BreadcrumbPage>{formattedSegment}</BreadcrumbPage>
-                </BreadcrumbItem>
-              ) : (
-                <React.Fragment key={segment}>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href={segmentPath}>{formattedSegment}</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                </React.Fragment>
-              );
-            })}
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-    );
-  };
+  // Completely removed renderBreadcrumbs and all breadcrumb rendering.
 
   return (
-    <>
-      <Sidebar className={cn(
-        "border-r border-gray-200 h-screen transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
-      )}>
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            {!collapsed && <span className="font-semibold text-lg text-music-600">Admin Panel</span>}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={onToggleCollapse}
-              className="h-8 w-8"
-            >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          </div>
-          
-          <SidebarContent className="flex-1">
-            <SidebarMenu>
-              {permissionMap.courses?.view && (
-                <MenuItem 
-                  icon={BookOpen} 
-                  label="Courses" 
-                  active={activeTab === 'courses'} 
-                  onClick={() => onTabChange('courses')}
-                  collapsed={collapsed}
-                />
-              )}
-
-              {permissionMap.classTypes?.view && (
-                <MenuItem 
-                  icon={Puzzle} 
-                  label="Class Types" 
-                  active={activeTab === 'classTypes'} 
-                  onClick={() => onTabChange('classTypes')}
-                  collapsed={collapsed}
-                />
-              )}
-              
-              {permissionMap.students?.view && (
-                <MenuItem 
-                  icon={Users} 
-                  label="Students" 
-                  active={activeTab === 'students'} 
-                  onClick={() => onTabChange('students')}
-                  collapsed={collapsed}
-                />
-              )}
-              
-              {permissionMap.teachers?.view && (
-                <MenuItem 
-                  icon={GraduationCap} 
-                  label="Teachers" 
-                  active={activeTab === 'teachers'} 
-                  onClick={() => onTabChange('teachers')}
-                  collapsed={collapsed}
-                />
-              )}
-              
-              {permissionMap.admins?.view && (
-                <MenuItem 
-                  icon={ShieldCheck} 
-                  label="Admins" 
-                  active={activeTab === 'admins'} 
-                  onClick={() => onTabChange('admins')}
-                  collapsed={collapsed}
-                />
-              )}
-              
-              {permissionMap.leads?.view && (
-                <MenuItem 
-                  icon={UserPlus} 
-                  label="Leads" 
-                  active={activeTab === 'leads'} 
-                  onClick={() => onTabChange('leads')}
-                  collapsed={collapsed}
-                />
-              )}
-              
-              {permissionMap.levels?.view && (
-                <MenuItem 
-                  icon={Menu} 
-                  label="Levels" 
-                  active={activeTab === 'levels'} 
-                  onClick={() => onTabChange('levels')}
-                  collapsed={collapsed}
-                />
-              )}
-            </SidebarMenu>
-          </SidebarContent>
+    <Sidebar className={cn(
+      "border-r border-gray-200 h-screen transition-all duration-300",
+      collapsed ? "w-16" : "w-64"
+    )}>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          {!collapsed && <span className="font-semibold text-lg text-music-600">Admin Panel</span>}
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onToggleCollapse}
+            className="h-8 w-8"
+            aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
         </div>
-      </Sidebar>
-      
-      {/* Render breadcrumbs outside the sidebar */}
-      {renderBreadcrumbs()}
-    </>
+        <SidebarContent className="flex-1">
+          <SidebarMenu>
+            {permissionMap.courses?.view && (
+              <MenuItem 
+                icon={BookOpen} 
+                label="Courses" 
+                active={activeTab === 'courses'} 
+                onClick={() => onTabChange('courses')}
+                collapsed={collapsed}
+              />
+            )}
+            {permissionMap.classTypes?.view && (
+              <MenuItem 
+                icon={Puzzle} 
+                label="Class Types" 
+                active={activeTab === 'classTypes'} 
+                onClick={() => onTabChange('classTypes')}
+                collapsed={collapsed}
+              />
+            )}
+            {permissionMap.students?.view && (
+              <MenuItem 
+                icon={Users} 
+                label="Students" 
+                active={activeTab === 'students'} 
+                onClick={() => onTabChange('students')}
+                collapsed={collapsed}
+              />
+            )}
+            {permissionMap.teachers?.view && (
+              <MenuItem 
+                icon={GraduationCap} 
+                label="Teachers" 
+                active={activeTab === 'teachers'} 
+                onClick={() => onTabChange('teachers')}
+                collapsed={collapsed}
+              />
+            )}
+            {permissionMap.admins?.view && (
+              <MenuItem 
+                icon={ShieldCheck} 
+                label="Admins" 
+                active={activeTab === 'admins'} 
+                onClick={() => onTabChange('admins')}
+                collapsed={collapsed}
+              />
+            )}
+            {permissionMap.leads?.view && (
+              <MenuItem 
+                icon={UserPlus} 
+                label="Leads" 
+                active={activeTab === 'leads'} 
+                onClick={() => onTabChange('leads')}
+                collapsed={collapsed}
+              />
+            )}
+            {permissionMap.levels?.view && (
+              <MenuItem 
+                icon={Menu} 
+                label="Levels" 
+                active={activeTab === 'levels'} 
+                onClick={() => onTabChange('levels')}
+                collapsed={collapsed}
+              />
+            )}
+          </SidebarMenu>
+        </SidebarContent>
+      </div>
+    </Sidebar>
   );
 };
 
@@ -215,34 +154,32 @@ const MenuItem = ({
   active: boolean; 
   onClick: () => void;
   collapsed: boolean;
-}) => {
-  return (
-    <SidebarMenuItem>
-      <TooltipProvider disableHoverableContent={!collapsed}>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <SidebarMenuButton
-              onClick={onClick}
-              className={cn(
-                "flex items-center w-full p-3 rounded-md transition-colors",
-                active 
-                  ? "bg-music-100 text-music-600" 
-                  : "hover:bg-gray-100"
-              )}
-            >
-              <Icon className="h-5 w-5 mr-3" />
-              {!collapsed && <span>{label}</span>}
-            </SidebarMenuButton>
-          </TooltipTrigger>
-          {collapsed && (
-            <TooltipContent side="right">
-              <p>{label}</p>
-            </TooltipContent>
-          )}
-        </Tooltip>
-      </TooltipProvider>
-    </SidebarMenuItem>
-  );
-};
+}) => (
+  <SidebarMenuItem>
+    <TooltipProvider disableHoverableContent={!collapsed}>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <SidebarMenuButton
+            onClick={onClick}
+            className={cn(
+              "flex items-center w-full p-3 rounded-md transition-colors",
+              active 
+                ? "bg-music-100 text-music-600" 
+                : "hover:bg-gray-100"
+            )}
+          >
+            <Icon className="h-5 w-5 mr-3" />
+            {!collapsed && <span>{label}</span>}
+          </SidebarMenuButton>
+        </TooltipTrigger>
+        {collapsed && (
+          <TooltipContent side="right">
+            <p>{label}</p>
+          </TooltipContent>
+        )}
+      </Tooltip>
+    </TooltipProvider>
+  </SidebarMenuItem>
+);
 
 export default AdminSidebar;
