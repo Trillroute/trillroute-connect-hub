@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShieldCheck, Music } from 'lucide-react';
+import { Menu, X, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -10,24 +10,20 @@ const Navbar = () => {
   const { user, logout, role, isSuperAdmin } = useAuth();
   const location = useLocation();
 
-  // Only show Home, Courses, SuperAdmin dashboard navigation when NOT on /dashboard/superadmin route
   const isSuperAdminRoute = location.pathname.startsWith('/dashboard/superadmin') && isSuperAdmin();
   const isAdminRoute = 
     location.pathname.includes('/dashboard/admin') ||
     location.pathname.includes('/dashboard/superadmin') ||
     location.pathname.includes('/admin');
 
-  // These links are hidden for SuperAdmin dashboard
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Courses', path: '/courses' },
   ].filter(() => !isSuperAdminRoute);
 
-  // Only show dashboardOption if not superadmin dashboard route
   const dashboardLink = () => {
     if (!user) return null;
 
-    // Prevent showing dashboard link if on superadmin dashboard
     if (isSuperAdmin() && isSuperAdminRoute) {
       return null;
     }
@@ -55,25 +51,22 @@ const Navbar = () => {
     return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
   };
 
-  // Fix for the onClick handler
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // If on admin route, use a different navbar styling
   if (isAdminRoute) {
     return (
       <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm w-full">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0 flex items-center">
+              <Link to="/" className="flex-shrink-0">
                 <img 
                   src="https://static.wixstatic.com/media/7ce495_06a8ff028073430581ba22c033ab586f~mv2.jpg" 
                   alt="Trillroute Logo" 
-                  className="h-10 w-10 mr-2 rounded-full"
+                  className="h-10 w-10 rounded-full"
                 />
-                <span className="ml-2 text-xl font-bold text-music-500">Trillroute</span>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
@@ -125,13 +118,12 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
+            <Link to="/" className="flex-shrink-0">
               <img 
                 src="https://static.wixstatic.com/media/7ce495_06a8ff028073430581ba22c033ab586f~mv2.jpg" 
                 alt="Trillroute Logo" 
-                className="h-10 w-10 mr-2 rounded-full"
+                className="h-10 w-10 rounded-full"
               />
-              <span className="ml-2 text-xl font-bold text-music-500">Trillroute</span>
             </Link>
           </div>
           {!isSuperAdminRoute && (
@@ -205,7 +197,6 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-      {/* Mobile menu */}
       {!isSuperAdminRoute && (
         <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
           <div className="pt-2 pb-3 space-y-1 flex flex-col items-center">
