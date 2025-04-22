@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import {
@@ -38,33 +37,28 @@ const ViewUserDialog = ({
   const [activeTab, setActiveTab] = useState('basic');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch teacher profile data when the dialog opens and the user is a teacher
   useEffect(() => {
     const fetchTeacherData = async () => {
       if (isOpen && user && user.role === 'teacher') {
         setIsLoading(true);
         try {
-          // Fetch qualifications
           const { data: qualificationsData } = await supabase
             .from('teacher_qualifications')
             .select('*')
             .eq('user_id', user.id);
 
-          // Fetch professional details
           const { data: professional } = await supabase
             .from('teacher_professional')
             .select('*')
             .eq('user_id', user.id)
             .single();
 
-          // Fetch bank details
           const { data: bankDetails } = await supabase
             .from('teacher_bank_details')
             .select('*')
             .eq('user_id', user.id)
             .single();
 
-          // Map database fields to application fields
           const mappedQualifications = qualificationsData 
             ? qualificationsData.map(q => ({
                 qualification: q.qualification || '',
@@ -125,10 +119,8 @@ const ViewUserDialog = ({
 
   if (!user) return null;
 
-  // Helper function to check if a field exists and is not empty
   const hasValue = (value: any) => value !== undefined && value !== null && value !== '';
 
-  // Determine if this is a teacher profile with additional data
   const isTeacher = user.role === 'teacher';
   const hasTeacherData = isTeacher && teacherProfileData !== null;
 
@@ -164,12 +156,11 @@ const ViewUserDialog = ({
           </Tabs>
         )}
         
-        <ScrollArea className={isTeacher ? "h-[calc(60vh-10rem)]" : "h-[calc(60vh-5rem)]"} className="pr-4">
+        <ScrollArea className={isTeacher ? "h-[calc(60vh-10rem)] pr-4" : "h-[calc(60vh-5rem)] pr-4"}>
           {isTeacher ? (
             <>
               <TabsContent value="basic" className="mt-0">
                 <div className="space-y-4 py-4">
-                  {/* Basic Information Section */}
                   <div className="bg-muted rounded-md p-3">
                     <h3 className="text-sm font-semibold mb-2 text-primary">Basic Information</h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -198,7 +189,6 @@ const ViewUserDialog = ({
                     </div>
                   </div>
 
-                  {/* Contact Information Section */}
                   {(hasValue(user.primaryPhone) || hasValue(user.secondaryPhone) || hasValue(user.address)) && (
                     <div className="bg-muted rounded-md p-3">
                       <h3 className="text-sm font-semibold mb-2 text-primary">Contact Information</h3>
@@ -231,7 +221,6 @@ const ViewUserDialog = ({
                     </div>
                   )}
 
-                  {/* Profile photo if available */}
                   {hasValue(user.profilePhoto) && (
                     <div className="bg-muted rounded-md p-3">
                       <h3 className="text-sm font-semibold mb-2 text-primary">Profile Photo</h3>
@@ -245,7 +234,6 @@ const ViewUserDialog = ({
                     </div>
                   )}
 
-                  {/* ID Proof if available */}
                   {hasValue(user.idProof) && (
                     <div className="bg-muted rounded-md p-3">
                       <h3 className="text-sm font-semibold mb-2 text-primary">ID Proof</h3>
@@ -339,7 +327,6 @@ const ViewUserDialog = ({
                   </div>
                 ) : hasTeacherData ? (
                   <div className="space-y-4 py-4">
-                    {/* Teaching Experience */}
                     <div className="bg-muted rounded-md p-3">
                       <h3 className="text-sm font-semibold mb-2 text-primary">Teaching Experience</h3>
                       <div className="grid grid-cols-2 gap-3">
@@ -364,7 +351,6 @@ const ViewUserDialog = ({
                       </div>
                     </div>
 
-                    {/* Previous Institutes */}
                     {teacherProfileData.previousInstitutes && teacherProfileData.previousInstitutes.length > 0 && (
                       <div className="bg-muted rounded-md p-3">
                         <h3 className="text-sm font-semibold mb-2 text-primary">Previous Institutes</h3>
@@ -389,7 +375,6 @@ const ViewUserDialog = ({
                       </div>
                     )}
 
-                    {/* Class Experience */}
                     {teacherProfileData.classExperience && teacherProfileData.classExperience.length > 0 && (
                       <div className="bg-muted rounded-md p-3">
                         <h3 className="text-sm font-semibold mb-2 text-primary">Class Experience</h3>
@@ -403,7 +388,6 @@ const ViewUserDialog = ({
                       </div>
                     )}
 
-                    {/* Musical Experience */}
                     {(hasValue(teacherProfileData.performances) || hasValue(teacherProfileData.curriculumExperience) || 
                       hasValue(teacherProfileData.musicalProjects)) && (
                       <div className="bg-muted rounded-md p-3">
@@ -429,7 +413,6 @@ const ViewUserDialog = ({
                       </div>
                     )}
 
-                    {/* Teaching Philosophy and Bio */}
                     {(hasValue(teacherProfileData.teachingPhilosophy) || hasValue(teacherProfileData.bio)) && (
                       <div className="bg-muted rounded-md p-3">
                         <h3 className="text-sm font-semibold mb-2 text-primary">About</h3>
@@ -526,7 +509,6 @@ const ViewUserDialog = ({
             </>
           ) : (
             <div className="space-y-4 py-4">
-              {/* Basic Information Section */}
               <div className="bg-muted rounded-md p-3">
                 <h3 className="text-sm font-semibold mb-2 text-primary">Basic Information</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -555,7 +537,6 @@ const ViewUserDialog = ({
                 </div>
               </div>
 
-              {/* Contact Information Section */}
               {(hasValue(user.primaryPhone) || hasValue(user.secondaryPhone) || hasValue(user.address)) && (
                 <div className="bg-muted rounded-md p-3">
                   <h3 className="text-sm font-semibold mb-2 text-primary">Contact Information</h3>
@@ -588,7 +569,6 @@ const ViewUserDialog = ({
                 </div>
               )}
 
-              {/* Student-specific information */}
               {user.role === 'student' && (hasValue(user.parentName) || hasValue(user.guardianRelation)) && (
                 <div className="bg-muted rounded-md p-3">
                   <h3 className="text-sm font-semibold mb-2 text-primary">Guardian Information</h3>
@@ -609,7 +589,6 @@ const ViewUserDialog = ({
                 </div>
               )}
 
-              {/* Admin-specific information */}
               {user.role === 'admin' && hasValue(user.adminRoleName) && (
                 <div className="bg-muted rounded-md p-3">
                   <h3 className="text-sm font-semibold mb-2 text-primary">Admin Information</h3>
@@ -620,7 +599,6 @@ const ViewUserDialog = ({
                 </div>
               )}
 
-              {/* Profile photo if available */}
               {hasValue(user.profilePhoto) && (
                 <div className="bg-muted rounded-md p-3">
                   <h3 className="text-sm font-semibold mb-2 text-primary">Profile Photo</h3>
@@ -634,7 +612,6 @@ const ViewUserDialog = ({
                 </div>
               )}
 
-              {/* ID Proof if available */}
               {hasValue(user.idProof) && (
                 <div className="bg-muted rounded-md p-3">
                   <h3 className="text-sm font-semibold mb-2 text-primary">ID Proof</h3>
