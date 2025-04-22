@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { ClassType } from "./ClassTypeTable";
 import { uploadFile } from "@/utils/fileUpload";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditClassTypeDialogProps {
   open: boolean;
