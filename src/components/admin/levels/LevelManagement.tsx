@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -8,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, LayoutList, LayoutGrid, Grid2x2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 import LevelTable from './LevelTable';
@@ -20,6 +19,9 @@ import PermissionsDialog from './PermissionsDialog';
 import { fetchLevels, addLevel, updateLevel, deleteLevel } from './LevelService';
 import { updateCachedAdminRoles } from '@/utils/adminPermissions';
 import { useAuth } from '@/hooks/useAuth';
+
+const VIEW_MODES = ['list', 'grid', 'tile'] as const;
+type ViewMode = typeof VIEW_MODES[number];
 
 interface LevelManagementProps {
   canAddLevel?: boolean;
@@ -40,6 +42,10 @@ const LevelManagement = ({
   const [isViewPermissionsDialogOpen, setIsViewPermissionsDialogOpen] = useState(false);
   const [isEditPermissionsDialogOpen, setIsEditPermissionsDialogOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<AdminLevelDetailed | null>(null);
+
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+
   const { toast } = useToast();
   const { isSuperAdmin } = useAuth();
 
@@ -48,8 +54,6 @@ const LevelManagement = ({
       setIsLoading(true);
       const levelsData = await fetchLevels();
       setLevels(levelsData);
-      
-      // Update the cached admin roles for permission checks
       updateCachedAdminRoles(levelsData);
     } catch (error) {
       console.error('Error fetching levels:', error);
@@ -68,15 +72,10 @@ const LevelManagement = ({
   }, []);
 
   const handleCreateLevel = async (levelData: Omit<AdminLevelDetailed, 'id'>) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await addLevel(levelData);
-
-      toast({
-        title: 'Success',
-        description: 'Admin level created successfully.',
-      });
-      
+      toast({ title: 'Success', description: 'Admin level created successfully.' });
       setIsCreateDialogOpen(false);
       loadLevels();
     } catch (error: any) {
@@ -92,21 +91,15 @@ const LevelManagement = ({
   };
 
   const handleUpdateLevel = async (id: number, levelData: Partial<AdminLevelDetailed>) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await updateLevel(id, levelData);
-
-      toast({
-        title: 'Success',
-        description: 'Admin level updated successfully.',
-      });
-      
+      toast({ title: 'Success', description: 'Admin level updated successfully.' });
       setIsEditDialogOpen(false);
       setIsEditPermissionsDialogOpen(false);
       setSelectedLevel(null);
       loadLevels();
     } catch (error: any) {
-      console.error('Error updating level:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to update admin level. Please try again.',
@@ -119,21 +112,14 @@ const LevelManagement = ({
 
   const handleDeleteLevel = async () => {
     if (!selectedLevel) return;
-    
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await deleteLevel(selectedLevel.id);
-
-      toast({
-        title: 'Success',
-        description: 'Admin level deleted successfully.',
-      });
-      
+      toast({ title: 'Success', description: 'Admin level deleted successfully.' });
       setIsDeleteDialogOpen(false);
       setSelectedLevel(null);
       loadLevels();
     } catch (error: any) {
-      console.error('Error deleting level:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to delete admin level. Please try again.',
@@ -144,40 +130,83 @@ const LevelManagement = ({
     }
   };
 
+  const handleBulkDelete = async () => {
+    setIsLoading(true);
+    let deletedCount = 0;
+    for (const id of selectedIds) {
+      try {
+        await deleteLevel(id);
+        deletedCount++;
+      } catch (error) {
+        // continue on errors
+      }
+    }
+    setSelectedIds([]);
+    await loadLevels();
+    toast({
+      title: 'Success',
+      description: `Deleted ${deletedCount} admin level${deletedCount !== 1 ? "s" : ""}.`,
+    });
+    setIsLoading(false);
+  };
+
   const openEditDialog = (level: AdminLevelDetailed) => {
     setSelectedLevel(level);
     setIsEditDialogOpen(true);
   };
-
   const openDeleteDialog = (level: AdminLevelDetailed) => {
     setSelectedLevel(level);
     setIsDeleteDialogOpen(true);
   };
-
   const openViewPermissionsDialog = (level: AdminLevelDetailed) => {
     setSelectedLevel(level);
     setIsViewPermissionsDialogOpen(true);
   };
-
   const openEditPermissionsDialog = (level: AdminLevelDetailed) => {
     setSelectedLevel(level);
     setIsEditPermissionsDialogOpen(true);
   };
 
-  // Only superadmins can fully manage admin levels
   const effectiveCanAdd = canAddLevel && isSuperAdmin();
   const effectiveCanEdit = canEditLevel && isSuperAdmin();
   const effectiveCanDelete = canDeleteLevel && isSuperAdmin();
 
+  const allLevelIds = levels.map(l => l.id);
+  const allSelected = selectedIds.length > 0 && allLevelIds.length > 0 && allLevelIds.every(id => selectedIds.includes(id));
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
           <div>
             <CardTitle>Level Management</CardTitle>
             <CardDescription>Manage permission levels</CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <Button
+              size="sm"
+              variant={viewMode === 'list' ? "secondary" : "outline"}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'grid' ? "secondary" : "outline"}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'tile' ? "secondary" : "outline"}
+              onClick={() => setViewMode('tile')}
+              title="Tile view"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
             <Button variant="outline" onClick={loadLevels}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -188,12 +217,22 @@ const LevelManagement = ({
                 Add Level
               </Button>
             )}
+            {selectedIds.length > 0 && effectiveCanDelete && (
+              <Button
+                variant="destructive"
+                onClick={handleBulkDelete}
+                className="ml-2"
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected ({selectedIds.length})
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <LevelTable 
-          levels={levels} 
+        <LevelTable
+          levels={levels}
           isLoading={isLoading}
           onEditLevel={(level) => {
             if (effectiveCanEdit) {
@@ -204,15 +243,18 @@ const LevelManagement = ({
           }}
           onDeleteLevel={openDeleteDialog}
           onViewPermissions={openViewPermissionsDialog}
+          viewMode={viewMode}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
         />
-        
+
         <CreateLevelDialog
           isOpen={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
           onCreateLevel={handleCreateLevel}
           isLoading={isLoading}
         />
-        
+
         <EditLevelDialog
           level={selectedLevel}
           isOpen={isEditDialogOpen}
@@ -220,7 +262,7 @@ const LevelManagement = ({
           onUpdateLevel={handleUpdateLevel}
           isLoading={isLoading}
         />
-        
+
         <DeleteLevelDialog
           level={selectedLevel}
           isOpen={isDeleteDialogOpen}
@@ -228,13 +270,13 @@ const LevelManagement = ({
           onDelete={handleDeleteLevel}
           isLoading={isLoading}
         />
-        
+
         <ViewPermissionsDialog
           level={selectedLevel}
           isOpen={isViewPermissionsDialogOpen}
           onOpenChange={setIsViewPermissionsDialogOpen}
         />
-        
+
         <PermissionsDialog
           level={selectedLevel}
           isOpen={isEditPermissionsDialogOpen}
