@@ -50,11 +50,11 @@ const AdminSidebar = ({
   onTabChange,
   permissionMap
 }: AdminSidebarProps) => (
-  <>
+  <div className="flex flex-col">
     <Navbar />
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex">
       <Sidebar className={cn(
-        "border-r border-gray-200 h-full transition-all duration-300 bg-white relative flex flex-col",
+        "border-r border-gray-200 h-[calc(100vh-4rem)] transition-all duration-300 bg-white relative flex flex-col",
         collapsed ? "w-16" : "w-64"
       )}>
         <SidebarHeader collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
@@ -68,7 +68,7 @@ const AdminSidebar = ({
         <SidebarFooter collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
       </Sidebar>
     </div>
-  </>
+  </div>
 );
 
 export default AdminSidebar;

@@ -25,10 +25,7 @@ const Layout = ({ children }: LayoutProps) => {
     return (
       <div className="min-h-screen bg-background">
         <SidebarProvider defaultOpen={true}>
-          <div className="flex flex-col h-screen">
-            {/* Admin main content area with the sidebar included in children */}
-            {children}
-          </div>
+          {children}
         </SidebarProvider>
       </div>
     );

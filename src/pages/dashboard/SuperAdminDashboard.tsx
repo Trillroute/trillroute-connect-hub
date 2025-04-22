@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -196,16 +197,18 @@ const SuperAdminDashboard = () => {
   };
   
   return (
-    <div className="flex flex-col h-screen">
-      <AdminSidebar 
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={handleSidebarToggle}
-        activeTab={activeTab} 
-        onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
-        permissionMap={permissionMap}
-      />
+    <div className="flex h-screen">
+      <div className="flex-shrink-0">
+        <AdminSidebar 
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={handleSidebarToggle}
+          activeTab={activeTab} 
+          onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
+          permissionMap={permissionMap}
+        />
+      </div>
       
-      <div className="flex-1 overflow-auto">
+      <div className="flex-grow overflow-auto">
         <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
