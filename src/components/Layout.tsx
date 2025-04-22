@@ -21,19 +21,37 @@ const Layout = ({ children }: LayoutProps) => {
     location.pathname.includes('/admin');
   const isStudentDashboard = location.pathname.includes('/dashboard/student');
 
-  // For admin pages: Header on top, sidebar/content below sharing space horizontally
+  // For admin pages, header is full width at top, sidebar + content share the below space horizontally
   if (isAdminPage) {
+    // Expect children to be [<Sidebar />, <MainContent />]
+    let sidebar = null;
+    let mainContent = null;
+
+    // If children is array, safely destructure
+    if (Array.isArray(children)) {
+      [sidebar, mainContent] = children;
+    } else {
+      // fallback: everything in main content if only 1 child
+      mainContent = children;
+    }
+
     return (
       <div className="min-h-screen flex flex-col w-full bg-background">
-        {/* Header at the top, not overlapped */}
+        {/* Header: always on top, full width */}
         <div className="w-full flex-shrink-0">
           <Navbar />
         </div>
-        {/* Horizontal layout for sidebar + content below header */}
         <SidebarProvider defaultOpen={true}>
+          {/* Flex row below header: sidebar left, main content right */}
           <div className="flex flex-1 min-h-0 w-full">
-            {/* Sidebar and main content should be rendered together */}
-            {children}
+            {/* Sidebar left */}
+            <div className="h-full">
+              {sidebar}
+            </div>
+            {/* Main content right, flex-grow */}
+            <div className="flex-1 h-full overflow-auto">
+              {mainContent}
+            </div>
           </div>
         </SidebarProvider>
       </div>
@@ -57,4 +75,3 @@ const Layout = ({ children }: LayoutProps) => {
 };
 
 export default Layout;
-
