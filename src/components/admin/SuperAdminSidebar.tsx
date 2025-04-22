@@ -26,7 +26,8 @@ import {
   User,
   FileText,
   Shield,
-  Settings
+  Settings,
+  Kanban
 } from "lucide-react";
 
 export type ActiveTab =
@@ -37,6 +38,7 @@ export type ActiveTab =
   | "fees"
   | "communication"
   | "leads"
+  | "leads-cards"
   | "scheduling"
   | "teachers"
   | "intramural"
@@ -52,7 +54,6 @@ interface SuperAdminSidebarProps {
 }
 
 const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabChange }) => {
-  // State for submenu open/close (can add more for more submenus)
   const [coursesOpen, setCoursesOpen] = useState(activeTab === 'classTypes' || activeTab === 'courseManagement' || activeTab === 'courses');
   const [accessOpen, setAccessOpen] = useState(activeTab === 'admins' || activeTab === 'levels' || activeTab === 'access');
 
@@ -61,7 +62,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
       <SidebarContent className="pt-20">
         <SidebarGroup>
           <SidebarMenu>
-            {/* Today */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "today"}
@@ -78,9 +78,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Today</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            
-            
-            {/* Students */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "students"}
@@ -97,7 +94,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Students</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Courses (Submenu) */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "courses" || activeTab === "classTypes" || activeTab === "courseManagement"}
@@ -136,7 +132,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 </SidebarMenuSub>
               )}
             </SidebarMenuItem>
-            {/* Fees */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "fees"}
@@ -153,7 +148,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Fees</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Communication */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "communication"}
@@ -170,7 +164,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Communication</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Leads & Trials */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "leads"}
@@ -187,7 +180,24 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Leads & Trials</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Scheduling */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={activeTab === "leads-cards"}
+                asChild
+                className={`
+                  flex items-center gap-2
+                  ${activeTab === "leads-cards"
+                    ? "bg-music-100 text-music-600 font-semibold"
+                    : "hover:bg-gray-100"
+                  }
+                `}
+              >
+                <a href="/dashboard/superadmin/leads/cards">
+                  <Kanban className="h-5 w-5" />
+                  <span>Cards (Kanban)</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "scheduling"}
@@ -204,7 +214,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Scheduling</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Teachers */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "teachers"}
@@ -221,7 +230,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Teachers</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Intramural */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "intramural"}
@@ -238,8 +246,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Intramural</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            
-            {/* Reports */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "reports"}
@@ -256,8 +262,6 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
                 <span>Reports</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            
-            {/* Access (Submenu) */}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={activeTab === "access" || activeTab === "admins" || activeTab === "levels"}
