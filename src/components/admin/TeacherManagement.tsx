@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -19,6 +18,7 @@ import EditUserDialog from './users/EditUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
 import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable-panel';
 
 interface TeacherManagementProps {
   canAddUser?: boolean;
@@ -289,25 +289,29 @@ const TeacherManagement = ({
         </div>
       </CardHeader>
       <CardContent>
-        <UserTable 
-          users={teachers} 
-          isLoading={isLoading}
-          onViewUser={openViewDialog}
-          onDeleteUser={openDeleteDialog}
-          canDeleteUser={canTeacherBeDeleted}
-          canEditUser={undefined}
-          roleFilter="teacher"
-          viewMode={viewMode}
-          selectedUserIds={selectedTeachers}
-          onSelectUserId={id =>
-            setSelectedTeachers(prev =>
-              prev.includes(id)
-                ? prev.filter(tid => tid !== id)
-                : [...prev, id]
-            )
-          }
-          onSelectAll={ids => setSelectedTeachers(ids)}
-        />
+        <ResizablePanelGroup direction="horizontal" className="w-full">
+          <ResizablePanel>
+            <UserTable 
+              users={teachers} 
+              isLoading={isLoading}
+              onViewUser={openViewDialog}
+              onDeleteUser={openDeleteDialog}
+              canDeleteUser={canTeacherBeDeleted}
+              canEditUser={undefined}
+              roleFilter="teacher"
+              viewMode={viewMode}
+              selectedUserIds={selectedTeachers}
+              onSelectUserId={id =>
+                setSelectedTeachers(prev =>
+                  prev.includes(id)
+                    ? prev.filter(tid => tid !== id)
+                    : [...prev, id]
+                )
+              }
+              onSelectAll={ids => setSelectedTeachers(ids)}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
         
         <AddUserDialog
           isOpen={isAddDialogOpen}

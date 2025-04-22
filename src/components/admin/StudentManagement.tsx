@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -19,6 +18,7 @@ import EditUserDialog from './users/EditUserDialog';
 import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
 import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
+import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable-panel';
 
 interface StudentManagementProps {
   canAddUser?: boolean;
@@ -227,7 +227,6 @@ const StudentManagement = ({
     return true;
   };
 
-  // --- UI for view switching, bulk delete, and passing to UserTable
   return (
     <Card>
       <CardHeader>
@@ -282,25 +281,29 @@ const StudentManagement = ({
         </div>
       </CardHeader>
       <CardContent>
-        <UserTable 
-          users={students} 
-          isLoading={isLoading}
-          onViewUser={openViewDialog}
-          onDeleteUser={openDeleteDialog}
-          canDeleteUser={canStudentBeDeleted}
-          canEditUser={undefined}
-          roleFilter="student"
-          viewMode={viewMode}
-          selectedUserIds={selectedStudents}
-          onSelectUserId={id =>
-            setSelectedStudents(prev =>
-              prev.includes(id)
-                ? prev.filter(sid => sid !== id)
-                : [...prev, id]
-            )
-          }
-          onSelectAll={ids => setSelectedStudents(ids)}
-        />
+        <ResizablePanelGroup direction="horizontal" className="w-full">
+          <ResizablePanel>
+            <UserTable 
+              users={students} 
+              isLoading={isLoading}
+              onViewUser={openViewDialog}
+              onDeleteUser={openDeleteDialog}
+              canDeleteUser={canStudentBeDeleted}
+              canEditUser={undefined}
+              roleFilter="student"
+              viewMode={viewMode}
+              selectedUserIds={selectedStudents}
+              onSelectUserId={id =>
+                setSelectedStudents(prev =>
+                  prev.includes(id)
+                    ? prev.filter(sid => sid !== id)
+                    : [...prev, id]
+                )
+              }
+              onSelectAll={ids => setSelectedStudents(ids)}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
         
         <AddUserDialog
           isOpen={isAddDialogOpen}

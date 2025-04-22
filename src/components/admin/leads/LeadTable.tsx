@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  ResizablePanelGroup, ResizablePanel, ResizableHandle
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, UserPlus, ArrowUpDown, Filter, X } from 'lucide-react';
@@ -270,108 +273,215 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
           No leads match your search criteria.
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <Checkbox
-                    checked={isAllSelected}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all leads"
-                  />
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => handleSort('name')}
-                >
-                  Name {sortField === 'name' && (
-                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                  )}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => handleSort('email')}
-                >
-                  Email {sortField === 'email' && (
-                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                  )}
-                </TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => handleSort('status')}
-                >
-                  Status {sortField === 'status' && (
-                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                  )}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => handleSort('source')}
-                >
-                  Source {sortField === 'source' && (
-                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                  )}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => handleSort('created_at')}
-                >
-                  Created {sortField === 'created_at' && (
-                    <ArrowUpDown className="inline h-4 w-4 ml-1" />
-                  )}
-                </TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leads.map((lead) => (
-                <TableRow key={lead.id}>
-                  <TableCell>
+        <ResizablePanelGroup direction="horizontal" className="w-full rounded-md border">
+          <ResizablePanel minSize={4} defaultSize={4}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
                     <Checkbox
-                      checked={selectedIds.includes(lead.id)}
-                      onCheckedChange={() => toggleSelectOne(lead.id)}
-                      aria-label={`Select ${lead.name}`}
+                      checked={isAllSelected}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all leads"
                     />
-                  </TableCell>
-                  <TableCell className="font-medium">{lead.name}</TableCell>
-                  <TableCell>{lead.email}</TableCell>
-                  <TableCell>{lead.phone || '-'}</TableCell>
-                  <TableCell>
-                    <Badge className={`${getStatusColor(lead.status)} text-white`}>
-                      {lead.status || 'Unknown'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{lead.source || '-'}</TableCell>
-                  <TableCell>
-                    {format(new Date(lead.created_at), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEdit(lead)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit lead</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(lead)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete lead</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(lead.id)}
+                        onCheckedChange={() => toggleSelectOne(lead.id)}
+                        aria-label={`Select ${lead.name}`}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={12} defaultSize={14}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => handleSort('name')}
+                  >
+                    Name {sortField === 'name' && (
+                      <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                    )}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell className="font-medium">{lead.name}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={12} defaultSize={14}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => handleSort('email')}
+                  >
+                    Email {sortField === 'email' && (
+                      <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                    )}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell>{lead.email}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={10} defaultSize={10}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Phone</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell>{lead.phone || '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={10} defaultSize={10}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => handleSort('status')}
+                  >
+                    Status {sortField === 'status' && (
+                      <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                    )}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell>
+                      <Badge className={`${getStatusColor(lead.status)} text-white`}>
+                        {lead.status || 'Unknown'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={10} defaultSize={11}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => handleSort('source')}
+                  >
+                    Source {sortField === 'source' && (
+                      <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                    )}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell>{lead.source || '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={10} defaultSize={12}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => handleSort('created_at')}
+                  >
+                    Created {sortField === 'created_at' && (
+                      <ArrowUpDown className="inline h-4 w-4 ml-1" />
+                    )}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell>
+                      {format(new Date(lead.created_at), 'MMM d, yyyy')}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={10} defaultSize={12}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leads.map((lead) => (
+                  <TableRow key={lead.id}>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEdit(lead)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit lead</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(lead)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete lead</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
       
       <div className="text-sm text-muted-foreground pt-2">

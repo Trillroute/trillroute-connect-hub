@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
+import { 
+  Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption,
+  ResizablePanelGroup, ResizablePanel, ResizableHandle 
+} from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -147,6 +150,7 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   }
 
   if (viewMode === "list") {
+    // Resizable columns for: select, name, description, duration, max_students, price
     return (
       <>
         {selectedIds.length > 0 && (
@@ -157,70 +161,150 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
             </Button>
           </div>
         )}
-        <Table>
-          <TableCaption>A list of all class types in the system.</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all class types"
-                />
-              </TableHead>
-              <TableHead className="w-[220px]">Class Type</TableHead>
-              <TableHead className="hidden md:table-cell">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>Description</TooltipTrigger>
-                    <TooltipContent>
-                      Hover over a row to see full description
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </TableHead>
-              <TableHead className="hidden md:table-cell">Duration</TableHead>
-              <TableHead className="hidden md:table-cell">Max Students</TableHead>
-              <TableHead className="hidden md:table-cell">Price (INR)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredClassTypes.map(ct => (
-              <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedIds.includes(ct.id)}
-                    onCheckedChange={() => toggleSelectOne(ct.id)}
-                    aria-label={`Select ${ct.name}`}
-                  />
-                </TableCell>
-                <TableCell className="font-medium max-w-[220px]">
-                  <div className="truncate font-semibold">{ct.name}</div>
-                  <div className="text-xs text-gray-500 md:hidden truncate">
-                    {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
-                  </div>
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="block max-w-[200px]">
-                        <span className="truncate block">{truncateText(ct.description)}</span>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-[300px]">
-                        {ct.description}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </TableCell>
-                <TableCell className="hidden md:table-cell truncate">
-                  {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">{ct.max_students}</TableCell>
-                <TableCell className="hidden md:table-cell">{ct.price_inr}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+
+        <ResizablePanelGroup direction="horizontal" className="w-full">
+          <ResizablePanel minSize={6} defaultSize={6}>
+            <Table>
+              <TableCaption>A list of all class types in the system.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all class types"
+                    />
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClassTypes.map(ct => (
+                  <TableRow key={ct.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(ct.id)}
+                        onCheckedChange={() => toggleSelectOne(ct.id)}
+                        aria-label={`Select ${ct.name}`}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={18} defaultSize={18}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[220px]">Class Type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClassTypes.map(ct => (
+                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
+                    <TableCell className="font-medium max-w-[220px]">
+                      <div className="truncate font-semibold">{ct.name}</div>
+                      <div className="text-xs text-gray-500 md:hidden truncate">
+                        {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={16} defaultSize={16}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="hidden md:table-cell">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>Description</TooltipTrigger>
+                        <TooltipContent>
+                          Hover over a row to see full description
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClassTypes.map(ct => (
+                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
+                    <TableCell className="hidden md:table-cell">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="block max-w-[200px]">
+                            <span className="truncate block">{truncateText(ct.description)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px]">
+                            {ct.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={12} defaultSize={12}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="hidden md:table-cell">Duration</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClassTypes.map(ct => (
+                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
+                    <TableCell className="hidden md:table-cell truncate">
+                      {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={8} defaultSize={8}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="hidden md:table-cell">Max Students</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClassTypes.map(ct => (
+                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
+                    <TableCell className="hidden md:table-cell">{ct.max_students}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+          <ResizableHandle withHandle isHeader />
+          <ResizablePanel minSize={8} defaultSize={8}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="hidden md:table-cell">Price (INR)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredClassTypes.map(ct => (
+                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
+                    <TableCell className="hidden md:table-cell">{ct.price_inr}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ResizablePanel>
+        </ResizablePanelGroup>
         <EditClassTypeDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
@@ -352,3 +436,5 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
 
 export type { ClassType };
 export default ClassTypeTable;
+
+// NOTE: This file is getting long; consider refactoring into smaller components.
