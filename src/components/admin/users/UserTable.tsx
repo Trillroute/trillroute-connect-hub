@@ -324,13 +324,13 @@ const UserTable = ({
             {users.map((user) => (
               <TableRow
                 key={user.id}
-                className={onEditUser ? "cursor-pointer hover:bg-muted/60 transition-colors" : ""}
-                onClick={onEditUser ? (e) => {
+                className="cursor-pointer hover:bg-muted/60 transition-colors"
+                onClick={(e) => {
                   const isActionButton = (e.target as HTMLElement).closest('button');
-                  if (!isActionButton && onEditUser && canEditUser && canEditUser(user)) {
-                    onEditUser(user);
+                  if (!isActionButton) {
+                    onViewUser(user);
                   }
-                } : undefined}
+                }}
               >
                 <TableCell className="font-medium max-w-[160px] truncate" title={`${user.firstName} ${user.lastName}`}>
                   {`${user.firstName} ${user.lastName}`}
@@ -364,34 +364,6 @@ const UserTable = ({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); onViewUser(user); }}
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">View</span>
-                    </Button>
-                    {canEditUser && canEditUser(user) && onEditUser && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); onEditUser(user); }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                    )}
-                    {canEditAdminLevel && canEditAdminLevel(user) && onEditAdminLevel && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); onEditAdminLevel(user); }}
-                      >
-                        <BadgeCheck className="h-4 w-4" />
-                        <span className="sr-only">Edit Permissions</span>
-                      </Button>
-                    )}
                     {canDeleteUser(user) && (
                       <Button
                         variant="ghost"
