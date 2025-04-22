@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Lead } from '@/types/lead';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, MoveVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 type StatusColumn = {
   key: string;
@@ -29,6 +31,10 @@ interface LeadKanbanBoardProps {
 const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
   leads, loading, onEdit, onDelete
 }) => {
+  const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const { toast } = useToast();
+
   if (loading) {
     return (
       <div className="flex w-full gap-4 overflow-x-auto pb-4">
@@ -72,21 +78,77 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     }
   });
 
+  const handleDragStart = (lead: Lead) => {
+    setDraggedLead(lead);
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault();
+    
+    if (!draggedLead || draggedLead.status === newStatus) {
+      setIsDragging(false);
+      setDraggedLead(null);
+      return;
+    }
+    
+    // Optimistically update the UI first
+    const updatedLead = { ...draggedLead, status: newStatus };
+    
+    try {
+      // Update the lead status in the database
+      const { error } = await supabase
+        .from('leads')
+        .update({ status: newStatus })
+        .eq('id', draggedLead.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Lead Updated",
+        description: `Lead moved to ${STATUS_COLUMNS.find(s => s.key === newStatus)?.label}`,
+      });
+    } catch (error) {
+      console.error('Error updating lead:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update lead status. Please try again.",
+      });
+    } finally {
+      setIsDragging(false);
+      setDraggedLead(null);
+    }
+  };
+
   return (
     <div className="flex w-full gap-4 overflow-x-auto pb-4">
       {STATUS_COLUMNS.map(column => (
-        <div key={column.key} className="min-w-[270px] flex-1">
-          <Card className="bg-muted/40 border-0 shadow-none">
+        <div 
+          key={column.key} 
+          className="min-w-[270px] flex-1"
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, column.key)}
+        >
+          <Card className={`bg-muted/40 border-0 shadow-none ${isDragging ? 'border-dashed border-2' : ''}`}>
             <CardTitle className="text-center py-2 font-semibold text-base">{column.label}</CardTitle>
             <CardContent>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 min-h-[100px]">
                 {leadsByStatus[column.key].length === 0 && (
                   <div className="text-xs text-gray-400 text-center py-4">No leads</div>
                 )}
                 {leadsByStatus[column.key].map(lead => (
                   <div
                     key={lead.id}
-                    className="bg-white rounded-lg shadow border p-3 flex flex-col gap-2 hover:shadow-md animate-fade-in"
+                    className={`bg-white rounded-lg shadow border p-3 flex flex-col gap-2 hover:shadow-md animate-fade-in cursor-move ${
+                      draggedLead?.id === lead.id ? 'opacity-50' : ''
+                    }`}
+                    draggable
+                    onDragStart={() => handleDragStart(lead)}
                   >
                     <div className="font-medium">{lead.name}</div>
                     <div className="text-xs text-gray-500">{lead.email}</div>
@@ -96,14 +158,23 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
                     <div className="flex justify-between items-center mt-2 gap-2">
                       <span className="text-gray-400 text-xs">{lead.source || 'Unspecified'}</span>
                       <div className="flex space-x-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 rounded-full group"
+                          title="Drag to move"
+                        >
+                          <MoveVertical className="w-3 h-3 text-gray-400" />
+                          <span className="sr-only">Drag to move</span>
+                        </Button>
                         {onEdit && (
                           <Button
                             size="icon"
                             variant="ghost"
                             onClick={() => onEdit(lead)}
-                            className="rounded-full group"
+                            className="h-6 w-6 rounded-full group"
                           >
-                            <Pencil className="w-4 h-4 group-hover:text-primary" />
+                            <Pencil className="w-3 h-3 group-hover:text-primary" />
                             <span className="sr-only">Edit</span>
                           </Button>
                         )}
@@ -112,9 +183,9 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
                             size="icon"
                             variant="ghost"
                             onClick={() => onDelete(lead)}
-                            className="rounded-full group"
+                            className="h-6 w-6 rounded-full group"
                           >
-                            <Trash2 className="w-4 h-4 group-hover:text-red-600" />
+                            <Trash2 className="w-3 h-3 group-hover:text-red-600" />
                             <span className="sr-only">Delete</span>
                           </Button>
                         )}

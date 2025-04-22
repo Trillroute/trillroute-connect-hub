@@ -34,8 +34,24 @@ export const useFetchLeads = () => {
     }
   };
 
+  // Set up a real-time subscription for lead updates
   useEffect(() => {
     fetchLeads();
+
+    // Subscribe to changes on the leads table
+    const channel = supabase
+      .channel('leads-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'leads' }, 
+        () => {
+          fetchLeads();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return { leads, loading, fetchLeads };
