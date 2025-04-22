@@ -177,6 +177,19 @@ const TeacherManagement = ({
     }
   };
 
+  const openDeleteDialog = (teacher: UserManagementUser) => {
+    if (!canDeleteUser) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to delete teachers.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setTeacherToDelete(teacher);
+    setIsDeleteDialogOpen(true);
+  };
+
   const canTeacherBeDeleted = (teacher: UserManagementUser) => {
     if (!canDeleteUser) return false;
     return true;
