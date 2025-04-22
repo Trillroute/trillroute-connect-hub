@@ -19,6 +19,7 @@ const Layout = ({ children }: LayoutProps) => {
     location.pathname.includes('/dashboard/admin') ||
     location.pathname.includes('/dashboard/superadmin') ||
     location.pathname.includes('/admin');
+  const isStudentDashboard = location.pathname.includes('/dashboard/student');
 
   // For admin pages, use a layout with sidebar
   if (isAdminPage) {
@@ -35,7 +36,7 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {!isAuthPage && <Navbar />}
-      <main className="flex-grow">
+      <main className={`flex-grow ${isStudentDashboard ? 'pt-4' : ''}`}>
         {children}
       </main>
       {!isAuthPage && (
