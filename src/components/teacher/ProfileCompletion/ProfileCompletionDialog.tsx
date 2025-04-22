@@ -39,6 +39,7 @@ export const ProfileCompletionDialog = ({
 }: ProfileCompletionDialogProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState("education");
 
   const handleSubmit = async () => {
     try {
@@ -66,12 +67,13 @@ export const ProfileCompletionDialog = ({
         <DialogHeader>
           <DialogTitle>Complete Your Profile</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="education" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="education">Educational Info</TabsTrigger>
             <TabsTrigger value="professional">Professional Info</TabsTrigger>
             <TabsTrigger value="bank">Bank Details</TabsTrigger>
           </TabsList>
+          
           <TabsContent value="education">
             <EducationalInfoTab 
               formData={formData} 
@@ -80,6 +82,7 @@ export const ProfileCompletionDialog = ({
               removeQualification={removeQualification}
             />
           </TabsContent>
+          
           <TabsContent value="professional">
             <ProfessionalInfoTab
               formData={formData}
@@ -90,6 +93,7 @@ export const ProfileCompletionDialog = ({
               removeInstitute={removeInstitute}
             />
           </TabsContent>
+          
           <TabsContent value="bank">
             <BankDetailsTab
               formData={formData}
@@ -97,12 +101,18 @@ export const ProfileCompletionDialog = ({
             />
           </TabsContent>
         </Tabs>
-        <div className="flex justify-end mt-4">
+        
+        <div className="flex justify-end mt-6 space-x-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Changes"}
+            {isSubmitting ? "Saving..." : "Save Profile"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default ProfileCompletionDialog;

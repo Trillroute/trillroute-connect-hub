@@ -51,3 +51,5 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({ formData, handleInpu
     </div>
   );
 };
+
+export default DocumentsTab;
