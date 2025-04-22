@@ -1,151 +1,129 @@
 
 import React from 'react';
 import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarHeader, 
-  SidebarMenu, 
-  SidebarMenuItem, 
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { BookOpen, School, GraduationCap, Shield, UserPlus, User, Layers, Briefcase } from 'lucide-react';
+import { 
+  // Only allowed icons per system instruction:
+  ArrowLeft, 
+  ArrowRight, 
+  Menu, 
+  User
+} from 'lucide-react';
+
 import { useAuth } from '@/hooks/useAuth';
 
+// Add your logo
+const LOGO_URL = "https://static.wixstatic.com/media/7ce495_c7aa45068c7743e7b27d8d4fe92499d0~mv2.png";
+
 interface AdminSidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  permissionMap: {
-    courses: { view: boolean };
-    classTypes?: { view: boolean };
-    students: { view: boolean };
-    teachers: { view: boolean };
-    admins: { view: boolean };
-    leads: { view: boolean };
-    levels?: { view: boolean };
-  };
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-/**
- * Set collapsible="none" for always-expanded sidebar, as required.
- * SidebarTrigger will be kept for Admin/Non-superadmin dashboards (if needed in future), but does nothing when collapsible is set to "none".
- */
-const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarProps) => {
+const MENU_ITEMS = [
+  { key: 'courses', label: 'Courses', icon: Menu, canView: (pm: any) => pm.courses?.view },
+  { key: 'classTypes', label: 'Class Types', icon: Menu, canView: (pm: any) => pm.classTypes?.view },
+  { key: 'students', label: 'Students', icon: Menu, canView: (pm: any) => pm.students?.view },
+  { key: 'teachers', label: 'Teachers', icon: Menu, canView: (pm: any) => pm.teachers?.view },
+  { key: 'admins', label: 'Admins', icon: Menu, canView: (pm: any) => pm.admins?.view },
+  { key: 'leads', label: 'Leads', icon: Menu, canView: (pm: any) => pm.leads?.view },
+  { key: 'levels', label: 'Levels', icon: Menu, canView: (pm: any) => pm.levels?.view },
+];
+
+const AdminSidebar = ({
+  collapsed,
+  onToggleCollapse,
+}: AdminSidebarProps) => {
   const { user } = useAuth();
+  // Assume active tab and permissionMap come from route or context
+  const [activeTab, setActiveTab] = React.useState('courses');
+  // TODO: permissionMap should come from props/context
+  // For demonstration, allow all:
+  const permissionMap = {
+    courses: { view: true },
+    classTypes: { view: true },
+    students: { view: true },
+    teachers: { view: true },
+    admins: { view: true },
+    leads: { view: true },
+    levels: { view: true },
+  };
 
   return (
-    <Sidebar 
-      variant="floating" 
-      collapsible="none" 
-      className="h-full min-h-screen transition-all duration-300 mt-16 z-40"
+    <Sidebar
+      variant="floating"
+      className={`
+        h-full min-h-screen transition-all duration-300 bg-sidebar border-r border-sidebar-border
+        flex flex-col 
+        ${collapsed ? 'w-[60px] items-center' : 'w-[240px]'}
+      `}
+      style={{
+        minWidth: collapsed ? 60 : 180,
+        maxWidth: 320,
+        width: collapsed ? 60 : undefined,
+        paddingTop: "0", // No extra top margin now
+      }}
+      collapsible="none"
+      // Not absolutely/fixed positioned anymore; handled by flex layout.
     >
-      <SidebarHeader className="p-3">
-        {/* Optionally remove SidebarTrigger, as collapsing is disabled */}
+      {/* Logo/Header */}
+      <SidebarHeader className="flex items-center justify-center py-4 px-0 mb-2">
+        <img
+          src={LOGO_URL}
+          alt="Logo"
+          className={`
+            transition-all duration-300
+            ${collapsed ? 'w-8 h-8' : 'w-32 h-10'}
+            object-contain
+          `}
+        />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {permissionMap.courses.view && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={activeTab === 'courses'} 
-                onClick={() => onTabChange('courses')}
-                tooltip="Courses"
-                className="flex items-center group-data-[collapsible=icon]:justify-center"
+          {MENU_ITEMS.filter(item => item.canView(permissionMap)).map(item => (
+            <SidebarMenuItem key={item.key}>
+              <SidebarMenuButton
+                isActive={activeTab === item.key}
+                onClick={() => setActiveTab(item.key)}
+                tooltip={collapsed ? item.label : undefined}
+                className={`flex items-center justify-start group-data-[collapsible=icon]:justify-center
+                  ${collapsed ? 'justify-center px-1' : ''}
+                `}
               >
-                <BookOpen className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Courses</span>
+                <item.icon className={`h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0 ${collapsed ? 'mr-0' : ''}`} />
+                {!collapsed && <span>{item.label}</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
-          )}
-          {permissionMap.classTypes?.view && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={activeTab === 'classTypes'} 
-                onClick={() => onTabChange('classTypes')}
-                tooltip="Class Types"
-                className="flex items-center group-data-[collapsible=icon]:justify-center"
-              >
-                <Briefcase className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Class Types</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
-          {permissionMap.students.view && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={activeTab === 'students'} 
-                onClick={() => onTabChange('students')}
-                tooltip="Students"
-                className="flex items-center group-data-[collapsible=icon]:justify-center"
-              >
-                <School className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Students</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
-          {permissionMap.teachers.view && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={activeTab === 'teachers'} 
-                onClick={() => onTabChange('teachers')}
-                tooltip="Teachers"
-                className="flex items-center group-data-[collapsible=icon]:justify-center"
-              >
-                <GraduationCap className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Teachers</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
-          {permissionMap.admins.view && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={activeTab === 'admins'} 
-                onClick={() => onTabChange('admins')}
-                tooltip="Admins"
-                className="flex items-center group-data-[collapsible=icon]:justify-center"
-              >
-                <Shield className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Admins</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
-          {permissionMap.leads.view && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={activeTab === 'leads'} 
-                onClick={() => onTabChange('leads')}
-                tooltip="Leads"
-                className="flex items-center group-data-[collapsible=icon]:justify-center"
-              >
-                <UserPlus className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Leads</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
-          {permissionMap.levels?.view && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={activeTab === 'levels'} 
-                onClick={() => onTabChange('levels')}
-                tooltip="Levels"
-                className="flex items-center group-data-[collapsible=icon]:justify-center"
-              >
-                <Layers className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
-                <span>Levels</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
+          ))}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <div className="px-3 py-2">
-          <div className="flex items-center group-data-[collapsible=icon]:justify-center">
-            <User className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0 text-sidebar-foreground" />
-            <span className="text-sm font-medium truncate group-data-[collapsible=icon]:hidden">
-              {user?.email || 'User'}
-            </span>
-          </div>
+        <div className="px-3 py-2 flex flex-col items-center justify-center">
+          {!collapsed && (
+            <div className="flex items-center mb-2">
+              <User className="h-5 w-5 mr-2 text-sidebar-foreground" />
+              <span className="text-sm font-medium truncate">{user?.email || 'User'}</span>
+            </div>
+          )}
+          {/* Collapse/Expand button */}
+          <button
+            type="button"
+            className="
+              w-8 h-8 flex items-center justify-center rounded-full border bg-background text-gray-600 shadow hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all
+            "
+            onClick={onToggleCollapse}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label="Toggle sidebar"
+          >
+            {collapsed ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          </button>
         </div>
       </SidebarFooter>
     </Sidebar>
@@ -153,3 +131,4 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
 };
 
 export default AdminSidebar;
+
