@@ -11,6 +11,7 @@ interface ProtectedRouteProps {
   requireAdmin?: boolean;
   requireSuperAdmin?: boolean;
   requiredPermissions?: AdminPermission[];
+  isProfileRoute?: boolean;
 }
 
 const ProtectedRoute = ({ 
@@ -19,6 +20,7 @@ const ProtectedRoute = ({
   requireAdmin = false,
   requireSuperAdmin = false,
   requiredPermissions = [],
+  isProfileRoute = false,
 }: ProtectedRouteProps) => {
   const { user, loading, isSuperAdmin } = useAuth();
 
@@ -28,6 +30,11 @@ const ProtectedRoute = ({
 
   if (!user) {
     return <Navigate to="/auth/login" replace />;
+  }
+
+  // Special case for profile route - allow access regardless of role
+  if (isProfileRoute) {
+    return <>{children}</>;
   }
 
   // Superadmin should always go to their dashboard
