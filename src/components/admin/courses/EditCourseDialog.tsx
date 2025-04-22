@@ -53,17 +53,15 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { user, isSuperAdmin } = useAuth();
   
-  // Determine if user has edit permissions
   const hasEditPermission = isSuperAdmin() || 
     (user?.role === 'admin' && canManageCourses(user, 'edit'));
-  
+
   console.log('EditCourseDialog - User:', user);
   console.log('EditCourseDialog - User role:', user?.role);
   console.log('EditCourseDialog - Is superadmin?', isSuperAdmin());
   console.log('EditCourseDialog - hasEditPermission:', hasEditPermission);
   console.log('EditCourseDialog - admin role name:', user?.adminRoleName);
-  
-  // Debug logs for admin users
+
   if (user && user.role === 'admin') {
     console.log('EditCourseDialog - Can manage courses check:', canManageCourses(user, 'edit'));
   }
@@ -80,27 +78,22 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     }
   }, [open, hasEditPermission, onOpenChange, toast]);
 
-  // Ensure we have arrays for instructors and students
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
-  // Keep track of student_ids for database operations but don't expose to the form
   const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
 
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
     if (durationType !== 'fixed' || !duration) {
       return { value: '0', metric: 'weeks' };
     }
-    
     const parts = duration.split(' ');
     const value = parts[0] || '0';
     let metric: DurationMetric = 'weeks';
-    
     if (parts[1]) {
       const metricLower = parts[1].toLowerCase();
       if (['days', 'weeks', 'months', 'years'].includes(metricLower)) {
         metric = metricLower as DurationMetric;
       }
     }
-    
     return { value, metric };
   };
   
@@ -109,7 +102,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     course.duration_type
   );
 
-  // Convert the duration_type to the proper literal type
   const durationType: "fixed" | "recurring" = 
     (course.duration_type === "fixed" || course.duration_type === "recurring") 
       ? course.duration_type as "fixed" | "recurring" 
@@ -130,18 +122,12 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     }
   });
 
-  // This will ensure the form values are correctly reset every time the dialog opens
-  // or whenever the course object changes
   useEffect(() => {
     if (open) {
-      console.log('EditCourseDialog - Form resetting with course:', course);
-      console.log('EditCourseDialog - Reset instructor_ids:', instructorIds);
-      
-      // Force reset the form every time the dialog opens to ensure latest data
       form.reset({
         title: course.title,
         description: course.description,
-        instructors: [...instructorIds], // Create new array to ensure reactivity
+        instructors: [...instructorIds],
         level: course.level,
         skill: course.skill,
         durationValue: durationValue,
@@ -149,12 +135,9 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         durationType: durationType,
         image: course.image,
       });
-      
-      console.log('EditCourseDialog - Form reset complete');
     }
   }, [course, open, instructorIds, durationValue, durationMetric, durationType, form]);
 
-  // Monitor form values for debugging
   useEffect(() => {
     const subscription = form.watch((value) => {
       console.log('EditCourseDialog - Form values updated:', value);
@@ -164,7 +147,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     if (!hasEditPermission) {
-      console.log('EditCourseDialog - Update attempt without permission');
       toast({
         title: "Permission Denied",
         description: "You don't have permission to edit courses.",
@@ -184,9 +166,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         duration = 'Recurring';
       }
       
-      // Debug logs before update
       console.log('Updating course with instructors:', data.instructors);
-      
+
       const { error: courseError } = await supabase
         .from('courses')
         .update({
@@ -198,8 +179,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           duration_type: data.durationType,
           image: data.image,
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
-          student_ids: studentIds, // Keep existing student_ids
-          students: studentIds.length, // Update the student count to match the array length
+          student_ids: studentIds,
+          students: studentIds.length,
         })
         .eq('id', course.id);
         

@@ -1,4 +1,3 @@
-
 export interface Course {
   id: string;
   title: string;
@@ -11,12 +10,6 @@ export interface Course {
   duration_type: string;
   created_at: string;
   instructor_ids: string[];
-  classes_count?: number;
-  classes_duration?: number;
-  studio_sessions_count?: number;
-  studio_sessions_duration?: number;
-  practical_sessions_count?: number;
-  practical_sessions_duration?: number;
   student_ids?: string[]; // <-- added for enrolled students
 }
 
