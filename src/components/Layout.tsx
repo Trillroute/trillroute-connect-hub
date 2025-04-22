@@ -11,7 +11,10 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const isAuthPage = location.pathname.includes('/auth');
-  const isAdminPage = location.pathname.includes('/dashboard/admin') || location.pathname.includes('/dashboard/superadmin');
+  const isAdminPage = 
+    location.pathname.includes('/dashboard/admin') || 
+    location.pathname.includes('/dashboard/superadmin') ||
+    location.pathname.includes('/admin');
   
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -19,7 +22,7 @@ const Layout = ({ children }: LayoutProps) => {
       <main className={`flex-grow ${isAdminPage ? 'p-0' : ''}`}>
         {children}
       </main>
-      {!isAuthPage && (
+      {!isAuthPage && !isAdminPage && (
         <div className="relative z-50">
           <Footer />
         </div>
@@ -29,3 +32,4 @@ const Layout = ({ children }: LayoutProps) => {
 };
 
 export default Layout;
+
