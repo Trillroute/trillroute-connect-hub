@@ -95,7 +95,9 @@ const AdminManagement = ({
       const admin = admins.find(a => a.id === id);
       // Only attempt delete if allowed
       if (admin && canAdminBeDeleted(admin)) {
-        await handleDeleteAdmin(admin); // Fixed: Passing the admin object instead of just the id
+        // Instead of passing admin object, first set it as the admin to delete, then call handleDeleteAdmin
+        openDeleteDialog(admin);
+        await handleDeleteAdmin(); // Call without arguments since it operates on adminToDelete state
       }
     }
     setSelectedIds([]);
