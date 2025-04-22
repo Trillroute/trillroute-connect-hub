@@ -28,9 +28,6 @@ interface SuperAdminSidebarProps {
 const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabChange }) => (
   <Sidebar className="border-r border-gray-200 h-full bg-white w-56 flex-shrink-0">
     <SidebarContent className="pt-12">
-      <div className="mb-4 px-3">
-        <h2 className="text-lg font-semibold text-gray-700">Dashboard</h2>
-      </div>
       <SidebarMenu>
         {NAV_ITEMS.map((item) => (
           <SidebarMenuItem key={item.key}>
