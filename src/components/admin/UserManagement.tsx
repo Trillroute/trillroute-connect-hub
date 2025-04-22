@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -165,6 +166,12 @@ const UserManagement = ({
         setIsDeleteDialogOpen(true);
       }, 100);
     }
+  };
+
+  // Here's the missing function that was causing the error
+  const openEditAdminLevelDialog = (admin: UserManagementUser) => {
+    setAdminToEdit(admin);
+    setIsEditAdminLevelDialogOpen(true);
   };
 
   const canUserBeDeleted = (user: UserManagementUser) => {
