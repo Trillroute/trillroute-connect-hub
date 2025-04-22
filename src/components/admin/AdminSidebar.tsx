@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Sidebar, 
@@ -10,7 +9,7 @@ import {
   SidebarTrigger,
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { BookOpen, School, GraduationCap, Shield, UserPlus, User, Layers } from 'lucide-react';
+import { BookOpen, School, GraduationCap, Shield, UserPlus, User, Layers, Briefcase } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface AdminSidebarProps {
@@ -18,6 +17,7 @@ interface AdminSidebarProps {
   onTabChange: (tab: string) => void;
   permissionMap: {
     courses: { view: boolean };
+    classTypes?: { view: boolean };
     students: { view: boolean };
     teachers: { view: boolean };
     admins: { view: boolean };
@@ -52,6 +52,19 @@ const AdminSidebar = ({ activeTab, onTabChange, permissionMap }: AdminSidebarPro
               >
                 <BookOpen className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
                 <span>Courses</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          {permissionMap.classTypes?.view && (
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={activeTab === 'classTypes'} 
+                onClick={() => onTabChange('classTypes')}
+                tooltip="Class Types"
+                className="flex items-center group-data-[collapsible=icon]:justify-center"
+              >
+                <Briefcase className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
+                <span>Class Types</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
