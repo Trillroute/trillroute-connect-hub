@@ -1,30 +1,11 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-import { ClassType as ClassTypeBase } from "./ClassTypeTable";
-
-// Create a new interface that doesn't extend ClassTypeBase but includes its properties
-interface ClassType {
-  id: string;
-  name: string;
-  description: string;
-  duration_metric: string;
-  duration_value: number | null;
-  max_students: number;
-  price_inr: number;
-  created_at: string;
-  location: string;
-  image: string | null;
-}
-
-const LOCATION_OPTIONS = [
-  "Trill Route, Indiranagar",
-  "Online",
-];
+import { ClassType } from "./ClassTypeTable";
+import { uploadFile } from "@/utils/fileUpload";
 
 interface EditClassTypeDialogProps {
   open: boolean;
@@ -32,6 +13,11 @@ interface EditClassTypeDialogProps {
   classType: ClassType | null;
   onSuccess: () => void;
 }
+
+const LOCATION_OPTIONS = [
+  "Trill Route, Indiranagar",
+  "Online",
+];
 
 const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
   open,
@@ -92,25 +78,34 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
     let uploadedImageUrl = form.image;
     if (imageFile) {
-      // @ts-ignore
-      const { uploadFile } = await import("@/utils/fileUpload");
-      const url = await uploadFile(imageFile, "class-types");
-      if (!url) {
+      try {
+        const url = await uploadFile(imageFile, "class-types");
+        if (!url) {
+          toast({
+            title: "Image Upload Failed",
+            description: "Please try a different image file.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        uploadedImageUrl = url;
+      } catch (error) {
+        console.error("Image upload error:", error);
         toast({
-          title: "Image Upload Failed",
-          description: "Please try a different image file.",
-          variant: "destructive",
+          title: "Image Upload Error",
+          description: "An unexpected error occurred during image upload.",
+          variant: "destructive"
         });
         setIsLoading(false);
         return;
       }
-      uploadedImageUrl = url;
     }
 
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
       const { error } = await supabase
         .from("class_types")
         .update({

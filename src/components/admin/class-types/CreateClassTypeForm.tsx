@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { uploadFile } from "@/utils/fileUpload";
 
 const DURATION_METRICS = [
   "minutes",
@@ -75,19 +76,28 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
 
     let uploadedImageUrl = null;
     if (imageFile) {
-      // @ts-ignore
-      const { uploadFile } = await import("@/utils/fileUpload");
-      const url = await uploadFile(imageFile, "class-types");
-      if (!url) {
+      try {
+        const url = await uploadFile(imageFile, "class-types");
+        if (!url) {
+          toast({
+            title: "Image Upload Failed",
+            description: "Please try a different image file.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+        uploadedImageUrl = url;
+      } catch (error) {
+        console.error("Image upload error:", error);
         toast({
-          title: "Image Upload Failed",
-          description: "Please try a different image file.",
+          title: "Image Upload Error",
+          description: "An unexpected error occurred during image upload.",
           variant: "destructive"
         });
         setLoading(false);
         return;
       }
-      uploadedImageUrl = url;
     }
 
     const classTypeData = {
