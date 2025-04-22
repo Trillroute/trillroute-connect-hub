@@ -113,7 +113,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             </TableBody>
           </Table>
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle isHeader />
         <ResizablePanel minSize={24} defaultSize={24}>
           <Table>
             <TableHeader>
@@ -146,7 +146,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             </TableBody>
           </Table>
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle isHeader />
         <ResizablePanel minSize={12} defaultSize={12}>
           <Table>
             <TableHeader>
@@ -165,7 +165,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             </TableBody>
           </Table>
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle isHeader />
         <ResizablePanel minSize={12} defaultSize={12}>
           <Table>
             <TableHeader>
@@ -184,7 +184,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             </TableBody>
           </Table>
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle isHeader />
         <ResizablePanel minSize={10} defaultSize={10}>
           <Table>
             <TableHeader>
@@ -203,7 +203,7 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             </TableBody>
           </Table>
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle isHeader />
         <ResizablePanel minSize={12} defaultSize={12}>
           <Table>
             <TableHeader>
