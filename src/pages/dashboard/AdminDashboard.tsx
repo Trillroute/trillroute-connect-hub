@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -223,7 +224,7 @@ const AdminDashboard = () => {
 
   return (
     <ResizablePanelGroup direction="horizontal" className="min-h-screen bg-background flex w-full" style={{ height: "100vh" }}>
-      <ResizablePanel defaultSize={collapsed ? 8 : 22} minSize={8} maxSize={28} collapsible={true} collapsedSize={5}>
+      <ResizablePanel defaultSize={sidebarCollapsed ? 8 : 22} minSize={8} maxSize={28} collapsible={true} collapsedSize={5}>
         <AdminSidebar 
           collapsed={sidebarCollapsed}
           onToggleCollapse={handleSidebarToggle}
