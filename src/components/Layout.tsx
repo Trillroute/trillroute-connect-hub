@@ -20,16 +20,14 @@ const Layout = ({ children }: LayoutProps) => {
     location.pathname.includes('/dashboard/superadmin') ||
     location.pathname.includes('/admin');
 
-  // For admin pages, use a side-by-side layout
+  // For admin pages, use a layout with sidebar
   if (isAdminPage) {
     return (
       <div className="min-h-screen bg-background">
         <SidebarProvider defaultOpen={true}>
-          <div className="flex h-screen">
-            {/* Admin sidebar area */}
-            <div className="flex-shrink-0">
-              {children}
-            </div>
+          <div className="flex flex-col h-screen">
+            {/* Admin main content area with the sidebar included in children */}
+            {children}
           </div>
         </SidebarProvider>
       </div>

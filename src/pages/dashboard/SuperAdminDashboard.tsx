@@ -186,33 +186,26 @@ const SuperAdminDashboard = () => {
   }, []);
   
   const permissionMap = {
-    courses: { view: true, add: true, edit: true, delete: true },
-    students: { view: true, add: true, edit: true, delete: true },
-    teachers: { view: true, add: true, edit: true, delete: true },
-    admins: { view: true, add: true, edit: true, delete: true },
-    leads: { view: true, add: true, edit: true, delete: true },
-    levels: { view: true, add: true, edit: true, delete: true }
+    courses: { view: true },
+    classTypes: { view: true },
+    students: { view: true },
+    teachers: { view: true },
+    admins: { view: true },
+    leads: { view: true },
+    levels: { view: true }
   };
   
   return (
-    <>
+    <div className="flex flex-col h-screen">
       <AdminSidebar 
         collapsed={sidebarCollapsed}
         onToggleCollapse={handleSidebarToggle}
         activeTab={activeTab} 
         onTabChange={(tab) => setActiveTab(tab as ActiveTab)}
-        permissionMap={{
-          courses: { view: true },
-          classTypes: { view: true },
-          students: { view: true },
-          teachers: { view: true },
-          admins: { view: true },
-          leads: { view: true },
-          levels: { view: true }
-        }}
+        permissionMap={permissionMap}
       />
       
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 overflow-auto">
         <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
@@ -231,7 +224,7 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
 
-        <div className="flex-1 p-4 md:p-6 overflow-auto">
+        <div className="p-4 md:p-6 overflow-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
             <Card>
               <CardHeader className="pb-2">
@@ -377,7 +370,7 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
