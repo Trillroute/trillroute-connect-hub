@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ClassType {
   id: string;
@@ -17,6 +18,7 @@ interface ClassType {
 const ClassTypeTable: React.FC = () => {
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchClassTypes = async () => {
@@ -25,24 +27,36 @@ const ClassTypeTable: React.FC = () => {
         .from("class_types")
         .select("*")
         .order("created_at", { ascending: false });
-      if (!error && data) setClassTypes(data as ClassType[]);
+      
+      if (error) {
+        console.error("Error fetching class types:", error);
+      } else if (data) {
+        setClassTypes(data as ClassType[]);
+      }
       setLoading(false);
     };
-    fetchClassTypes();
+    
+    if (user) {
+      fetchClassTypes();
+  
+      const realtime = supabase
+        .channel("public:class_types")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "class_types" },
+          () => fetchClassTypes()
+        )
+        .subscribe();
+  
+      return () => {
+        realtime.unsubscribe();
+      };
+    }
+  }, [user]);
 
-    const realtime = supabase
-      .channel("public:class_types")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "class_types" },
-        () => fetchClassTypes()
-      )
-      .subscribe();
-
-    return () => {
-      realtime.unsubscribe();
-    };
-  }, []);
+  if (!user) {
+    return <div className="py-4 text-center text-gray-500">Please log in to view class types.</div>;
+  }
 
   if (loading) {
     return <div className="py-4 text-center text-gray-500">Loading class types...</div>;

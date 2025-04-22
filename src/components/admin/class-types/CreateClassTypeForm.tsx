@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const DURATION_METRICS = [
   "minutes",
@@ -18,6 +19,7 @@ const DURATION_METRICS = [
 
 const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -35,6 +37,16 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "You must be logged in to create class types.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     if (!form.name.trim() || !form.description.trim() || !form.duration_metric || !form.max_students || !form.price_inr) {
@@ -56,15 +68,19 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
       price_inr: Number(form.price_inr)
     };
 
-    const { error } = await supabase.from("class_types").insert([classTypeData]);
+    console.log("Creating class type with data:", classTypeData);
+
+    const { error, data } = await supabase.from("class_types").insert([classTypeData]).select();
 
     if (error) {
+      console.error("Error creating class type:", error);
       toast({
         title: "Creation Failed",
         description: error.message,
         variant: "destructive"
       });
     } else {
+      console.log("Class type created successfully:", data);
       toast({
         title: "Class Type Created",
         description: `${form.name} added successfully!`,
@@ -82,6 +98,10 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
     }
     setLoading(false);
   };
+
+  if (!user) {
+    return <div className="py-4 text-center text-gray-500">Please log in to create class types.</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md bg-white border rounded-lg p-6 shadow mt-2">
