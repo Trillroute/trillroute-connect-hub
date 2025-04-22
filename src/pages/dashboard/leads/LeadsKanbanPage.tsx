@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useFetchLeads } from "@/hooks/useFetchLeads";
 import LeadKanbanBoard from "@/components/admin/leads/LeadKanbanBoard";
@@ -19,7 +19,7 @@ const LeadsKanbanPage: React.FC = () => {
   const [selectedLead, setSelectedLead] = React.useState<Lead | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
-  const [activeTab, setActiveTab] = useState<"leads-cards">("leads-cards");
+  const [activeTab, setActiveTab] = React.useState<"leads-cards">("leads-cards");
 
   const isSuperAdmin = user?.role === 'superadmin';
 
@@ -77,6 +77,9 @@ const LeadsKanbanPage: React.FC = () => {
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Leads Cards</h1>
+              <p className="text-muted-foreground mt-1">
+                Manage your leads in a Kanban board view
+              </p>
             </div>
           </div>
         </div>
@@ -86,7 +89,7 @@ const LeadsKanbanPage: React.FC = () => {
               <CardHeader>
                 <CardTitle>Leads Kanban Board</CardTitle>
                 <CardDescription>
-                  Visualize and manage your leads in a Kanban board view.
+                  Drag and drop leads between statuses to update their progress.
                 </CardDescription>
               </CardHeader>
               <CardContent>

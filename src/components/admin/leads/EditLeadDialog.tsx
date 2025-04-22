@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Lead } from '@/types/lead';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
 
 type EditLeadDialogProps = {
   open: boolean;
@@ -12,6 +13,14 @@ type EditLeadDialogProps = {
   lead: Lead;
   onSuccess: () => void;
 };
+
+const statusOptions = [
+  { value: 'new', label: 'New' },
+  { value: 'contacted', label: 'Contacted' },
+  { value: 'qualified', label: 'Qualified' },
+  { value: 'converted', label: 'Converted' },
+  { value: 'lost', label: 'Lost' },
+];
 
 const EditLeadDialog: React.FC<EditLeadDialogProps> = ({ 
   open, 
@@ -25,8 +34,9 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
     name: lead?.name || '',
     email: lead?.email || '',
     phone: lead?.phone || '',
-    status: lead?.status || 'NEW',
-    notes: lead?.notes || ''
+    status: (lead?.status || 'new').toLowerCase(),
+    notes: lead?.notes || '',
+    source: lead?.source || ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -39,9 +49,19 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
     setIsLoading(true);
     
     try {
-      // Update lead logic would go here
-      // For now we'll just simulate a successful update
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { error } = await supabase
+        .from('leads')
+        .update({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          status: formData.status,
+          notes: formData.notes,
+          source: formData.source
+        })
+        .eq('id', lead.id);
+      
+      if (error) throw error;
       
       toast({
         title: 'Lead Updated',
@@ -103,7 +123,18 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                   id="phone"
                   name="phone"
                   className="px-3 py-2 border border-gray-300 rounded-md"
-                  value={formData.phone}
+                  value={formData.phone || ''}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <label htmlFor="source" className="text-sm font-medium">Source</label>
+                <input
+                  id="source"
+                  name="source"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.source || ''}
                   onChange={handleChange}
                 />
               </div>
@@ -117,11 +148,11 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                   value={formData.status}
                   onChange={handleChange}
                 >
-                  <option value="NEW">New</option>
-                  <option value="CONTACTED">Contacted</option>
-                  <option value="QUALIFIED">Qualified</option>
-                  <option value="CONVERTED">Converted</option>
-                  <option value="LOST">Lost</option>
+                  {statusOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               
@@ -131,7 +162,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                   id="notes"
                   name="notes"
                   className="px-3 py-2 border border-gray-300 rounded-md min-h-[100px]"
-                  value={formData.notes}
+                  value={formData.notes || ''}
                   onChange={handleChange}
                 />
               </div>
