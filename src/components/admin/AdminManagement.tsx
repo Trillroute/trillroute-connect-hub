@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, LayoutList, LayoutGrid, Grid2x2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +17,9 @@ import AdminTable from './admin/AdminTable';
 import AdminDialogs from './admin/AdminDialogs';
 import { updateCachedAdminRoles } from '@/utils/adminPermissions';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
+
+const VIEW_MODES = ['list', 'grid', 'tile'] as const;
+type ViewMode = typeof VIEW_MODES[number];
 
 interface AdminManagementProps {
   canAddAdmin?: boolean;
@@ -34,7 +37,9 @@ const AdminManagement = ({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isSuperAdmin } = useAuth();
-  
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
   const {
     admins,
     isLoading,
@@ -65,13 +70,10 @@ const AdminManagement = ({
     toast
   });
 
-  // Load admin roles for permission checks when component mounts
   useEffect(() => {
     const loadAdminRoles = async () => {
       try {
-        console.log('[AdminManagement] Loading admin roles');
         const roles = await fetchAdminRoles();
-        console.log('[AdminManagement] Received admin roles:', roles);
         if (roles && roles.length > 0) {
           updateCachedAdminRoles(roles);
         }
@@ -79,23 +81,64 @@ const AdminManagement = ({
         console.error('Error loading admin roles:', error);
       }
     };
-    
     loadAdminRoles();
     loadAdmins();
   }, [loadAdmins]);
 
-  console.log('[AdminManagement] effectiveCanEditAdminLevel =', effectiveCanEditAdminLevel);
-  console.log('[AdminManagement] isSuperAdmin =', isSuperAdmin());
+  const allAdminIds = admins.map(admin => admin.id);
+  const allSelected = selectedIds.length > 0 && allAdminIds.length > 0 && allAdminIds.every(id => selectedIds.includes(id));
+  const someSelected = selectedIds.length > 0 && !allSelected;
+
+  // Bulk delete logic
+  const handleBulkDelete = async () => {
+    for (const id of selectedIds) {
+      const admin = admins.find(a => a.id === id);
+      // Only attempt delete if allowed
+      if (admin && canAdminBeDeleted(admin)) {
+        await handleDeleteAdmin({ id }); // this function might take an object or just id, adjust as needed
+      }
+    }
+    setSelectedIds([]);
+    toast({
+      title: 'Success',
+      description: 'Selected administrators deleted.',
+    });
+    loadAdmins();
+  };
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
           <div>
             <CardTitle>Administrator Management</CardTitle>
             <CardDescription>Manage administrator accounts</CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap space-x-2 items-center">
+            <Button
+              size="sm"
+              variant={viewMode === 'list' ? "secondary" : "outline"}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <LayoutList className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'grid' ? "secondary" : "outline"}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'tile' ? "secondary" : "outline"}
+              onClick={() => setViewMode('tile')}
+              title="Tile view"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
             <Button variant="outline" onClick={loadAdmins}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -106,20 +149,32 @@ const AdminManagement = ({
                 Add Administrator
               </Button>
             )}
+            {selectedIds.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={handleBulkDelete}
+                className="ml-2"
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected ({selectedIds.length})
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <AdminTable 
-          admins={admins} 
+          admins={admins}
           isLoading={isLoading}
           onViewAdmin={openViewDialog}
           onEditAdmin={openEditDialog}
           onDeleteAdmin={openDeleteDialog}
           canDeleteAdmin={canAdminBeDeleted}
           canEditAdmin={isAdminEditable}
+          viewMode={viewMode}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
         />
-        
         <AdminDialogs
           isAddDialogOpen={isAddDialogOpen}
           setIsAddDialogOpen={setIsAddDialogOpen}
@@ -146,3 +201,4 @@ const AdminManagement = ({
 };
 
 export default AdminManagement;
+
