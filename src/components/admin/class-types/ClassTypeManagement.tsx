@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { ClassType } from "./ClassTypeTable";
+import EditClassTypeDialog from "./EditClassTypeDialog";
+import ViewClassTypeDialog from "./ViewClassTypeDialog";
 
 const ClassTypeManagement: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -24,6 +25,10 @@ const ClassTypeManagement: React.FC = () => {
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [classTypeToDelete, setClassTypeToDelete] = useState<ClassType | null>(null);
+  
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedClassType, setSelectedClassType] = useState<ClassType | null>(null);
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "tile">("list");
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,7 +51,6 @@ const ClassTypeManagement: React.FC = () => {
   useEffect(() => {
     fetchClassTypes();
     
-    // Set up subscription for realtime updates
     const subscription = supabase
       .channel('class_types_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'class_types' }, () => {
@@ -111,11 +115,8 @@ const ClassTypeManagement: React.FC = () => {
   };
 
   const handleEditClassType = (classType: ClassType) => {
-    toast({
-      title: "Edit Class Type",
-      description: `Editing ${classType.name}`,
-    });
-    // Add edit functionality here
+    setSelectedClassType(classType);
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteClassType = (classType: ClassType) => {
@@ -125,7 +126,8 @@ const ClassTypeManagement: React.FC = () => {
 
   const handleViewClassType = (classType: ClassType) => {
     console.log("View:", classType);
-    // Add view functionality here
+    setSelectedClassType(classType);
+    setIsViewDialogOpen(true);
   };
 
   const handleBulkDelete = async () => {
@@ -291,6 +293,19 @@ const ClassTypeManagement: React.FC = () => {
           onSelectAll={handleSelectAll}
         />
       </CardContent>
+
+      <EditClassTypeDialog 
+        open={isEditDialogOpen} 
+        onOpenChange={setIsEditDialogOpen} 
+        classType={selectedClassType} 
+        onSuccess={fetchClassTypes}
+      />
+
+      <ViewClassTypeDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        classType={selectedClassType}
+      />
 
       <AlertDialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
         <AlertDialogContent>
