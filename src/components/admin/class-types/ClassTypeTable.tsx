@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
@@ -174,16 +175,16 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredClassTypes.map(ct => (
-          <div key={ct.id} className="bg-muted rounded-lg shadow p-4 flex flex-col">
+          <div key={ct.id} className="bg-muted rounded-lg shadow p-4 flex flex-col h-full">
             <div className="flex flex-col gap-1">
-              <div className="font-semibold text-lg">{ct.name}</div>
+              <div className="font-semibold text-lg line-clamp-1" title={ct.name}>{ct.name}</div>
               <div className="text-xs text-gray-500">
                 {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
               </div>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger className="text-sm">
-                    <span className="truncate block">{truncateText(ct.description, 80)}</span>
+                    <p className="line-clamp-3 text-sm text-left w-full">{ct.description}</p>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-[250px]">
                     {ct.description}
@@ -191,7 +192,7 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="mt-2 flex flex-row flex-wrap gap-x-6 gap-y-1 text-xs">
+            <div className="mt-auto pt-2 flex flex-row flex-wrap gap-x-6 gap-y-1 text-xs">
               <div>Max students: <b>{ct.max_students}</b></div>
               <div>Price: <b>&#8377;{ct.price_inr}</b></div>
             </div>
@@ -205,22 +206,22 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   return (
     <div className="flex flex-wrap gap-4">
       {filteredClassTypes.map(ct => (
-        <div key={ct.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center">
-          <div className="font-semibold text-lg">{ct.name}</div>
+        <div key={ct.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center h-full">
+          <div className="font-semibold text-lg line-clamp-1 text-center w-full" title={ct.name}>{ct.name}</div>
           <div className="text-xs text-gray-500 mb-2">
             {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
           </div>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger className="text-sm text-center">
-                <span className="truncate block">{truncateText(ct.description, 100)}</span>
+                <p className="line-clamp-3 text-sm text-center w-full">{ct.description}</p>
               </TooltipTrigger>
               <TooltipContent className="max-w-[250px]">
                 {ct.description}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <div className="mt-2 text-xs">Max students: <b>{ct.max_students}</b></div>
+          <div className="mt-auto pt-2 text-xs">Max students: <b>{ct.max_students}</b></div>
           <div className="text-xs">Price (INR): <b>{ct.price_inr}</b></div>
         </div>
       ))}
