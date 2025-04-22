@@ -46,7 +46,6 @@ const TeacherManagement = ({
     try {
       setIsLoading(true);
       const usersData = await fetchAllUsers();
-      // Filter to only show teachers
       setTeachers(usersData.filter(user => user.role === 'teacher'));
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -75,7 +74,6 @@ const TeacherManagement = ({
         return;
       }
       
-      // Ensure we're adding a teacher
       userData.role = 'teacher';
       
       setIsLoading(true);
