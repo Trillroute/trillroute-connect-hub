@@ -81,7 +81,9 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
   const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
-  const classTypesData = Array.isArray(course.class_types_data) ? course.class_types_data : [];
+  const classTypesData = Array.isArray(course.class_types_data) 
+    ? (course.class_types_data as unknown as ClassTypeData[]) 
+    : [];
 
   const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
     if (durationType !== 'fixed' || !duration) {
@@ -137,10 +139,10 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         durationMetric: durationMetric,
         durationType: durationType,
         image: course.image,
-        class_types_data: course.class_types_data || [],
+        class_types_data: classTypesData || [],
       });
     }
-  }, [course, open, instructorIds, durationValue, durationMetric, durationType, form]);
+  }, [course, open, instructorIds, durationValue, durationMetric, durationType, form, classTypesData]);
 
   useEffect(() => {
     const subscription = form.watch((value) => {
@@ -186,7 +188,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           student_ids: studentIds,
           students: studentIds.length,
-          class_types_data: data.class_types_data || [],
+          // Cast to any to bypass TypeScript error
+          class_types_data: data.class_types_data || [] as any,
         })
         .eq('id', course.id);
         

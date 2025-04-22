@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Course } from "@/types/course";
@@ -32,7 +33,7 @@ export function useTeacherCourses() {
           instructor_ids: course.instructor_ids || [],
           class_types_data: course.class_types_data ? 
             (Array.isArray(course.class_types_data) ? 
-              course.class_types_data as ClassTypeData[] : 
+              (course.class_types_data as unknown as ClassTypeData[]) : 
               []) : 
             [],
         }));

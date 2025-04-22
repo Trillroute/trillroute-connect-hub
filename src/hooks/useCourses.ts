@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Course, ClassTypeData } from '@/types/course';
 import { useToast } from '@/hooks/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 export function useCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -34,8 +35,9 @@ export function useCourses() {
           instructor_ids: item.instructor_ids || [],
           student_ids: item.student_ids || [],
           class_types_data: item.class_types_data ? 
+            // Properly cast the Json to ClassTypeData[]
             (Array.isArray(item.class_types_data) ? 
-              item.class_types_data as ClassTypeData[] : 
+              (item.class_types_data as unknown as ClassTypeData[]) : 
               []) : 
             [],
         }));

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -119,7 +120,8 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           students: 0,
           student_ids: [],
-          class_types_data: data.class_types_data || [],
+          // Convert ClassTypeData[] to Json for Supabase
+          class_types_data: data.class_types_data || [] as any,
         })
         .select()
         .single();
