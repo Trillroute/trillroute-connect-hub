@@ -435,6 +435,41 @@ export type Database = {
           },
         ]
       }
+      user_activity_logs: {
+        Row: {
+          action: string
+          component: string | null
+          created_at: string | null
+          id: string
+          page_url: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          component?: string | null
+          created_at?: string | null
+          id?: string
+          page_url?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          component?: string | null
+          created_at?: string | null
+          id?: string
+          page_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

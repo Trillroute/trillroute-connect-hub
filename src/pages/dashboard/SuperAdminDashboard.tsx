@@ -15,6 +15,8 @@ import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagement";
 import SuperAdminSidebar, { ActiveTab } from "@/components/admin/SuperAdminSidebar";
+import useActivityLogger from "@/hooks/useActivityLogger";
+import UserActivityReport from "@/components/admin/reports/UserActivityReport";
 
 const NAV_ITEMS: {
   key: ActiveTab;
@@ -42,6 +44,12 @@ const SuperAdminDashboard = () => {
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
+  const logActivity = useActivityLogger();
+
+  const handleTabChange = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    logActivity("CLICK_TAB", `Tab: ${tab}`, window.location.pathname);
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -212,7 +220,7 @@ const SuperAdminDashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-row bg-background w-full">
-      <SuperAdminSidebar activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab)} />
+      <SuperAdminSidebar activeTab={activeTab} onTabChange={handleTabChange} />
 
       <div className="flex-1 flex flex-col">
         <div className="p-4 md:p-6 border-b border-gray-200">
@@ -371,6 +379,12 @@ const SuperAdminDashboard = () => {
             {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
             {activeTab === 'levels' && <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />}
           </div>
+
+          {activeTab === 'reports' && (
+            <div className="my-8">
+              <UserActivityReport />
+            </div>
+          )}
         </div>
       </div>
     </div>
