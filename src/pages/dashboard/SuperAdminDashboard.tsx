@@ -212,165 +212,185 @@ const SuperAdminDashboard = () => {
         }}
       />
       
-      <div className="flex-1 p-4 md:p-6 overflow-auto">
-        <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-              <Download className="h-4 w-4 mr-2" />
-              Download Reports
-            </Button>
-            <Button className="bg-music-500 hover:bg-music-600">
-              <Settings className="h-4 w-4 mr-2" />
-              System Settings
-            </Button>
+      <div className="flex-1 flex flex-col">
+        <div className="p-4 md:p-6 border-b border-gray-200">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
+                <Download className="h-4 w-4 mr-2" />
+                Download Reports
+              </Button>
+              <Button className="bg-music-500 hover:bg-music-600">
+                <Settings className="h-4 w-4 mr-2" />
+                System Settings
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Students</CardTitle>
-              <CardDescription>Enrolled students</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <School className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {studentsCount === 0 ? "No students enrolled yet" : `${studentsCount} enrolled students`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Teachers</CardTitle>
-              <CardDescription>Active instructors</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <GraduationCap className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Admins</CardTitle>
-              <CardDescription>All administrators</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <Shield className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{adminsCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {adminsCount === 0 ? "No admins registered yet" : `${adminsCount} active admins`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Total Courses</CardTitle>
-              <CardDescription>All courses</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <BookOpen className="h-8 w-8 text-music-500 mr-3" />
-                <div>
-                  <div className="text-3xl font-bold text-music-500">{coursesCount}</div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {coursesCount === 0 ? "No courses created yet" : `${coursesCount} total courses`}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {activeTab === 'classTypes' && (
-          <div className="mb-6">
-            <ClassTypeManagement />
+        <div className="flex-1 p-4 md:p-6 overflow-auto">
+          <div className="mb-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
+                <Download className="h-4 w-4 mr-2" />
+                Download Reports
+              </Button>
+              <Button className="bg-music-500 hover:bg-music-600">
+                <Settings className="h-4 w-4 mr-2" />
+                System Settings
+              </Button>
+            </div>
           </div>
-        )}
 
-        <div className="space-y-6">
-          {activeTab === 'teachers' && (
-            <div className="mb-4">
-              <Link 
-                to="/admin/teacher-registration" 
-                className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-music-500 text-white hover:bg-music-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-music-500 focus-visible:ring-offset-2"
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Register New Teacher
-              </Link>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Total Students</CardTitle>
+                <CardDescription>Enrolled students</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <School className="h-8 w-8 text-music-500 mr-3" />
+                  <div>
+                    <div className="text-3xl font-bold text-music-500">{studentsCount}</div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {studentsCount === 0 ? "No students enrolled yet" : `${studentsCount} enrolled students`}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Total Teachers</CardTitle>
+                <CardDescription>Active instructors</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <GraduationCap className="h-8 w-8 text-music-500 mr-3" />
+                  <div>
+                    <div className="text-3xl font-bold text-music-500">{teachersCount}</div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {teachersCount === 0 ? "No teachers registered yet" : `${teachersCount} active teachers`}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Total Admins</CardTitle>
+                <CardDescription>All administrators</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <Shield className="h-8 w-8 text-music-500 mr-3" />
+                  <div>
+                    <div className="text-3xl font-bold text-music-500">{adminsCount}</div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {adminsCount === 0 ? "No admins registered yet" : `${adminsCount} active admins`}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Total Courses</CardTitle>
+                <CardDescription>All courses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center">
+                  <BookOpen className="h-8 w-8 text-music-500 mr-3" />
+                  <div>
+                    <div className="text-3xl font-bold text-music-500">{coursesCount}</div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {coursesCount === 0 ? "No courses created yet" : `${coursesCount} total courses`}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {activeTab === 'classTypes' && (
+            <div className="mb-6">
+              <ClassTypeManagement />
             </div>
           )}
-          
-          {activeTab === 'courses' && <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />}
-          {activeTab === 'students' && <StudentManagement canAddUser={true} canDeleteUser={true} />}
-          {activeTab === 'teachers' && <TeacherManagement canAddUser={true} canDeleteUser={true} />}
-          {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}
-          {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
-          {activeTab === 'levels' && <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />}
-        </div>
 
-        <div className="grid grid-cols-1 gap-6 mt-8">
-          <Card>
-            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2">
-              <div>
-                <CardTitle>User Growth {currentYear}</CardTitle>
-                <CardDescription>All users registered by month</CardDescription>
-              </div>
-              <div className="flex space-x-2 mt-2 md:mt-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleYearChange(-1)}
+          <div className="space-y-6">
+            {activeTab === 'teachers' && (
+              <div className="mb-4">
+                <Link 
+                  to="/admin/teacher-registration" 
+                  className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-music-500 text-white hover:bg-music-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-music-500 focus-visible:ring-offset-2"
                 >
-                  Previous Year
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleYearChange(1)}
-                >
-                  Next Year
-                </Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Register New Teacher
+                </Link>
               </div>
-            </CardHeader>
-            <CardContent className="h-80">
-              {userActivityData.length > 0 ? (
-                <AreaChart
-                  data={userActivityData}
-                  index="name"
-                  categories={["Students", "Teachers", "Admins"]}
-                  colors={["music.500", "music.300", "music.700"]}
-                  valueFormatter={(value: number) => `${value}`}
-                  className="h-full"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <p>Loading user growth data...</p>
+            )}
+            
+            {activeTab === 'courses' && <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />}
+            {activeTab === 'students' && <StudentManagement canAddUser={true} canDeleteUser={true} />}
+            {activeTab === 'teachers' && <TeacherManagement canAddUser={true} canDeleteUser={true} />}
+            {activeTab === 'admins' && <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />}
+            {activeTab === 'leads' && <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />}
+            {activeTab === 'levels' && <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 mt-8">
+            <Card>
+              <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2">
+                <div>
+                  <CardTitle>User Growth {currentYear}</CardTitle>
+                  <CardDescription>All users registered by month</CardDescription>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="flex space-x-2 mt-2 md:mt-0">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleYearChange(-1)}
+                  >
+                    Previous Year
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleYearChange(1)}
+                  >
+                    Next Year
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="h-80">
+                {userActivityData.length > 0 ? (
+                  <AreaChart
+                    data={userActivityData}
+                    index="name"
+                    categories={["Students", "Teachers", "Admins"]}
+                    colors={["music.500", "music.300", "music.700"]}
+                    valueFormatter={(value: number) => `${value}`}
+                    className="h-full"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    <p>Loading user growth data...</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
