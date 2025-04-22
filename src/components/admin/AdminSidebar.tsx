@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { 
   Sidebar, 
@@ -16,8 +15,7 @@ import {
   Puzzle, 
   Menu as MenuIcon, 
   ChevronRight, 
-  ChevronLeft, 
-  Move 
+  ChevronLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -68,16 +66,13 @@ const AdminSidebar = ({
   onTabChange,
   permissionMap 
 }: AdminSidebarProps) => {
-  // For ordering the sidebar nav items
   const [itemsOrder, setItemsOrder] = useState(() =>
     sidebarItems
       .filter(item => permissionMap[item.permissionKey]?.view)
       .map(item => item.key)
   );
-  // DnD drag state
   const draggingIndex = useRef<number | null>(null);
 
-  // Handle drag start
   const handleDragStart = (idx: number) => {
     draggingIndex.current = idx;
   };
@@ -95,7 +90,6 @@ const AdminSidebar = ({
     draggingIndex.current = null;
   };
 
-  // Compute final items to show, in current order
   const visibleItems = itemsOrder
     .map(key => sidebarItems.find(i => i.key === key)!)
     .filter(item => permissionMap[item.permissionKey]?.view);
@@ -155,7 +149,6 @@ const AdminSidebar = ({
                         aria-current={activeTab === item.key ? "page" : undefined}
                       >
                         <span className="mr-3 flex items-center">
-                          <Move className="h-4 w-4 text-gray-400 mr-1 cursor-move" />
                           <item.icon className="h-5 w-5" />
                         </span>
                         {!collapsed && <span>{item.label}</span>}
@@ -198,4 +191,3 @@ const AdminSidebar = ({
 };
 
 export default AdminSidebar;
-
