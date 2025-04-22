@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { 
   Sidebar, 
@@ -66,6 +67,7 @@ const AdminSidebar = ({
   onTabChange,
   permissionMap 
 }: AdminSidebarProps) => {
+  // Track order of visible items
   const [itemsOrder, setItemsOrder] = useState(() =>
     sidebarItems
       .filter(item => permissionMap[item.permissionKey]?.view)
@@ -90,6 +92,7 @@ const AdminSidebar = ({
     draggingIndex.current = null;
   };
 
+  // Only display items that are allowed by permissionMap, in the desired order
   const visibleItems = itemsOrder
     .map(key => sidebarItems.find(i => i.key === key)!)
     .filter(item => permissionMap[item.permissionKey]?.view);
@@ -100,6 +103,7 @@ const AdminSidebar = ({
       collapsed ? "w-16" : "w-64"
     )}>
       <div className="flex flex-col h-full">
+        {/* Header: Always pinned to top */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           {!collapsed && <span className="font-semibold text-lg text-music-600">Admin Panel</span>}
           <Button 
@@ -112,7 +116,8 @@ const AdminSidebar = ({
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
-        <SidebarContent className="flex-1">
+        {/* Navigation: Always immediately below header, sticks to the top! */}
+        <SidebarContent className="flex-grow min-h-0 overflow-y-auto py-2">
           <SidebarMenu>
             {visibleItems.map((item, idx) => (
               <SidebarMenuItem
@@ -149,6 +154,7 @@ const AdminSidebar = ({
                         aria-current={activeTab === item.key ? "page" : undefined}
                       >
                         <span className="mr-3 flex items-center">
+                          {/* No move icon */}
                           <item.icon className="h-5 w-5" />
                         </span>
                         {!collapsed && <span>{item.label}</span>}
@@ -165,6 +171,7 @@ const AdminSidebar = ({
             ))}
           </SidebarMenu>
         </SidebarContent>
+        {/* Footer: Always at the bottom */}
         <div className="p-2 border-t border-gray-200">
           <Button 
             variant="outline" 
