@@ -116,9 +116,10 @@ const AdminSidebar = ({
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         </div>
-        {/* Navigation: Always immediately below header, sticks to the top! */}
-        <SidebarContent className="flex-grow min-h-0 overflow-y-auto py-2">
-          <SidebarMenu>
+        
+        {/* Navigation section - this is now explicitly at the top after the header */}
+        <div className="overflow-y-auto flex-grow">
+          <SidebarMenu className="py-2">
             {visibleItems.map((item, idx) => (
               <SidebarMenuItem
                 key={item.key}
@@ -154,7 +155,6 @@ const AdminSidebar = ({
                         aria-current={activeTab === item.key ? "page" : undefined}
                       >
                         <span className="mr-3 flex items-center">
-                          {/* No move icon */}
                           <item.icon className="h-5 w-5" />
                         </span>
                         {!collapsed && <span>{item.label}</span>}
@@ -170,9 +170,10 @@ const AdminSidebar = ({
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
-        </SidebarContent>
+        </div>
+        
         {/* Footer: Always at the bottom */}
-        <div className="p-2 border-t border-gray-200">
+        <div className="p-2 border-t border-gray-200 mt-auto">
           <Button 
             variant="outline" 
             size="sm" 
