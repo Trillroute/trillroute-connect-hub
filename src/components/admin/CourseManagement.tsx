@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Eye, Pencil, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseTable from './courses/CourseTable';
 import CreateCourseDialog from './courses/CreateCourseDialog';

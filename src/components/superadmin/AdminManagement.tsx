@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Pencil, Trash2, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import { fetchAdmins, updateUserRole, deleteUser } from './AdminService';
@@ -229,7 +229,7 @@ const AdminManagement = () => {
                 <div className="font-semibold">{admin.firstName} {admin.lastName}</div>
                 <div className="text-sm text-gray-500">{admin.email}</div>
                 <div className="mt-2 flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => onEditUserDetails && onEditUserDetails(admin)}>
+                  <Button size="sm" variant="ghost" onClick={() => openEditUserDialog(admin)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(admin)}>
@@ -248,7 +248,7 @@ const AdminManagement = () => {
                 <div className="font-semibold">{admin.firstName} {admin.lastName}</div>
                 <div className="text-xs text-gray-500">{admin.email}</div>
                 <div className="mt-2 flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => onEditUserDetails && onEditUserDetails(admin)}>
+                  <Button size="sm" variant="ghost" onClick={() => openEditUserDialog(admin)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(admin)}>
