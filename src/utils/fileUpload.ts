@@ -13,13 +13,18 @@ export const uploadFile = async (file: File, folder: string): Promise<string | n
 
     if (uploadError) {
       console.error('Error uploading file:', uploadError);
-      throw uploadError;
+      return null;
     }
 
     // Get the public URL for the uploaded file
     const { data: { publicUrl } } = supabase.storage
       .from('user-uploads')
       .getPublicUrl(filePath);
+
+    if (!publicUrl) {
+      console.error('No public url returned for uploaded file.');
+      return null;
+    }
 
     return publicUrl;
   } catch (error) {

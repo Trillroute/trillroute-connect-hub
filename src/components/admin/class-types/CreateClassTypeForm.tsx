@@ -34,10 +34,19 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
     location: LOCATION_OPTIONS[0],
   });
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setImageFile(e.target.files[0]);
+      setImagePreview(URL.createObjectURL(e.target.files[0]));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,6 +73,23 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
       return;
     }
 
+    let uploadedImageUrl = "";
+    if (imageFile) {
+      // @ts-ignore
+      const { uploadFile } = await import("@/utils/fileUpload");
+      const url = await uploadFile(imageFile, "class-types");
+      if (!url) {
+        toast({
+          title: "Image Upload Failed",
+          description: "Please try a different image file.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+      uploadedImageUrl = url;
+    }
+
     const classTypeData = {
       name: form.name.trim(),
       description: form.description.trim(),
@@ -72,6 +98,7 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
       max_students: Number(form.max_students),
       price_inr: Number(form.price_inr),
       location: form.location,
+      image: uploadedImageUrl,
     };
 
     console.log("Creating class type with data:", classTypeData);
@@ -201,6 +228,22 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
             <option key={loc} value={loc}>{loc}</option>
           ))}
         </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="image">
+          Class Image (optional)
+        </label>
+        <input
+          id="image"
+          name="image"
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="block w-full text-sm"
+        />
+        {imagePreview && (
+          <img src={imagePreview} alt="Preview" className="mt-2 rounded w-24 h-24 object-cover border" />
+        )}
       </div>
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Creating..." : "Create Class Type"}

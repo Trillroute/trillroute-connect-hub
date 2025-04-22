@@ -21,8 +21,22 @@ interface ClassType {
   max_students: number;
   price_inr: number;
   created_at: string;
-  location: string;  // Added the location field to match the database schema
+  location: string;
+  image?: string | null; // Make optional for backward compatibility
 }
+
+// Column options for table views
+const COLUMN_OPTIONS = [
+  { key: "name", label: "Class Type" },
+  { key: "description", label: "Description" },
+  { key: "duration", label: "Duration" },
+  { key: "max_students", label: "Max Students" },
+  { key: "price_inr", label: "Price (INR)" },
+  { key: "location", label: "Location" },
+  { key: "image", label: "Image" }
+];
+
+const DEFAULT_VISIBLE_COLUMNS = ["name", "description", "duration", "max_students", "price_inr", "location", "image"];
 
 interface ClassTypeTableProps {
   viewMode?: "list" | "grid" | "tile";
@@ -40,6 +54,22 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
+  const [columnDropdownOpen, setColumnDropdownOpen] = useState(false);
+
+  const toggleColumn = (key: string) => {
+    setVisibleColumns((prev) =>
+      prev.includes(key)
+        ? prev.filter((col) => col !== key)
+        : [...prev, key]
+    );
+  };
+  
+  const handleDropdownBlur = (e: React.FocusEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setColumnDropdownOpen(false);
+    }
+  };
 
   const fetchClassTypes = async () => {
     setLoading(true);
@@ -151,18 +181,44 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
   }
 
   if (viewMode === "list") {
-    // Resizable columns for: select, name, description, duration, max_students, price
     return (
       <>
-        {selectedIds.length > 0 && (
-          <div className="flex items-center justify-end mb-2">
+        <div className="flex items-center justify-between mb-2">
+          {selectedIds.length > 0 && (
             <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
               <Trash2 className="w-4 h-4 mr-1" />
               Delete Selected ({selectedIds.length})
             </Button>
+          )}
+          <div className="relative z-30">
+            <button
+              className="px-3 py-1 border rounded bg-white shadow-sm hover:bg-gray-50 focus:outline-none"
+              onClick={() => setColumnDropdownOpen((open) => !open)}
+              type="button"
+            >
+              Choose Columns
+            </button>
+            {columnDropdownOpen && (
+              <div
+                className="absolute right-0 mt-1 min-w-[180px] bg-white border rounded shadow-lg z-50 p-2"
+                tabIndex={0}
+                onBlur={handleDropdownBlur}
+              >
+                {COLUMN_OPTIONS.map((col) => (
+                  <label key={col.key} className="flex items-center gap-2 cursor-pointer py-0.5">
+                    <input
+                      type="checkbox"
+                      className="accent-indigo-600"
+                      checked={visibleColumns.includes(col.key)}
+                      onChange={() => toggleColumn(col.key)}
+                    />
+                    {col.label}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-
+        </div>
         <ResizablePanelGroup direction="horizontal" className="w-full">
           <ResizablePanel minSize={6} defaultSize={6}>
             <Table>
@@ -215,96 +271,64 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
               </TableBody>
             </Table>
           </ResizablePanel>
-          <ResizableHandle withHandle isHeader />
-          <ResizablePanel minSize={16} defaultSize={16}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden md:table-cell">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>Description</TooltipTrigger>
-                        <TooltipContent>
-                          Hover over a row to see full description
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClassTypes.map(ct => (
-                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
-                    <TableCell className="hidden md:table-cell">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="block max-w-[200px]">
-                            <span className="truncate block">{truncateText(ct.description)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-[300px]">
-                            {ct.description}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ResizablePanel>
-          <ResizableHandle withHandle isHeader />
-          <ResizablePanel minSize={12} defaultSize={12}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden md:table-cell">Duration</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClassTypes.map(ct => (
-                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
-                    <TableCell className="hidden md:table-cell truncate">
-                      {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ResizablePanel>
-          <ResizableHandle withHandle isHeader />
-          <ResizablePanel minSize={8} defaultSize={8}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden md:table-cell">Max Students</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClassTypes.map(ct => (
-                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
-                    <TableCell className="hidden md:table-cell">{ct.max_students}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ResizablePanel>
-          <ResizableHandle withHandle isHeader />
-          <ResizablePanel minSize={8} defaultSize={8}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden md:table-cell">Price (INR)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClassTypes.map(ct => (
-                  <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
-                    <TableCell className="hidden md:table-cell">{ct.price_inr}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ResizablePanel>
+          
+          {COLUMN_OPTIONS.filter((col) => col.key !== "name" && visibleColumns.includes(col.key)).map((col) => (
+            <React.Fragment key={col.key}>
+              <ResizableHandle withHandle isHeader />
+              <ResizablePanel minSize={12} defaultSize={12}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="hidden md:table-cell">{col.label}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClassTypes.map((ct) => (
+                      <TableRow
+                        key={ct.id}
+                        className="cursor-pointer"
+                        onClick={() => openEditDialog(ct)}
+                      >
+                        <TableCell className="hidden md:table-cell">
+                          {col.key === "description" && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger className="block max-w-[200px]">
+                                  <span className="truncate block">{truncateText(ct.description)}</span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[300px]">
+                                  {ct.description}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {col.key === "duration" && (
+                            ct.duration_value !== null
+                              ? `${ct.duration_value} ${ct.duration_metric}`
+                              : ct.duration_metric
+                          )}
+                          {col.key === "max_students" && ct.max_students}
+                          {col.key === "price_inr" && ct.price_inr}
+                          {col.key === "location" && ct.location}
+                          {col.key === "image" && ct.image && (
+                            <img
+                              src={ct.image}
+                              alt={ct.name}
+                              className="w-14 h-14 object-cover rounded border"
+                              onClick={e => e.stopPropagation()}
+                            />
+                          )}
+                          {col.key === "image" && !ct.image && (
+                            <span className="text-xs text-gray-400">No image</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ResizablePanel>
+            </React.Fragment>
+          ))}
         </ResizablePanelGroup>
         <EditClassTypeDialog
           open={editDialogOpen}
@@ -345,6 +369,9 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
                   onClick={e => e.stopPropagation()}
                 />
               </div>
+              {ct.image && (
+                <img src={ct.image} alt={ct.name} className="w-28 h-28 object-cover rounded mb-1 mx-auto border" />
+              )}
               <div className="flex flex-col gap-1">
                 <div className="font-semibold text-lg line-clamp-1 w-full" title={ct.name}>{ct.name}</div>
                 <div className="text-xs text-gray-500">
@@ -406,6 +433,9 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
                 onClick={e => e.stopPropagation()}
               />
             </div>
+            {ct.image && (
+              <img src={ct.image} alt={ct.name} className="w-20 h-20 object-cover rounded mb-1 border" />
+            )}
             <div className="font-semibold text-lg line-clamp-1 text-center w-full" title={ct.name}>{ct.name}</div>
             <div className="text-xs text-gray-500 mb-2">
               {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
