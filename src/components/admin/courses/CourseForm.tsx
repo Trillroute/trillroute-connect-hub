@@ -14,15 +14,13 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { Teacher } from '@/types/course';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Student } from '@/hooks/useStudents';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '@/components/ui/card';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface CourseFormValues {
   title: string;
   description: string;
   instructors: string[];
-  students?: string[];
   level: string;
   skill: string;
   durationType: "fixed" | "recurring";
@@ -42,7 +40,6 @@ interface CourseFormProps {
   onSubmit: (values: CourseFormValues) => void;
   teachers: Teacher[];
   skills: { id: string; name: string }[];
-  students?: Student[];
   submitButtonText?: string;
   cancelAction?: () => void;
 }
@@ -52,7 +49,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
   onSubmit,
   teachers,
   skills,
-  students = [],
   submitButtonText = "Submit",
   cancelAction
 }) => {
@@ -63,9 +59,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
 
   useEffect(() => {
     const instructorsValue = form.watch('instructors');
-    const studentsValue = form.watch('students');
     console.log('CourseForm - instructors value:', instructorsValue);
-    console.log('CourseForm - students value:', studentsValue);
   }, [form]);
 
   return (
@@ -109,6 +103,57 @@ const CourseForm: React.FC<CourseFormProps> = ({
           )}
         />
         
+        <FormField
+          control={form.control}
+          name="instructors"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Instructors</FormLabel>
+              <FormDescription>
+                Select the instructors for this course
+              </FormDescription>
+              <Card>
+                <ScrollArea className="h-60">
+                  <CardContent className="pt-4 space-y-2">
+                    {teachers.length === 0 ? (
+                      <div className="text-center text-muted-foreground">
+                        No teachers available
+                      </div>
+                    ) : (
+                      teachers.map((teacher) => (
+                        <div key={teacher.id} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`teacher-${teacher.id}`}
+                            checked={field.value?.includes(teacher.id)}
+                            onCheckedChange={(checked) => {
+                              const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                              
+                              if (checked) {
+                                if (!currentValues.includes(teacher.id)) {
+                                  field.onChange([...currentValues, teacher.id]);
+                                }
+                              } else {
+                                field.onChange(currentValues.filter(id => id !== teacher.id));
+                              }
+                            }}
+                          />
+                          <Label 
+                            htmlFor={`teacher-${teacher.id}`}
+                            className="cursor-pointer"
+                          >
+                            {teacher.first_name} {teacher.last_name}
+                          </Label>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </ScrollArea>
+              </Card>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="level"
@@ -159,112 +204,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
               <FormDescription>
                 Choose the primary skill or category for this course.
               </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="instructors"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Instructors</FormLabel>
-              <FormDescription>
-                Select the instructors for this course
-              </FormDescription>
-              <Card>
-                <ScrollArea className="h-60">
-                  <CardContent className="pt-4 space-y-2">
-                    {teachers.length === 0 ? (
-                      <div className="text-center text-muted-foreground">
-                        No teachers available
-                      </div>
-                    ) : (
-                      teachers.map((teacher) => (
-                        <div key={teacher.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`teacher-${teacher.id}`}
-                            checked={field.value?.includes(teacher.id)}
-                            onCheckedChange={(checked) => {
-                              const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                              
-                              if (checked) {
-                                // Add to selection
-                                if (!currentValues.includes(teacher.id)) {
-                                  field.onChange([...currentValues, teacher.id]);
-                                }
-                              } else {
-                                // Remove from selection
-                                field.onChange(currentValues.filter(id => id !== teacher.id));
-                              }
-                            }}
-                          />
-                          <Label 
-                            htmlFor={`teacher-${teacher.id}`}
-                            className="cursor-pointer"
-                          >
-                            {teacher.first_name} {teacher.last_name}
-                          </Label>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </ScrollArea>
-              </Card>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="students"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Students</FormLabel>
-              <FormDescription>
-                Select the students who should be enrolled in this course
-              </FormDescription>
-              <Card>
-                <ScrollArea className="h-60">
-                  <CardContent className="pt-4 space-y-2">
-                    {students.length === 0 ? (
-                      <div className="text-center text-muted-foreground">
-                        No students available
-                      </div>
-                    ) : (
-                      students.map((student) => (
-                        <div key={student.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`student-${student.id}`}
-                            checked={field.value?.includes(student.id)}
-                            onCheckedChange={(checked) => {
-                              const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                              
-                              if (checked) {
-                                // Add to selection
-                                if (!currentValues.includes(student.id)) {
-                                  field.onChange([...currentValues, student.id]);
-                                }
-                              } else {
-                                // Remove from selection
-                                field.onChange(currentValues.filter(id => id !== student.id));
-                              }
-                            }}
-                          />
-                          <Label 
-                            htmlFor={`student-${student.id}`} 
-                            className="cursor-pointer"
-                          >
-                            {student.first_name} {student.last_name}
-                          </Label>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </ScrollArea>
-              </Card>
               <FormMessage />
             </FormItem>
           )}

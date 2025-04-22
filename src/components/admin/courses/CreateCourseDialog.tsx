@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -51,7 +50,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
-  const { students = [] } = useStudents();
   const { user } = useAuth();
 
   const form = useForm<CourseFormValues>({
@@ -179,7 +177,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
           onSubmit={handleCreateCourse} 
           teachers={teachers} 
           skills={skills}
-          students={students}
           submitButtonText="Create Course"
           cancelAction={() => onOpenChange(false)}
         />
