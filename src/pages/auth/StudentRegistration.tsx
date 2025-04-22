@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -166,7 +165,6 @@ const StudentRegistration = () => {
                   <TabsTrigger value="documents">Documents</TabsTrigger>
                 </TabsList>
 
-                {/* Basic Information Tab */}
                 <TabsContent value="basic" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
@@ -299,7 +297,6 @@ const StudentRegistration = () => {
                   </div>
                 </TabsContent>
 
-                {/* Contact Information Tab */}
                 <TabsContent value="contact" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="parentName">Parent/Guardian Name (For minors)</Label>
@@ -381,7 +378,6 @@ const StudentRegistration = () => {
                   </div>
                 </TabsContent>
 
-                {/* Documents Tab */}
                 <TabsContent value="documents" className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="idProof">ID Proof (Optional)</Label>
