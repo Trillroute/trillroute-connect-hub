@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Music, ShieldCheck } from 'lucide-react';
@@ -140,78 +139,78 @@ const Navbar = () => {
       </div>
       {/* Mobile menu */}
       {!isSuperAdminRoute && (
-      <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-        <div className="pt-2 pb-3 space-y-1 flex flex-col items-center">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {link.name}
-            </Link>
-          ))}
-          {dashboardOption && (
-            <Link
-              to={dashboardOption.path}
-              className="block px-4 py-2 text-base font-medium text-music-500 hover:text-music-600 hover:bg-gray-50"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {isSuperAdmin() && <ShieldCheck className="inline-block mr-1 h-4 w-4" />}
-              {dashboardOption.name}
-            </Link>
-          )}
-        </div>
-        <div className="pt-4 pb-3 border-t border-gray-200 flex flex-col items-center">
-          {user ? (
-            <div className="space-y-1 w-full text-center">
+        <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
+          <div className="pt-2 pb-3 space-y-1 flex flex-col items-center">
+            {navLinks.map((link) => (
               <Link
-                to="/profile"
-                className="flex items-center justify-center px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Avatar className="h-8 w-8 mr-2 border border-gray-200">
-                  {user.profilePhoto ? (
-                    <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
-                  ) : (
-                    <AvatarFallback className="bg-music-100 text-music-600">
-                      {getUserInitials()}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                Profile
-              </Link>
-              <button
-                onClick={() => {
-                  logout();
-                  setIsMenuOpen(false);
-                }}
-                className="block w-full text-center px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-1 w-full text-center">
-              <Link
-                to="/auth/login"
+                key={link.name}
+                to={link.path}
                 className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Login
+                {link.name}
               </Link>
+            ))}
+            {dashboardOption && (
               <Link
-                to="/auth/register"
-                className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
+                to={dashboardOption.path}
+                className="block px-4 py-2 text-base font-medium text-music-500 hover:text-music-600 hover:bg-gray-50"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Register
+                {isSuperAdmin() && <ShieldCheck className="inline-block mr-1 h-4 w-4" />}
+                {dashboardOption.name}
               </Link>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="pt-4 pb-3 border-t border-gray-200 flex flex-col items-center">
+            {user ? (
+              <div className="space-y-1 w-full text-center">
+                <Link
+                  to="/profile"
+                  className="flex items-center justify-center px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Avatar className="h-8 w-8 mr-2 border border-gray-200">
+                    {user.profilePhoto ? (
+                      <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
+                    ) : (
+                      <AvatarFallback className="bg-music-100 text-music-600">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="block w-full text-center px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1 w-full text-center">
+                <Link
+                  to="/auth/login"
+                  className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/auth/register"
+                  className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
       )}
     </nav>
   );

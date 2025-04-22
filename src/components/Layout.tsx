@@ -28,11 +28,13 @@ const Layout = ({ children }: LayoutProps) => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         {!isAuthPage && <Navbar />}
-        <SidebarProvider defaultOpen={true}>
-          <div className="flex w-full flex-1 min-h-screen">
-            {children}
-          </div>
-        </SidebarProvider>
+        <div className="flex-1 flex">
+          <SidebarProvider defaultOpen={true}>
+            <div className="flex w-full">
+              {children}
+            </div>
+          </SidebarProvider>
+        </div>
       </div>
     );
   }
@@ -54,4 +56,3 @@ const Layout = ({ children }: LayoutProps) => {
 };
 
 export default Layout;
-
