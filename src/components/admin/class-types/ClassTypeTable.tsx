@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -92,6 +92,11 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
     );
   }, [classTypes, searchQuery]);
 
+  const truncateText = (text: string, maxLength: number = 50) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
   if (!user) {
     return <div className="py-4 text-center text-gray-500">Please log in to view class types.</div>;
   }
@@ -117,7 +122,16 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[220px]">Class Type</TableHead>
-            <TableHead className="hidden md:table-cell">Description</TableHead>
+            <TableHead className="hidden md:table-cell">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>Description</TooltipTrigger>
+                  <TooltipContent>
+                    Hover over a row to see full description
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </TableHead>
             <TableHead className="hidden md:table-cell">Duration</TableHead>
             <TableHead className="hidden md:table-cell">Max Students</TableHead>
             <TableHead className="hidden md:table-cell">Price (INR)</TableHead>
@@ -132,8 +146,21 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
                   {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
                 </div>
               </TableCell>
-              <TableCell className="hidden md:table-cell truncate">{ct.description}</TableCell>
-              <TableCell className="hidden md:table-cell truncate">{ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}</TableCell>
+              <TableCell className="hidden md:table-cell">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="block max-w-[200px]">
+                      <span className="truncate block">{truncateText(ct.description)}</span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[300px]">
+                      {ct.description}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </TableCell>
+              <TableCell className="hidden md:table-cell truncate">
+                {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+              </TableCell>
               <TableCell className="hidden md:table-cell">{ct.max_students}</TableCell>
               <TableCell className="hidden md:table-cell">{ct.price_inr}</TableCell>
             </TableRow>
@@ -150,8 +177,19 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
           <div key={ct.id} className="bg-muted rounded-lg shadow p-4 flex flex-col">
             <div className="flex flex-col gap-1">
               <div className="font-semibold text-lg">{ct.name}</div>
-              <div className="text-xs text-gray-500">{ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}</div>
-              <div className="text-sm truncate">{ct.description}</div>
+              <div className="text-xs text-gray-500">
+                {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger className="text-sm">
+                    <span className="truncate block">{truncateText(ct.description, 80)}</span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[250px]">
+                    {ct.description}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div className="mt-2 flex flex-row flex-wrap gap-x-6 gap-y-1 text-xs">
               <div>Max students: <b>{ct.max_students}</b></div>
@@ -169,8 +207,19 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
       {filteredClassTypes.map(ct => (
         <div key={ct.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center">
           <div className="font-semibold text-lg">{ct.name}</div>
-          <div className="text-xs text-gray-500 mb-2">{ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}</div>
-          <div className="text-sm truncate text-center">{ct.description}</div>
+          <div className="text-xs text-gray-500 mb-2">
+            {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger className="text-sm text-center">
+                <span className="truncate block">{truncateText(ct.description, 100)}</span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[250px]">
+                {ct.description}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="mt-2 text-xs">Max students: <b>{ct.max_students}</b></div>
           <div className="text-xs">Price (INR): <b>{ct.price_inr}</b></div>
         </div>
