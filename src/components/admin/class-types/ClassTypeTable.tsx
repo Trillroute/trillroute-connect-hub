@@ -1,10 +1,10 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableCaption } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import EditClassTypeDialog from "./EditClassTypeDialog";
 
 interface ClassType {
   id: string;
@@ -28,6 +28,8 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
 }) => {
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedClassType, setSelectedClassType] = useState<ClassType | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -98,6 +100,11 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
     return text.substring(0, maxLength) + '...';
   };
 
+  const openEditDialog = (ct: ClassType) => {
+    setSelectedClassType(ct);
+    setEditDialogOpen(true);
+  };
+
   if (!user) {
     return <div className="py-4 text-center text-gray-500">Please log in to view class types.</div>;
   }
@@ -118,115 +125,154 @@ const ClassTypeTable: React.FC<ClassTypeTableProps> = ({
 
   if (viewMode === "list") {
     return (
-      <Table>
-        <TableCaption>A list of all class types in the system.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[220px]">Class Type</TableHead>
-            <TableHead className="hidden md:table-cell">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>Description</TooltipTrigger>
-                  <TooltipContent>
-                    Hover over a row to see full description
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </TableHead>
-            <TableHead className="hidden md:table-cell">Duration</TableHead>
-            <TableHead className="hidden md:table-cell">Max Students</TableHead>
-            <TableHead className="hidden md:table-cell">Price (INR)</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredClassTypes.map(ct => (
-            <TableRow key={ct.id}>
-              <TableCell className="font-medium max-w-[220px]">
-                <div className="truncate font-semibold">{ct.name}</div>
-                <div className="text-xs text-gray-500 md:hidden truncate">
-                  {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
-                </div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
+      <>
+        <Table>
+          <TableCaption>A list of all class types in the system.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[220px]">Class Type</TableHead>
+              <TableHead className="hidden md:table-cell">
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger className="block max-w-[200px]">
-                      <span className="truncate block">{truncateText(ct.description)}</span>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[300px]">
-                      {ct.description}
+                    <TooltipTrigger>Description</TooltipTrigger>
+                    <TooltipContent>
+                      Hover over a row to see full description
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </TableCell>
-              <TableCell className="hidden md:table-cell truncate">
-                {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
-              </TableCell>
-              <TableCell className="hidden md:table-cell">{ct.max_students}</TableCell>
-              <TableCell className="hidden md:table-cell">{ct.price_inr}</TableCell>
+              </TableHead>
+              <TableHead className="hidden md:table-cell">Duration</TableHead>
+              <TableHead className="hidden md:table-cell">Max Students</TableHead>
+              <TableHead className="hidden md:table-cell">Price (INR)</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filteredClassTypes.map(ct => (
+              <TableRow key={ct.id} className="cursor-pointer" onClick={() => openEditDialog(ct)}>
+                <TableCell className="font-medium max-w-[220px]">
+                  <div className="truncate font-semibold">{ct.name}</div>
+                  <div className="text-xs text-gray-500 md:hidden truncate">
+                    {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="block max-w-[200px]">
+                        <span className="truncate block">{truncateText(ct.description)}</span>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-[300px]">
+                        {ct.description}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+                <TableCell className="hidden md:table-cell truncate">
+                  {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{ct.max_students}</TableCell>
+                <TableCell className="hidden md:table-cell">{ct.price_inr}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <EditClassTypeDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          classType={selectedClassType}
+          onSuccess={fetchClassTypes}
+        />
+      </>
     );
   }
 
   if (viewMode === "grid") {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredClassTypes.map(ct => (
-          <div key={ct.id} className="bg-muted rounded-lg shadow p-4 flex flex-col h-full">
-            <div className="flex flex-col gap-1">
-              <div className="font-semibold text-lg line-clamp-1" title={ct.name}>{ct.name}</div>
-              <div className="text-xs text-gray-500">
-                {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredClassTypes.map(ct => (
+            <div
+              key={ct.id}
+              className="bg-muted rounded-lg shadow p-4 flex flex-col h-full cursor-pointer"
+              onClick={() => openEditDialog(ct)}
+              tabIndex={0}
+              role="button"
+              aria-label={`Edit ${ct.name}`}
+            >
+              <div className="flex flex-col gap-1">
+                <div className="font-semibold text-lg line-clamp-1 w-full" title={ct.name}>{ct.name}</div>
+                <div className="text-xs text-gray-500">
+                  {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger className="text-sm block w-full">
+                      <p className="line-clamp-3 text-sm text-left w-full break-words">{ct.description}</p>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[250px]">
+                      {ct.description}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger className="text-sm">
-                    <p className="line-clamp-3 text-sm text-left w-full">{ct.description}</p>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-[250px]">
-                    {ct.description}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="mt-auto pt-2 flex flex-row flex-wrap gap-x-6 gap-y-1 text-xs">
+                <div>Max students: <b>{ct.max_students}</b></div>
+                <div>Price: <b>&#8377;{ct.price_inr}</b></div>
+              </div>
             </div>
-            <div className="mt-auto pt-2 flex flex-row flex-wrap gap-x-6 gap-y-1 text-xs">
-              <div>Max students: <b>{ct.max_students}</b></div>
-              <div>Price: <b>&#8377;{ct.price_inr}</b></div>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+        <EditClassTypeDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          classType={selectedClassType}
+          onSuccess={fetchClassTypes}
+        />
+      </>
     );
   }
 
   // tile view
   return (
-    <div className="flex flex-wrap gap-4">
-      {filteredClassTypes.map(ct => (
-        <div key={ct.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center h-full">
-          <div className="font-semibold text-lg line-clamp-1 text-center w-full" title={ct.name}>{ct.name}</div>
-          <div className="text-xs text-gray-500 mb-2">
-            {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+    <>
+      <div className="flex flex-wrap gap-4">
+        {filteredClassTypes.map(ct => (
+          <div
+            key={ct.id}
+            className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center h-full cursor-pointer"
+            onClick={() => openEditDialog(ct)}
+            tabIndex={0}
+            role="button"
+            aria-label={`Edit ${ct.name}`}
+          >
+            <div className="font-semibold text-lg line-clamp-1 text-center w-full" title={ct.name}>{ct.name}</div>
+            <div className="text-xs text-gray-500 mb-2">
+              {ct.duration_value !== null ? `${ct.duration_value} ${ct.duration_metric}` : ct.duration_metric}
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="text-sm text-center w-full">
+                  <p className="line-clamp-3 text-sm text-center w-full break-words">{ct.description}</p>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[250px]">
+                  {ct.description}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <div className="mt-auto pt-2 text-xs">Max students: <b>{ct.max_students}</b></div>
+            <div className="text-xs">Price (INR): <b>{ct.price_inr}</b></div>
           </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger className="text-sm text-center">
-                <p className="line-clamp-3 text-sm text-center w-full">{ct.description}</p>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[250px]">
-                {ct.description}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <div className="mt-auto pt-2 text-xs">Max students: <b>{ct.max_students}</b></div>
-          <div className="text-xs">Price (INR): <b>{ct.price_inr}</b></div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      <EditClassTypeDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        classType={selectedClassType}
+        onSuccess={fetchClassTypes}
+      />
+    </>
   );
 };
 
+export type { ClassType };
 export default ClassTypeTable;
