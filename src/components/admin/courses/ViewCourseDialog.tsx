@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { Course } from '@/types/course';
@@ -18,11 +19,14 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
+import EditCourseDialog from './EditCourseDialog';
+import DeleteCourseDialog from './DeleteCourseDialog';
 
 interface ViewCourseDialogProps {
   course: Course | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 interface ClassType {
@@ -35,7 +39,7 @@ interface ClassType {
   price_inr: number;
 }
 
-const ViewCourseDialog = ({ course, isOpen, onOpenChange }: ViewCourseDialogProps) => {
+const ViewCourseDialog = ({ course, isOpen, onOpenChange, onSuccess }: ViewCourseDialogProps) => {
   const [classTypes, setClassTypes] = useState<Record<string, ClassType>>({});
   const [loading, setLoading] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -75,6 +79,21 @@ const ViewCourseDialog = ({ course, isOpen, onOpenChange }: ViewCourseDialogProp
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditClick = () => {
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    if (onSuccess) {
+      onSuccess();
+    }
+    onOpenChange(false);
   };
 
   if (!course) return null;
@@ -209,10 +228,10 @@ const ViewCourseDialog = ({ course, isOpen, onOpenChange }: ViewCourseDialogProp
                 </TabsContent>
               </Tabs>
               <div className="pt-4 flex justify-end gap-2">
-                <Button variant="secondary" onClick={() => setEditDialogOpen(true)}>
+                <Button variant="secondary" onClick={handleEditClick}>
                   Edit
                 </Button>
-                <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+                <Button variant="destructive" onClick={handleDeleteClick}>
                   Delete
                 </Button>
               </div>
@@ -225,17 +244,25 @@ const ViewCourseDialog = ({ course, isOpen, onOpenChange }: ViewCourseDialogProp
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
       {course && (
         <>
           {editDialogOpen && (
-            <div>
-              {/* Edit dialog implementation */}
-            </div>
+            <EditCourseDialog
+              open={editDialogOpen}
+              onOpenChange={setEditDialogOpen}
+              course={course}
+              onSuccess={handleEditSuccess}
+            />
           )}
+          
           {deleteDialogOpen && (
-            <div>
-              {/* Delete dialog implementation */}
-            </div>
+            <DeleteCourseDialog
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              course={course}
+              onSuccess={handleEditSuccess}
+            />
           )}
         </>
       )}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -95,17 +96,16 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
             <TableRow
               key={course.id}
               data-course-id={course.id}
-              onClick={() => onView && onView(course)}
-              className={onView ? "cursor-pointer" : ""}
+              className="cursor-pointer"
             >
-              <TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
                 <Checkbox
                   checked={selectedIds.includes(course.id)}
                   onCheckedChange={() => toggleSelectOne(course.id)}
                   aria-label={`Select ${course.title}`}
                 />
               </TableCell>
-              <TableCell className="font-medium max-w-[250px]">
+              <TableCell className="font-medium max-w-[250px]" onClick={() => onView && onView(course)}>
                 <div className="flex items-center gap-3">
                   {course.image && (
                     <img
@@ -122,17 +122,24 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
                   </div>
                 </div>
               </TableCell>
-              <TableCell className="hidden md:table-cell truncate">{course.level}</TableCell>
-              <TableCell className="hidden md:table-cell truncate">{course.skill}</TableCell>
-              <TableCell className="hidden md:table-cell truncate">{course.duration}</TableCell>
-              <TableCell className="text-right">
+              <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
+                {course.level}
+              </TableCell>
+              <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
+                {course.skill}
+              </TableCell>
+              <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
+                {course.duration}
+              </TableCell>
+              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-end space-x-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => viewCourse(e, course)}
                   >
-                    View
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View</span>
                   </Button>
                 </div>
               </TableCell>

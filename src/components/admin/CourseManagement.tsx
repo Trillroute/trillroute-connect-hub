@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import CourseTable from './courses/CourseTable';
 import CreateCourseDialog from './courses/CreateCourseDialog';
-import EditCourseDialog from './courses/EditCourseDialog';
-import DeleteCourseDialog from './courses/DeleteCourseDialog';
 import ViewCourseDialog from './courses/ViewCourseDialog';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
 import { Input } from '@/components/ui/input';
 import { canManageCourses } from '@/utils/adminPermissions';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CourseManagementProps {
   canAddCourse?: boolean;
@@ -28,8 +27,6 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const { toast } = useToast();
   const { user, isSuperAdmin } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { courses, loading, fetchCourses } = useCourses();
@@ -52,29 +49,47 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
     setSelectedCourse(course);
     setIsViewDialogOpen(true);
   };
-  
-  const openEditDialog = (course: Course) => {
-    if (effectiveCanEditCourse) {
-      setSelectedCourse(course);
-      setIsEditDialogOpen(true);
-    } else {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to edit courses.",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const openDeleteDialog = (course: Course) => {
-    if (effectiveCanDeleteCourse) {
-      setSelectedCourse(course);
-      setIsDeleteDialogOpen(true);
-    } else {
+  const handleBulkDelete = async (courseIds: string[]) => {
+    if (!effectiveCanDeleteCourse) {
       toast({
         title: "Permission Denied",
         description: "You don't have permission to delete courses.",
         variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .in('id', courseIds);
+        
+      if (error) {
+        console.error('Error deleting courses:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete courses. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      toast({
+        title: "Courses Deleted",
+        description: `Successfully deleted ${courseIds.length} course(s)`,
+        duration: 3000,
+      });
+      
+      // Refresh courses
+      fetchCourses();
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
       });
     }
   };
@@ -163,9 +178,8 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
             <CourseTable 
               courses={filteredCourses} 
               loading={loading} 
-              onEdit={effectiveCanEditCourse ? openEditDialog : undefined} 
-              onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
               onView={openViewDialog}
+              onBulkDelete={handleBulkDelete}
             />
           )}
           {viewMode === 'grid' && (
@@ -189,16 +203,6 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
                     <Button size="sm" variant="ghost" onClick={() => openViewDialog(course)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    {effectiveCanEditCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openEditDialog(course)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {effectiveCanDeleteCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(course)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -221,16 +225,6 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
                     <Button size="sm" variant="ghost" onClick={() => openViewDialog(course)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    {effectiveCanEditCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openEditDialog(course)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {effectiveCanDeleteCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(course)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -247,29 +241,12 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
         )}
 
         {selectedCourse && (
-          <>
-            <ViewCourseDialog
-              isOpen={isViewDialogOpen}
-              onOpenChange={setIsViewDialogOpen}
-              course={selectedCourse}
-            />
-            
-            <EditCourseDialog 
-              open={isEditDialogOpen} 
-              onOpenChange={setIsEditDialogOpen} 
-              course={selectedCourse}
-              onSuccess={fetchCourses}
-            />
-            
-            {effectiveCanDeleteCourse && (
-              <DeleteCourseDialog 
-                open={isDeleteDialogOpen} 
-                onOpenChange={setIsDeleteDialogOpen} 
-                course={selectedCourse}
-                onSuccess={fetchCourses}
-              />
-            )}
-          </>
+          <ViewCourseDialog
+            isOpen={isViewDialogOpen}
+            onOpenChange={setIsViewDialogOpen}
+            course={selectedCourse}
+            onSuccess={fetchCourses}
+          />
         )}
       </CardContent>
     </Card>
