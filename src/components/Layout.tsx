@@ -1,10 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { useLocation } from 'react-router-dom';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './ui/resizable';
 import { SidebarProvider } from './ui/sidebar';
+
+// Removed PanelGroup import as we shouldn't nest things for admin
+// If needed elsewhere, re-add only for non-admin paths
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,20 +23,21 @@ const Layout = ({ children }: LayoutProps) => {
     location.pathname.includes('/dashboard/superadmin') ||
     location.pathname.includes('/admin');
 
-  // For admin pages, we just render the children because AdminSidebar is included within the dashboard components
+  // For admin pages, wrap sidebar/content in a single flex container!
   if (isAdminPage) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen flex flex-col bg-background">
         {!isAuthPage && <Navbar />}
         <SidebarProvider defaultOpen={true}>
-          <main className="flex-1">
+          <div className="flex w-full flex-1 min-h-screen">
             {children}
-          </main>
+          </div>
         </SidebarProvider>
       </div>
     );
   }
 
+  // Regular pages as before.
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {!isAuthPage && <Navbar />}
@@ -51,3 +54,4 @@ const Layout = ({ children }: LayoutProps) => {
 };
 
 export default Layout;
+
