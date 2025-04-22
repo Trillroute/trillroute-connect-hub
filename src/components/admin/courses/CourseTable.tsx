@@ -1,7 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Course } from '@/types/course';
@@ -73,80 +83,155 @@ const CourseTable: React.FC<CourseTableProps> = ({ courses, loading, onEdit, onD
           </Button>
         </div>
       )}
-      <Table>
-        <TableCaption>A list of all courses in the system.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>
-              <Checkbox
-                checked={isAllSelected}
-                onCheckedChange={toggleSelectAll}
-                aria-label="Select all courses"
-              />
-            </TableHead>
-            <TableHead className="w-[250px]">Course</TableHead>
-            <TableHead className="hidden md:table-cell">Level</TableHead>
-            <TableHead className="hidden md:table-cell">Skill</TableHead>
-            <TableHead className="hidden md:table-cell">Duration</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {courses.map((course) => (
-            <TableRow
-              key={course.id}
-              data-course-id={course.id}
-              className="cursor-pointer"
-            >
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <Checkbox
-                  checked={selectedIds.includes(course.id)}
-                  onCheckedChange={() => toggleSelectOne(course.id)}
-                  aria-label={`Select ${course.title}`}
-                />
-              </TableCell>
-              <TableCell className="font-medium max-w-[250px]" onClick={() => onView && onView(course)}>
-                <div className="flex items-center gap-3">
-                  {course.image && (
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="h-10 w-10 rounded object-cover flex-shrink-0"
+      <ResizablePanelGroup direction="horizontal" className="w-full">
+        <ResizablePanel minSize={8} defaultSize={8}>
+          <Table>
+            <TableCaption>A list of all courses in the system.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all courses"
+                  />
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {courses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedIds.includes(course.id)}
+                      onCheckedChange={() => toggleSelectOne(course.id)}
+                      aria-label={`Select ${course.title}`}
                     />
-                  )}
-                  <div className="overflow-hidden">
-                    <div className="font-semibold truncate">{course.title}</div>
-                    <div className="text-xs text-gray-500 md:hidden truncate">
-                      {course.level} • {course.skill}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel minSize={24} defaultSize={24}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[250px]">Course</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {courses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell className="font-medium max-w-[250px]" onClick={() => onView && onView(course)}>
+                    <div className="flex items-center gap-3">
+                      {course.image && (
+                        <img
+                          src={course.image}
+                          alt={course.title}
+                          className="h-10 w-10 rounded object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="overflow-hidden">
+                        <div className="font-semibold truncate">{course.title}</div>
+                        <div className="text-xs text-gray-500 md:hidden truncate">
+                          {course.level} • {course.skill}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
-                {course.level}
-              </TableCell>
-              <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
-                {course.skill}
-              </TableCell>
-              <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
-                {course.duration}
-              </TableCell>
-              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => viewCourse(e, course)}
-                  >
-                    <Eye className="h-4 w-4" />
-                    <span className="sr-only">View</span>
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel minSize={12} defaultSize={12}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="hidden md:table-cell">Level</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {courses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
+                    {course.level}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel minSize={12} defaultSize={12}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="hidden md:table-cell">Skill</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {courses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
+                    {course.skill}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel minSize={10} defaultSize={10}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="hidden md:table-cell">Duration</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {courses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell className="hidden md:table-cell truncate" onClick={() => onView && onView(course)}>
+                    {course.duration}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel minSize={12} defaultSize={12}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {courses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => viewCourse(e, course)}
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };

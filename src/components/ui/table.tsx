@@ -105,13 +105,19 @@ const TableCaption = React.forwardRef<
 ))
 TableCaption.displayName = "TableCaption"
 
-export {
+export { 
   Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-}
+  TableHeader, 
+  TableBody, 
+  TableFooter, 
+  TableHead, 
+  TableRow, 
+  TableCell, 
+  TableCaption 
+};
+
+export {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle
+} from './resizable'; // This allows import in other files
