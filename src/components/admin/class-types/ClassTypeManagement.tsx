@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Search } from "lucide-react";
+import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreateClassTypeForm from "./CreateClassTypeForm";
 import ClassTypeTable from "./ClassTypeTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -19,6 +20,10 @@ const ClassTypeManagement: React.FC = () => {
   const [canManageClassTypes, setCanManageClassTypes] = useState(false);
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedClassTypeIds, setSelectedClassTypeIds] = useState<string[]>([]);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [classTypeToDelete, setClassTypeToDelete] = useState<ClassType | null>(null);
 
   const [viewMode, setViewMode] = useState<"list" | "grid" | "tile">("list");
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,6 +118,98 @@ const ClassTypeManagement: React.FC = () => {
     // Add edit functionality here
   };
 
+  const handleDeleteClassType = (classType: ClassType) => {
+    setClassTypeToDelete(classType);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleViewClassType = (classType: ClassType) => {
+    console.log("View:", classType);
+    // Add view functionality here
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedClassTypeIds.length === 0) return;
+    
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('class_types')
+        .delete()
+        .in('id', selectedClassTypeIds);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Success",
+        description: `Deleted ${selectedClassTypeIds.length} class types successfully.`
+      });
+      
+      setSelectedClassTypeIds([]);
+      setIsBulkDeleteDialogOpen(false);
+      fetchClassTypes();
+    } catch (error: any) {
+      console.error("Error deleting class types:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete class types. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSingleDelete = async () => {
+    if (!classTypeToDelete) return;
+    
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('class_types')
+        .delete()
+        .eq('id', classTypeToDelete.id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Success",
+        description: `Deleted ${classTypeToDelete.name} successfully.`
+      });
+      
+      setClassTypeToDelete(null);
+      setIsDeleteDialogOpen(false);
+      fetchClassTypes();
+    } catch (error: any) {
+      console.error("Error deleting class type:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete class type. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectClassTypeId = (id: string) => {
+    setSelectedClassTypeIds(prev => 
+      prev.includes(id)
+        ? prev.filter(classTypeId => classTypeId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (ids: string[]) => {
+    setSelectedClassTypeIds(ids);
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-4">
@@ -121,7 +218,7 @@ const ClassTypeManagement: React.FC = () => {
             <CardTitle>Class Types Management</CardTitle>
             <CardDescription>Manage different types of classes</CardDescription>
           </div>
-          <div className="flex flex-row gap-2 items-center">
+          <div className="flex flex-wrap gap-2 items-center">
             <Button
               size="sm"
               variant={viewMode === 'list' ? "secondary" : "outline"}
@@ -150,6 +247,17 @@ const ClassTypeManagement: React.FC = () => {
               <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
+            {selectedClassTypeIds.length > 0 && (
+              <Button 
+                size="sm" 
+                variant="destructive" 
+                className="flex items-center gap-2"
+                onClick={() => setIsBulkDeleteDialogOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Selected ({selectedClassTypeIds.length})
+              </Button>
+            )}
             {canManageClassTypes && (
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
@@ -174,12 +282,55 @@ const ClassTypeManagement: React.FC = () => {
           classTypes={classTypes}
           loading={loading}
           onEditClassType={handleEditClassType}
-          onDeleteClassType={(classType) => console.log("Delete:", classType)}
-          onViewClassType={(classType) => console.log("View:", classType)}
+          onDeleteClassType={handleDeleteClassType}
+          onViewClassType={handleViewClassType}
           viewMode={viewMode}
           searchQuery={searchQuery}
+          selectedClassTypeIds={selectedClassTypeIds}
+          onSelectClassTypeId={handleSelectClassTypeId}
+          onSelectAll={handleSelectAll}
         />
       </CardContent>
+
+      <AlertDialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to delete {selectedClassTypeIds.length} class types. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {loading ? "Deleting..." : "Delete Selected"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to delete {classTypeToDelete?.name}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleSingleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {loading ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

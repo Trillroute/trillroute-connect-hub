@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Table,
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export interface ClassType {
   id: string;
@@ -35,6 +37,9 @@ interface ClassTypeTableProps {
   onDeleteClassType?: (classType: ClassType) => void;
   viewMode?: "list" | "grid" | "tile";
   searchQuery?: string;
+  selectedClassTypeIds?: string[];
+  onSelectClassTypeId?: (id: string) => void;
+  onSelectAll?: (ids: string[]) => void;
 }
 
 const placeholderImage = "/placeholder.svg";
@@ -47,6 +52,9 @@ const ClassTypeTable = ({
   onDeleteClassType,
   viewMode = "list",
   searchQuery = "",
+  selectedClassTypeIds = [],
+  onSelectClassTypeId,
+  onSelectAll,
 }: ClassTypeTableProps) => {
   const [localSearchTerm, setLocalSearchTerm] = useState("");
   const searchTerm = searchQuery || localSearchTerm;
@@ -67,6 +75,17 @@ const ClassTypeTable = ({
       currency: "INR",
     }).format(price);
   };
+
+  const allClassTypeIds = filteredClassTypes.map(ct => ct.id);
+  
+  const allSelected = 
+    selectedClassTypeIds.length > 0 && 
+    allClassTypeIds.length > 0 &&
+    allClassTypeIds.every(id => selectedClassTypeIds.includes(id));
+  
+  const someSelected = 
+    selectedClassTypeIds.length > 0 && 
+    !allSelected;
 
   if (loading) {
     return (
@@ -106,10 +125,20 @@ const ClassTypeTable = ({
             {filteredClassTypes.map((classType) => (
               <div 
                 key={classType.id}
-                className="bg-muted rounded-lg shadow p-4 flex flex-col transition hover:shadow-md min-h-[210px] h-full"
+                className="bg-background rounded-lg shadow border border-border p-4 flex flex-col transition hover:shadow-md min-h-[210px] h-full relative"
               >
+                {onSelectClassTypeId && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <Checkbox
+                      checked={selectedClassTypeIds.includes(classType.id)}
+                      onCheckedChange={() => onSelectClassTypeId(classType.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="flex-shrink-0 rounded overflow-hidden bg-gray-100 border w-12 h-12 flex items-center justify-center">
+                  <div className="flex-shrink-0 rounded overflow-hidden bg-muted border w-12 h-12 flex items-center justify-center">
                     {classType.image ? (
                       <img
                         src={classType.image}
@@ -127,7 +156,7 @@ const ClassTypeTable = ({
                     <div className="font-semibold truncate text-base" title={classType.name}>
                       {classType.name}
                     </div>
-                    <div className="text-xs text-gray-500 truncate" title={classType.description}>
+                    <div className="text-xs text-muted-foreground truncate" title={classType.description}>
                       {classType.description}
                     </div>
                   </div>
@@ -142,22 +171,22 @@ const ClassTypeTable = ({
                   )}
                 </div>
 
-                <div className="flex items-center text-xs text-gray-600 gap-4 mb-2">
+                <div className="flex items-center text-xs text-muted-foreground gap-4 mb-2">
                   <span>
-                    <span className="text-gray-500">Duration:</span>{" "}
+                    <span className="text-muted-foreground">Duration:</span>{" "}
                     {classType.duration_value
                       ? `${classType.duration_value} ${classType.duration_metric}`
                       : `Unlimited ${classType.duration_metric}`}
                   </span>
                   <span>|</span>
                   <span>
-                    <span className="text-gray-500">Max:</span>{" "}
+                    <span className="text-muted-foreground">Max:</span>{" "}
                     {classType.max_students}
                   </span>
                 </div>
-                <div className="flex-1" />
+                <div className="flex-1"></div>
                 <div className="flex justify-between items-end mt-2">
-                  <span className="text-sm font-semibold text-music-500">
+                  <span className="text-sm font-semibold text-primary">
                     {formatPrice(classType.price_inr)}
                   </span>
                   <div className="flex gap-1">
@@ -165,7 +194,10 @@ const ClassTypeTable = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onViewClassType(classType)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewClassType(classType);
+                        }}
                         title="View details"
                         className="h-8 w-8"
                       >
@@ -176,7 +208,10 @@ const ClassTypeTable = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onEditClassType(classType)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditClassType(classType);
+                      }}
                       title="Edit class type"
                       className="h-8 w-8"
                     >
@@ -187,7 +222,10 @@ const ClassTypeTable = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onDeleteClassType(classType)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteClassType(classType);
+                        }}
                         title="Delete class type"
                         className="h-8 w-8"
                       >
@@ -233,10 +271,20 @@ const ClassTypeTable = ({
             {filteredClassTypes.map((classType) => (
               <div
                 key={classType.id}
-                className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center justify-between min-h-[200px]"
+                className="w-56 bg-background rounded-lg shadow border border-border p-4 flex flex-col items-center justify-between min-h-[200px] relative"
               >
+                {onSelectClassTypeId && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <Checkbox
+                      checked={selectedClassTypeIds.includes(classType.id)}
+                      onCheckedChange={() => onSelectClassTypeId(classType.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
+                
                 <div className="mb-2 w-full flex flex-col items-center">
-                  <div className="rounded bg-gray-100 border w-12 h-12 flex items-center justify-center mb-2 overflow-hidden">
+                  <div className="rounded bg-muted border w-12 h-12 flex items-center justify-center mb-2 overflow-hidden">
                     {classType.image ? (
                       <img
                         src={classType.image}
@@ -253,7 +301,7 @@ const ClassTypeTable = ({
                   <div className="font-semibold text-base truncate w-full text-center" title={classType.name}>
                     {classType.name}
                   </div>
-                  <div className="text-xs text-gray-500 text-center truncate w-full" title={classType.description}>
+                  <div className="text-xs text-muted-foreground text-center truncate w-full" title={classType.description}>
                     {classType.description}
                   </div>
                   {classType.location && (
@@ -267,16 +315,16 @@ const ClassTypeTable = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center gap-1 w-full">
-                  <span className="text-xs text-gray-600">
-                    <span className="text-gray-500">Duration:</span>{" "}
+                  <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground">Duration:</span>{" "}
                     {classType.duration_value
                       ? `${classType.duration_value} ${classType.duration_metric}`
                       : `Unlimited ${classType.duration_metric}`}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     Max: {classType.max_students}
                   </span>
-                  <span className="text-sm font-semibold text-music-500">
+                  <span className="text-sm font-semibold text-primary">
                     {formatPrice(classType.price_inr)}
                   </span>
                 </div>
@@ -285,7 +333,10 @@ const ClassTypeTable = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onViewClassType(classType)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewClassType(classType);
+                      }}
                       className="h-8 w-8"
                       title="View"
                     >
@@ -295,7 +346,10 @@ const ClassTypeTable = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onEditClassType(classType)}
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      onEditClassType(classType);
+                    }}
                     className="h-8 w-8"
                     title="Edit"
                   >
@@ -305,7 +359,10 @@ const ClassTypeTable = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onDeleteClassType(classType)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteClassType(classType);
+                      }}
                       className="h-8 w-8"
                       title="Delete"
                     >
@@ -348,6 +405,21 @@ const ClassTypeTable = ({
           <Table>
             <TableHeader>
               <TableRow>
+                {onSelectClassTypeId && (
+                  <TableHead className="w-6">
+                    <Checkbox 
+                      checked={allSelected ? true : (someSelected ? "indeterminate" : false)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          onSelectAll?.(allClassTypeIds);
+                        } else {
+                          onSelectAll?.([]);
+                        }
+                      }}
+                      aria-label="Select all class types"
+                    />
+                  </TableHead>
+                )}
                 <TableHead className="w-[250px]">Name</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Max Students</TableHead>
@@ -360,11 +432,19 @@ const ClassTypeTable = ({
             <TableBody>
               {filteredClassTypes.map((classType) => (
                 <TableRow key={classType.id} className="h-[80px]">
+                  {onSelectClassTypeId && (
+                    <TableCell className="w-6">
+                      <Checkbox 
+                        checked={selectedClassTypeIds.includes(classType.id)}
+                        onCheckedChange={() => onSelectClassTypeId(classType.id)}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium">
                     <div className="truncate max-w-[200px]" title={classType.name}>
                       {classType.name}
                     </div>
-                    <div className="text-xs text-gray-500 truncate max-w-[200px]" title={classType.description}>
+                    <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={classType.description}>
                       {classType.description}
                     </div>
                   </TableCell>
@@ -381,7 +461,7 @@ const ClassTypeTable = ({
                         {classType.location}
                       </Badge>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -397,7 +477,7 @@ const ClassTypeTable = ({
                         />
                       </div>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
