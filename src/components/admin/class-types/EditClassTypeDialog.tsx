@@ -40,6 +40,7 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageType, setImageType] = useState<"file" | "url">(classType?.image ? (classType.image.startsWith("http") ? "url" : "file") : "file");
   const [imagePreview, setImagePreview] = useState<string | null>(classType?.image || null);
 
   React.useEffect(() => {
@@ -56,6 +57,7 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
       });
       setImagePreview(classType.image || null);
       setImageFile(null);
+      setImageType(classType.image ? (classType.image.startsWith("http") ? "url" : "file") : "file");
     }
   }, [classType]);
 
@@ -69,19 +71,33 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
     }));
   };
 
+  const handleImageTypeChange = (type: "file" | "url") => {
+    setImageType(type);
+    setForm((f) => ({ ...f, image: "" }));
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setImageFile(e.target.files[0]);
       setImagePreview(URL.createObjectURL(e.target.files[0]));
+      setForm((prev) => ({ ...prev, image: "" }));
     }
+  };
+
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, image: e.target.value }));
+    setImageFile(null);
+    setImagePreview(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     let uploadedImageUrl = form.image;
-    if (imageFile) {
+    if (imageType === "file" && imageFile) {
       try {
         const url = await uploadFile(imageFile, "class-types");
         if (!url) {
@@ -273,13 +289,40 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
             </div>
             <div>
               <label className="text-sm">Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                name="image"
-                onChange={handleImageChange}
-                className="block w-full text-sm"
-              />
+              <div className="flex space-x-2 mb-2">
+                <button
+                  type="button"
+                  className={`px-2 py-1 rounded ${imageType === "file" ? "bg-music-500 text-white" : "bg-gray-200"}`}
+                  onClick={() => handleImageTypeChange("file")}
+                >
+                  Upload File
+                </button>
+                <button
+                  type="button"
+                  className={`px-2 py-1 rounded ${imageType === "url" ? "bg-music-500 text-white" : "bg-gray-200"}`}
+                  onClick={() => handleImageTypeChange("url")}
+                >
+                  Use Image URL
+                </button>
+              </div>
+              {imageType === "file" ? (
+                <input
+                  type="file"
+                  accept="image/*"
+                  name="image"
+                  onChange={handleImageChange}
+                  className="block w-full text-sm"
+                />
+              ) : (
+                <Input
+                  type="text"
+                  name="image"
+                  placeholder="Paste the image URL..."
+                  value={form.image}
+                  onChange={handleImageUrlChange}
+                  className="block w-full text-sm"
+                />
+              )}
               {imagePreview && (
                 <img src={imagePreview} alt="Preview" className="mt-2 rounded w-24 h-24 object-cover border" />
               )}

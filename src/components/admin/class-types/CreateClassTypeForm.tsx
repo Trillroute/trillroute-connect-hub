@@ -33,26 +33,42 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
     max_students: "",
     price_inr: "",
     location: LOCATION_OPTIONS[0],
+    image: "",
   });
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageType, setImageType] = useState<"file" | "url">("file");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   };
 
+  const handleImageTypeChange = (type: "file" | "url") => {
+    setImageType(type);
+    setForm((f) => ({ ...f, image: "" }));
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setImageFile(e.target.files[0]);
       setImagePreview(URL.createObjectURL(e.target.files[0]));
+      setForm((f) => ({ ...f, image: "" }));
     }
+  };
+
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((f) => ({ ...f, image: e.target.value }));
+    setImageFile(null);
+    setImagePreview(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -61,7 +77,7 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
       });
       return;
     }
-    
+
     setLoading(true);
 
     if (!form.name.trim() || !form.description.trim() || !form.duration_metric || !form.max_students || !form.price_inr) {
@@ -74,8 +90,8 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
       return;
     }
 
-    let uploadedImageUrl = null;
-    if (imageFile) {
+    let uploadedImageUrl = form.image || null;
+    if (imageType === "file" && imageFile) {
       try {
         const url = await uploadFile(imageFile, "class-types");
         if (!url) {
@@ -138,9 +154,11 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
         max_students: "",
         price_inr: "",
         location: LOCATION_OPTIONS[0],
+        image: "",
       });
       setImageFile(null);
       setImagePreview(null);
+      setImageType("file");
       if (onCreated) onCreated();
     }
     setLoading(false);
@@ -242,17 +260,43 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1" htmlFor="image">
-          Class Image (optional)
-        </label>
-        <input
-          id="image"
-          name="image"
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="block w-full text-sm"
-        />
+        <label className="block text-sm font-medium mb-1">Class Image (optional)</label>
+        <div className="flex space-x-2 mb-2">
+          <button
+            type="button"
+            className={`px-2 py-1 rounded ${imageType === "file" ? "bg-music-500 text-white" : "bg-gray-200"}`}
+            onClick={() => handleImageTypeChange("file")}
+          >
+            Upload File
+          </button>
+          <button
+            type="button"
+            className={`px-2 py-1 rounded ${imageType === "url" ? "bg-music-500 text-white" : "bg-gray-200"}`}
+            onClick={() => handleImageTypeChange("url")}
+          >
+            Use Image URL
+          </button>
+        </div>
+        {imageType === "file" ? (
+          <input
+            id="image"
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="block w-full text-sm"
+          />
+        ) : (
+          <Input
+            id="image-url"
+            name="image"
+            type="text"
+            placeholder="Paste the image URL..."
+            value={form.image}
+            onChange={handleImageUrlChange}
+            className="block w-full text-sm"
+          />
+        )}
         {imagePreview && (
           <img src={imagePreview} alt="Preview" className="mt-2 rounded w-24 h-24 object-cover border" />
         )}
