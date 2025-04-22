@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,11 @@ interface EditClassTypeDialogProps {
   onSuccess: () => void;
 }
 
+const LOCATION_OPTIONS = [
+  "Trill Route, Indiranagar",
+  "Online",
+];
+
 const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
   open,
   onOpenChange,
@@ -28,6 +32,7 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
     duration_value: classType?.duration_value || 0,
     max_students: classType?.max_students || 1,
     price_inr: classType?.price_inr || 0,
+    location: classType?.location || LOCATION_OPTIONS[0],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -41,11 +46,12 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
         duration_value: classType.duration_value ?? 0,
         max_students: classType.max_students,
         price_inr: classType.price_inr,
+        location: classType.location || LOCATION_OPTIONS[0],
       });
     }
   }, [classType]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
@@ -70,6 +76,7 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
           duration_value: form.duration_value,
           max_students: form.max_students,
           price_inr: form.price_inr,
+          location: form.location,
         })
         .eq("id", classType?.id);
 
@@ -185,6 +192,19 @@ const EditClassTypeDialog: React.FC<EditClassTypeDialogProps> = ({
                   min={1}
                 />
               </div>
+            </div>
+            <div>
+              <label className="text-sm">Location</label>
+              <select
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                className="w-full border rounded-md text-sm px-2 py-2 mt-1"
+              >
+                {LOCATION_OPTIONS.map((loc) => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
             </div>
             <div className="flex gap-2">
               <div className="flex-1">

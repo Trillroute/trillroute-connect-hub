@@ -172,7 +172,14 @@ const LevelManagement = ({
   const effectiveCanDelete = canDeleteLevel && isSuperAdmin();
 
   const allLevelIds = levels.map(l => l.id);
-  const allSelected = selectedIds.length > 0 && allLevelIds.length > 0 && allLevelIds.every(id => selectedIds.includes(id));
+  const allSelected = selectedIds.length > 0 && levels.length > 0 && levels.every(lvl => selectedIds.includes(lvl.id));
+  const toggleSelectAll = () => {
+    if (allSelected) setSelectedIds([]);
+    else setSelectedIds(levels.map(lvl => lvl.id));
+  };
+  const toggleSelectOne = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
 
   return (
     <Card>
@@ -231,22 +238,132 @@ const LevelManagement = ({
         </div>
       </CardHeader>
       <CardContent>
-        <LevelTable
-          levels={levels}
-          isLoading={isLoading}
-          onEditLevel={(level) => {
-            if (effectiveCanEdit) {
-              openEditPermissionsDialog(level);
-            } else {
-              openViewPermissionsDialog(level);
-            }
-          }}
-          onDeleteLevel={openDeleteDialog}
-          onViewPermissions={openViewPermissionsDialog}
-          viewMode={viewMode}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
-        />
+        <div>
+          {viewMode === 'list' && (
+            <table className="w-full mb-3">
+              <thead>
+                <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {levels.map(level => (
+                  <tr key={level.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(level.id)}
+                        onChange={() => toggleSelectOne(level.id)}
+                        aria-label={`Select level ${level.name}`}
+                      />
+                    </td>
+                    <td>{level.name}</td>
+                    <td className="truncate max-w-xs">{level.description}</td>
+                    <td>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => effectiveCanEdit ? openEditPermissionsDialog(level) : openViewPermissionsDialog(level)}
+                      >
+                        Edit
+                      </Button>
+                      {effectiveCanDelete && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="ml-2"
+                          onClick={() => openDeleteDialog(level)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {viewMode === 'grid' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-3">
+              {levels.map(level => (
+                <div key={level.id} className="relative border rounded p-4 shadow bg-gray-50">
+                  <input
+                    type="checkbox"
+                    className="absolute top-2 right-2"
+                    checked={selectedIds.includes(level.id)}
+                    onChange={() => toggleSelectOne(level.id)}
+                    aria-label={`Select level ${level.name}`}
+                  />
+                  <div className="font-bold text-lg">{level.name}</div>
+                  <div className="text-sm text-gray-600 mb-2">{level.description}</div>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => effectiveCanEdit ? openEditPermissionsDialog(level) : openViewPermissionsDialog(level)}
+                    >
+                      Edit
+                    </Button>
+                    {effectiveCanDelete && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => openDeleteDialog(level)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {viewMode === 'tile' && (
+            <div className="flex flex-wrap gap-4 mb-3">
+              {levels.map(level => (
+                <div key={level.id} className="w-60 border rounded p-4 flex flex-col items-center shadow bg-gray-50 relative">
+                  <input
+                    type="checkbox"
+                    className="absolute top-2 right-2"
+                    checked={selectedIds.includes(level.id)}
+                    onChange={() => toggleSelectOne(level.id)}
+                    aria-label={`Select level ${level.name}`}
+                  />
+                  <div className="font-bold text-lg mb-2">{level.name}</div>
+                  <div className="text-xs text-gray-600 mb-4 text-center line-clamp-3">{level.description}</div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => effectiveCanEdit ? openEditPermissionsDialog(level) : openViewPermissionsDialog(level)}
+                    >
+                      Edit
+                    </Button>
+                    {effectiveCanDelete && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => openDeleteDialog(level)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <CreateLevelDialog
           isOpen={isCreateDialogOpen}

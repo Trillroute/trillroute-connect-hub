@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +16,11 @@ const DURATION_METRICS = [
   "unlimited"
 ] as const;
 
+const LOCATION_OPTIONS = [
+  "Trill Route, Indiranagar",
+  "Online",
+];
+
 const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -26,7 +30,8 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
     duration_metric: "minutes",
     duration_value: "",
     max_students: "",
-    price_inr: ""
+    price_inr: "",
+    location: LOCATION_OPTIONS[0],
   });
   const [loading, setLoading] = useState(false);
 
@@ -65,7 +70,8 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
       duration_metric: form.duration_metric,
       duration_value: form.duration_value ? Number(form.duration_value) : null,
       max_students: Number(form.max_students),
-      price_inr: Number(form.price_inr)
+      price_inr: Number(form.price_inr),
+      location: form.location,
     };
 
     console.log("Creating class type with data:", classTypeData);
@@ -93,7 +99,8 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
         duration_metric: "minutes",
         duration_value: "",
         max_students: "",
-        price_inr: ""
+        price_inr: "",
+        location: LOCATION_OPTIONS[0],
       });
       if (onCreated) onCreated();
     }
@@ -180,6 +187,20 @@ const CreateClassTypeForm = ({ onCreated }: { onCreated?: () => void }) => {
           placeholder="e.g. 500"
           min="0"
         />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1" htmlFor="location">Location</label>
+        <select
+          id="location"
+          name="location"
+          value={form.location}
+          onChange={handleChange}
+          className="w-full border rounded-md text-sm px-2 py-2"
+        >
+          {LOCATION_OPTIONS.map((loc) => (
+            <option key={loc} value={loc}>{loc}</option>
+          ))}
+        </select>
       </div>
       <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Creating..." : "Create Class Type"}

@@ -52,6 +52,7 @@ export type Database = {
           duration_metric: string
           duration_value: number | null
           id: string
+          location: string
           max_students: number
           name: string
           price_inr: number
@@ -62,6 +63,7 @@ export type Database = {
           duration_metric: string
           duration_value?: number | null
           id?: string
+          location?: string
           max_students: number
           name: string
           price_inr: number
@@ -72,6 +74,7 @@ export type Database = {
           duration_metric?: string
           duration_value?: number | null
           id?: string
+          location?: string
           max_students?: number
           name?: string
           price_inr?: number
