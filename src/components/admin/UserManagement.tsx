@@ -157,9 +157,14 @@ const UserManagement = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const openEditAdminLevelDialog = (admin: UserManagementUser) => {
-    setAdminToEdit(admin);
-    setIsEditAdminLevelDialogOpen(true);
+  const handleDeleteFromView = () => {
+    if (userToView) {
+      setUserToDelete(userToView);
+      setIsViewDialogOpen(false);
+      setTimeout(() => {
+        setIsDeleteDialogOpen(true);
+      }, 100);
+    }
   };
 
   const canUserBeDeleted = (user: UserManagementUser) => {
@@ -230,6 +235,8 @@ const UserManagement = ({
           user={userToView}
           isOpen={isViewDialogOpen}
           onOpenChange={setIsViewDialogOpen}
+          onDeleteUser={handleDeleteFromView}
+          canDeleteUser={userToView ? canUserBeDeleted(userToView) : false}
         />
 
         <EditAdminLevelDialog

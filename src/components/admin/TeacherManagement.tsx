@@ -190,6 +190,16 @@ const TeacherManagement = ({
     setIsDeleteDialogOpen(true);
   };
 
+  const handleDeleteFromView = () => {
+    if (teacherToView && canDeleteUser) {
+      setTeacherToDelete(teacherToView);
+      setIsViewDialogOpen(false);
+      setTimeout(() => {
+        setIsDeleteDialogOpen(true);
+      }, 100);
+    }
+  };
+
   const canTeacherBeDeleted = (teacher: UserManagementUser) => {
     if (!canDeleteUser) return false;
     return true;
@@ -261,6 +271,8 @@ const TeacherManagement = ({
           isOpen={isViewDialogOpen}
           onOpenChange={setIsViewDialogOpen}
           onEditFromView={canEditUser ? handleEditFromView : undefined}
+          onDeleteUser={canDeleteUser ? handleDeleteFromView : undefined}
+          canDeleteUser={canDeleteUser}
         />
       </CardContent>
     </Card>
