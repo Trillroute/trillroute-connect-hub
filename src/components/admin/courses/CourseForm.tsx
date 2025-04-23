@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -75,6 +76,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
     form.handleSubmit(onSubmit)(e);
   };
 
+  // Initialize instructors field with empty array if undefined
   useEffect(() => {
     const instructorsValue = form.watch('instructors');
     if (instructorsValue === undefined) {
@@ -156,32 +158,39 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   <Command>
                     <CommandInput placeholder="Search instructors..." />
                     <CommandEmpty>No instructor found.</CommandEmpty>
-                    <ScrollArea className="h-60">
-                      <CommandGroup>
-                        {teachers.map((teacher) => (
-                          <CommandItem
-                            key={teacher.id}
-                            onSelect={() => {
-                              const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                              const newValue = currentValues.includes(teacher.id)
-                                ? currentValues.filter(id => id !== teacher.id)
-                                : [...currentValues, teacher.id];
-                              field.onChange(newValue);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                field.value && field.value.includes(teacher.id)
-                                  ? "opacity-100"
-                                  : "opacity-0"
-                              )}
-                            />
-                            {teacher.first_name} {teacher.last_name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </ScrollArea>
+                    {teachers.length > 0 && (
+                      <ScrollArea className="h-60">
+                        <CommandGroup>
+                          {teachers.map((teacher) => (
+                            <CommandItem
+                              key={teacher.id}
+                              onSelect={() => {
+                                const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                                const newValue = currentValues.includes(teacher.id)
+                                  ? currentValues.filter(id => id !== teacher.id)
+                                  : [...currentValues, teacher.id];
+                                field.onChange(newValue);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  field.value && field.value.includes(teacher.id)
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {teacher.first_name} {teacher.last_name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </ScrollArea>
+                    )}
+                    {teachers.length === 0 && (
+                      <div className="py-6 text-center text-sm">
+                        No instructors available
+                      </div>
+                    )}
                   </Command>
                 </PopoverContent>
               </Popover>
