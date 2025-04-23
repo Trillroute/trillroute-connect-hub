@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -162,9 +161,9 @@ const CourseForm: React.FC<CourseFormProps> = ({
                     <Command>
                       <CommandInput placeholder="Search instructors..." />
                       <CommandEmpty>No instructor found.</CommandEmpty>
-                      {teachers.length > 0 && (
-                        <ScrollArea className="h-60">
-                          <CommandGroup>
+                      <CommandGroup>
+                        {teachers && teachers.length > 0 ? (
+                          <ScrollArea className="h-60">
                             {teachers.map((teacher) => (
                               <CommandItem
                                 key={teacher.id}
@@ -187,14 +186,13 @@ const CourseForm: React.FC<CourseFormProps> = ({
                                 {teacher.first_name} {teacher.last_name}
                               </CommandItem>
                             ))}
-                          </CommandGroup>
-                        </ScrollArea>
-                      )}
-                      {teachers.length === 0 && (
-                        <div className="py-6 text-center text-sm">
-                          No instructors available
-                        </div>
-                      )}
+                          </ScrollArea>
+                        ) : (
+                          <div className="py-6 text-center text-sm">
+                            No instructors available
+                          </div>
+                        )}
+                      </CommandGroup>
                     </Command>
                   </PopoverContent>
                 </Popover>
