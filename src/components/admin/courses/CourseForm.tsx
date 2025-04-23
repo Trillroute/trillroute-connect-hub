@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
   FormField, FormItem, FormLabel, FormControl, 
@@ -18,6 +18,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import ClassTypesSelector from './ClassTypesSelector';
 import { ClassTypeData } from '@/types/course';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export interface CourseFormValues {
   title: string;
@@ -49,6 +61,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
   submitButtonText = "Submit",
   cancelAction
 }) => {
+  const [open, setOpen] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     form.handleSubmit(onSubmit)(e);
@@ -114,43 +128,53 @@ const CourseForm: React.FC<CourseFormProps> = ({
               <FormDescription>
                 Select the instructors for this course
               </FormDescription>
-              <Card>
-                <ScrollArea className="h-60">
-                  <CardContent className="pt-4 space-y-2">
-                    {teachers.length === 0 ? (
-                      <div className="text-center text-muted-foreground">
-                        No teachers available
-                      </div>
-                    ) : (
-                      teachers.map((teacher) => (
-                        <div key={teacher.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`teacher-${teacher.id}`}
-                            checked={field.value?.includes(teacher.id)}
-                            onCheckedChange={(checked) => {
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between"
+                  >
+                    {field.value?.length > 0
+                      ? `${field.value.length} instructor${field.value.length === 1 ? "" : "s"} selected`
+                      : "Select instructors..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput placeholder="Search instructors..." />
+                    <CommandEmpty>No instructor found.</CommandEmpty>
+                    <ScrollArea className="h-60">
+                      <CommandGroup>
+                        {teachers.map((teacher) => (
+                          <CommandItem
+                            key={teacher.id}
+                            onSelect={() => {
                               const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                              
-                              if (checked) {
-                                if (!currentValues.includes(teacher.id)) {
-                                  field.onChange([...currentValues, teacher.id]);
-                                }
-                              } else {
-                                field.onChange(currentValues.filter(id => id !== teacher.id));
-                              }
+                              const newValue = currentValues.includes(teacher.id)
+                                ? currentValues.filter(id => id !== teacher.id)
+                                : [...currentValues, teacher.id];
+                              field.onChange(newValue);
                             }}
-                          />
-                          <Label 
-                            htmlFor={`teacher-${teacher.id}`}
-                            className="cursor-pointer"
                           >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                field.value?.includes(teacher.id)
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
                             {teacher.first_name} {teacher.last_name}
-                          </Label>
-                        </div>
-                      ))
-                    )}
-                  </CardContent>
-                </ScrollArea>
-              </Card>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </ScrollArea>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
