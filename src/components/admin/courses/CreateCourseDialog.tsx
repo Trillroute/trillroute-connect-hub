@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -37,6 +36,13 @@ const courseSchema = z.object({
     class_type_id: z.string(),
     quantity: z.number()
   })).optional(),
+  base_price: z.number().min(0, { message: "Base price must be 0 or greater" }),
+  is_gst_applicable: z.boolean(),
+  gst_rate: z.number().min(0).max(100).optional(),
+  discount_metric: z.enum(["percentage", "fixed"]),
+  discount_value: z.number().min(0).optional(),
+  discount_validity: z.string().optional(),
+  discount_code: z.string().optional(),
 }).refine((data) => {
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
@@ -45,6 +51,14 @@ const courseSchema = z.object({
 }, {
   message: "Duration value and metric are required for fixed duration courses",
   path: ["durationValue"]
+}).refine((data) => {
+  if (data.is_gst_applicable) {
+    return !!data.gst_rate;
+  }
+  return true;
+}, {
+  message: "GST rate is required when GST is applicable",
+  path: ["gst_rate"]
 });
 
 const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenChange, onSuccess }) => {
@@ -81,6 +95,13 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       image: '',
       instructors: [],
       class_types_data: [],
+      base_price: 0,
+      is_gst_applicable: false,
+      gst_rate: 0,
+      discount_metric: 'percentage',
+      discount_value: 0,
+      discount_validity: '',
+      discount_code: '',
     }
   });
 
@@ -104,9 +125,19 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       } else {
         duration = 'Recurring';
       }
+
+      let finalPrice = data.base_price;
+      if (data.is_gst_applicable && data.gst_rate) {
+        finalPrice += (finalPrice * data.gst_rate) / 100;
+      }
       
-      console.log('Creating course with instructors:', data.instructors);
-      console.log('Creating course with class types:', data.class_types_data);
+      if (data.discount_value && data.discount_value > 0) {
+        if (data.discount_metric === 'percentage') {
+          finalPrice -= (finalPrice * data.discount_value) / 100;
+        } else {
+          finalPrice -= data.discount_value;
+        }
+      }
       
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
@@ -121,8 +152,15 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           students: 0,
           student_ids: [],
-          // Convert ClassTypeData[] to Json for Supabase
-          class_types_data: data.class_types_data || [] as any,
+          class_types_data: data.class_types_data || [],
+          base_price: data.base_price,
+          is_gst_applicable: data.is_gst_applicable,
+          gst_rate: data.is_gst_applicable ? data.gst_rate : 0,
+          final_price: finalPrice,
+          discount_metric: data.discount_metric,
+          discount_value: data.discount_value || 0,
+          discount_validity: data.discount_validity || null,
+          discount_code: data.discount_code || null,
         })
         .select()
         .single();

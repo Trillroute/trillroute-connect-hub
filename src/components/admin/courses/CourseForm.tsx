@@ -26,6 +26,13 @@ export interface CourseFormValues {
   image: string;
   instructors: string[];
   class_types_data?: ClassTypeData[];
+  base_price: number;
+  is_gst_applicable: boolean;
+  gst_rate?: number;
+  discount_metric: "percentage" | "fixed";
+  discount_value?: number;
+  discount_validity?: string;
+  discount_code?: string;
 }
 
 interface CourseFormProps {
@@ -48,6 +55,28 @@ const CourseForm: React.FC<CourseFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     form.handleSubmit(onSubmit)(e);
+  };
+
+  const watchBasePrice = form.watch('base_price');
+  const watchIsGstApplicable = form.watch('is_gst_applicable');
+  const watchGstRate = form.watch('gst_rate');
+  const watchDiscountValue = form.watch('discount_value');
+  const watchDiscountMetric = form.watch('discount_metric');
+
+  const calculateFinalPrice = () => {
+    let finalPrice = Number(watchBasePrice) || 0;
+    if (watchIsGstApplicable && watchGstRate) {
+      finalPrice += (finalPrice * Number(watchGstRate)) / 100;
+    }
+    
+    if (watchDiscountValue && watchDiscountValue > 0) {
+      if (watchDiscountMetric === 'percentage') {
+        finalPrice -= (finalPrice * Number(watchDiscountValue)) / 100;
+      } else {
+        finalPrice -= Number(watchDiscountValue);
+      }
+    }
+    return finalPrice.toFixed(2);
   };
 
   return (
@@ -279,6 +308,163 @@ const CourseForm: React.FC<CourseFormProps> = ({
             </FormItem>
           )}
         />
+
+        <div className="space-y-6 border-t pt-6">
+          <h3 className="text-lg font-semibold text-gray-900">Pricing Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="base_price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Base Price (₹) *</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      step="0.01"
+                      placeholder="Enter base price"
+                      {...field}
+                      onChange={e => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="is_gst_applicable"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel className="text-sm font-semibold">GST Applicable</FormLabel>
+                </FormItem>
+              )}
+            />
+
+            {form.watch('is_gst_applicable') && (
+              <FormField
+                control={form.control}
+                name="gst_rate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold">GST Rate (%) *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        placeholder="Enter GST rate"
+                        {...field}
+                        onChange={e => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+
+          <div className="pt-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">Final Price (after GST):</p>
+              <p className="text-xl font-semibold text-gray-900">₹{calculateFinalPrice()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 border-t pt-6">
+          <h3 className="text-lg font-semibold text-gray-900">Discount Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="discount_metric"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Discount Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select discount type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="discount_value"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">
+                    Discount Value ({form.watch('discount_metric') === 'percentage' ? '%' : '₹'})
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number"
+                      min="0"
+                      step={form.watch('discount_metric') === 'percentage' ? "1" : "0.01"}
+                      placeholder={`Enter discount ${form.watch('discount_metric') === 'percentage' ? 'percentage' : 'amount'}`}
+                      {...field}
+                      onChange={e => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="discount_validity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Discount Valid Until</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="datetime-local"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="discount_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Discount Code</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter discount code"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         <div className="pt-6 flex justify-end gap-2 border-t">
           {cancelAction && (

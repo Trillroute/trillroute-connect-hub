@@ -86,14 +86,22 @@ export type Database = {
       }
       courses: {
         Row: {
+          base_price: number | null
           class_types_data: Json | null
           created_at: string
           description: string
+          discount_code: string | null
+          discount_metric: string | null
+          discount_validity: string | null
+          discount_value: number | null
           duration: string
           duration_type: string
+          final_price: number | null
+          gst_rate: number | null
           id: string
           image: string
           instructor_ids: string[] | null
+          is_gst_applicable: boolean | null
           level: string
           skill: string
           student_ids: string[] | null
@@ -101,14 +109,22 @@ export type Database = {
           title: string
         }
         Insert: {
+          base_price?: number | null
           class_types_data?: Json | null
           created_at?: string
           description: string
+          discount_code?: string | null
+          discount_metric?: string | null
+          discount_validity?: string | null
+          discount_value?: number | null
           duration: string
           duration_type?: string
+          final_price?: number | null
+          gst_rate?: number | null
           id?: string
           image: string
           instructor_ids?: string[] | null
+          is_gst_applicable?: boolean | null
           level: string
           skill: string
           student_ids?: string[] | null
@@ -116,14 +132,22 @@ export type Database = {
           title: string
         }
         Update: {
+          base_price?: number | null
           class_types_data?: Json | null
           created_at?: string
           description?: string
+          discount_code?: string | null
+          discount_metric?: string | null
+          discount_validity?: string | null
+          discount_value?: number | null
           duration?: string
           duration_type?: string
+          final_price?: number | null
+          gst_rate?: number | null
           id?: string
           image?: string
           instructor_ids?: string[] | null
+          is_gst_applicable?: boolean | null
           level?: string
           skill?: string
           student_ids?: string[] | null
