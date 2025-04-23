@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -152,7 +153,8 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           students: 0,
           student_ids: [],
-          class_types_data: data.class_types_data || [],
+          // Cast class_types_data to any to resolve the type error
+          class_types_data: data.class_types_data ? data.class_types_data as any : [],
           base_price: data.base_price,
           is_gst_applicable: data.is_gst_applicable,
           gst_rate: data.is_gst_applicable ? data.gst_rate : 0,
