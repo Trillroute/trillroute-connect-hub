@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
   FormField, FormItem, FormLabel, FormControl, 
@@ -12,9 +13,6 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Teacher } from '@/types/course';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
 import ClassTypesSelector from './ClassTypesSelector';
 import { ClassTypeData } from '@/types/course';
 
@@ -252,28 +250,33 @@ const CourseForm: React.FC<CourseFormProps> = ({
           control={form.control}
           name="instructors"
           render={({ field }) => (
-            <FormItem className="space-y-2">
+            <FormItem className="flex flex-col">
               <FormLabel>Course Instructors</FormLabel>
-              <div className="flex flex-col space-y-4">
-                <ScrollArea className="h-[200px] rounded-md border p-4">
+              <Select
+                onValueChange={(value) => {
+                  // Split the comma-separated string into an array and remove empty values
+                  const selectedIds = value.split(',').filter(id => id);
+                  field.onChange(selectedIds);
+                }}
+                defaultValue={field.value?.join(',')}
+                value={field.value?.join(',')}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select teachers" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
                   {teachers.map((teacher) => (
-                    <div key={teacher.id} className="flex items-center space-x-2 py-2">
-                      <Checkbox
-                        checked={field.value?.includes(teacher.id)}
-                        onCheckedChange={(checked) => {
-                          const updatedValue = checked
-                            ? [...(field.value || []), teacher.id]
-                            : (field.value || []).filter((id) => id !== teacher.id);
-                          field.onChange(updatedValue);
-                        }}
-                      />
-                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        {teacher.first_name} {teacher.last_name}
-                      </label>
-                    </div>
+                    <SelectItem 
+                      key={teacher.id} 
+                      value={teacher.id}
+                    >
+                      {teacher.first_name} {teacher.last_name}
+                    </SelectItem>
                   ))}
-                </ScrollArea>
-              </div>
+                </SelectContent>
+              </Select>
               <FormDescription>
                 Select one or more teachers for this course
               </FormDescription>
