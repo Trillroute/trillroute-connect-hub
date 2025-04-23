@@ -1,4 +1,3 @@
-
 export interface Course {
   id: string;
   title: string;
@@ -12,7 +11,6 @@ export interface Course {
   created_at: string;
   instructor_ids: string[];
   student_ids?: string[];
-  // Add the new field:
   class_types_data?: ClassTypeData[];
 }
 
@@ -23,10 +21,11 @@ export interface Teacher {
   email: string;
 }
 
-// For the class_types_data field.
 export interface ClassTypeData {
   class_type_id: string;
   quantity: number;
+  duration_value?: number;
+  duration_metric?: string;
 }
 
 export interface CourseInstructor {

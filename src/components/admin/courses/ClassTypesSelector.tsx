@@ -1,10 +1,14 @@
 
 import React from 'react';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Minus, Plus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ClassTypeData } from '@/types/course';
 import { useClassTypes } from '@/hooks/useClassTypes';
 
@@ -16,81 +20,118 @@ interface ClassTypesSelectorProps {
 const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange }) => {
   const { classTypes = [] } = useClassTypes();
 
-  const handleQuantityChange = (classTypeId: string, newQuantity: number) => {
+  const handleChange = (classTypeId: string, field: 'quantity' | 'duration_value' | 'duration_metric', newValue: string | number) => {
     const currentValue = [...value];
     const existingIndex = currentValue.findIndex(ct => ct.class_type_id === classTypeId);
 
-    if (newQuantity <= 0) {
-      // Remove the class type if quantity is 0 or negative
+    if (field === 'quantity' && Number(newValue) <= 0) {
       if (existingIndex !== -1) {
         currentValue.splice(existingIndex, 1);
       }
     } else {
-      // Update or add the class type
       if (existingIndex !== -1) {
-        currentValue[existingIndex].quantity = newQuantity;
+        currentValue[existingIndex] = {
+          ...currentValue[existingIndex],
+          [field]: field === 'duration_metric' ? newValue : Number(newValue),
+        };
       } else {
-        currentValue.push({ class_type_id: classTypeId, quantity: newQuantity });
+        currentValue.push({ 
+          class_type_id: classTypeId, 
+          quantity: field === 'quantity' ? Number(newValue) : 1,
+          duration_value: field === 'duration_value' ? Number(newValue) : 0,
+          duration_metric: field === 'duration_metric' ? String(newValue) : 'minutes',
+        });
       }
     }
 
     onChange(currentValue);
   };
 
-  const getQuantityForClassType = (classTypeId: string): number => {
-    return value.find(ct => ct.class_type_id === classTypeId)?.quantity || 0;
+  const getValueForClassType = (classTypeId: string, field: 'quantity' | 'duration_value' | 'duration_metric'): string | number => {
+    const classType = value.find(ct => ct.class_type_id === classTypeId);
+    if (!classType) return field === 'duration_metric' ? 'minutes' : 0;
+    return classType[field] || (field === 'duration_metric' ? 'minutes' : 0);
   };
 
   return (
     <div className="space-y-4">
       <Label>Select Class Types for this Course</Label>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-4">
         {classTypes.map((classType) => {
-          const quantity = getQuantityForClassType(classType.id);
+          const quantity = getValueForClassType(classType.id, 'quantity');
+          const durationValue = getValueForClassType(classType.id, 'duration_value');
+          const durationMetric = getValueForClassType(classType.id, 'duration_metric');
+
           return (
-            <Card key={classType.id} className={`${quantity > 0 ? 'border-music-500' : ''}`}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{classType.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">
-                    {classType.duration_value} {classType.duration_metric}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    ₹{classType.price_inr} • Max {classType.max_students} students
-                  </div>
-                  <div className="flex items-center space-x-2 mt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuantityChange(classType.id, quantity - 1)}
-                      disabled={quantity === 0}
+            <div key={classType.id} className="border p-4 rounded-lg space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">{classType.name}</h3>
+                  <p className="text-sm text-muted-foreground">₹{classType.price_inr} • Max {classType.max_students} students</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={`quantity-${classType.id}`}>Quantity:</Label>
+                  <Select
+                    value={String(quantity)}
+                    onValueChange={(val) => handleChange(classType.id, 'quantity', val)}
+                  >
+                    <SelectTrigger className="w-24">
+                      <SelectValue placeholder="Select quantity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <SelectItem key={num} value={String(num)}>
+                          {num}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {quantity > 0 && (
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor={`duration-value-${classType.id}`}>Duration Value</Label>
+                    <Select
+                      value={String(durationValue)}
+                      onValueChange={(val) => handleChange(classType.id, 'duration_value', val)}
                     >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <Input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => handleQuantityChange(classType.id, parseInt(e.target.value) || 0)}
-                      className="w-20 text-center"
-                      min="0"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleQuantityChange(classType.id, quantity + 1)}
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[15, 30, 45, 60, 90, 120].map((num) => (
+                          <SelectItem key={num} value={String(num)}>
+                            {num}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Label htmlFor={`duration-metric-${classType.id}`}>Duration Metric</Label>
+                    <Select
+                      value={String(durationMetric)}
+                      onValueChange={(val) => handleChange(classType.id, 'duration_metric', val)}
                     >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select metric" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {['minutes', 'hours', 'days', 'weeks', 'months'].map((metric) => (
+                          <SelectItem key={metric} value={metric}>
+                            {metric.charAt(0).toUpperCase() + metric.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        )}
+              )}
+            </div>
+          );
+        })}
       </div>
       {classTypes.length === 0 && (
         <div className="text-center text-muted-foreground py-4">
