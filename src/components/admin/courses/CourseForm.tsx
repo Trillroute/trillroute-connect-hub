@@ -1,15 +1,13 @@
-
 import React from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Teacher } from '@/types/course';
+import { TabsContent } from '@/components/ui/tabs';
 import ClassTypesSelector from './ClassTypesSelector';
 import BasicCourseInfo from './form-sections/BasicCourseInfo';
 import DurationSection from './form-sections/DurationSection';
 import PricingSection from './form-sections/PricingSection';
 import DiscountSection from './form-sections/DiscountSection';
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'; // Added FormControl import
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface CourseFormValues {
   title: string;
@@ -72,60 +70,69 @@ const CourseForm: React.FC<CourseFormProps> = ({
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <BasicCourseInfo form={form} skills={skills} />
-        
-        <FormField
-          control={form.control}
-          name="instructors"
-          render={({ field }) => (
-            <FormItem>
-              <Select
-                onValueChange={(value) => {
-                  const selectedIds = value.split(',').filter(id => id);
-                  field.onChange(selectedIds);
-                }}
-                defaultValue={field.value?.join(',')}
-                value={field.value?.join(',')}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select teachers" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {teachers.map((teacher) => (
-                    <SelectItem 
-                      key={teacher.id} 
-                      value={teacher.id}
-                    >
-                      {teacher.first_name} {teacher.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-6">
+          <TabsContent value="basic" className="mt-4">
+            <BasicCourseInfo form={form} skills={skills} />
+            <FormField
+              control={form.control}
+              name="instructors"
+              render={({ field }) => (
+                <FormItem>
+                  <Select
+                    onValueChange={(value) => {
+                      const selectedIds = value.split(',').filter(id => id);
+                      field.onChange(selectedIds);
+                    }}
+                    defaultValue={field.value?.join(',')}
+                    value={field.value?.join(',')}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select teachers" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {teachers.map((teacher) => (
+                        <SelectItem 
+                          key={teacher.id} 
+                          value={teacher.id}
+                        >
+                          {teacher.first_name} {teacher.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
 
-        <DurationSection form={form} />
+          <TabsContent value="duration" className="mt-4">
+            <DurationSection form={form} />
+            <FormField
+              control={form.control}
+              name="class_types_data"
+              render={({ field }) => (
+                <FormItem>
+                  <ClassTypesSelector
+                    value={field.value || []}
+                    onChange={field.onChange}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
 
-        <FormField
-          control={form.control}
-          name="class_types_data"
-          render={({ field }) => (
-            <FormItem>
-              <ClassTypesSelector
-                value={field.value || []}
-                onChange={field.onChange}
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <TabsContent value="pricing" className="mt-4">
+            <PricingSection form={form} calculateFinalPrice={calculateFinalPrice} />
+          </TabsContent>
 
-        <PricingSection form={form} calculateFinalPrice={calculateFinalPrice} />
-        <DiscountSection form={form} />
+          <TabsContent value="discount" className="mt-4">
+            <DiscountSection form={form} />
+          </TabsContent>
+        </div>
 
         <div className="pt-6 flex justify-end gap-2 border-t">
           {cancelAction && (

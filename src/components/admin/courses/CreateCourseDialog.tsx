@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -15,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { canManageCourses } from '@/utils/adminPermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader } from 'lucide-react';
-import { ClassTypeData } from '@/types/course';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -153,7 +152,6 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           students: 0,
           student_ids: [],
-          // Cast class_types_data to any to resolve the type error
           class_types_data: data.class_types_data ? data.class_types_data as any : [],
           base_price: data.base_price,
           is_gst_applicable: data.is_gst_applicable,
@@ -214,14 +212,22 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
         ) : (
           <ScrollArea className="max-h-[calc(100vh-8rem)]">
             <div className="p-6 pt-2">
-              <CourseForm 
-                form={form} 
-                onSubmit={handleCreateCourse} 
-                teachers={teachers}
-                skills={skills}
-                submitButtonText="Create Course"
-                cancelAction={() => onOpenChange(false)}
-              />
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="duration">Duration</TabsTrigger>
+                  <TabsTrigger value="pricing">Pricing</TabsTrigger>
+                  <TabsTrigger value="discount">Discount</TabsTrigger>
+                </TabsList>
+                <CourseForm 
+                  form={form} 
+                  onSubmit={handleCreateCourse} 
+                  teachers={teachers}
+                  skills={skills}
+                  submitButtonText="Create Course"
+                  cancelAction={() => onOpenChange(false)}
+                />
+              </Tabs>
             </div>
           </ScrollArea>
         )}
