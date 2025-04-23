@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -25,7 +24,6 @@ interface EditCourseDialogProps {
 const courseSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   level: z.string().min(1, { message: "Level is required" }),
   skill: z.string().min(1, { message: "Skill is required" }),
   durationType: z.enum(["fixed", "recurring"]),
@@ -132,7 +130,6 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       form.reset({
         title: course.title,
         description: course.description,
-        instructors: [...instructorIds],
         level: course.level,
         skill: course.skill,
         durationValue: durationValue,
@@ -142,7 +139,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         class_types_data: classTypesData || [],
       });
     }
-  }, [course, open, instructorIds, durationValue, durationMetric, durationType, form, classTypesData]);
+  }, [course, open, durationValue, durationMetric, durationType, form, classTypesData]);
 
   useEffect(() => {
     const subscription = form.watch((value) => {

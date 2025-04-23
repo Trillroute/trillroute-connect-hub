@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronsUpDown } from 'lucide-react';
 import { Teacher } from '@/types/course';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,30 +18,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import ClassTypesSelector from './ClassTypesSelector';
 import { ClassTypeData } from '@/types/course';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export interface CourseFormValues {
   title: string;
   description: string;
-  instructors: string[];
   level: string;
   skill: string;
   durationType: "fixed" | "recurring";
@@ -69,21 +48,10 @@ const CourseForm: React.FC<CourseFormProps> = ({
   submitButtonText = "Submit",
   cancelAction
 }) => {
-  const [open, setOpen] = useState(false);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     form.handleSubmit(onSubmit)(e);
   };
-
-  // Initialize instructors field with empty array if undefined
-  useEffect(() => {
-    const instructorsValue = form.watch('instructors');
-    if (instructorsValue === undefined) {
-      form.setValue('instructors', [], { shouldValidate: false });
-    }
-    console.log('CourseForm - instructors value:', instructorsValue);
-  }, [form]);
 
   useEffect(() => {
     const classTypesValue = form.watch('class_types_data');
@@ -129,77 +97,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
               <FormMessage />
             </FormItem>
           )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="instructors"
-          render={({ field }) => {
-            // Ensure field.value is always an array
-            const safeValue = Array.isArray(field.value) ? field.value : [];
-            
-            return (
-              <FormItem className="flex flex-col">
-                <FormLabel>Instructors</FormLabel>
-                <FormDescription>
-                  Select the instructors for this course
-                </FormDescription>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-full justify-between"
-                    >
-                      {safeValue.length > 0
-                        ? `${safeValue.length} instructor${safeValue.length === 1 ? "" : "s"} selected`
-                        : "Select instructors..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Search instructors..." />
-                      <CommandEmpty>No instructor found.</CommandEmpty>
-                      <CommandGroup className="max-h-[300px] overflow-auto">
-                        {Array.isArray(teachers) && teachers.length > 0 ? (
-                          teachers.map((teacher) => (
-                            <CommandItem
-                              key={teacher.id}
-                              onSelect={() => {
-                                // Handle instructor selection/deselection
-                                const newValue = safeValue.includes(teacher.id)
-                                  ? safeValue.filter(id => id !== teacher.id)
-                                  : [...safeValue, teacher.id];
-                                field.onChange(newValue);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Check
-                                className={cn(
-                                  "h-4 w-4",
-                                  safeValue.includes(teacher.id)
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {teacher.first_name} {teacher.last_name}
-                            </CommandItem>
-                          ))
-                        ) : (
-                          <div className="py-6 text-center text-sm">
-                            No instructors available
-                          </div>
-                        )}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            );
-          }}
         />
 
         <FormField
