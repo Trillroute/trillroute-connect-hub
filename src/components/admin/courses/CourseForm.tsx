@@ -8,7 +8,7 @@ import BasicCourseInfo from './form-sections/BasicCourseInfo';
 import DurationSection from './form-sections/DurationSection';
 import PricingSection from './form-sections/PricingSection';
 import DiscountSection from './form-sections/DiscountSection';
-import { FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form'; // Added FormControl import
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface CourseFormValues {
