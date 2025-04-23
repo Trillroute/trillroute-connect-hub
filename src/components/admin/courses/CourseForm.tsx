@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -135,7 +136,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           name="instructors"
           render={({ field }) => {
             // Ensure field.value is always an array
-            const value = Array.isArray(field.value) ? field.value : [];
+            const safeValue = Array.isArray(field.value) ? field.value : [];
             
             return (
               <FormItem className="flex flex-col">
@@ -151,8 +152,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       aria-expanded={open}
                       className="w-full justify-between"
                     >
-                      {value.length > 0
-                        ? `${value.length} instructor${value.length === 1 ? "" : "s"} selected`
+                      {safeValue.length > 0
+                        ? `${safeValue.length} instructor${safeValue.length === 1 ? "" : "s"} selected`
                         : "Select instructors..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -161,32 +162,31 @@ const CourseForm: React.FC<CourseFormProps> = ({
                     <Command>
                       <CommandInput placeholder="Search instructors..." />
                       <CommandEmpty>No instructor found.</CommandEmpty>
-                      <CommandGroup>
-                        {teachers && teachers.length > 0 ? (
-                          <ScrollArea className="h-60">
-                            {teachers.map((teacher) => (
-                              <CommandItem
-                                key={teacher.id}
-                                onSelect={() => {
-                                  // Handle instructor selection/deselection
-                                  const newValue = value.includes(teacher.id)
-                                    ? value.filter(id => id !== teacher.id)
-                                    : [...value, teacher.id];
-                                  field.onChange(newValue);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    value.includes(teacher.id)
-                                      ? "opacity-100"
-                                      : "opacity-0"
-                                  )}
-                                />
-                                {teacher.first_name} {teacher.last_name}
-                              </CommandItem>
-                            ))}
-                          </ScrollArea>
+                      <CommandGroup className="max-h-[300px] overflow-auto">
+                        {Array.isArray(teachers) && teachers.length > 0 ? (
+                          teachers.map((teacher) => (
+                            <CommandItem
+                              key={teacher.id}
+                              onSelect={() => {
+                                // Handle instructor selection/deselection
+                                const newValue = safeValue.includes(teacher.id)
+                                  ? safeValue.filter(id => id !== teacher.id)
+                                  : [...safeValue, teacher.id];
+                                field.onChange(newValue);
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <Check
+                                className={cn(
+                                  "h-4 w-4",
+                                  safeValue.includes(teacher.id)
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              {teacher.first_name} {teacher.last_name}
+                            </CommandItem>
+                          ))
                         ) : (
                           <div className="py-6 text-center text-sm">
                             No instructors available
@@ -242,7 +242,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {skills.map((skill) => (
+                  {Array.isArray(skills) && skills.map((skill) => (
                     <SelectItem key={skill.id} value={skill.name}>
                       {skill.name}
                     </SelectItem>
