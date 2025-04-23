@@ -30,6 +30,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface CourseFormValues {
   title: string;
@@ -70,6 +77,9 @@ const CourseForm: React.FC<CourseFormProps> = ({
 
   useEffect(() => {
     const instructorsValue = form.watch('instructors');
+    if (instructorsValue === undefined) {
+      form.setValue('instructors', [], { shouldValidate: false });
+    }
     console.log('CourseForm - instructors value:', instructorsValue);
   }, [form]);
 
@@ -136,7 +146,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                     aria-expanded={open}
                     className="w-full justify-between"
                   >
-                    {field.value?.length > 0
+                    {field.value && field.value.length > 0
                       ? `${field.value.length} instructor${field.value.length === 1 ? "" : "s"} selected`
                       : "Select instructors..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -162,7 +172,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                field.value?.includes(teacher.id)
+                                field.value && field.value.includes(teacher.id)
                                   ? "opacity-100"
                                   : "opacity-0"
                               )}
