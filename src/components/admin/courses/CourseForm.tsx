@@ -134,69 +134,74 @@ const CourseForm: React.FC<CourseFormProps> = ({
         <FormField
           control={form.control}
           name="instructors"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Instructors</FormLabel>
-              <FormDescription>
-                Select the instructors for this course
-              </FormDescription>
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className="w-full justify-between"
-                  >
-                    {field.value && field.value.length > 0
-                      ? `${field.value.length} instructor${field.value.length === 1 ? "" : "s"} selected`
-                      : "Select instructors..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Search instructors..." />
-                    <CommandEmpty>No instructor found.</CommandEmpty>
-                    {teachers.length > 0 && (
-                      <ScrollArea className="h-60">
-                        <CommandGroup>
-                          {teachers.map((teacher) => (
-                            <CommandItem
-                              key={teacher.id}
-                              onSelect={() => {
-                                const currentValues = Array.isArray(field.value) ? [...field.value] : [];
-                                const newValue = currentValues.includes(teacher.id)
-                                  ? currentValues.filter(id => id !== teacher.id)
-                                  : [...currentValues, teacher.id];
-                                field.onChange(newValue);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  field.value && field.value.includes(teacher.id)
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {teacher.first_name} {teacher.last_name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </ScrollArea>
-                    )}
-                    {teachers.length === 0 && (
-                      <div className="py-6 text-center text-sm">
-                        No instructors available
-                      </div>
-                    )}
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            // Ensure field.value is always an array
+            const value = Array.isArray(field.value) ? field.value : [];
+            
+            return (
+              <FormItem className="flex flex-col">
+                <FormLabel>Instructors</FormLabel>
+                <FormDescription>
+                  Select the instructors for this course
+                </FormDescription>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-full justify-between"
+                    >
+                      {value.length > 0
+                        ? `${value.length} instructor${value.length === 1 ? "" : "s"} selected`
+                        : "Select instructors..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search instructors..." />
+                      <CommandEmpty>No instructor found.</CommandEmpty>
+                      {teachers.length > 0 && (
+                        <ScrollArea className="h-60">
+                          <CommandGroup>
+                            {teachers.map((teacher) => (
+                              <CommandItem
+                                key={teacher.id}
+                                onSelect={() => {
+                                  // Handle instructor selection/deselection
+                                  const newValue = value.includes(teacher.id)
+                                    ? value.filter(id => id !== teacher.id)
+                                    : [...value, teacher.id];
+                                  field.onChange(newValue);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    value.includes(teacher.id)
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {teacher.first_name} {teacher.last_name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </ScrollArea>
+                      )}
+                      {teachers.length === 0 && (
+                        <div className="py-6 text-center text-sm">
+                          No instructors available
+                        </div>
+                      )}
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
