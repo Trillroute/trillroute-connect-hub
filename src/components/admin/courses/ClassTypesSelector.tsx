@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/select";
 import { ClassTypeData } from '@/types/course';
 import { useClassTypes } from '@/hooks/useClassTypes';
+import { Button } from '@/components/ui/button';
+import { Plus, Minus } from 'lucide-react';
 
 interface ClassTypesSelectorProps {
   value: ClassTypeData[];
@@ -20,66 +22,87 @@ interface ClassTypesSelectorProps {
 const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange }) => {
   const { classTypes = [] } = useClassTypes();
 
-  const handleChange = (classTypeId: string, field: 'quantity' | 'duration_value' | 'duration_metric', newValue: string | number) => {
-    const currentValue = [...value];
-    const existingIndex = currentValue.findIndex(ct => ct.class_type_id === classTypeId);
-
-    if (field === 'quantity' && Number(newValue) <= 0) {
-      if (existingIndex !== -1) {
-        currentValue.splice(existingIndex, 1);
-      }
+  const handleChange = (index: number, field: keyof ClassTypeData, newValue: string | number) => {
+    const updatedValue = [...value];
+    
+    if (field === 'quantity' && typeof newValue === 'number' && newValue <= 0) {
+      updatedValue.splice(index, 1);
     } else {
-      if (existingIndex !== -1) {
-        currentValue[existingIndex] = {
-          ...currentValue[existingIndex],
-          [field]: field === 'duration_metric' ? newValue : Number(newValue),
-        };
-      } else {
-        currentValue.push({ 
-          class_type_id: classTypeId, 
-          quantity: field === 'quantity' ? Number(newValue) : 1,
-          duration_value: field === 'duration_value' ? Number(newValue) : 0,
-          duration_metric: field === 'duration_metric' ? String(newValue) : 'minutes',
-        });
-      }
+      updatedValue[index] = {
+        ...updatedValue[index],
+        [field]: newValue
+      };
     }
-
-    onChange(currentValue);
+    
+    onChange(updatedValue);
   };
 
-  const getValueForClassType = (classTypeId: string, field: 'quantity' | 'duration_value' | 'duration_metric'): string | number => {
-    const classType = value.find(ct => ct.class_type_id === classTypeId);
-    if (!classType) return field === 'duration_metric' ? 'minutes' : 0;
-    return classType[field] || (field === 'duration_metric' ? 'minutes' : 0);
+  const addClassType = () => {
+    onChange([...value, {
+      class_type_id: '',
+      quantity: 1,
+      duration_value: 30,
+      duration_metric: 'minutes'
+    }]);
+  };
+
+  const removeClassType = (index: number) => {
+    const updatedValue = [...value];
+    updatedValue.splice(index, 1);
+    onChange(updatedValue);
   };
 
   return (
     <div className="space-y-4">
-      <Label>Select Class Types for this Course</Label>
-      <div className="space-y-4">
-        {classTypes.map((classType) => {
-          const quantity = getValueForClassType(classType.id, 'quantity');
-          const durationValue = getValueForClassType(classType.id, 'duration_value');
-          const durationMetric = getValueForClassType(classType.id, 'duration_metric');
+      <div className="flex justify-between items-center">
+        <Label>Select Class Types for this Course</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addClassType}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Class Type
+        </Button>
+      </div>
 
-          return (
-            <div key={classType.id} className="border p-4 rounded-lg space-y-4">
-              <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        {value.map((classTypeData, index) => (
+          <div key={index} className="border p-4 rounded-lg space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                 <div>
-                  <h3 className="font-medium">{classType.name}</h3>
-                  <p className="text-sm text-muted-foreground">₹{classType.price_inr} • Max {classType.max_students} students</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor={`quantity-${classType.id}`}>Quantity:</Label>
+                  <Label>Class Type</Label>
                   <Select
-                    value={String(quantity)}
-                    onValueChange={(val) => handleChange(classType.id, 'quantity', val)}
+                    value={classTypeData.class_type_id}
+                    onValueChange={(val) => handleChange(index, 'class_type_id', val)}
                   >
-                    <SelectTrigger className="w-24">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select class type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name} (₹{type.price_inr})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Quantity</Label>
+                  <Select
+                    value={String(classTypeData.quantity)}
+                    onValueChange={(val) => handleChange(index, 'quantity', Number(val))}
+                  >
+                    <SelectTrigger>
                       <SelectValue placeholder="Select quantity" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                         <SelectItem key={num} value={String(num)}>
                           {num}
                         </SelectItem>
@@ -87,36 +110,32 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
 
-              {quantity > 0 && (
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor={`duration-value-${classType.id}`}>Duration Value</Label>
+                <div>
+                  <Label>Duration</Label>
+                  <div className="flex gap-2">
                     <Select
-                      value={String(durationValue)}
-                      onValueChange={(val) => handleChange(classType.id, 'duration_value', val)}
+                      value={String(classTypeData.duration_value)}
+                      onValueChange={(val) => handleChange(index, 'duration_value', Number(val))}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select duration" />
+                        <SelectValue placeholder="Duration" />
                       </SelectTrigger>
                       <SelectContent>
-                        {[15, 30, 45, 60, 90, 120].map((num) => (
-                          <SelectItem key={num} value={String(num)}>
-                            {num}
+                        {[15, 30, 45, 60, 90, 120].map((duration) => (
+                          <SelectItem key={duration} value={String(duration)}>
+                            {duration}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor={`duration-metric-${classType.id}`}>Duration Metric</Label>
+
                     <Select
-                      value={String(durationMetric)}
-                      onValueChange={(val) => handleChange(classType.id, 'duration_metric', val)}
+                      value={classTypeData.duration_metric}
+                      onValueChange={(val) => handleChange(index, 'duration_metric', val)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select metric" />
+                        <SelectValue placeholder="Metric" />
                       </SelectTrigger>
                       <SelectContent>
                         {['minutes', 'hours', 'days', 'weeks', 'months'].map((metric) => (
@@ -128,16 +147,33 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                     </Select>
                   </div>
                 </div>
-              )}
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeClassType(index)}
+                className="ml-2"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
             </div>
-          );
-        })}
+
+            {classTypeData.class_type_id && (
+              <div className="text-sm text-muted-foreground">
+                {classTypes.find(ct => ct.id === classTypeData.class_type_id)?.description}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {value.length === 0 && (
+          <div className="text-center text-muted-foreground py-8 border rounded-lg">
+            No class types added. Click the button above to add one.
+          </div>
+        )}
       </div>
-      {classTypes.length === 0 && (
-        <div className="text-center text-muted-foreground py-4">
-          No class types available
-        </div>
-      )}
     </div>
   );
 };
