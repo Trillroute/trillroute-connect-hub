@@ -1,148 +1,102 @@
 
-import React, { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { ClassTypeData } from "@/types/course";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableHead, TableRow, TableCell, TableBody } from "@/components/ui/table";
-import { Plus, Minus } from "lucide-react";
+import React from 'react';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Minus, Plus } from 'lucide-react';
+import { ClassTypeData } from '@/types/course';
+import { useClassTypes } from '@/hooks/useClassTypes';
 
-interface ClassType {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface Props {
+interface ClassTypesSelectorProps {
   value: ClassTypeData[];
-  onChange: (data: ClassTypeData[]) => void;
+  onChange: (value: ClassTypeData[]) => void;
 }
 
-const ClassTypesSelector: React.FC<Props> = ({ value, onChange }) => {
-  const { toast } = useToast();
-  const [classTypes, setClassTypes] = useState<ClassType[]>([]);
-  const [addId, setAddId] = useState<string>("");
-  const [addQty, setAddQty] = useState<number>(1);
+const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange }) => {
+  const { classTypes = [] } = useClassTypes();
 
-  useEffect(() => {
-    const fetchClassTypes = async () => {
-      const { data, error } = await supabase
-        .from("class_types")
-        .select("id, name, description")
-        .order("name");
+  const handleQuantityChange = (classTypeId: string, newQuantity: number) => {
+    const currentValue = [...value];
+    const existingIndex = currentValue.findIndex(ct => ct.class_type_id === classTypeId);
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load class types.",
-          variant: "destructive",
-        });
-      } else {
-        setClassTypes(data || []);
+    if (newQuantity <= 0) {
+      // Remove the class type if quantity is 0 or negative
+      if (existingIndex !== -1) {
+        currentValue.splice(existingIndex, 1);
       }
-    };
-
-    fetchClassTypes();
-  }, [toast]);
-
-  const handleAdd = () => {
-    if (!addId || !addQty || addQty < 1) return;
-    if (value.some(ct => ct.class_type_id === addId)) {
-      toast({
-        title: "Class type already added",
-        description: "Please adjust the quantity in the table below.",
-        variant: "destructive",
-      });
-      return;
+    } else {
+      // Update or add the class type
+      if (existingIndex !== -1) {
+        currentValue[existingIndex].quantity = newQuantity;
+      } else {
+        currentValue.push({ class_type_id: classTypeId, quantity: newQuantity });
+      }
     }
-    onChange([...value, { class_type_id: addId, quantity: addQty }]);
-    setAddId("");
-    setAddQty(1);
+
+    onChange(currentValue);
   };
 
-  const handleRemove = (id: string) => {
-    onChange(value.filter(ct => ct.class_type_id !== id));
-  };
-
-  const handleQtyChange = (id: string, qty: number) => {
-    if (qty < 1) return;
-    onChange(value.map(ct => ct.class_type_id === id ? { ...ct, quantity: qty } : ct));
+  const getQuantityForClassType = (classTypeId: string): number => {
+    return value.find(ct => ct.class_type_id === classTypeId)?.quantity || 0;
   };
 
   return (
-    <div className="space-y-2">
-      <label className="font-medium">Select Class Types for this Course</label>
-      <div className="flex items-end gap-2">
-        <select
-          className="border rounded px-2 py-1 flex-1"
-          value={addId}
-          onChange={e => setAddId(e.target.value)}
-        >
-          <option value="">Select class type...</option>
-          {classTypes
-            .filter(ct => !value.some(val => val.class_type_id === ct.id))
-            .map(ct => (
-              <option key={ct.id} value={ct.id}>
-                {ct.name}
-              </option>
-            ))}
-        </select>
-        <Input
-          type="number"
-          min={1}
-          className="w-20"
-          value={addQty}
-          onChange={e => setAddQty(Number(e.target.value))}
-        />
-        <Button type="button" variant="outline" onClick={handleAdd}>
-          <Plus className="h-4 w-4" />
-        </Button>
-      </div>
-      {value.length > 0 && (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Class Type</TableCell>
-              <TableCell>Quantity</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {value.map(ctData => {
-              const ct = classTypes.find(c => c.id === ctData.class_type_id);
-              return (
-                <TableRow key={ctData.class_type_id}>
-                  <TableCell>{ct?.name || ctData.class_type_id}</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={ctData.quantity}
-                      onChange={e => handleQtyChange(ctData.class_type_id, Number(e.target.value))}
-                      className="w-16"
-                    />
-                  </TableCell>
-                  <TableCell>
+    <div className="space-y-4">
+      <Label>Select Class Types for this Course</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {classTypes.map((classType) => {
+          const quantity = getQuantityForClassType(classType.id);
+          return (
+            <Card key={classType.id} className={`${quantity > 0 ? 'border-music-500' : ''}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">{classType.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    {classType.duration_value} {classType.duration_metric}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    ₹{classType.price_inr} • Max {classType.max_students} students
+                  </div>
+                  <div className="flex items-center space-x-2 mt-4">
                     <Button
                       type="button"
-                      variant="destructive"
-                      onClick={() => handleRemove(ctData.class_type_id)}
-                      size="icon"
-                      className="ml-2"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuantityChange(classType.id, quantity - 1)}
+                      disabled={quantity === 0}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <Input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => handleQuantityChange(classType.id, parseInt(e.target.value) || 0)}
+                      className="w-20 text-center"
+                      min="0"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuantityChange(classType.id, quantity + 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        )}
+      </div>
+      {classTypes.length === 0 && (
+        <div className="text-center text-muted-foreground py-4">
+          No class types available
+        </div>
       )}
-      <p className="text-sm text-muted-foreground">
-        You can add multiple class types for this course and specify how many of each.
-      </p>
     </div>
   );
 };
