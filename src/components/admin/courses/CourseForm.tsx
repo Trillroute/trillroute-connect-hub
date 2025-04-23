@@ -1,8 +1,11 @@
+
 import React from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Teacher } from '@/types/course';
 import { TabsContent } from '@/components/ui/tabs';
+import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ClassTypesSelector from './ClassTypesSelector';
 import BasicCourseInfo from './form-sections/BasicCourseInfo';
 import DurationSection from './form-sections/DurationSection';
