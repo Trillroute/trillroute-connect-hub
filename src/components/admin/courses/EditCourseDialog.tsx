@@ -30,6 +30,7 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
+  instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   class_types_data: z.array(z.object({
     class_type_id: z.string(),
     quantity: z.number()
@@ -114,14 +115,14 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
     defaultValues: {
       title: course.title,
       description: course.description,
-      instructors: instructorIds,
       level: course.level,
       skill: course.skill,
       durationValue: durationValue,
       durationMetric: durationMetric,
       durationType: durationType,
       image: course.image,
-      class_types_data: classTypesData,
+      instructors: instructorIds,
+      class_types_data: classTypesData || [],
     }
   });
 
@@ -136,6 +137,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         durationMetric: durationMetric,
         durationType: durationType,
         image: course.image,
+        instructors: instructorIds,
         class_types_data: classTypesData || [],
       });
     }

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -28,6 +27,7 @@ export interface CourseFormValues {
   durationValue?: string;
   durationMetric?: "days" | "weeks" | "months" | "years";
   image: string;
+  instructors: string[];
   class_types_data?: ClassTypeData[];
 }
 
@@ -52,11 +52,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
     e.preventDefault();
     form.handleSubmit(onSubmit)(e);
   };
-
-  useEffect(() => {
-    const classTypesValue = form.watch('class_types_data');
-    console.log('CourseForm - class_types_data value:', classTypesValue);
-  }, [form]);
 
   return (
     <FormProvider {...form}>
@@ -247,6 +242,40 @@ const CourseForm: React.FC<CourseFormProps> = ({
               </FormControl>
               <FormDescription>
                 Provide a URL for the course image.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="instructors"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel>Course Instructors</FormLabel>
+              <div className="flex flex-col space-y-4">
+                <ScrollArea className="h-[200px] rounded-md border p-4">
+                  {teachers.map((teacher) => (
+                    <div key={teacher.id} className="flex items-center space-x-2 py-2">
+                      <Checkbox
+                        checked={field.value?.includes(teacher.id)}
+                        onCheckedChange={(checked) => {
+                          const updatedValue = checked
+                            ? [...(field.value || []), teacher.id]
+                            : (field.value || []).filter((id) => id !== teacher.id);
+                          field.onChange(updatedValue);
+                        }}
+                      />
+                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {teacher.first_name} {teacher.last_name}
+                      </label>
+                    </div>
+                  ))}
+                </ScrollArea>
+              </div>
+              <FormDescription>
+                Select one or more teachers for this course
               </FormDescription>
               <FormMessage />
             </FormItem>

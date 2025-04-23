@@ -30,6 +30,7 @@ const courseSchema = z.object({
   durationValue: z.string().optional(),
   durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
   image: z.string().url({ message: "Must be a valid URL" }),
+  instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
   class_types_data: z.array(z.object({
     class_type_id: z.string(),
     quantity: z.number()
@@ -76,6 +77,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       durationValue: '',
       durationMetric: 'weeks',
       image: '',
+      instructors: [],
       class_types_data: [],
     }
   });
