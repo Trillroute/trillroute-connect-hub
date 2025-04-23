@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { 
@@ -54,146 +53,19 @@ const CourseForm: React.FC<CourseFormProps> = ({
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Course title" {...field} />
-              </FormControl>
-              <FormDescription>
-                This is the title of the course that will be displayed to users.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Course description"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Briefly describe what the course is about.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="level"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Level</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a level" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Beginner">Beginner</SelectItem>
-                  <SelectItem value="Intermediate">Intermediate</SelectItem>
-                  <SelectItem value="Advanced">Advanced</SelectItem>
-                  <SelectItem value="For Anyone">For Anyone</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Specify the level of difficulty of the course.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="skill"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Skill</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a skill" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {Array.isArray(skills) && skills.map((skill) => (
-                    <SelectItem key={skill.id} value={skill.name}>
-                      {skill.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Choose the primary skill or category for this course.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="durationType"
-          render={({ field }) => (
-            <FormItem className="flex flex-col space-y-3">
-              <FormLabel>Duration Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="fixed" />
-                    </FormControl>
-                    <FormLabel>Fixed</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="recurring" />
-                    </FormControl>
-                    <FormLabel>Recurring</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormDescription>
-                Specify whether the course has a fixed or recurring duration.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {form.watch("durationType") === "fixed" && (
-          <>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
             <FormField
               control={form.control}
-              name="durationValue"
+              name="title"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Duration Value</FormLabel>
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Title *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Duration value" {...field} />
+                    <Input placeholder="Enter course title" className="w-full" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Enter the duration value.
+                    Choose a clear and descriptive title
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -202,88 +74,197 @@ const CourseForm: React.FC<CourseFormProps> = ({
 
             <FormField
               control={form.control}
-              name="durationMetric"
+              name="description"
               render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Duration Metric</FormLabel>
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Description *</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe what students will learn"
+                      className="min-h-[120px] resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Image URL *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://example.com/image.jpg" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="level"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Level *</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a metric" />
+                        <SelectValue placeholder="Select course level" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="days">Days</SelectItem>
-                      <SelectItem value="weeks">Weeks</SelectItem>
-                      <SelectItem value="months">Months</SelectItem>
-                      <SelectItem value="years">Years</SelectItem>
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Advanced">Advanced</SelectItem>
+                      <SelectItem value="For Anyone">For Anyone</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="skill"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Skill *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select primary skill" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {skills.map((skill) => (
+                        <SelectItem key={skill.id} value={skill.name}>
+                          {skill.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="instructors"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">Course Instructors *</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      const selectedIds = value.split(',').filter(id => id);
+                      field.onChange(selectedIds);
+                    }}
+                    defaultValue={field.value?.join(',')}
+                    value={field.value?.join(',')}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select teachers" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {teachers.map((teacher) => (
+                        <SelectItem 
+                          key={teacher.id} 
+                          value={teacher.id}
+                        >
+                          {teacher.first_name} {teacher.last_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    Choose the unit of time for the duration.
+                    Choose the instructors for this course
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </>
-        )}
+          </div>
+        </div>
 
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Image URL</FormLabel>
-              <FormControl>
-                <Input placeholder="Image URL" {...field} />
-              </FormControl>
-              <FormDescription>
-                Provide a URL for the course image.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="instructors"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Course Instructors</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  // Split the comma-separated string into an array and remove empty values
-                  const selectedIds = value.split(',').filter(id => id);
-                  field.onChange(selectedIds);
-                }}
-                defaultValue={field.value?.join(',')}
-                value={field.value?.join(',')}
-              >
+        <div className="space-y-6 pt-4">
+          <FormField
+            control={form.control}
+            name="durationType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-semibold">Duration Type *</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select teachers" />
-                  </SelectTrigger>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="fixed" id="fixed" />
+                      <Label htmlFor="fixed">Fixed</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="recurring" id="recurring" />
+                      <Label htmlFor="recurring">Recurring</Label>
+                    </div>
+                  </RadioGroup>
                 </FormControl>
-                <SelectContent>
-                  {teachers.map((teacher) => (
-                    <SelectItem 
-                      key={teacher.id} 
-                      value={teacher.id}
-                    >
-                      {teacher.first_name} {teacher.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select one or more teachers for this course
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {form.watch("durationType") === "fixed" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="durationValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold">Duration Value *</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Enter duration" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="durationMetric"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold">Duration Unit *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="days">Days</SelectItem>
+                        <SelectItem value="weeks">Weeks</SelectItem>
+                        <SelectItem value="months">Months</SelectItem>
+                        <SelectItem value="years">Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           )}
-        />
+        </div>
 
         <FormField
           control={form.control}
@@ -299,13 +280,21 @@ const CourseForm: React.FC<CourseFormProps> = ({
           )}
         />
 
-        <div className="pt-4 flex justify-end gap-2">
+        <div className="pt-6 flex justify-end gap-2 border-t">
           {cancelAction && (
-            <Button type="button" variant="outline" onClick={cancelAction}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={cancelAction}
+              className="w-24"
+            >
               Cancel
             </Button>
           )}
-          <Button type="submit" className="bg-music-500 hover:bg-music-600">
+          <Button 
+            type="submit" 
+            className="bg-music-500 hover:bg-music-600 w-24"
+          >
             {submitButtonText}
           </Button>
         </div>

@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ import CourseForm from './CourseForm';
 import { useAuth } from '@/hooks/useAuth';
 import { canManageCourses } from '@/utils/adminPermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader } from 'lucide-react';
 import { ClassTypeData } from '@/types/course';
 
 interface CreateCourseDialogProps {
@@ -157,28 +159,30 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
 
   return (
     <Dialog open={open && hasAddPermission} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Create New Course</DialogTitle>
-          <DialogDescription>
-            Fill in the information below to create a new course.
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle className="text-2xl font-bold text-music-600">Create New Course</DialogTitle>
+          <p className="text-muted-foreground mt-2">
+            Fill in the course details below. All fields marked with * are required.
+          </p>
         </DialogHeader>
         
         {isLoading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-music-500"></div>
+          <div className="flex items-center justify-center py-12">
+            <Loader className="h-8 w-8 animate-spin text-music-500" />
           </div>
         ) : (
-          <ScrollArea className="max-h-[calc(100vh-14rem)] pr-4">
-            <CourseForm 
-              form={form} 
-              onSubmit={handleCreateCourse} 
-              teachers={teachers}
-              skills={skills}
-              submitButtonText="Create Course"
-              cancelAction={() => onOpenChange(false)}
-            />
+          <ScrollArea className="max-h-[calc(100vh-8rem)]">
+            <div className="p-6 pt-2">
+              <CourseForm 
+                form={form} 
+                onSubmit={handleCreateCourse} 
+                teachers={teachers}
+                skills={skills}
+                submitButtonText="Create Course"
+                cancelAction={() => onOpenChange(false)}
+              />
+            </div>
           </ScrollArea>
         )}
       </DialogContent>
