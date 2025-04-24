@@ -57,12 +57,16 @@ export function useCourses() {
     
     // If it's already an array, try to cast it
     if (Array.isArray(data)) {
-      return data.map(item => ({
-        class_type_id: String(item.class_type_id || ''),
-        quantity: Number(item.quantity || 0),
-        duration_value: item.duration_value ? Number(item.duration_value) : undefined,
-        duration_metric: item.duration_metric ? String(item.duration_metric) : undefined,
-      }));
+      return data.map(item => {
+        // Safely access properties with type checking
+        const itemObj = item as Record<string, unknown>;
+        return {
+          class_type_id: String(itemObj.class_type_id || ''),
+          quantity: Number(itemObj.quantity || 0),
+          duration_value: itemObj.duration_value ? Number(itemObj.duration_value) : undefined,
+          duration_metric: itemObj.duration_metric ? String(itemObj.duration_metric) : undefined,
+        };
+      });
     }
     
     // If it's a string, try to parse it
@@ -70,12 +74,16 @@ export function useCourses() {
       try {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed)) {
-          return parsed.map(item => ({
-            class_type_id: String(item.class_type_id || ''),
-            quantity: Number(item.quantity || 0),
-            duration_value: item.duration_value ? Number(item.duration_value) : undefined,
-            duration_metric: item.duration_metric ? String(item.duration_metric) : undefined,
-          }));
+          return parsed.map(item => {
+            // Safely access properties with type checking
+            const itemObj = item as Record<string, unknown>;
+            return {
+              class_type_id: String(itemObj.class_type_id || ''),
+              quantity: Number(itemObj.quantity || 0),
+              duration_value: itemObj.duration_value ? Number(itemObj.duration_value) : undefined,
+              duration_metric: itemObj.duration_metric ? String(itemObj.duration_metric) : undefined,
+            };
+          });
         }
         return [];
       } catch (e) {
