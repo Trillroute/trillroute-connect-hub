@@ -19,24 +19,28 @@ export const useFetchLeads = () => {
 
       if (error) throw error;
       
+      console.log('Raw lead data from database:', data);
+      
       // Map the database response to match our Lead type
       const typedLeads = (data || []).map(item => ({
         id: item.id,
         name: item.name,
         email: item.email,
         phone: item.phone,
-        secondary_phone: item.secondary_phone,
+        // Map status to stage if stage doesn't exist (for backwards compatibility)
+        stage: item.stage || item.status || 'New' as Lead['stage'],
+        // Add the new fields, with fallbacks for any missing data
+        secondary_phone: item.secondary_phone || null,
         whatsapp_enabled: item.whatsapp_enabled || false,
-        age: item.age,
-        location: item.location as Lead['location'],
-        channel: item.channel as Lead['channel'],
-        remarks: item.remarks,
-        lead_quality: item.lead_quality,
-        stage: item.stage || 'New' as Lead['stage'],
-        owner: item.owner,
-        interested_courses: item.interested_courses,
-        interested_skills: item.interested_skills,
-        source: item.source,
+        age: item.age || null,
+        location: (item.location as Lead['location']) || null,
+        channel: (item.channel as Lead['channel']) || null,
+        remarks: item.remarks || null,
+        lead_quality: item.lead_quality || null,
+        owner: item.owner || null,
+        interested_courses: item.interested_courses || null,
+        interested_skills: item.interested_skills || null,
+        source: item.source || null,
         created_at: item.created_at,
         user_id: item.user_id
       })) as Lead[];
