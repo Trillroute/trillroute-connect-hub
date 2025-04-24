@@ -34,12 +34,7 @@ export function useCourses() {
           ...item,
           instructor_ids: item.instructor_ids || [],
           student_ids: item.student_ids || [],
-          class_types_data: item.class_types_data ? 
-            // Properly cast the Json to ClassTypeData[]
-            (Array.isArray(item.class_types_data) ? 
-              (item.class_types_data as unknown as ClassTypeData[]) : 
-              []) : 
-            [],
+          class_types_data: formatClassTypesData(item.class_types_data),
         }));
 
         setCourses(formattedCourses);
@@ -54,6 +49,30 @@ export function useCourses() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to format class_types_data correctly
+  const formatClassTypesData = (data: Json | null): ClassTypeData[] => {
+    if (!data) return [];
+    
+    // If it's already an array, try to cast it
+    if (Array.isArray(data)) {
+      return data as ClassTypeData[];
+    }
+    
+    // If it's a string, try to parse it
+    if (typeof data === 'string') {
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error('Error parsing class_types_data string:', e);
+        return [];
+      }
+    }
+    
+    // If we can't determine what it is, return empty array
+    return [];
   };
 
   const getCourseById = async (id: string): Promise<Course | null> => {
@@ -74,11 +93,7 @@ export function useCourses() {
           ...data,
           instructor_ids: data.instructor_ids || [],
           student_ids: data.student_ids || [],
-          class_types_data: data.class_types_data ? 
-            (Array.isArray(data.class_types_data) ? 
-              (data.class_types_data as unknown as ClassTypeData[]) : 
-              []) : 
-            [],
+          class_types_data: formatClassTypesData(data.class_types_data),
         };
       }
       return null;

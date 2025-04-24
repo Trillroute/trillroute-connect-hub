@@ -1,3 +1,4 @@
+
 export interface Course {
   id: string;
   title: string;
@@ -12,6 +13,15 @@ export interface Course {
   instructor_ids: string[];
   student_ids?: string[];
   class_types_data?: ClassTypeData[];
+  // Add missing properties from errors
+  final_price?: number | null;
+  base_price?: number | null;
+  discount_value?: number | null;
+  discount_metric?: string | null;
+  discount_code?: string | null;
+  discount_validity?: string | null;
+  gst_rate?: number | null;
+  is_gst_applicable?: boolean | null;
 }
 
 export interface Teacher {
