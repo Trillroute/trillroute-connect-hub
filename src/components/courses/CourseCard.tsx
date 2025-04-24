@@ -5,7 +5,6 @@ import { Clock, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/types/course';
-import { Teacher } from '@/types/course';
 
 interface CourseCardProps {
   course: Course;
