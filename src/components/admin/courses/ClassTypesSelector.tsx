@@ -76,7 +76,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                 <div>
                   <Label>Class Type</Label>
                   <Select
-                    value={classTypeData.class_type_id || "select-class-type"}
+                    value={classTypeData.class_type_id || "_select_class_type"}
                     onValueChange={(val) => handleChange(index, 'class_type_id', val)}
                   >
                     <SelectTrigger>
@@ -84,7 +84,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                     </SelectTrigger>
                     <SelectContent>
                       {classTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id || "default-type-id"}>
+                        <SelectItem key={type.id} value={type.id || "_default_type"}>
                           {type.name} (₹{type.price_inr})
                         </SelectItem>
                       ))}

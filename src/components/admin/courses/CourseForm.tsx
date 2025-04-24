@@ -87,7 +87,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       field.onChange(selectedIds);
                     }}
                     defaultValue={field.value?.join(',')}
-                    value={field.value?.join(',')}
+                    value={field.value?.join(',') || "_no_instructors"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -98,7 +98,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       {teachers.map((teacher) => (
                         <SelectItem 
                           key={teacher.id} 
-                          value={teacher.id || "default-teacher-id"}
+                          value={teacher.id || "_default_teacher"}
                         >
                           {teacher.first_name} {teacher.last_name}
                         </SelectItem>

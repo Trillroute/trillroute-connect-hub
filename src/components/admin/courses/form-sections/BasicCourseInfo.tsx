@@ -88,7 +88,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
               </FormControl>
               <SelectContent>
                 {skills.map((skill) => (
-                  <SelectItem key={skill.id} value={skill.name || "default-skill"}>
+                  <SelectItem key={skill.id} value={skill.id || "_default"}>
                     {skill.name}
                   </SelectItem>
                 ))}
