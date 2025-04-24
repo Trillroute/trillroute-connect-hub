@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,7 +94,7 @@ const Courses = () => {
           }}
         />
         <div className="absolute top-2 right-2 bg-white rounded-full px-2 py-1 text-xs font-bold">
-          {course.status || 'Active'}
+          Active
         </div>
       </div>
       <CardHeader>
