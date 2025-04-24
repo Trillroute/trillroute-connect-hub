@@ -12,6 +12,7 @@ import { Course } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCourses } from '@/hooks/useCourses';
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -20,6 +21,7 @@ const CourseDetail = () => {
   const { toast } = useToast();
   const { teachers = [] } = useTeachers();
   const { user } = useAuth();
+  const { getCourseById } = useCourses();
   
   // Function to get instructor names
   const getInstructorNames = (instructorIds: string[] | undefined) => {
@@ -40,24 +42,10 @@ const CourseDetail = () => {
         setLoading(true);
         if (!courseId) return;
         
-        const { data, error } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', courseId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching course:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load course details. Please try again later.',
-            variant: 'destructive',
-          });
-          return;
-        }
+        const courseData = await getCourseById(courseId);
         
-        if (data) {
-          setCourse(data);
+        if (courseData) {
+          setCourse(courseData);
         }
       } catch (error) {
         console.error('Unexpected error:', error);
@@ -72,7 +60,7 @@ const CourseDetail = () => {
     };
     
     fetchCourseDetails();
-  }, [courseId, toast]);
+  }, [courseId, toast, getCourseById]);
   
   // Enrollment function (placeholder for now)
   const handleEnroll = () => {

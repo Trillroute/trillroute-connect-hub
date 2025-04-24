@@ -57,14 +57,27 @@ export function useCourses() {
     
     // If it's already an array, try to cast it
     if (Array.isArray(data)) {
-      return data as ClassTypeData[];
+      return data.map(item => ({
+        class_type_id: String(item.class_type_id || ''),
+        quantity: Number(item.quantity || 0),
+        duration_value: item.duration_value ? Number(item.duration_value) : undefined,
+        duration_metric: item.duration_metric ? String(item.duration_metric) : undefined,
+      }));
     }
     
     // If it's a string, try to parse it
     if (typeof data === 'string') {
       try {
         const parsed = JSON.parse(data);
-        return Array.isArray(parsed) ? parsed : [];
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => ({
+            class_type_id: String(item.class_type_id || ''),
+            quantity: Number(item.quantity || 0),
+            duration_value: item.duration_value ? Number(item.duration_value) : undefined,
+            duration_metric: item.duration_metric ? String(item.duration_metric) : undefined,
+          }));
+        }
+        return [];
       } catch (e) {
         console.error('Error parsing class_types_data string:', e);
         return [];
