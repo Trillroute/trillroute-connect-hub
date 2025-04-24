@@ -74,7 +74,11 @@ const DurationSection: React.FC<DurationSectionProps> = ({ form }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-semibold">Duration Unit *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || "weeks"}>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || "weeks"}
+                  defaultValue={field.value || "weeks"}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select duration unit" />

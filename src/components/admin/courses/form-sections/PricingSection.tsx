@@ -28,7 +28,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ form, calculateFinalPri
                   min="0" 
                   step="0.01"
                   placeholder="Enter base price"
-                  {...field}
+                  value={field.value || 0}
                   onChange={e => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
@@ -44,7 +44,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ form, calculateFinalPri
             <FormItem className="flex flex-row items-center space-x-2 space-y-0">
               <FormControl>
                 <Switch
-                  checked={field.value}
+                  checked={field.value || false}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
@@ -67,7 +67,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ form, calculateFinalPri
                     max="100"
                     step="0.01"
                     placeholder="Enter GST rate"
-                    {...field}
+                    value={field.value || 0}
                     onChange={e => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>

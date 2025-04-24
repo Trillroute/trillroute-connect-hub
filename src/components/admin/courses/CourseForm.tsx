@@ -70,6 +70,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
     return finalPrice.toFixed(2);
   };
 
+  // Ensure we have a valid default for instructor selection
+  const instructorValue = Array.isArray(form.watch('instructors')) && form.watch('instructors').length > 0 
+    ? form.watch('instructors').join(',') 
+    : "no_instructors";
+
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -83,11 +88,15 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 <FormItem>
                   <Select
                     onValueChange={(value) => {
-                      const selectedIds = value.split(',').filter(id => id);
-                      field.onChange(selectedIds);
+                      // Handle the case where value is "no_instructors"
+                      if (value === "no_instructors") {
+                        field.onChange([]);
+                      } else {
+                        const selectedIds = value.split(',').filter(id => id);
+                        field.onChange(selectedIds);
+                      }
                     }}
-                    defaultValue={field.value?.join(',') || "no_instructors"}
-                    value={field.value?.join(',') || "no_instructors"}
+                    value={instructorValue}
                   >
                     <FormControl>
                       <SelectTrigger>

@@ -21,7 +21,11 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-sm font-semibold">Discount Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value || "percentage"}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value || "percentage"}
+                defaultValue={field.value || "percentage"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select discount type" />
@@ -51,7 +55,7 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
                   min="0"
                   step={form.watch('discount_metric') === 'percentage' ? "1" : "0.01"}
                   placeholder={`Enter discount ${form.watch('discount_metric') === 'percentage' ? 'percentage' : 'amount'}`}
-                  {...field}
+                  value={field.value || 0}
                   onChange={e => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
@@ -87,6 +91,7 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
                 <Input 
                   placeholder="Enter discount code"
                   {...field}
+                  value={field.value || ""}
                 />
               </FormControl>
               <FormMessage />

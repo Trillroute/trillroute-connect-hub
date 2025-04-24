@@ -56,7 +56,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-semibold">Level *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value || "Beginner"}>
+            <Select onValueChange={field.onChange} defaultValue={field.value || "Beginner"} value={field.value || "Beginner"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select course level" />
@@ -80,18 +80,22 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-semibold">Skill *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value || "_no_skill_selected"}>
+            <Select onValueChange={field.onChange} defaultValue={field.value || "_no_skill_selected"} value={field.value || "_no_skill_selected"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select primary skill" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {skills.map((skill) => (
-                  <SelectItem key={skill.id} value={skill.id}>
-                    {skill.name}
-                  </SelectItem>
-                ))}
+                {skills.length > 0 ? (
+                  skills.map((skill) => (
+                    <SelectItem key={skill.id} value={skill.id || "_no_skill_selected"}>
+                      {skill.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="_no_skill_selected">No Skills Available</SelectItem>
+                )}
                 <SelectItem value="_no_skill_selected">No Skill Selected</SelectItem>
               </SelectContent>
             </Select>

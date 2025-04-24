@@ -20,7 +20,7 @@ interface ClassTypesSelectorProps {
 }
 
 const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value = [], onChange }) => {
-  const { classTypes, loading } = useClassTypes();
+  const { classTypes, isLoading } = useClassTypes();
   const [selectedClassTypes, setSelectedClassTypes] = useState<ClassTypeData[]>(value);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value = [], onC
     onChange(updatedClassTypes);
   };
 
-  if (loading) {
+  if (isLoading) {
     return <div>Loading class types...</div>;
   }
 
@@ -101,7 +101,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value = [], onC
                     </SelectTrigger>
                     <SelectContent>
                       {classTypes.map((classType) => (
-                        <SelectItem key={classType.id} value={classType.id}>
+                        <SelectItem key={classType.id} value={classType.id || "default_class_type"}>
                           {classType.name}
                         </SelectItem>
                       ))}

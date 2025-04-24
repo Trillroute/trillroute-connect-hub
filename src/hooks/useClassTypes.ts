@@ -16,7 +16,7 @@ export interface ClassType {
 }
 
 export const useClassTypes = () => {
-  const { data: classTypes, isLoading, error } = useQuery({
+  const { data: classTypes = [], isLoading, error } = useQuery({
     queryKey: ['classTypes'],
     queryFn: async () => {
       const { data, error } = await supabase
