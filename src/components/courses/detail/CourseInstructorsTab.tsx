@@ -1,13 +1,14 @@
 
 import { Course } from "@/types/course";
 import { Teacher } from "@/types/course";
+import { memo } from "react";
 
 interface CourseInstructorsTabProps {
   course: Course;
   getInstructorNames: (instructorIds: string[] | undefined) => string;
 }
 
-export const CourseInstructorsTab = ({ course, getInstructorNames }: CourseInstructorsTabProps) => (
+export const CourseInstructorsTab = memo(({ course, getInstructorNames }: CourseInstructorsTabProps) => (
   <div className="space-y-4">
     <h3 className="text-xl font-semibold mb-2">Meet Your Instructors</h3>
     <p className="text-gray-600 mb-4">
@@ -21,4 +22,6 @@ export const CourseInstructorsTab = ({ course, getInstructorNames }: CourseInstr
       </p>
     </div>
   </div>
-);
+));
+
+CourseInstructorsTab.displayName = 'CourseInstructorsTab';

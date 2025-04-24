@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,8 +27,8 @@ const CourseDetail = () => {
   const { user } = useAuth();
   const { getCourseById } = useCourses();
   
-  // Function to get instructor names
-  const getInstructorNames = (instructorIds: string[] | undefined) => {
+  // Function to get instructor names - memoized to prevent unnecessary recalculations
+  const getInstructorNames = useCallback((instructorIds: string[] | undefined) => {
     if (!instructorIds || !Array.isArray(instructorIds) || !instructorIds.length) {
       return 'No instructors';
     }
@@ -37,19 +37,23 @@ const CourseDetail = () => {
       const teacher = teachers.find(t => t.id === instructorId);
       return teacher ? `${teacher.first_name} ${teacher.last_name}` : 'Unknown';
     }).join(', ');
-  };
+  }, [teachers]);
 
   // Enrollment function
-  const handleEnroll = () => {
+  const handleEnroll = useCallback(() => {
     toast({
       title: 'Enrollment Request Sent',
       description: 'Your enrollment request has been submitted successfully.',
     });
-  };
+  }, [toast]);
   
-  // Fetch the course details
+  // Fetch the course details - useEffect with proper dependencies
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchCourseDetails = async () => {
+      if (!isMounted) return;
+      
       try {
         setLoading(true);
         if (!courseId) {
@@ -59,13 +63,13 @@ const CourseDetail = () => {
             description: 'Could not load course details. Missing course ID.',
             variant: 'destructive',
           });
-          setLoading(false);
           return;
         }
         
         console.log('Fetching course with ID:', courseId);
         const courseData = await getCourseById(courseId);
-        console.log('Course data received:', courseData);
+        
+        if (!isMounted) return;
         
         if (courseData) {
           setCourse(courseData);
@@ -77,6 +81,8 @@ const CourseDetail = () => {
           });
         }
       } catch (error) {
+        if (!isMounted) return;
+        
         console.error('Unexpected error fetching course:', error);
         toast({
           title: 'Error',
@@ -84,12 +90,19 @@ const CourseDetail = () => {
           variant: 'destructive',
         });
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
     fetchCourseDetails();
-  }, [courseId, toast, getCourseById]);
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, [courseId, toast, getCourseById]); // Only relevant dependencies
   
   if (loading) {
     return <CourseDetailSkeleton />;
