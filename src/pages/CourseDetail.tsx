@@ -40,18 +40,35 @@ const CourseDetail = () => {
     const fetchCourseDetails = async () => {
       try {
         setLoading(true);
-        if (!courseId) return;
+        if (!courseId) {
+          console.error('No course ID provided in URL params');
+          toast({
+            title: 'Error',
+            description: 'Could not load course details. Missing course ID.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
         
+        console.log('Fetching course with ID:', courseId);
         const courseData = await getCourseById(courseId);
+        console.log('Course data received:', courseData);
         
         if (courseData) {
           setCourse(courseData);
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Course not found.',
+            variant: 'destructive',
+          });
         }
       } catch (error) {
-        console.error('Unexpected error:', error);
+        console.error('Unexpected error fetching course:', error);
         toast({
           title: 'Error',
-          description: 'An unexpected error occurred.',
+          description: 'An unexpected error occurred while loading course details.',
           variant: 'destructive',
         });
       } finally {
@@ -173,7 +190,7 @@ const CourseDetail = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex items-center">
                       <Clock className="h-5 w-5 text-music-500 mr-2" />
-                      <span>{course.duration} ({course.duration_type})</span>
+                      <span>{course.duration} ({course.duration_type || 'fixed'})</span>
                     </div>
                     <div className="flex items-center">
                       <Users className="h-5 w-5 text-music-500 mr-2" />
