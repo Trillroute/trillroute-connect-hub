@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Lead } from '@/types/lead';
+import { Database } from '@/integrations/supabase/types';
 
 export const useFetchLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -27,9 +28,7 @@ export const useFetchLeads = () => {
         name: item.name,
         email: item.email,
         phone: item.phone,
-        // Map status to stage if stage doesn't exist (for backwards compatibility)
         stage: item.stage || item.status || 'New' as Lead['stage'],
-        // Add the new fields, with fallbacks for any missing data
         secondary_phone: item.secondary_phone || null,
         whatsapp_enabled: item.whatsapp_enabled || false,
         age: item.age || null,
@@ -62,15 +61,12 @@ export const useFetchLeads = () => {
   useEffect(() => {
     fetchLeads();
 
-    // Subscribe to changes on the leads table for ALL events (insert, update, delete)
     const channel = supabase
       .channel('leads-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'leads' }, 
         (payload) => {
           console.log('Realtime update received:', payload);
-          
-          // Immediately fetch the updated data
           fetchLeads();
         }
       )

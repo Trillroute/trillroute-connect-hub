@@ -245,34 +245,67 @@ export type Database = {
       }
       leads: {
         Row: {
+          age: number | null
+          channel: string | null
           created_at: string
           email: string
           id: string
+          interested_courses: string[] | null
+          interested_skills: string[] | null
+          lead_quality: number | null
+          location: string | null
           name: string
+          owner: string | null
           phone: string | null
+          remarks: string | null
+          secondary_phone: string | null
           source: string | null
+          stage: string | null
           status: string | null
           user_id: string | null
+          whatsapp_enabled: boolean | null
         }
         Insert: {
+          age?: number | null
+          channel?: string | null
           created_at?: string
           email: string
           id?: string
+          interested_courses?: string[] | null
+          interested_skills?: string[] | null
+          lead_quality?: number | null
+          location?: string | null
           name: string
+          owner?: string | null
           phone?: string | null
+          remarks?: string | null
+          secondary_phone?: string | null
           source?: string | null
+          stage?: string | null
           status?: string | null
           user_id?: string | null
+          whatsapp_enabled?: boolean | null
         }
         Update: {
+          age?: number | null
+          channel?: string | null
           created_at?: string
           email?: string
           id?: string
+          interested_courses?: string[] | null
+          interested_skills?: string[] | null
+          lead_quality?: number | null
+          location?: string | null
           name?: string
+          owner?: string | null
           phone?: string | null
+          remarks?: string | null
+          secondary_phone?: string | null
           source?: string | null
+          stage?: string | null
           status?: string | null
           user_id?: string | null
+          whatsapp_enabled?: boolean | null
         }
         Relationships: []
       }
