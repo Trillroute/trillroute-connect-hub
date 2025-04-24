@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { Course } from '@/types/course';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Toggle } from '@/components/ui/toggle';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Link } from 'react-router-dom';
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -114,9 +116,11 @@ const Courses = () => {
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full bg-music-500 hover:bg-music-600">
-          View Course
-        </Button>
+        <Link to={`/courses/${course.id}`} className="w-full">
+          <Button className="w-full bg-music-500 hover:bg-music-600">
+            View Course
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

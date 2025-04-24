@@ -56,6 +56,38 @@ export function useCourses() {
     }
   };
 
+  const getCourseById = async (id: string): Promise<Course | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching course by ID:', error);
+        return null;
+      }
+
+      if (data) {
+        return {
+          ...data,
+          instructor_ids: data.instructor_ids || [],
+          student_ids: data.student_ids || [],
+          class_types_data: data.class_types_data ? 
+            (Array.isArray(data.class_types_data) ? 
+              (data.class_types_data as unknown as ClassTypeData[]) : 
+              []) : 
+            [],
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Unexpected error fetching course by ID:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchCourses();
     
@@ -72,5 +104,5 @@ export function useCourses() {
     };
   }, []);
 
-  return { courses, loading, fetchCourses };
+  return { courses, loading, fetchCourses, getCourseById };
 }

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,10 +111,12 @@ const StudentDashboard = () => {
                     </div>
                   </div>
                   
-                  <Button variant="outline" className="w-full border-music-300 text-music-500 hover:bg-music-50">
-                    <PlayCircle className="h-4 w-4 mr-2" />
-                    Continue Learning
-                  </Button>
+                  <Link to={`/courses/${course.id}`} className="w-full">
+                    <Button variant="outline" className="w-full border-music-300 text-music-500 hover:bg-music-50">
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Continue Learning
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
@@ -218,9 +221,11 @@ const StudentDashboard = () => {
                       </div>
                     </div>
                   ))}
-                  <Button variant="link" className="w-full text-music-500">
-                    View All Recommendations
-                  </Button>
+                  <Link to="/courses">
+                    <Button variant="link" className="w-full text-music-500">
+                      View All Recommendations
+                    </Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
@@ -229,9 +234,11 @@ const StudentDashboard = () => {
                   <p className="text-gray-500 max-w-sm mx-auto mb-4">
                     We'll suggest courses based on your interests as you explore our platform.
                   </p>
-                  <Button variant="link" className="w-full text-music-500">
-                    Browse All Courses
-                  </Button>
+                  <Link to="/courses">
+                    <Button variant="link" className="w-full text-music-500">
+                      Browse All Courses
+                    </Button>
+                  </Link>
                 </div>
               )}
             </CardContent>
