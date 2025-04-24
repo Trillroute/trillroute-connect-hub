@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Clock, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,9 +44,11 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, getInstructorNames }) =
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full bg-music-500 hover:bg-music-600">
-          Enroll Now
-        </Button>
+        <Link to={`/courses/${course.id}`} className="w-full">
+          <Button className="w-full bg-music-500 hover:bg-music-600">
+            View Course
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

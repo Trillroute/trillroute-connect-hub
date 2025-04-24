@@ -13,6 +13,7 @@ import Layout from "@/components/Layout";
 // Pages
 import Index from "./pages/Index";
 import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -47,6 +48,7 @@ const App = () => (
               {/* Main Pages */}
               <Route path="/" element={<Index />} />
               <Route path="/courses" element={<Courses />} />
+              <Route path="/courses/:courseId" element={<CourseDetail />} />
               
               {/* Auth Pages */}
               <Route path="/auth/login" element={<Login />} />
