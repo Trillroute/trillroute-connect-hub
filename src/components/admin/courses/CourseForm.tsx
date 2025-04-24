@@ -86,8 +86,8 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       const selectedIds = value.split(',').filter(id => id);
                       field.onChange(selectedIds);
                     }}
-                    defaultValue={field.value?.join(',')}
-                    value={field.value?.join(',') || "_no_instructors"}
+                    defaultValue={field.value?.join(',') || "no_instructors"}
+                    value={field.value?.join(',') || "no_instructors"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -98,11 +98,12 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       {teachers.map((teacher) => (
                         <SelectItem 
                           key={teacher.id} 
-                          value={teacher.id || "_default_teacher"}
+                          value={teacher.id}
                         >
                           {teacher.first_name} {teacher.last_name}
                         </SelectItem>
                       ))}
+                      <SelectItem value="no_instructors">Select Instructors</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
