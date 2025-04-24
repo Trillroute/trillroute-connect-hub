@@ -29,7 +29,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ form, calculateFinalPri
                   step="0.01"
                   placeholder="Enter base price"
                   value={field.value || 0}
-                  onChange={e => field.onChange(Number(e.target.value))}
+                  onChange={e => field.onChange(Number(e.target.value) || 0)}
                 />
               </FormControl>
               <FormMessage />
@@ -68,7 +68,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ form, calculateFinalPri
                     step="0.01"
                     placeholder="Enter GST rate"
                     value={field.value || 0}
-                    onChange={e => field.onChange(Number(e.target.value))}
+                    onChange={e => field.onChange(Number(e.target.value) || 0)}
                   />
                 </FormControl>
                 <FormMessage />

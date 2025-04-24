@@ -22,7 +22,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
           <FormItem>
             <FormLabel className="text-sm font-semibold">Title *</FormLabel>
             <FormControl>
-              <Input placeholder="Enter course title" className="w-full" {...field} />
+              <Input placeholder="Enter course title" className="w-full" {...field} value={field.value || ''} />
             </FormControl>
             <FormDescription>
               Choose a clear and descriptive title
@@ -43,6 +43,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
                 placeholder="Describe what students will learn"
                 className="min-h-[120px] resize-none"
                 {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormMessage />
@@ -56,7 +57,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-semibold">Level *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value || "Beginner"} value={field.value || "Beginner"}>
+            <Select onValueChange={field.onChange} value={field.value || "Beginner"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select course level" />
@@ -80,7 +81,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-semibold">Skill *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value || "_no_skill_selected"} value={field.value || "_no_skill_selected"}>
+            <Select onValueChange={field.onChange} value={field.value || "_no_skill_selected"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select primary skill" />
@@ -89,13 +90,11 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
               <SelectContent>
                 {skills.length > 0 ? (
                   skills.map((skill) => (
-                    <SelectItem key={skill.id} value={skill.id || "_no_skill_selected"}>
+                    <SelectItem key={skill.id} value={skill.id}>
                       {skill.name}
                     </SelectItem>
                   ))
-                ) : (
-                  <SelectItem value="_no_skill_selected">No Skills Available</SelectItem>
-                )}
+                ) : []}
                 <SelectItem value="_no_skill_selected">No Skill Selected</SelectItem>
               </SelectContent>
             </Select>
@@ -111,7 +110,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
           <FormItem>
             <FormLabel className="text-sm font-semibold">Image URL *</FormLabel>
             <FormControl>
-              <Input placeholder="https://example.com/image.jpg" {...field} />
+              <Input placeholder="https://example.com/image.jpg" {...field} value={field.value || ''} />
             </FormControl>
             <FormMessage />
           </FormItem>

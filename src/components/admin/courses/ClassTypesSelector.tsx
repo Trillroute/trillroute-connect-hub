@@ -101,7 +101,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value = [], onC
                     </SelectTrigger>
                     <SelectContent>
                       {classTypes.map((classType) => (
-                        <SelectItem key={classType.id} value={classType.id || "default_class_type"}>
+                        <SelectItem key={classType.id} value={classType.id}>
                           {classType.name}
                         </SelectItem>
                       ))}

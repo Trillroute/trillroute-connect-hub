@@ -26,8 +26,7 @@ const DurationSection: React.FC<DurationSectionProps> = ({ form }) => {
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
-                defaultValue={field.value}
-                value={field.value}
+                value={field.value || "fixed"}
                 className="flex flex-col space-y-3"
               >
                 <div className="flex items-center space-x-3">
@@ -61,6 +60,7 @@ const DurationSection: React.FC<DurationSectionProps> = ({ form }) => {
                     type="number"
                     placeholder="Enter duration value (e.g., 4)"
                     {...field}
+                    value={field.value || ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -77,7 +77,6 @@ const DurationSection: React.FC<DurationSectionProps> = ({ form }) => {
                 <Select 
                   onValueChange={field.onChange} 
                   value={field.value || "weeks"}
-                  defaultValue={field.value || "weeks"}
                 >
                   <FormControl>
                     <SelectTrigger>

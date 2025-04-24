@@ -54,10 +54,17 @@ const Courses = () => {
   
   // Extract unique levels and durations for filters
   const uniqueLevels = [...new Set((courses || []).map(course => course.level))];
-  const uniqueDurations = [...new Set((courses || []).map(course => course.duration.split(' ')[0]))];
+  const uniqueDurations = [...new Set((courses || [])
+    .map(course => {
+      const durationParts = course.duration.split(' ');
+      return durationParts.length > 0 ? durationParts[0] : 'unknown';
+    })
+    .filter(duration => duration && duration !== 'unknown'))];
   
   // Get all unique skills from courses
-  const uniqueSkills = [...new Set((courses || []).map(course => course.skill))];
+  const uniqueSkills = [...new Set((courses || [])
+    .map(course => course.skill)
+    .filter(skill => skill && skill !== ''))];
   
   // Group courses by skill for the tabs
   const coursesBySkill = {
@@ -76,11 +83,11 @@ const Courses = () => {
   };
   
   // Render a course card
-  const CourseCard = ({ course }) => (
+  const CourseCard = ({ course }: { course: Course }) => (
     <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg">
       <div className="relative h-48 overflow-hidden">
         <img 
-          src={course.image} 
+          src={course.image || '/placeholder.svg'} 
           alt={course.title} 
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           onError={(e) => {
@@ -102,9 +109,9 @@ const Courses = () => {
         <p className="text-gray-600 line-clamp-2">{course.description}</p>
         <div className="flex items-center mt-4 text-sm text-gray-500">
           <Clock className="h-4 w-4 mr-1" />
-          <span className="mr-3">{course.duration} ({course.duration_type})</span>
+          <span className="mr-3">{course.duration} ({course.duration_type || 'fixed'})</span>
           <Users className="h-4 w-4 mr-1" />
-          <span>{course.students} students</span>
+          <span>{course.students || 0} students</span>
         </div>
       </CardContent>
       <CardFooter>
@@ -149,25 +156,31 @@ const Courses = () => {
             <span>Filter</span>
           </Button>
           
-          <Select value={levelFilter || ''} onValueChange={value => setLevelFilter(value || null)}>
+          <Select 
+            value={levelFilter || "null"} 
+            onValueChange={value => setLevelFilter(value === "null" ? null : value)}
+          >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Levels</SelectItem>
-              {uniqueLevels.map(level => (
+              <SelectItem value="null">All Levels</SelectItem>
+              {uniqueLevels.map(level => level && (
                 <SelectItem key={level} value={level}>{level}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           
-          <Select value={durationFilter || ''} onValueChange={value => setDurationFilter(value || null)}>
+          <Select 
+            value={durationFilter || "null"} 
+            onValueChange={value => setDurationFilter(value === "null" ? null : value)}
+          >
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Duration" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Duration</SelectItem>
-              {uniqueDurations.map(duration => (
+              <SelectItem value="null">Any Duration</SelectItem>
+              {uniqueDurations.map(duration => duration && (
                 <SelectItem key={duration} value={duration}>{duration}</SelectItem>
               ))}
             </SelectContent>
@@ -185,7 +198,7 @@ const Courses = () => {
             <div>
               <h3 className="font-medium mb-2">Level</h3>
               <ToggleGroup type="single" value={levelFilter || ''} onValueChange={value => setLevelFilter(value || null)}>
-                {uniqueLevels.map(level => (
+                {uniqueLevels.map(level => level && (
                   <ToggleGroupItem key={level} value={level} size="sm">{level}</ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -193,7 +206,7 @@ const Courses = () => {
             <div>
               <h3 className="font-medium mb-2">Duration</h3>
               <ToggleGroup type="single" value={durationFilter || ''} onValueChange={value => setDurationFilter(value || null)}>
-                {uniqueDurations.map(duration => (
+                {uniqueDurations.map(duration => duration && (
                   <ToggleGroupItem key={duration} value={duration} size="sm">{duration}</ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -207,7 +220,7 @@ const Courses = () => {
         <div className="overflow-x-auto pb-2">
           <TabsList className="mb-8">
             <TabsTrigger value="all">All Courses</TabsTrigger>
-            {skills.map(skill => (
+            {skills.map(skill => skill?.name && (
               <TabsTrigger key={skill.id} value={skill.name.toLowerCase().replace(/\s+/g, '-')}>
                 {skill.name}
               </TabsTrigger>
@@ -235,7 +248,7 @@ const Courses = () => {
           )}
         </TabsContent>
         
-        {skills.map(skill => (
+        {skills.map(skill => skill?.name && (
           <TabsContent key={skill.id} value={skill.name.toLowerCase().replace(/\s+/g, '-')}>
             {loading ? (
               <div className="flex justify-center items-center py-20">

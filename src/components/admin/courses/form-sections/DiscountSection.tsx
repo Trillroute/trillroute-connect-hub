@@ -24,7 +24,6 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value || "percentage"}
-                defaultValue={field.value || "percentage"}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -56,7 +55,7 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
                   step={form.watch('discount_metric') === 'percentage' ? "1" : "0.01"}
                   placeholder={`Enter discount ${form.watch('discount_metric') === 'percentage' ? 'percentage' : 'amount'}`}
                   value={field.value || 0}
-                  onChange={e => field.onChange(Number(e.target.value))}
+                  onChange={e => field.onChange(Number(e.target.value) || 0)}
                 />
               </FormControl>
               <FormMessage />
@@ -74,6 +73,7 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
                 <Input 
                   type="datetime-local"
                   {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -91,7 +91,7 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
                 <Input 
                   placeholder="Enter discount code"
                   {...field}
-                  value={field.value || ""}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
