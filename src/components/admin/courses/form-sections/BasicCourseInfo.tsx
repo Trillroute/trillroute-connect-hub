@@ -56,7 +56,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-semibold">Level *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} defaultValue={field.value || "Beginner"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select course level" />
@@ -88,7 +88,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
               </FormControl>
               <SelectContent>
                 {skills.map((skill) => (
-                  <SelectItem key={skill.id} value={skill.name}>
+                  <SelectItem key={skill.id} value={skill.name || "default-skill"}>
                     {skill.name}
                   </SelectItem>
                 ))}

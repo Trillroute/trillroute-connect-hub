@@ -76,7 +76,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                 <div>
                   <Label>Class Type</Label>
                   <Select
-                    value={classTypeData.class_type_id}
+                    value={classTypeData.class_type_id || "select-class-type"}
                     onValueChange={(val) => handleChange(index, 'class_type_id', val)}
                   >
                     <SelectTrigger>
@@ -84,7 +84,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                     </SelectTrigger>
                     <SelectContent>
                       {classTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
+                        <SelectItem key={type.id} value={type.id || "default-type-id"}>
                           {type.name} (₹{type.price_inr})
                         </SelectItem>
                       ))}
@@ -95,7 +95,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                 <div>
                   <Label>Quantity</Label>
                   <Select
-                    value={String(classTypeData.quantity)}
+                    value={String(classTypeData.quantity) || "1"}
                     onValueChange={(val) => handleChange(index, 'quantity', Number(val))}
                   >
                     <SelectTrigger>
@@ -115,7 +115,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                   <Label>Duration</Label>
                   <div className="flex gap-2">
                     <Select
-                      value={String(classTypeData.duration_value)}
+                      value={String(classTypeData.duration_value) || "30"}
                       onValueChange={(val) => handleChange(index, 'duration_value', Number(val))}
                     >
                       <SelectTrigger>
@@ -131,7 +131,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                     </Select>
 
                     <Select
-                      value={classTypeData.duration_metric}
+                      value={classTypeData.duration_metric || "minutes"}
                       onValueChange={(val) => handleChange(index, 'duration_metric', val)}
                     >
                       <SelectTrigger>

@@ -98,7 +98,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                       {teachers.map((teacher) => (
                         <SelectItem 
                           key={teacher.id} 
-                          value={teacher.id}
+                          value={teacher.id || "default-teacher-id"}
                         >
                           {teacher.first_name} {teacher.last_name}
                         </SelectItem>
