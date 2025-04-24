@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Lead, LeadChannel, LeadLocation, LeadStage } from '@/types/lead';
@@ -8,6 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { Select } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { useSkills } from '@/hooks/useSkills';
 
 type EditLeadDialogProps = {
   open: boolean;
@@ -24,6 +26,9 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { skills, loading: skillsLoading } = useSkills();
+  const [courses, setCourses] = useState<{id: string, title: string}[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
   const [formData, setFormData] = useState({
     name: lead?.name || '',
     email: lead?.email || '',
@@ -41,9 +46,34 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
     interested_skills: lead?.interested_skills || []
   });
 
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const { data, error } = await supabase
+          .from('courses')
+          .select('id, title')
+          .order('title');
+          
+        if (error) throw error;
+        setCourses(data || []);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleMultiSelectChange = (name: string, values: string[]) => {
+    setFormData(prev => ({ ...prev, [name]: values }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -251,6 +281,26 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                   onChange={handleChange}
                 />
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Interested Skills</label>
+              <MultiSelect
+                options={skills.map(skill => ({ label: skill.name, value: skill.name }))}
+                selected={formData.interested_skills || []}
+                onChange={(selected) => handleMultiSelectChange('interested_skills', selected)}
+                placeholder={skillsLoading ? "Loading skills..." : "Select skills..."}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Interested Courses</label>
+              <MultiSelect
+                options={courses.map(course => ({ label: course.title, value: course.title }))}
+                selected={formData.interested_courses || []}
+                onChange={(selected) => handleMultiSelectChange('interested_courses', selected)}
+                placeholder={loadingCourses ? "Loading courses..." : "Select courses..."}
+              />
             </div>
 
             <div className="grid gap-2">

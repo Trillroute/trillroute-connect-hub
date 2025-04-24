@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,7 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { MultiSelect } from '@/components/ui/multi-select';
 import { LeadChannel, LeadLocation, LeadStage } from '@/types/lead';
+import { useSkills } from '@/hooks/useSkills';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -32,8 +34,8 @@ const formSchema = z.object({
   lead_quality: z.number().min(1).max(5).optional(),
   stage: z.enum(['New', 'Contacted', 'Interested', 'Take admission', 'Converted', 'Lost'] as const).default('New'),
   owner: z.string().optional(),
-  interested_courses: z.array(z.string()).optional(),
-  interested_skills: z.array(z.string()).optional()
+  interested_courses: z.array(z.string()).default([]),
+  interested_skills: z.array(z.string()).default([])
 });
 
 type LeadFormValues = z.infer<typeof formSchema>;
@@ -50,6 +52,30 @@ const CreateLeadDialog: React.FC<CreateLeadDialogProps> = ({
   onSuccess 
 }) => {
   const { toast } = useToast();
+  const { skills } = useSkills();
+  const [courses, setCourses] = useState<{id: string, title: string}[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const { data, error } = await supabase
+          .from('courses')
+          .select('id, title')
+          .order('title');
+          
+        if (error) throw error;
+        setCourses(data || []);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(formSchema),
@@ -331,6 +357,44 @@ const CreateLeadDialog: React.FC<CreateLeadDialogProps> = ({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="interested_skills"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Interested Skills</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={skills.map(skill => ({ label: skill.name, value: skill.name }))}
+                      selected={field.value || []}
+                      onChange={field.onChange}
+                      placeholder="Select skills..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="interested_courses"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Interested Courses</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={courses.map(course => ({ label: course.title, value: course.title }))}
+                      selected={field.value || []}
+                      onChange={field.onChange}
+                      placeholder={loadingCourses ? "Loading courses..." : "Select courses..."}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
