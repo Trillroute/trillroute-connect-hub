@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { 
@@ -33,7 +34,7 @@ type LeadTableProps = {
   onDelete: (lead: Lead) => void;
 };
 
-type SortField = 'name' | 'email' | 'status' | 'source' | 'created_at';
+type SortField = 'name' | 'email' | 'stage' | 'source' | 'created_at';
 type SortDirection = 'asc' | 'desc';
 
 const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onEdit, onDelete }) => {
@@ -41,7 +42,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [stageFilter, setStageFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -66,8 +67,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
       );
     }
     
-    if (statusFilter !== 'all') {
-      filteredLeads = filteredLeads.filter(lead => lead.status === statusFilter);
+    if (stageFilter !== 'all') {
+      filteredLeads = filteredLeads.filter(lead => lead.stage === stageFilter);
     }
     
     filteredLeads.sort((a, b) => {
@@ -80,8 +81,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
         case 'email':
           comparison = a.email.localeCompare(b.email);
           break;
-        case 'status':
-          comparison = String(a.status || '').localeCompare(String(b.status || ''));
+        case 'stage':
+          comparison = String(a.stage || '').localeCompare(String(b.stage || ''));
           break;
         case 'source':
           comparison = String(a.source || '').localeCompare(String(b.source || ''));
@@ -97,7 +98,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
     });
     
     setLeads(filteredLeads);
-  }, [initialLeads, searchQuery, sortField, sortDirection, statusFilter]);
+  }, [initialLeads, searchQuery, sortField, sortDirection, stageFilter]);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -110,18 +111,19 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
 
   const clearFilters = () => {
     setSearchQuery('');
-    setStatusFilter('all');
+    setStageFilter('all');
     setSortField('created_at');
     setSortDirection('desc');
   };
 
-  const getStatusColor = (status: Lead['status']) => {
-    switch (status) {
-      case 'new': return 'bg-blue-500';
-      case 'contacted': return 'bg-yellow-500';
-      case 'qualified': return 'bg-purple-500';
-      case 'converted': return 'bg-green-500';
-      case 'lost': return 'bg-red-500';
+  const getStageColor = (stage: Lead['stage']) => {
+    switch (stage) {
+      case 'New': return 'bg-blue-500';
+      case 'Contacted': return 'bg-yellow-500';
+      case 'Interested': return 'bg-purple-500';
+      case 'Take admission': return 'bg-orange-500';
+      case 'Converted': return 'bg-green-500';
+      case 'Lost': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
   };
@@ -146,7 +148,7 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
     return <div className="py-8 text-center text-gray-500">Loading leads...</div>;
   }
   
-  if (leads.length === 0 && !searchQuery && statusFilter === 'all') {
+  if (leads.length === 0 && !searchQuery && stageFilter === 'all') {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center border rounded-md">
         <UserPlus className="h-12 w-12 text-gray-300 mb-4" />
@@ -210,10 +212,10 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
                 Email {sortField === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
               <DropdownMenuItem
-                className={sortField === 'status' ? 'bg-accent' : ''}
-                onClick={() => handleSort('status')}
+                className={sortField === 'stage' ? 'bg-accent' : ''}
+                onClick={() => handleSort('stage')}
               >
-                Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                Stage {sortField === 'stage' && (sortDirection === 'asc' ? '↑' : '↓')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className={sortField === 'source' ? 'bg-accent' : ''}
@@ -240,18 +242,19 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
         <div className="p-4 bg-muted/40 rounded-md border">
           <div className="flex flex-wrap gap-4 items-center">
             <div>
-              <p className="text-sm font-medium mb-1">Filter by Status</p>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <p className="text-sm font-medium mb-1">Filter by Stage</p>
+              <Select value={stageFilter} onValueChange={setStageFilter}>
                 <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Select Status" />
+                  <SelectValue placeholder="Select Stage" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="qualified">Qualified</SelectItem>
-                  <SelectItem value="converted">Converted</SelectItem>
-                  <SelectItem value="lost">Lost</SelectItem>
+                  <SelectItem value="all">All Stages</SelectItem>
+                  <SelectItem value="New">New</SelectItem>
+                  <SelectItem value="Contacted">Contacted</SelectItem>
+                  <SelectItem value="Interested">Interested</SelectItem>
+                  <SelectItem value="Take admission">Take admission</SelectItem>
+                  <SelectItem value="Converted">Converted</SelectItem>
+                  <SelectItem value="Lost">Lost</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -374,9 +377,9 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
                 <TableRow>
                   <TableHead 
                     className="cursor-pointer hover:bg-accent/50"
-                    onClick={() => handleSort('status')}
+                    onClick={() => handleSort('stage')}
                   >
-                    Status {sortField === 'status' && (
+                    Stage {sortField === 'stage' && (
                       <ArrowUpDown className="inline h-4 w-4 ml-1" />
                     )}
                   </TableHead>
@@ -386,8 +389,8 @@ const LeadTable: React.FC<LeadTableProps> = ({ leads: initialLeads, loading, onE
                 {leads.map((lead) => (
                   <TableRow key={lead.id}>
                     <TableCell>
-                      <Badge className={`${getStatusColor(lead.status)} text-white`}>
-                        {lead.status || 'Unknown'}
+                      <Badge className={`${getStageColor(lead.stage)} text-white`}>
+                        {lead.stage || 'Unknown'}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,7 +62,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
         lead.name.toLowerCase().includes(query) ||
         lead.email.toLowerCase().includes(query) ||
         (lead.phone && lead.phone.toLowerCase().includes(query)) ||
-        (lead.status && lead.status.toLowerCase().includes(query)) ||
+        (lead.stage && lead.stage.toLowerCase().includes(query)) ||
         (lead.source && lead.source.toLowerCase().includes(query))
       );
     });

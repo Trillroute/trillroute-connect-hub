@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Lead } from '@/types/lead';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
@@ -13,11 +14,12 @@ type StatusColumn = {
 };
 
 const STATUS_COLUMNS: StatusColumn[] = [
-  { key: 'new', label: 'New' },
-  { key: 'contacted', label: 'Contacted' },
-  { key: 'qualified', label: 'Qualified' },
-  { key: 'converted', label: 'Converted' },
-  { key: 'lost', label: 'Lost' },
+  { key: 'New', label: 'New' },
+  { key: 'Contacted', label: 'Contacted' },
+  { key: 'Interested', label: 'Interested' },
+  { key: 'Take admission', label: 'Take Admission' },
+  { key: 'Converted', label: 'Converted' },
+  { key: 'Lost', label: 'Lost' },
 ];
 
 interface LeadKanbanBoardProps {
@@ -60,23 +62,16 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     );
   }
 
-  const normalizedLeads = localLeads.map(lead => ({
-    ...lead,
-    status: lead.status ? lead.status.toLowerCase() : 'new'
-  }));
-
-  const leadsByStatus: { [status: string]: Lead[] } = {};
-  STATUS_COLUMNS.forEach(s => leadsByStatus[s.key] = []);
+  const leadsByStage: { [stage: string]: Lead[] } = {};
+  STATUS_COLUMNS.forEach(s => leadsByStage[s.key] = []);
   
-  normalizedLeads.forEach(lead => {
-    const statusKey = STATUS_COLUMNS.some(col => col.key === lead.status) 
-      ? lead.status 
-      : 'new';
-      
-    if (leadsByStatus[statusKey]) {
-      leadsByStatus[statusKey].push(lead);
+  leads.forEach(lead => {
+    const stageKey = lead.stage || 'New';
+    
+    if (leadsByStage[stageKey]) {
+      leadsByStage[stageKey].push(lead);
     } else {
-      leadsByStatus['new'].push(lead);
+      leadsByStage['New'].push(lead);
     }
   });
 
@@ -89,10 +84,10 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     e.preventDefault();
   };
 
-  const handleDrop = async (e: React.DragEvent, newStatus: string) => {
+  const handleDrop = async (e: React.DragEvent, newStage: string) => {
     e.preventDefault();
     
-    if (!draggedLead || draggedLead.status === newStatus) {
+    if (!draggedLead || draggedLead.stage === newStage) {
       setIsDragging(false);
       setDraggedLead(null);
       return;
@@ -101,7 +96,7 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     setLocalLeads(prev => 
       prev.map(lead => 
         lead.id === draggedLead.id 
-          ? { ...lead, status: newStatus } 
+          ? { ...lead, stage: newStage as Lead['stage'] } 
           : lead
       )
     );
@@ -109,14 +104,14 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     try {
       const { error } = await supabase
         .from('leads')
-        .update({ status: newStatus })
+        .update({ stage: newStage })
         .eq('id', draggedLead.id);
       
       if (error) throw error;
       
       toast({
         title: "Lead Updated",
-        description: `Lead moved to ${STATUS_COLUMNS.find(s => s.key === newStatus)?.label}`,
+        description: `Lead moved to ${STATUS_COLUMNS.find(s => s.key === newStage)?.label}`,
       });
     } catch (error) {
       console.error('Error updating lead:', error);
@@ -126,7 +121,7 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update lead status. Please try again.",
+        description: "Failed to update lead stage. Please try again.",
       });
     } finally {
       setIsDragging(false);
@@ -147,10 +142,10 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
             <CardTitle className="text-center py-2 font-semibold text-base">{column.label}</CardTitle>
             <CardContent>
               <div className="flex flex-col gap-3 min-h-[100px]">
-                {leadsByStatus[column.key].length === 0 && (
+                {leadsByStage[column.key].length === 0 && (
                   <div className="text-xs text-gray-400 text-center py-4">No leads</div>
                 )}
-                {leadsByStatus[column.key].map(lead => (
+                {leadsByStage[column.key].map(lead => (
                   <div
                     key={lead.id}
                     className={`bg-white rounded-lg shadow border p-3 flex flex-col gap-2 hover:shadow-md animate-fade-in cursor-move ${

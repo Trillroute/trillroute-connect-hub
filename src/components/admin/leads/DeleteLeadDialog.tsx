@@ -69,9 +69,9 @@ const DeleteLeadDialog: React.FC<DeleteLeadDialogProps> = ({
               <strong>Phone:</strong> {lead.phone}
             </div>
           )}
-          {lead.status && (
+          {lead.stage && (
             <div className="text-sm text-muted-foreground">
-              <strong>Status:</strong> {lead.status}
+              <strong>Stage:</strong> {lead.stage}
             </div>
           )}
         </div>
