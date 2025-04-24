@@ -21,7 +21,7 @@ const DiscountSection: React.FC<DiscountSectionProps> = ({ form }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-sm font-semibold">Discount Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || "percentage"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select discount type" />

@@ -80,7 +80,7 @@ const BasicCourseInfo: React.FC<BasicCourseInfoProps> = ({ form, skills }) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-semibold">Skill *</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} defaultValue={field.value || "_no_skill_selected"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select primary skill" />

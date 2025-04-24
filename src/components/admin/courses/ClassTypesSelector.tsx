@@ -95,7 +95,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                 <div>
                   <Label>Quantity</Label>
                   <Select
-                    value={String(classTypeData.quantity) || "1"}
+                    value={String(classTypeData.quantity || 1)}
                     onValueChange={(val) => handleChange(index, 'quantity', Number(val))}
                   >
                     <SelectTrigger>
@@ -115,7 +115,7 @@ const ClassTypesSelector: React.FC<ClassTypesSelectorProps> = ({ value, onChange
                   <Label>Duration</Label>
                   <div className="flex gap-2">
                     <Select
-                      value={String(classTypeData.duration_value) || "30"}
+                      value={String(classTypeData.duration_value || 30)}
                       onValueChange={(val) => handleChange(index, 'duration_value', Number(val))}
                     >
                       <SelectTrigger>
