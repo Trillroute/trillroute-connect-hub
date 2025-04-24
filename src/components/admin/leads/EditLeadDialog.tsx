@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Lead } from '@/types/lead';
+import { Lead, LeadChannel, LeadLocation, LeadStage } from '@/types/lead';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
+import { Select } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 type EditLeadDialogProps = {
   open: boolean;
@@ -13,14 +15,6 @@ type EditLeadDialogProps = {
   lead: Lead;
   onSuccess: () => void;
 };
-
-const statusOptions = [
-  { value: 'new', label: 'New' },
-  { value: 'contacted', label: 'Contacted' },
-  { value: 'qualified', label: 'Qualified' },
-  { value: 'converted', label: 'Converted' },
-  { value: 'lost', label: 'Lost' },
-];
 
 const EditLeadDialog: React.FC<EditLeadDialogProps> = ({ 
   open, 
@@ -34,9 +28,17 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
     name: lead?.name || '',
     email: lead?.email || '',
     phone: lead?.phone || '',
-    status: (lead?.status || 'new').toLowerCase(),
-    notes: lead?.notes || '',
-    source: lead?.source || ''
+    secondary_phone: lead?.secondary_phone || '',
+    whatsapp_enabled: lead?.whatsapp_enabled || false,
+    age: lead?.age || '',
+    location: lead?.location || '',
+    channel: lead?.channel || '',
+    remarks: lead?.remarks || '',
+    lead_quality: lead?.lead_quality || 1,
+    stage: lead?.stage || 'New',
+    owner: lead?.owner || '',
+    interested_courses: lead?.interested_courses || [],
+    interested_skills: lead?.interested_skills || []
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -55,9 +57,17 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          status: formData.status,
-          notes: formData.notes,
-          source: formData.source
+          secondary_phone: formData.secondary_phone,
+          whatsapp_enabled: formData.whatsapp_enabled,
+          age: formData.age ? parseInt(formData.age.toString()) : null,
+          location: formData.location,
+          channel: formData.channel,
+          remarks: formData.remarks,
+          lead_quality: formData.lead_quality ? parseInt(formData.lead_quality.toString()) : null,
+          stage: formData.stage,
+          owner: formData.owner,
+          interested_courses: formData.interested_courses,
+          interested_skills: formData.interested_skills
         })
         .eq('id', lead.id);
       
@@ -84,14 +94,14 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Lead</DialogTitle>
         </DialogHeader>
         
         <ScrollArea className="h-[calc(100vh-14rem)] pr-4">
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <label htmlFor="name" className="text-sm font-medium">Name</label>
                 <input
@@ -127,45 +137,131 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div className="grid gap-2">
-                <label htmlFor="source" className="text-sm font-medium">Source</label>
+                <label htmlFor="secondary_phone" className="text-sm font-medium">Secondary Phone</label>
                 <input
-                  id="source"
-                  name="source"
+                  id="secondary_phone"
+                  name="secondary_phone"
                   className="px-3 py-2 border border-gray-300 rounded-md"
-                  value={formData.source || ''}
+                  value={formData.secondary_phone || ''}
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div className="grid gap-2">
-                <label htmlFor="status" className="text-sm font-medium">Status</label>
-                <select
-                  id="status"
-                  name="status"
+                <label className="text-sm font-medium">WhatsApp Enabled</label>
+                <Switch
+                  checked={formData.whatsapp_enabled}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, whatsapp_enabled: checked }))}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="age" className="text-sm font-medium">Age</label>
+                <input
+                  id="age"
+                  name="age"
+                  type="number"
                   className="px-3 py-2 border border-gray-300 rounded-md"
-                  value={formData.status}
+                  value={formData.age}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="location" className="text-sm font-medium">Location</label>
+                <select
+                  id="location"
+                  name="location"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.location}
                   onChange={handleChange}
                 >
-                  {statusOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+                  <option value="">Select location</option>
+                  <option value="Indiranagar">Indiranagar</option>
+                  <option value="Online">Online</option>
+                </select>
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="channel" className="text-sm font-medium">Channel</label>
+                <select
+                  id="channel"
+                  name="channel"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.channel}
+                  onChange={handleChange}
+                >
+                  <option value="">Select channel</option>
+                  {[
+                    'Call', 'Wix', 'Walk-in', 'Whatsapp', 'Message',
+                    'Google My Business', 'Instagram', 'Meta Ads', 'Facebook',
+                    'Justdial', 'Urbanpro', 'Google form', 'Other',
+                    'In Person', 'Referral', 'E-mail'
+                  ].map((channel) => (
+                    <option key={channel} value={channel}>
+                      {channel}
                     </option>
                   ))}
                 </select>
               </div>
-              
+
               <div className="grid gap-2">
-                <label htmlFor="notes" className="text-sm font-medium">Notes</label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  className="px-3 py-2 border border-gray-300 rounded-md min-h-[100px]"
-                  value={formData.notes || ''}
+                <label htmlFor="lead_quality" className="text-sm font-medium">Lead Quality (1-5)</label>
+                <input
+                  id="lead_quality"
+                  name="lead_quality"
+                  type="number"
+                  min="1"
+                  max="5"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.lead_quality}
                   onChange={handleChange}
                 />
               </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="stage" className="text-sm font-medium">Stage</label>
+                <select
+                  id="stage"
+                  name="stage"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.stage}
+                  onChange={handleChange}
+                >
+                  {[
+                    'New', 'Contacted', 'Interested', 'Take admission',
+                    'Converted', 'Lost'
+                  ].map((stage) => (
+                    <option key={stage} value={stage}>
+                      {stage}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid gap-2">
+                <label htmlFor="owner" className="text-sm font-medium">Owner</label>
+                <input
+                  id="owner"
+                  name="owner"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.owner || ''}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <label htmlFor="remarks" className="text-sm font-medium">Remarks</label>
+              <textarea
+                id="remarks"
+                name="remarks"
+                className="px-3 py-2 border border-gray-300 rounded-md min-h-[100px]"
+                value={formData.remarks || ''}
+                onChange={handleChange}
+              />
             </div>
             
             <div className="flex justify-end gap-2 pt-2">
