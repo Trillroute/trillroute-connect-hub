@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Clock, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSkills } from '@/hooks/useSkills';
 import { useTeachers } from '@/hooks/useTeachers';
