@@ -1,19 +1,16 @@
-
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, Users, Clock, BookOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSkills } from '@/hooks/useSkills';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Toggle } from '@/components/ui/toggle';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Link } from 'react-router-dom';
+import SearchBar from '@/components/courses/SearchBar';
+import FiltersSection from '@/components/courses/FiltersSection';
 
 const Courses = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,6 +79,9 @@ const Courses = () => {
     setLevelFilter(null);
     setDurationFilter(null);
   };
+
+  // Count active filters
+  const activeFiltersCount = [levelFilter, durationFilter].filter(Boolean).length;
   
   // Render a course card
   const CourseCard = ({ course }: { course: Course }) => (
@@ -135,88 +135,26 @@ const Courses = () => {
       </div>
       
       {/* Search and Filter Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <div className="relative w-full md:w-1/2 mb-4 md:mb-0">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            type="text"
-            placeholder="Search for courses, instructors, or topics..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-8">
+        <div className="w-full md:w-1/2">
+          <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </div>
         
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center space-x-2"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4" />
-            <span>Filter</span>
-          </Button>
-          
-          <Select 
-            value={levelFilter || "null"} 
-            onValueChange={value => setLevelFilter(value === "null" ? null : value)}
-          >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="null">All Levels</SelectItem>
-              {uniqueLevels.map(level => level && (
-                <SelectItem key={level} value={level}>{level}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select 
-            value={durationFilter || "null"} 
-            onValueChange={value => setDurationFilter(value === "null" ? null : value)}
-          >
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Duration" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="null">Any Duration</SelectItem>
-              {uniqueDurations.map(duration => duration && (
-                <SelectItem key={duration} value={duration}>{duration}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {(levelFilter || durationFilter) && (
-            <Button variant="ghost" onClick={clearFilters}>Clear</Button>
-          )}
+        <div className="flex items-center gap-2 self-start">
+          <FiltersSection 
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            levelFilter={levelFilter}
+            setLevelFilter={setLevelFilter}
+            durationFilter={durationFilter}
+            setDurationFilter={setDurationFilter}
+            uniqueLevels={uniqueLevels}
+            uniqueDurations={uniqueDurations}
+            clearFilters={clearFilters}
+            activeFiltersCount={activeFiltersCount}
+          />
         </div>
       </div>
-      
-      {showFilters && (
-        <div className="mb-8 p-4 border rounded-md">
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">Level</h3>
-              <ToggleGroup type="single" value={levelFilter || ''} onValueChange={value => setLevelFilter(value || null)}>
-                {uniqueLevels.map(level => level && (
-                  <ToggleGroupItem key={level} value={level} size="sm">{level}</ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-            <div>
-              <h3 className="font-medium mb-2">Duration</h3>
-              <ToggleGroup type="single" value={durationFilter || ''} onValueChange={value => setDurationFilter(value || null)}>
-                {uniqueDurations.map(duration => duration && (
-                  <ToggleGroupItem key={duration} value={duration} size="sm">{duration}</ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-          </div>
-        </div>
-      )}
       
       {/* Course Categories Tabs */}
       <Tabs defaultValue="all">
@@ -246,7 +184,7 @@ const Courses = () => {
             <div className="text-center py-12">
               <BookOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
               <h3 className="text-xl font-medium text-gray-900 mb-2">No courses found</h3>
-              <p className="text-gray-600">No courses are currently available. Check back soon!</p>
+              <p className="text-gray-600">No courses are currently available with your filter criteria. Try adjusting your filters!</p>
             </div>
           )}
         </TabsContent>
