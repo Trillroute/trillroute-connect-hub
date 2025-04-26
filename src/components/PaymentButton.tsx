@@ -22,12 +22,19 @@ export const PaymentButton = ({
   className,
   children = 'Pay Now'
 }: PaymentButtonProps) => {
-  const { initializePayment, loading, scriptLoaded } = useRazorpay();
+  const { initializePayment, loading, scriptLoaded, checkRazorpayAvailability } = useRazorpay();
   
   useEffect(() => {
+    // Check Razorpay availability on mount and periodically
+    const checkInterval = setInterval(() => {
+      checkRazorpayAvailability();
+    }, 3000);
+    
     // Log payment button mount and script status
     console.log('Payment button mounted, script loaded:', scriptLoaded);
-  }, [scriptLoaded]);
+    
+    return () => clearInterval(checkInterval);
+  }, [scriptLoaded, checkRazorpayAvailability]);
 
   const handleClick = () => {
     // Check if the amount is valid (greater than 0)
@@ -43,11 +50,13 @@ export const PaymentButton = ({
       return;
     }
     
+    // Force a check of Razorpay availability before proceeding
+    checkRazorpayAvailability();
+    
     // Check if script is loaded before proceeding
     if (!scriptLoaded) {
-      // Fix: Using the sonner toast API correctly without title property
       toast("Payment System Loading", {
-        description: "Please wait while we initialize the payment system.",
+        description: "Please wait while we initialize the payment system."
       });
       return;
     }

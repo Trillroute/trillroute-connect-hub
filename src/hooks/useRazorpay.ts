@@ -23,7 +23,20 @@ export const useRazorpay = () => {
       const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
       if (existingScript) {
         console.log('Razorpay script already exists in DOM');
-        setScriptLoaded(true);
+        // Check if Razorpay object is actually available in window
+        if (typeof window !== 'undefined' && !!(window as any).Razorpay) {
+          console.log('Razorpay object is available');
+          setScriptLoaded(true);
+        } else {
+          console.log('Razorpay script exists but object not available yet, waiting...');
+          // Wait for script to fully initialize
+          setTimeout(() => {
+            if (typeof window !== 'undefined' && !!(window as any).Razorpay) {
+              console.log('Razorpay object is now available after waiting');
+              setScriptLoaded(true);
+            }
+          }, 1000);
+        }
         return;
       }
 
@@ -33,7 +46,12 @@ export const useRazorpay = () => {
       script.async = true;
       script.onload = () => {
         console.log('Razorpay script loaded successfully');
-        setScriptLoaded(true);
+        // Add a small timeout to ensure the Razorpay object is initialized
+        setTimeout(() => {
+          if (typeof window !== 'undefined' && !!(window as any).Razorpay) {
+            setScriptLoaded(true);
+          }
+        }, 500);
       };
       script.onerror = () => {
         console.error('Failed to load Razorpay script');
@@ -46,17 +64,36 @@ export const useRazorpay = () => {
 
     loadRazorpayScript();
     
+    // Retry checking if Razorpay is available every few seconds
+    const checkInterval = setInterval(() => {
+      if (!scriptLoaded && typeof window !== 'undefined' && !!(window as any).Razorpay) {
+        console.log('Razorpay detected during interval check');
+        setScriptLoaded(true);
+        clearInterval(checkInterval);
+      }
+    }, 2000);
+    
     // Cleanup function to handle component unmounting
     return () => {
+      clearInterval(checkInterval);
       // We don't remove the script as other components might need it
-      // But we can clean up any other resources if needed
     };
-  }, []);
+  }, [scriptLoaded]);
 
   // Check if Razorpay is available globally
   const isRazorpayAvailable = useCallback(() => {
     return typeof window !== 'undefined' && !!(window as any).Razorpay;
   }, []);
+
+  // Force re-check if Razorpay is available
+  const checkRazorpayAvailability = useCallback(() => {
+    const available = isRazorpayAvailable();
+    if (available && !scriptLoaded) {
+      console.log('Manually detected Razorpay is available');
+      setScriptLoaded(true);
+    }
+    return available;
+  }, [isRazorpayAvailable, scriptLoaded]);
 
   const initializePayment = async ({ amount, currency = 'INR', onSuccess, onError }: PaymentOptions) => {
     // Return early if already loading
@@ -87,6 +124,9 @@ export const useRazorpay = () => {
         return;
       }
 
+      // Force check Razorpay availability
+      checkRazorpayAvailability();
+
       // Ensure Razorpay is available after script loading
       if (!scriptLoaded) {
         console.log('Waiting for Razorpay script to load...');
@@ -96,11 +136,12 @@ export const useRazorpay = () => {
         
         // Wait a moment and check again - give script a chance to load
         setTimeout(() => {
-          if (isRazorpayAvailable()) {
+          const razorpayAvailable = checkRazorpayAvailability();
+          if (razorpayAvailable) {
             console.log('Razorpay became available after delay');
-            setScriptLoaded(true);
             // Retry the payment initialization
             setLoading(false);
+            initializePayment({ amount, currency, onSuccess, onError });
           } else {
             console.error('Razorpay still not available after delay');
             toast.error("Payment System Error", {
@@ -209,6 +250,7 @@ export const useRazorpay = () => {
   return { 
     initializePayment, 
     loading, 
-    scriptLoaded: scriptLoaded && isRazorpayAvailable() 
+    scriptLoaded: scriptLoaded && isRazorpayAvailable(),
+    checkRazorpayAvailability
   };
 };
