@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Check, Loader2 } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Check, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,11 +11,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { enrollStudentInCourse, isStudentEnrolledInCourse } from '@/utils/enrollmentUtils';
 import { PaymentButton } from '@/components/PaymentButton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { getCourseById } = useCourses();
   const { teachers } = useTeachers();
@@ -24,21 +24,34 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentProcessing, setEnrollmentProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
       if (courseId) {
         try {
+          setError(null);
           const courseData = await getCourseById(courseId);
+          
+          if (!courseData) {
+            setError("Course not found. It may have been removed or is temporarily unavailable.");
+            setLoading(false);
+            return;
+          }
+          
           setCourse(courseData);
         } catch (error) {
           console.error('Error fetching course:', error);
-          toast.error('Failed to load course information');
+          setError("Failed to load course information. Please check your connection and try again.");
+          toast.error('Connection Error', {
+            description: 'Could not connect to the server. Please try again later.'
+          });
         } finally {
           setLoading(false);
         }
       }
     };
+    
     fetchCourse();
   }, [courseId, getCourseById]);
 
@@ -54,10 +67,10 @@ const CourseDetail = () => {
       }
     };
 
-    if (!loading && user) {
+    if (!loading && user && !error) {
       checkEnrollmentStatus();
     }
-  }, [loading, courseId, isAuthenticated, user]);
+  }, [loading, courseId, isAuthenticated, user, error]);
 
   // Process enrollment after successful payment
   useEffect(() => {
@@ -164,6 +177,33 @@ const CourseDetail = () => {
     return <CourseDetailSkeleton />;
   }
 
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Courses
+        </Button>
+        
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        
+        <div className="text-center mt-8">
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!course) {
     return <CourseNotFound />;
   }
@@ -229,7 +269,7 @@ const CourseDetail = () => {
             <span>Students: {course.students || 0}</span>
           </div>
         </div>
-        <div className="relative h-48 md:h-full rounded-lg overflow-hidden">
+        <div className="relative h-48 md:h-full rounded-lg overflow-hidden bg-gray-100">
           <img
             src={course.image || '/placeholder.svg'}
             alt={course.title}

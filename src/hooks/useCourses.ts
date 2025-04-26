@@ -98,28 +98,49 @@ export function useCourses() {
 
   const getCourseById = async (id: string): Promise<Course | null> => {
     try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('id', id)
-        .single();
+      // Implement retry logic for network issues
+      const maxRetries = 3;
+      let retries = 0;
+      let lastError: Error | null = null;
+      
+      while (retries < maxRetries) {
+        try {
+          console.log(`Attempting to fetch course ${id}, attempt ${retries + 1}/${maxRetries}`);
+          const { data, error } = await supabase
+            .from('courses')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-      if (error) {
-        console.error('Error fetching course by ID:', error);
-        return null;
-      }
+          if (error) {
+            console.error(`Error fetching course by ID (attempt ${retries + 1}):`, error);
+            throw error;
+          }
 
-      if (data) {
-        return {
-          ...data,
-          instructor_ids: data.instructor_ids || [],
-          student_ids: data.student_ids || [],
-          class_types_data: formatClassTypesData(data.class_types_data),
-        };
+          if (data) {
+            return {
+              ...data,
+              instructor_ids: data.instructor_ids || [],
+              student_ids: data.student_ids || [],
+              class_types_data: formatClassTypesData(data.class_types_data),
+            };
+          }
+          return null;
+        } catch (error) {
+          lastError = error as Error;
+          retries++;
+          if (retries < maxRetries) {
+            // Wait before retrying with exponential backoff
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+          }
+        }
       }
-      return null;
+      
+      console.error('Error fetching course by ID after all retries:', lastError);
+      throw lastError;
+      
     } catch (error) {
-      console.error('Unexpected error fetching course by ID:', error);
+      console.error('Error fetching course by ID:', error);
       return null;
     }
   };
