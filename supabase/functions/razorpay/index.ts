@@ -1,4 +1,3 @@
-
 import Razorpay from "npm:razorpay";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -18,6 +17,14 @@ const razorpay = new Razorpay({
   key_secret: Deno.env.get('RAZORPAY_KEY_SECRET') || '',
 });
 
+// Generate a shorter receipt ID (within 40 chars limit)
+function generateShortReceiptId() {
+  // Use timestamp + random chars to keep it unique but short
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 6);
+  return `rcpt_${timestamp}${random}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -26,10 +33,22 @@ serve(async (req) => {
   try {
     const { amount, currency = 'INR', user_id } = await req.json();
 
+    // Validate amount
+    if (!amount || amount <= 0) {
+      console.error('Invalid amount:', amount);
+      return new Response(
+        JSON.stringify({ error: 'Invalid amount. Amount must be greater than 0.' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400 
+        }
+      );
+    }
+
     const options = {
       amount: Math.round(amount * 100), // Razorpay expects amount in smallest currency unit
       currency,
-      receipt: `receipt_${crypto.randomUUID()}`,
+      receipt: generateShortReceiptId(), // Use shorter receipt ID
     };
 
     console.log('Creating Razorpay order with options:', options);
@@ -69,7 +88,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in razorpay function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'An unknown error occurred' }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400 

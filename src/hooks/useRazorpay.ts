@@ -23,11 +23,17 @@ export const useRazorpay = () => {
         description: "Please login to make a payment",
         variant: "destructive",
       });
+      
+      if (onError) onError({ message: "Authentication required" });
       return;
     }
 
     try {
       setLoading(true);
+      
+      if (amount <= 0) {
+        throw new Error("Payment amount must be greater than 0");
+      }
 
       // Create order using our edge function
       const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay', {
@@ -35,6 +41,7 @@ export const useRazorpay = () => {
       });
 
       if (orderError) throw orderError;
+      if (!orderData) throw new Error("No data returned from payment function");
 
       const options = {
         key: orderData.key_id,
@@ -79,7 +86,18 @@ export const useRazorpay = () => {
         theme: {
           color: "#6366f1",
         },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+            if (onError) onError({ message: "Payment canceled by user" });
+          }
+        }
       };
+
+      // Check if Razorpay is loaded
+      if (!(window as any).Razorpay) {
+        throw new Error("Razorpay SDK not loaded. Please refresh the page and try again.");
+      }
 
       const razorpayInstance = new (window as any).Razorpay(options);
       razorpayInstance.open();
