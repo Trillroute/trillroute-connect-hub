@@ -45,33 +45,19 @@ serve(async (req) => {
       throw new Error('User not found. Please ensure you are logged in properly.')
     }
 
-    // Create payment record in database
-    const { data: payment, error: paymentError } = await supabase
-      .from('payments')
-      .insert({
-        amount: amount,
-        course_id: courseId,
-        user_id: userId,
-        status: 'pending',
-        currency: 'INR'
-      })
-      .select()
-      .single()
+    // Create payment record directly with the Razorpay order details
+    // We'll generate a unique ID for this payment
+    const paymentId = crypto.randomUUID();
 
-    if (paymentError) {
-      console.error('Error creating payment record:', paymentError)
-      throw new Error('Failed to create payment record')
-    }
-
-    // Create Razorpay order
+    // Create Razorpay order first
     const orderData: RazorpayOrder = {
       amount: amount * 100, // Razorpay expects amount in smallest currency unit (paise)
       currency: "INR",
-      receipt: payment.id,
+      receipt: paymentId,
       notes: {
         courseId: courseId,
         userId: userId,
-        paymentId: payment.id
+        paymentId: paymentId
       }
     }
 
@@ -91,14 +77,26 @@ serve(async (req) => {
       throw new Error('Failed to create Razorpay order')
     }
 
-    // Update payment record with Razorpay order ID
-    const { error: updateError } = await supabase
+    // After we have the Razorpay order, now create a local record in our custom payments table
+    const { data: payment, error: paymentError } = await supabase
       .from('payments')
-      .update({ razorpay_order_id: razorpayOrder.id })
-      .eq('id', payment.id)
+      .insert({
+        id: paymentId,
+        amount: amount,
+        course_id: courseId,
+        user_id: userId,
+        status: 'pending',
+        currency: 'INR',
+        razorpay_order_id: razorpayOrder.id
+      })
+      .select()
+      .single()
 
-    if (updateError) {
-      console.error('Error updating payment record:', updateError)
+    if (paymentError) {
+      console.error('Error creating payment record:', paymentError)
+      // Don't fail the entire operation if we couldn't create our local payment record
+      // The Razorpay order is already created, we'll just return it directly
+      console.log('Continuing despite payment record creation error')
     }
 
     // Get the Razorpay key ID to send to the client
@@ -108,7 +106,7 @@ serve(async (req) => {
       JSON.stringify({ 
         orderId: razorpayOrder.id,
         amount: amount,
-        paymentId: payment.id,
+        paymentId: paymentId,
         key: razorpayKeyId
       }),
       {

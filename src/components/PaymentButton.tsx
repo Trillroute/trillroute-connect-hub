@@ -68,6 +68,7 @@ export const PaymentButton = ({
       }
 
       console.log('Creating Razorpay order for course:', courseId);
+      console.log('User ID:', user.id);
 
       // Create Razorpay order
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
