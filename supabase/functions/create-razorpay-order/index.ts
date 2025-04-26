@@ -15,6 +15,30 @@ interface RazorpayOrder {
   notes?: Record<string, string>;
 }
 
+// Function to validate user exists in custom_users table
+const validateUser = async (
+  supabase: any, 
+  userId: string
+): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('custom_users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !data) {
+      console.error('User validation error:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error validating user:', error);
+    return false;
+  }
+};
+
 serve(async (req) => {
   console.log("Received request to create-razorpay-order");
 
@@ -48,17 +72,16 @@ serve(async (req) => {
     );
 
     // Check if user exists in custom_users table
-    const { data: userData, error: userError } = await supabase
-      .from('custom_users')
-      .select('id')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !userData) {
-      console.error('User validation error:', userError || 'User not found');
-      
-      // Create the payment record without foreign key constraint
-      console.log('User not found in custom_users table, proceeding without foreign key constraint');
+    const userExists = await validateUser(supabase, userId);
+    if (!userExists) {
+      console.error('User does not exist in custom_users table:', userId);
+      return new Response(
+        JSON.stringify({ 
+          error: 'User does not exist in system',
+          message: 'Please contact support for assistance' 
+        }),
+        { headers: responseHeaders, status: 400 }
+      );
     }
 
     // Create payment record directly with the Razorpay order details

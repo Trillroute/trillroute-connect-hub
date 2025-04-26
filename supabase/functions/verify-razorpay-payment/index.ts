@@ -126,6 +126,30 @@ const updatePaymentStatus = async (
   }
 };
 
+// Function to validate user exists in custom_users table
+const validateUser = async (
+  supabase: any, 
+  userId: string
+): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('custom_users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !data) {
+      console.error('User validation error:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error validating user:', error);
+    return false;
+  }
+};
+
 // Function to update course enrollment
 const updateCourseEnrollment = async (
   supabase: any,
@@ -133,6 +157,13 @@ const updateCourseEnrollment = async (
   userId: string
 ): Promise<boolean> => {
   try {
+    // First validate that the user exists in custom_users table
+    const userExists = await validateUser(supabase, userId);
+    if (!userExists) {
+      console.error('User does not exist in custom_users table:', userId);
+      return false;
+    }
+    
     const { data: courseData, error: courseError } = await supabase
       .from('courses')
       .select('student_ids, students')
@@ -177,6 +208,13 @@ const logUserActivity = async (
   courseId: string
 ): Promise<void> => {
   try {
+    // First validate that the user exists in custom_users table
+    const userExists = await validateUser(supabase, userId);
+    if (!userExists) {
+      console.error('Cannot log activity - user does not exist in custom_users table:', userId);
+      return;
+    }
+    
     const { error: logError } = await supabase
       .from('user_activity_logs')
       .insert({
@@ -249,6 +287,18 @@ serve(async (req) => {
       );
     }
 
+    // Validate user exists in custom_users table
+    const userExists = await validateUser(supabase, paymentData.user_id);
+    if (!userExists) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'User does not exist in custom_users table',
+          message: 'Please contact support for assistance'
+        }),
+        { headers: responseHeaders, status: 400 }
+      );
+    }
+
     // Update payment status
     const paymentUpdateSuccess = await updatePaymentStatus(
       supabase,
@@ -301,4 +351,3 @@ serve(async (req) => {
     );
   }
 });
-
