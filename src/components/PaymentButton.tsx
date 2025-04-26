@@ -61,6 +61,10 @@ export const PaymentButton = ({
 
       console.log('Creating payment link for user:', user.id, 'course:', courseId);
 
+      toast.info("Connecting to payment gateway", {
+        description: "Please wait while we connect to the payment service..."
+      });
+
       const { data, error } = await supabase.functions.invoke('razorpay', {
         body: { 
           amount,
@@ -72,11 +76,18 @@ export const PaymentButton = ({
 
       if (error) {
         console.error('Razorpay function error:', error);
-        throw error;
+        toast.error("Payment Gateway Error", {
+          description: error.message || "Failed to connect to payment gateway. Please try again."
+        });
+        if (onError) onError(error);
+        return;
       }
 
       if (!data?.payment_link) {
         console.error('No payment link received:', data);
+        toast.error("Payment Link Error", {
+          description: "No payment link received from gateway. Please try again."
+        });
         throw new Error('No payment link received');
       }
 
@@ -94,6 +105,7 @@ export const PaymentButton = ({
       console.log('Storing payment intent in session storage:', paymentIntent);
       sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
       
+      // Redirect to Razorpay payment page
       window.location.href = data.payment_link;
 
     } catch (error) {

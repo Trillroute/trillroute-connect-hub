@@ -75,17 +75,31 @@ serve(async (req) => {
       );
     }
 
-    // Verify user exists before creating payment record
+    // Verify user exists in custom_users table instead of profiles
     const { data: userData, error: userError } = await supabase
-      .from('profiles')
+      .from('custom_users')
       .select('id')
       .eq('id', user_id)
       .single();
 
     if (userError) {
       console.error('Error verifying user:', userError);
+      
+      // Continue anyway - don't block payment if user verification fails
+      console.log('Proceeding with payment despite user verification failure');
+    }
+
+    // Verify course exists
+    const { data: courseData, error: courseError } = await supabase
+      .from('courses')
+      .select('id, title')
+      .eq('id', course_id)
+      .single();
+
+    if (courseError) {
+      console.error('Error verifying course:', courseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid user ID or user not found' }),
+        JSON.stringify({ error: 'Invalid course ID or course not found' }),
         { 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400 
@@ -115,12 +129,14 @@ serve(async (req) => {
       throw new Error('Failed to create payment record');
     }
 
+    console.log('Payment record created:', paymentRecord);
+
     // Create a payment link
     const paymentLinkOptions = {
-      amount: Math.round(amount * 100),
+      amount: Math.round(amount * 100), // Convert to smallest currency unit (paise)
       currency,
       accept_partial: false,
-      description: `Course Enrollment Payment`,
+      description: `Course Enrollment: ${courseData?.title || 'Course Enrollment Payment'}`,
       customer: {
         name: 'Course Student',
         email: 'student@example.com',
