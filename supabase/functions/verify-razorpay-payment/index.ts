@@ -10,10 +10,195 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
+interface VerificationRequest {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+  payment_id: string;
+}
+
+interface PaymentData {
+  course_id: string;
+  user_id: string;
+}
+
+// Function to create Supabase client
+const createSupabaseClient = () => {
+  return createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+};
+
+// Function to verify Razorpay signature
+const verifyRazorpaySignature = async (
+  orderId: string,
+  paymentId: string,
+  signature: string
+): Promise<boolean> => {
+  try {
+    const body = orderId + "|" + paymentId;
+    const secret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
+    
+    if (!secret) {
+      console.error("RAZORPAY_KEY_SECRET is not defined in environment variables");
+      return false;
+    }
+    
+    console.log("Verifying signature for body:", body);
+    
+    const keyData = new TextEncoder().encode(secret);
+    const message = new TextEncoder().encode(body);
+    
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    
+    const signatureBytes = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      message
+    );
+    
+    const generatedSignature = hexEncode(new Uint8Array(signatureBytes));
+    
+    console.log("Generated signature:", generatedSignature);
+    console.log("Received signature:", signature);
+
+    return generatedSignature === signature;
+  } catch (error) {
+    console.error("Error during signature verification:", error);
+    return false;
+  }
+};
+
+// Function to get payment details
+const getPaymentDetails = async (supabase: any, paymentId: string): Promise<PaymentData | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('course_id, user_id')
+      .eq('id', paymentId)
+      .single();
+
+    if (error || !data) {
+      console.error('Error fetching payment data:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in getPaymentDetails:', error);
+    return null;
+  }
+};
+
+// Function to update payment status
+const updatePaymentStatus = async (
+  supabase: any,
+  paymentId: string,
+  razorpayPaymentId: string,
+  razorpaySignature: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('payments')
+      .update({
+        status: 'completed',
+        razorpay_payment_id: razorpayPaymentId,
+        razorpay_signature: razorpaySignature,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', paymentId);
+
+    if (error) {
+      console.error('Error updating payment:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error in updatePaymentStatus:', error);
+    return false;
+  }
+};
+
+// Function to update course enrollment
+const updateCourseEnrollment = async (
+  supabase: any,
+  courseId: string,
+  userId: string
+): Promise<boolean> => {
+  try {
+    const { data: courseData, error: courseError } = await supabase
+      .from('courses')
+      .select('student_ids, students')
+      .eq('id', courseId)
+      .single();
+
+    if (courseError) {
+      console.error('Error fetching course:', courseError);
+      return false;
+    }
+
+    const currentStudentIds = courseData.student_ids || [];
+    if (currentStudentIds.includes(userId)) {
+      console.log("Student already enrolled in course");
+      return true;
+    }
+
+    const { error: updateError } = await supabase
+      .from('courses')
+      .update({
+        student_ids: [...currentStudentIds, userId],
+        students: (courseData.students || 0) + 1
+      })
+      .eq('id', courseId);
+
+    if (updateError) {
+      console.error('Error updating course:', updateError);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in updateCourseEnrollment:', error);
+    return false;
+  }
+};
+
+// Function to log user activity
+const logUserActivity = async (
+  supabase: any,
+  userId: string,
+  courseId: string
+): Promise<void> => {
+  try {
+    const { error: logError } = await supabase
+      .from('user_activity_logs')
+      .insert({
+        user_id: userId,
+        action: 'payment_completed',
+        component: 'course_enrollment',
+        entity_id: courseId,
+        page_url: '/courses/' + courseId
+      });
+
+    if (logError) {
+      console.error('Error logging user activity:', logError);
+    }
+  } catch (error) {
+    console.error('Error during activity logging:', error);
+  }
+};
+
+// Main request handler
 serve(async (req) => {
   console.log("Received request to verify-razorpay-payment");
   
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("Handling OPTIONS preflight request");
     return new Response(null, { 
@@ -22,291 +207,88 @@ serve(async (req) => {
     });
   }
 
-  // Add CORS headers to all responses
   const responseHeaders = {
     ...corsHeaders,
     'Content-Type': 'application/json'
   };
 
   try {
-    const {
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-      payment_id
-    } = await req.json();
+    const requestData: VerificationRequest = await req.json();
+    console.log("Received verification request with data:", requestData);
 
-    console.log("Received verification request with data:", { 
-      razorpay_payment_id, 
-      razorpay_order_id, 
-      razorpay_signature, 
-      payment_id 
-    });
-
-    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !payment_id) {
-      console.error("Missing required parameters:", { 
-        razorpay_payment_id, 
-        razorpay_order_id, 
-        razorpay_signature, 
-        payment_id 
-      });
-      
+    if (!requestData.razorpay_payment_id || !requestData.razorpay_order_id || 
+        !requestData.razorpay_signature || !requestData.payment_id) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Missing required Razorpay verification parameters' 
-        }),
-        {
-          headers: responseHeaders,
-          status: 400,
-        }
+        JSON.stringify({ error: 'Missing required Razorpay verification parameters' }),
+        { headers: responseHeaders, status: 400 }
       );
     }
 
-    // Verify the payment signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const secret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
-    
-    if (!secret) {
-      console.error("RAZORPAY_KEY_SECRET is not defined in environment variables");
-      return new Response(
-        JSON.stringify({ error: 'Razorpay secret key is not configured' }),
-        {
-          headers: responseHeaders,
-          status: 500,
-        }
-      );
-    }
-    
-    console.log("Verifying signature for body:", body);
-    
-    try {
-      // Create HMAC signature using the updated Deno crypto API
-      const keyData = new TextEncoder().encode(secret);
-      const message = new TextEncoder().encode(body);
-      
-      // Create HMAC using sha256
-      const key = await crypto.subtle.importKey(
-        "raw",
-        keyData,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
-      
-      const signature = await crypto.subtle.sign(
-        "HMAC",
-        key,
-        message
-      );
-      
-      // Use the correct hex encoding function from Deno std
-      const generatedSignature = hexEncode(new Uint8Array(signature));
-      
-      console.log("Generated signature:", generatedSignature);
-      console.log("Received signature:", razorpay_signature);
+    // Verify signature
+    const isSignatureValid = await verifyRazorpaySignature(
+      requestData.razorpay_order_id,
+      requestData.razorpay_payment_id,
+      requestData.razorpay_signature
+    );
 
-      if (generatedSignature !== razorpay_signature) {
-        console.error("Signature verification failed");
-        console.error("Generated:", generatedSignature);
-        console.error("Received:", razorpay_signature);
-        
-        return new Response(
-          JSON.stringify({ error: 'Invalid payment signature' }),
-          {
-            headers: responseHeaders,
-            status: 400,
-          }
-        );
-      }
-
-      console.log("Signature verified successfully");
-    } catch (signError) {
-      console.error("Error during signature verification:", signError);
-      
+    if (!isSignatureValid) {
       return new Response(
-        JSON.stringify({ error: `Signature verification error: ${signError.message}` }),
-        {
-          headers: responseHeaders,
-          status: 400,
-        }
+        JSON.stringify({ error: 'Invalid payment signature' }),
+        { headers: responseHeaders, status: 400 }
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Supabase credentials missing");
-      return new Response(
-        JSON.stringify({ error: 'Database credentials are not configured' }),
-        {
-          headers: responseHeaders,
-          status: 500,
-        }
-      );
-    }
+    const supabase = createSupabaseClient();
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get payment details to access course and user information
-    const { data: paymentData, error: paymentFetchError } = await supabase
-      .from('payments')
-      .select('course_id, user_id')
-      .eq('id', payment_id)
-      .single();
-
-    if (paymentFetchError || !paymentData) {
-      console.error('Error fetching payment data:', paymentFetchError);
-      
+    // Get payment details
+    const paymentData = await getPaymentDetails(supabase, requestData.payment_id);
+    if (!paymentData) {
       return new Response(
         JSON.stringify({ error: 'Failed to fetch payment data' }),
-        {
-          headers: responseHeaders,
-          status: 400,
-        }
+        { headers: responseHeaders, status: 400 }
       );
-    }
-
-    console.log("Payment data fetched:", paymentData);
-
-    // Verify user exists in custom_users table
-    const { data: userData, error: userError } = await supabase
-      .from('custom_users')
-      .select('id')
-      .eq('id', paymentData.user_id)
-      .single();
-
-    if (userError || !userData) {
-      console.error('User not found in custom_users table:', userError);
-      
-      // Don't fail the verification process, but log the warning
-      console.warn(`User with ID ${paymentData.user_id} not found in custom_users table, proceeding anyway`);
-    } else {
-      console.log('User verified in custom_users table:', userData.id);
     }
 
     // Update payment status
-    const { error: updateError } = await supabase
-      .from('payments')
-      .update({
-        status: 'completed',
-        razorpay_payment_id,
-        razorpay_signature,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', payment_id);
+    const paymentUpdateSuccess = await updatePaymentStatus(
+      supabase,
+      requestData.payment_id,
+      requestData.razorpay_payment_id,
+      requestData.razorpay_signature
+    );
 
-    if (updateError) {
-      console.error('Error updating payment:', updateError);
-      
+    if (!paymentUpdateSuccess) {
       return new Response(
-        JSON.stringify({ error: `Failed to update payment status: ${updateError.message}` }),
-        {
-          headers: responseHeaders,
-          status: 500,
-        }
+        JSON.stringify({ error: 'Failed to update payment status' }),
+        { headers: responseHeaders, status: 500 }
       );
     }
 
-    console.log("Payment status updated to completed");
+    // Update course enrollment
+    const enrollmentSuccess = await updateCourseEnrollment(
+      supabase,
+      paymentData.course_id,
+      paymentData.user_id
+    );
 
-    // Get current course data
-    const { data: courseData, error: courseError } = await supabase
-      .from('courses')
-      .select('student_ids, students')
-      .eq('id', paymentData.course_id)
-      .single();
-
-    if (courseError) {
-      console.error('Error fetching course:', courseError);
-      
+    if (!enrollmentSuccess) {
       return new Response(
-        JSON.stringify({ error: `Failed to fetch course data: ${courseError.message}` }),
-        {
-          headers: responseHeaders,
-          status: 500,
-        }
+        JSON.stringify({ error: 'Failed to update course enrollment' }),
+        { headers: responseHeaders, status: 500 }
       );
     }
 
-    console.log("Course data fetched:", courseData);
-    
-    // Add student to course
-    const currentStudentIds = courseData.student_ids || [];
-    
-    // Check if student is already enrolled
-    if (currentStudentIds.includes(paymentData.user_id)) {
-      console.log("Student already enrolled in course, skipping enrollment update");
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          message: 'Payment verified successfully, student already enrolled'
-        }),
-        {
-          headers: responseHeaders,
-          status: 200,
-        }
-      );
-    }
-    
-    const newStudentIds = [...currentStudentIds, paymentData.user_id];
-    const newStudentCount = (courseData.students || 0) + 1;
-
-    console.log("Updating course with new student. Current IDs:", currentStudentIds);
-    console.log("New student IDs:", newStudentIds);
-
-    const { error: courseUpdateError } = await supabase
-      .from('courses')
-      .update({
-        student_ids: newStudentIds,
-        students: newStudentCount
-      })
-      .eq('id', paymentData.course_id);
-
-    if (courseUpdateError) {
-      console.error('Error updating course:', courseUpdateError);
-      
-      return new Response(
-        JSON.stringify({ error: `Failed to update course enrollment: ${courseUpdateError.message}` }),
-        {
-          headers: responseHeaders,
-          status: 500,
-        }
-      );
-    }
+    // Log user activity
+    await logUserActivity(supabase, paymentData.user_id, paymentData.course_id);
 
     console.log('Payment verification and enrollment completed successfully');
-
-    // Add entry to user activity logs
-    try {
-      const { error: logError } = await supabase
-        .from('user_activity_logs')
-        .insert({
-          user_id: paymentData.user_id,
-          action: 'payment_completed',
-          component: 'course_enrollment',
-          entity_id: paymentData.course_id,
-          page_url: '/courses/' + paymentData.course_id
-        });
-
-      if (logError) {
-        console.error('Error logging user activity:', logError);
-        // Don't fail the whole operation if logging fails
-      }
-    } catch (logError) {
-      console.error('Error during activity logging:', logError);
-      // Don't fail the whole operation if logging fails
-    }
 
     return new Response(
       JSON.stringify({ 
         success: true,
         message: 'Payment verification and enrollment completed successfully'
       }),
-      {
-        headers: responseHeaders,
-        status: 200,
-      }
+      { headers: responseHeaders, status: 200 }
     );
   } catch (error) {
     console.error('Error in payment verification:', error);
@@ -315,10 +297,8 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ error: error.message || 'Payment verification failed' }),
-      {
-        headers: responseHeaders,
-        status: 400,
-      }
+      { headers: responseHeaders, status: 400 }
     );
   }
 });
+
