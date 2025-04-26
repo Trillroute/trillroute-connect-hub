@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import * as crypto from "https://deno.land/std@0.190.0/crypto/mod.ts";
+import { createHmac } from "https://deno.land/std@0.190.0/crypto/hmac.ts";
+import { encode as hexEncode } from "https://deno.land/std@0.190.0/encoding/hex.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,11 +27,30 @@ serve(async (req) => {
       payment_id
     } = await req.json()
 
-    console.log("Received verification request with data:", { razorpay_payment_id, razorpay_order_id, razorpay_signature, payment_id });
+    console.log("Received verification request with data:", { 
+      razorpay_payment_id, 
+      razorpay_order_id, 
+      razorpay_signature, 
+      payment_id 
+    });
 
     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !payment_id) {
-      console.error("Missing required parameters:", { razorpay_payment_id, razorpay_order_id, razorpay_signature, payment_id });
-      throw new Error('Missing required Razorpay verification parameters')
+      console.error("Missing required parameters:", { 
+        razorpay_payment_id, 
+        razorpay_order_id, 
+        razorpay_signature, 
+        payment_id 
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing required Razorpay verification parameters' 
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
     // Verify the payment signature
@@ -39,66 +59,86 @@ serve(async (req) => {
     
     if (!secret) {
       console.error("RAZORPAY_KEY_SECRET is not defined in environment variables");
-      throw new Error('Razorpay secret key is not configured');
+      return new Response(
+        JSON.stringify({ error: 'Razorpay secret key is not configured' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
     }
     
     console.log("Verifying signature for body:", body);
     
     try {
-      // Create HMAC signature
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(secret);
+      // Create HMAC signature using the built-in HMAC function from Deno
+      const hmac = createHmac("sha256", secret);
+      hmac.update(body);
+      const generatedSignature = hexEncode(hmac.digest());
       
-      const key = await crypto.subtle.importKey(
-        "raw",
-        keyData,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
-      
-      const signatureData = await crypto.subtle.sign(
-        "HMAC",
-        key,
-        encoder.encode(body)
-      );
-      
-      // Convert to hex
-      const generated_signature = Array.from(new Uint8Array(signatureData))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-      
-      console.log("Generated signature:", generated_signature);
+      console.log("Generated signature:", generatedSignature);
       console.log("Received signature:", razorpay_signature);
 
-      if (generated_signature !== razorpay_signature) {
+      if (generatedSignature !== razorpay_signature) {
         console.error("Signature verification failed");
-        console.error("Expected:", generated_signature);
+        console.error("Generated:", generatedSignature);
         console.error("Received:", razorpay_signature);
-        throw new Error('Invalid payment signature')
+        
+        return new Response(
+          JSON.stringify({ error: 'Invalid payment signature' }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
       }
 
       console.log("Signature verified successfully");
     } catch (signError) {
       console.error("Error during signature verification:", signError);
-      throw new Error(`Signature verification failed: ${signError.message}`);
+      
+      return new Response(
+        JSON.stringify({ error: `Signature verification error: ${signError.message}` }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Supabase credentials missing");
+      return new Response(
+        JSON.stringify({ error: 'Database credentials are not configured' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get payment details to access course and user information
     const { data: paymentData, error: paymentFetchError } = await supabase
       .from('payments')
       .select('course_id, user_id')
       .eq('id', payment_id)
-      .single()
+      .single();
 
     if (paymentFetchError || !paymentData) {
       console.error('Error fetching payment data:', paymentFetchError);
-      throw new Error('Failed to fetch payment data')
+      
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch payment data' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
     console.log("Payment data fetched:", paymentData);
@@ -112,11 +152,18 @@ serve(async (req) => {
         razorpay_signature,
         updated_at: new Date().toISOString()
       })
-      .eq('id', payment_id)
+      .eq('id', payment_id);
 
     if (updateError) {
-      console.error('Error updating payment:', updateError)
-      throw new Error('Failed to update payment status')
+      console.error('Error updating payment:', updateError);
+      
+      return new Response(
+        JSON.stringify({ error: 'Failed to update payment status' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
     }
 
     console.log("Payment status updated to completed");
@@ -126,17 +173,24 @@ serve(async (req) => {
       .from('courses')
       .select('student_ids, students')
       .eq('id', paymentData.course_id)
-      .single()
+      .single();
 
     if (courseError) {
-      console.error('Error fetching course:', courseError)
-      throw new Error('Failed to fetch course data')
+      console.error('Error fetching course:', courseError);
+      
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch course data' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
     }
 
     console.log("Course data fetched:", courseData);
     
     // Add student to course
-    const currentStudentIds = courseData.student_ids || []
+    const currentStudentIds = courseData.student_ids || [];
     
     // Check if student is already enrolled
     if (currentStudentIds.includes(paymentData.user_id)) {
@@ -149,12 +203,12 @@ serve(async (req) => {
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
-        },
-      )
+        }
+      );
     }
     
-    const newStudentIds = [...currentStudentIds, paymentData.user_id]
-    const newStudentCount = (courseData.students || 0) + 1
+    const newStudentIds = [...currentStudentIds, paymentData.user_id];
+    const newStudentCount = (courseData.students || 0) + 1;
 
     console.log("Updating course with new student. Current IDs:", currentStudentIds);
     console.log("New student IDs:", newStudentIds);
@@ -165,14 +219,21 @@ serve(async (req) => {
         student_ids: newStudentIds,
         students: newStudentCount
       })
-      .eq('id', paymentData.course_id)
+      .eq('id', paymentData.course_id);
 
     if (courseUpdateError) {
-      console.error('Error updating course:', courseUpdateError)
-      throw new Error('Failed to update course enrollment')
+      console.error('Error updating course:', courseUpdateError);
+      
+      return new Response(
+        JSON.stringify({ error: 'Failed to update course enrollment' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
     }
 
-    console.log('Payment verification and enrollment completed successfully')
+    console.log('Payment verification and enrollment completed successfully');
 
     return new Response(
       JSON.stringify({ 
@@ -182,18 +243,18 @@ serve(async (req) => {
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-      },
-    )
+      }
+    );
   } catch (error) {
-    console.error('Error in payment verification:', error)
-    console.error('Error message:', error.message)
+    console.error('Error in payment verification:', error);
+    console.error('Error message:', error.message);
     
     return new Response(
       JSON.stringify({ error: error.message || 'Payment verification failed' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
-      },
-    )
+      }
+    );
   }
-})
+});
