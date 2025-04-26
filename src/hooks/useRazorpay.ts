@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,11 +21,14 @@ export const useRazorpay = () => {
   useEffect(() => {
     const loadRazorpayScript = () => {
       // Check if script is already loaded
-      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+      if (existingScript) {
+        console.log('Razorpay script already exists in DOM');
         setScriptLoaded(true);
         return;
       }
 
+      console.log('Attempting to load Razorpay script');
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
@@ -45,9 +48,26 @@ export const useRazorpay = () => {
     };
 
     loadRazorpayScript();
+    
+    // Cleanup function to handle component unmounting
+    return () => {
+      // We don't remove the script as other components might need it
+      // But we can clean up any other resources if needed
+    };
   }, [toast]);
 
+  // Check if Razorpay is available globally
+  const isRazorpayAvailable = useCallback(() => {
+    return typeof window !== 'undefined' && !!(window as any).Razorpay;
+  }, []);
+
   const initializePayment = async ({ amount, currency = 'INR', onSuccess, onError }: PaymentOptions) => {
+    // Return early if already loading
+    if (loading) {
+      console.log('Payment process already in progress');
+      return;
+    }
+
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -68,19 +88,44 @@ export const useRazorpay = () => {
         if (onSuccess) {
           onSuccess({ free_enrollment: true });
         }
+        setLoading(false);
         return;
       }
 
-      // Check if Razorpay script is loaded
+      // Ensure Razorpay is available after script loading
       if (!scriptLoaded) {
-        console.error('Razorpay script not loaded yet');
+        console.log('Waiting for Razorpay script to load...');
         toast({
           title: "Payment System Loading",
-          description: "Payment system is still loading. Please try again in a moment.",
-          variant: "destructive",
+          description: "Payment system is still loading. Please wait a moment.",
         });
-        if (onError) onError({ message: "Payment system not ready yet" });
+        
+        // Wait a moment and check again - give script a chance to load
+        setTimeout(() => {
+          if (isRazorpayAvailable()) {
+            console.log('Razorpay became available after delay');
+            setScriptLoaded(true);
+            // Retry the payment initialization
+            setLoading(false);
+          } else {
+            console.error('Razorpay still not available after delay');
+            toast({
+              title: "Payment System Error",
+              description: "Payment system failed to load. Please refresh the page and try again.",
+              variant: "destructive",
+            });
+            if (onError) onError({ message: "Payment system not ready" });
+            setLoading(false);
+          }
+        }, 2000);
+        
         return;
+      }
+      
+      // Double check Razorpay is available
+      if (!isRazorpayAvailable()) {
+        console.error('Razorpay not available despite script being loaded');
+        throw new Error("Payment system not properly initialized. Please refresh the page.");
       }
 
       console.log('Initializing payment with user ID:', user.id);
@@ -99,11 +144,6 @@ export const useRazorpay = () => {
       }
 
       console.log('Order data received:', orderData);
-
-      // Check again if Razorpay is available
-      if (!(window as any).Razorpay) {
-        throw new Error("Razorpay SDK not loaded. Please refresh the page and try again.");
-      }
 
       const options = {
         key: orderData.key_id,
@@ -148,7 +188,7 @@ export const useRazorpay = () => {
         },
         prefill: {
           email: user.email,
-          contact: user.primaryPhone,
+          contact: user.primaryPhone || '',
         },
         theme: {
           color: "#6366f1",
@@ -161,7 +201,10 @@ export const useRazorpay = () => {
         }
       };
 
-      const razorpayInstance = new (window as any).Razorpay(options);
+      console.log('Creating Razorpay instance with options:', options);
+      const RazorpayConstructor = (window as any).Razorpay;
+      const razorpayInstance = new RazorpayConstructor(options);
+      console.log('Opening Razorpay payment modal');
       razorpayInstance.open();
 
     } catch (error) {
@@ -172,10 +215,13 @@ export const useRazorpay = () => {
         variant: "destructive",
       });
       if (onError) onError(error);
-    } finally {
       setLoading(false);
     }
   };
 
-  return { initializePayment, loading, scriptLoaded };
+  return { 
+    initializePayment, 
+    loading, 
+    scriptLoaded: scriptLoaded && isRazorpayAvailable() 
+  };
 };

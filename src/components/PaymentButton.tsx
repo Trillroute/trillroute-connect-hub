@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { toast } from '@/components/ui/sonner';
@@ -23,6 +23,11 @@ export const PaymentButton = ({
   children = 'Pay Now'
 }: PaymentButtonProps) => {
   const { initializePayment, loading, scriptLoaded } = useRazorpay();
+  
+  useEffect(() => {
+    // Log payment button mount and script status
+    console.log('Payment button mounted, script loaded:', scriptLoaded);
+  }, [scriptLoaded]);
 
   const handleClick = () => {
     // Check if the amount is valid (greater than 0)
@@ -38,6 +43,15 @@ export const PaymentButton = ({
       return;
     }
     
+    // Check if script is loaded before proceeding
+    if (!scriptLoaded) {
+      toast({
+        title: "Payment System Loading",
+        description: "Please wait while we initialize the payment system.",
+      });
+      return;
+    }
+    
     // Otherwise proceed with payment
     initializePayment({
       amount,
@@ -50,17 +64,24 @@ export const PaymentButton = ({
   // Determine button text based on state
   const buttonText = () => {
     if (loading) return 'Processing...';
-    if (!scriptLoaded) return 'Loading Payment...';
+    if (!scriptLoaded && amount > 0) return 'Loading Payment...';
     return amount > 0 ? children : 'Enroll for Free';
+  };
+
+  // Determine button disabled state
+  const isDisabled = () => {
+    if (amount <= 0) return false; // Free courses can always be enrolled
+    return loading || !scriptLoaded; // Paid courses need payment system ready
   };
 
   return (
     <Button
       onClick={handleClick}
-      disabled={loading || (!scriptLoaded && amount > 0)}
+      disabled={isDisabled()}
       className={className}
     >
       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {!scriptLoaded && amount > 0 && !loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {buttonText()}
     </Button>
   );
