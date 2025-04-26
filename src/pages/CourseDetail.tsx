@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCourses } from '@/hooks/useCourses';
@@ -157,7 +158,7 @@ const CourseDetail = () => {
     }
   }, [loading, user, course, courseId, isEnrolled, enrollmentProcessing, navigate, searchParams]);
 
-  const handlePaymentSuccess = async (response: any) => {
+  const handleEnrollmentSuccess = async (response: any) => {
     if (user && courseId) {
       try {
         console.log('Payment success callback triggered, enrolling student');
@@ -175,7 +176,7 @@ const CourseDetail = () => {
     }
   };
 
-  const handlePaymentError = (error: any) => {
+  const handleEnrollmentError = (error: any) => {
     toast.error('Payment Failed', {
       description: error.message || 'There was an error processing your payment.'
     });
@@ -218,8 +219,8 @@ const CourseDetail = () => {
         isEnrolled={isEnrolled}
         enrollmentProcessing={enrollmentProcessing}
         onNavigateBack={() => navigate(-1)}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentError={handlePaymentError}
+        onEnrollmentSuccess={handleEnrollmentSuccess}
+        onEnrollmentError={handleEnrollmentError}
         courseId={courseId as string}
       />
 
