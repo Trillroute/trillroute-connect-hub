@@ -44,40 +44,45 @@ serve(async (req) => {
     
     console.log("Verifying signature for body:", body);
     
-    // Create HMAC signature
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(secret);
-    
-    const key = await crypto.subtle.importKey(
-      "raw",
-      keyData,
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-    
-    const signatureData = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      encoder.encode(body)
-    );
-    
-    // Convert to hex
-    const generated_signature = Array.from(new Uint8Array(signatureData))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    
-    console.log("Generated signature:", generated_signature);
-    console.log("Received signature:", razorpay_signature);
+    try {
+      // Create HMAC signature
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(secret);
+      
+      const key = await crypto.subtle.importKey(
+        "raw",
+        keyData,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      
+      const signatureData = await crypto.subtle.sign(
+        "HMAC",
+        key,
+        encoder.encode(body)
+      );
+      
+      // Convert to hex
+      const generated_signature = Array.from(new Uint8Array(signatureData))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+      
+      console.log("Generated signature:", generated_signature);
+      console.log("Received signature:", razorpay_signature);
 
-    if (generated_signature !== razorpay_signature) {
-      console.error("Signature verification failed");
-      console.error("Expected:", generated_signature);
-      console.error("Received:", razorpay_signature);
-      throw new Error('Invalid payment signature')
+      if (generated_signature !== razorpay_signature) {
+        console.error("Signature verification failed");
+        console.error("Expected:", generated_signature);
+        console.error("Received:", razorpay_signature);
+        throw new Error('Invalid payment signature')
+      }
+
+      console.log("Signature verified successfully");
+    } catch (signError) {
+      console.error("Error during signature verification:", signError);
+      throw new Error(`Signature verification failed: ${signError.message}`);
     }
-
-    console.log("Signature verified successfully");
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -92,7 +97,7 @@ serve(async (req) => {
       .single()
 
     if (paymentFetchError || !paymentData) {
-      console.error('Error fetching payment data:', paymentFetchError)
+      console.error('Error fetching payment data:', paymentFetchError);
       throw new Error('Failed to fetch payment data')
     }
 
@@ -132,6 +137,22 @@ serve(async (req) => {
     
     // Add student to course
     const currentStudentIds = courseData.student_ids || []
+    
+    // Check if student is already enrolled
+    if (currentStudentIds.includes(paymentData.user_id)) {
+      console.log("Student already enrolled in course, skipping enrollment update");
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Payment verified successfully, student already enrolled'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      )
+    }
+    
     const newStudentIds = [...currentStudentIds, paymentData.user_id]
     const newStudentCount = (courseData.students || 0) + 1
 
