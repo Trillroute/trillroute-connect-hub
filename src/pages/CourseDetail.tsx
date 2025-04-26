@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -65,49 +65,47 @@ const CourseDetail = () => {
       setEnrollmentProcessing(true);
       
       try {
-        let shouldEnroll = false;
-        let enrollmentSource = '';
+        const searchParams = new URLSearchParams(window.location.search);
+        const enrollmentStatus = searchParams.get('enrollment');
+        const paymentIntent = sessionStorage.getItem('paymentIntent');
         
-        if (searchParams.get('enrollment') === 'success') {
-          shouldEnroll = true;
-          enrollmentSource = 'redirect';
-        }
-        
-        const pendingEnrollment = sessionStorage.getItem('pendingEnrollment');
-        if (pendingEnrollment) {
-          const enrollment = JSON.parse(pendingEnrollment);
+        if (enrollmentStatus === 'success' && paymentIntent) {
+          const intent = JSON.parse(paymentIntent);
           
           const isValid = 
-            enrollment.courseId === courseId && 
-            enrollment.userId === user.id &&
-            (new Date().getTime() - enrollment.timestamp) < 30 * 60 * 1000;
+            intent.courseId === courseId && 
+            intent.userId === user.id &&
+            (new Date().getTime() - intent.timestamp) < 30 * 60 * 1000;
             
           if (isValid) {
-            shouldEnroll = true;
-            enrollmentSource = 'session';
-          }
-          
-          sessionStorage.removeItem('pendingEnrollment');
-        }
-        
-        if (shouldEnroll) {
-          console.log(`Processing enrollment from ${enrollmentSource} source for user ${user.id} in course ${courseId}`);
-          
-          const success = await enrollStudentInCourse(courseId, user.id);
-          if (success) {
-            setIsEnrolled(true);
-            toast.success('Course Enrollment', {
-              description: `You are now enrolled in ${course?.title}`
-            });
+            console.log('Processing enrollment for verified payment');
+            const success = await enrollStudentInCourse(courseId, user.id);
             
-            navigate(`/courses/${courseId}`, { replace: true });
+            if (success) {
+              setIsEnrolled(true);
+              toast.success('Course Enrollment', {
+                description: `You are now enrolled in ${course?.title}`
+              });
+              
+              navigate(`/courses/${courseId}`, { replace: true });
+              sessionStorage.removeItem('paymentIntent');
+            } else {
+              toast.error('Enrollment Failed', {
+                description: 'Please contact support for assistance'
+              });
+            }
           } else {
-            toast.error('Enrollment failed. Please contact support.');
+            console.error('Invalid or expired payment intent');
+            toast.error('Enrollment Failed', {
+              description: 'Invalid or expired payment session'
+            });
           }
         }
       } catch (error) {
         console.error('Error processing enrollment:', error);
-        toast.error('Enrollment failed. Please try again or contact support.');
+        toast.error('Enrollment Failed', {
+          description: 'Please try again or contact support'
+        });
       } finally {
         setEnrollmentProcessing(false);
       }
@@ -116,7 +114,7 @@ const CourseDetail = () => {
     if (!loading && user && course) {
       processEnrollment();
     }
-  }, [loading, user, course, courseId, isEnrolled, searchParams, navigate, enrollmentProcessing]);
+  }, [loading, user, course, courseId, isEnrolled, enrollmentProcessing, navigate]);
 
   const handlePaymentSuccess = async (response: any) => {
     if (user && courseId) {

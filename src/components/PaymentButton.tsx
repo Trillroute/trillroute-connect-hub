@@ -33,12 +33,9 @@ export const PaymentButton = ({
   const handleClick = async () => {
     // Check if amount is valid
     if (!amount || amount <= 0) {
-      if (onSuccess) {
-        toast.success("Free Enrollment", {
-          description: "This is a free course. Processing your enrollment..."
-        });
-        onSuccess({ free_enrollment: true });
-      }
+      toast.error("Invalid Amount", {
+        description: "Cannot process payment for zero or negative amount"
+      });
       return;
     }
 
@@ -54,17 +51,20 @@ export const PaymentButton = ({
         
         // Store the current course URL to redirect back after login
         localStorage.setItem('paymentRedirectUrl', `/courses/${courseId}`);
-        // Also store auth state to persist during redirect
-        localStorage.setItem('authRedirectState', JSON.stringify({
-          action: 'payment',
-          courseId: courseId
+        
+        // Store payment intent in localStorage
+        localStorage.setItem('paymentIntent', JSON.stringify({
+          courseId,
+          amount,
+          currency,
+          timestamp: new Date().getTime()
         }));
         
         navigate('/auth/login');
         return;
       }
 
-      console.log('User authenticated:', user.id);
+      console.log('Creating payment link for user:', user.id, 'course:', courseId);
 
       // Create payment link with authenticated user
       const { data, error } = await supabase.functions.invoke('razorpay', {
@@ -88,9 +88,11 @@ export const PaymentButton = ({
 
       console.log('Payment link created:', data.payment_link);
       
-      // Store user info in sessionStorage to maintain login state during redirect
-      sessionStorage.setItem('pendingEnrollment', JSON.stringify({
-        courseId: courseId,
+      // Store payment intent in sessionStorage
+      sessionStorage.setItem('paymentIntent', JSON.stringify({
+        courseId,
+        amount,
+        currency,
         userId: user.id,
         timestamp: new Date().getTime()
       }));
@@ -116,7 +118,7 @@ export const PaymentButton = ({
       className={className}
     >
       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {loading ? 'Processing...' : amount > 0 ? children : 'Enroll for Free'}
+      {children}
     </Button>
   );
 };
