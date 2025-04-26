@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -43,6 +42,23 @@ export const PaymentButton = ({
     }
   }, []);
 
+  const checkExistingOrder = async (orderId: string) => {
+    try {
+      const orderData = await getOrderStatus(orderId);
+      if (orderData.status === 'completed') {
+        toast.success('Payment Already Completed', {
+          description: 'This order has already been processed successfully.'
+        });
+        if (onSuccess) onSuccess({ orderId });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking order status:', error);
+      return false;
+    }
+  };
+
   const handleClick = async () => {
     try {
       setLoading(true);
@@ -86,6 +102,11 @@ export const PaymentButton = ({
         toast.error("Payment Failed", {
           description: "Invalid payment configuration received. Please try again."
         });
+        return;
+      }
+
+      if (await checkExistingOrder(orderData.orderId)) {
+        setLoading(false);
         return;
       }
 
