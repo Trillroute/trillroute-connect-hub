@@ -1,6 +1,7 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +9,7 @@ import { useCourses } from '@/hooks/useCourses';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/sonner';
+import { enrollStudentInCourse, isStudentEnrolledInCourse } from '@/utils/enrollmentUtils';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -15,10 +17,12 @@ const CourseDetail = () => {
   const { getCourseById } = useCourses();
   const { teachers } = useTeachers();
   const { user, isAuthenticated } = useAuth();
-  const [course, setCourse] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolling, setEnrolling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchCourse = async () => {
       if (courseId) {
         const courseData = await getCourseById(courseId);
@@ -29,7 +33,20 @@ const CourseDetail = () => {
     fetchCourse();
   }, [courseId, getCourseById]);
 
-  const handleEnrollNow = () => {
+  useEffect(() => {
+    const checkEnrollmentStatus = async () => {
+      if (isAuthenticated && user && courseId) {
+        const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
+        setIsEnrolled(enrolled);
+      }
+    };
+
+    if (!loading) {
+      checkEnrollmentStatus();
+    }
+  }, [loading, courseId, isAuthenticated, user]);
+
+  const handleEnrollNow = async () => {
     if (!isAuthenticated) {
       toast.error('Please login to enroll in this course', {
         description: 'You need to be logged in to enroll in a course.'
@@ -40,10 +57,24 @@ const CourseDetail = () => {
       return;
     }
 
-    // TODO: Implement actual enrollment logic
-    toast.success('Course Enrollment', {
-      description: `You are now enrolled in ${course.title}`
-    });
+    if (isEnrolled) {
+      toast.info('Already Enrolled', {
+        description: 'You are already enrolled in this course.'
+      });
+      return;
+    }
+
+    setEnrolling(true);
+    if (user && courseId) {
+      const success = await enrollStudentInCourse(courseId, user.id);
+      if (success) {
+        setIsEnrolled(true);
+        toast.success('Course Enrollment', {
+          description: `You are now enrolled in ${course.title}`
+        });
+      }
+    }
+    setEnrolling(false);
   };
 
   if (loading) {
@@ -80,9 +111,14 @@ const CourseDetail = () => {
         <Button 
           onClick={handleEnrollNow}
           className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+          disabled={enrolling || isEnrolled}
         >
-          <Check className="mr-2 h-4 w-4" />
-          Enroll Now
+          {enrolling ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Check className="mr-2 h-4 w-4" />
+          )}
+          {isEnrolled ? 'Enrolled' : 'Enroll Now'}
         </Button>
       </div>
 

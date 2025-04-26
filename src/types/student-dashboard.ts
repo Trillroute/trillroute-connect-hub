@@ -1,28 +1,30 @@
 
 export interface EnrolledCourse {
-  id: number;
+  id: string;
   title: string;
-  instructor: string;
+  description?: string;
+  image?: string;
   progress: number;
-  nextLesson: string;
-  imageUrl: string;
+  instructors: string[];
+  nextLessonDate?: string;
 }
 
 export interface UpcomingLesson {
-  id: number;
-  title: string;
-  instructor: string;
+  id: string;
+  courseId: string;
+  courseName: string;
   date: string;
   time: string;
-  duration: string;
+  instructor: string;
+  location?: string;
+  isOnline: boolean;
 }
 
 export interface RecommendedCourse {
-  id: number;
+  id: string;
   title: string;
-  instructor: string;
+  description: string;
+  image?: string;
   level: string;
-  rating: number;
-  students: number;
-  imageUrl: string;
+  instructors?: string[];
 }

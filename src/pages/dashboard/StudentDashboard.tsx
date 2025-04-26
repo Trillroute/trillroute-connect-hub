@@ -1,15 +1,18 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { EnrolledCourse, UpcomingLesson, RecommendedCourse } from '@/types/student-dashboard';
+import { UpcomingLesson, RecommendedCourse } from '@/types/student-dashboard';
 import { DashboardStats } from '@/components/dashboard/student/DashboardStats';
 import { EnrolledCoursesSection } from '@/components/dashboard/student/EnrolledCoursesSection';
 import { UpcomingLessonsCard } from '@/components/dashboard/student/UpcomingLessonsCard';
 import { RecommendedCoursesCard } from '@/components/dashboard/student/RecommendedCoursesCard';
+import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
-  const enrolledCourses: EnrolledCourse[] = [];
+  const { enrolledCourses, loading: coursesLoading } = useEnrolledCourses();
+  
+  // These would be replaced with actual API calls in a full implementation
   const upcomingLessons: UpcomingLesson[] = [];
   const recommendations: RecommendedCourse[] = [];
 
@@ -24,7 +27,7 @@ const StudentDashboard = () => {
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your Courses</h2>
-        <EnrolledCoursesSection courses={enrolledCourses} />
+        <EnrolledCoursesSection courses={enrolledCourses} loading={coursesLoading} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

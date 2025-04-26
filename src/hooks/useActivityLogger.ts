@@ -1,56 +1,39 @@
 
-import { useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Hook to log user actions/activity in the database.
- * Usage: const logActivity = useActivityLogger();
- *        logActivity("CLICK_TAB", "Tab: teachers", window.location.pathname);
- */
-const useActivityLogger = () => {
-  const { user } = useAuth();
+interface ActivityLogParams {
+  userId: string;
+  action: string;
+  component: string;
+  pageUrl?: string;
+  entityId?: string;
+}
 
-  // Log an activity entry to Supabase
-  const logActivity = useCallback(
-    async (action: string, component?: string, pageUrl?: string) => {
-      try {
-        if (!user) {
-          console.log("Cannot log activity: No authenticated user");
-          return;
-        }
+export function useActivityLogger() {
+  const logActivity = async ({
+    userId,
+    action,
+    component,
+    pageUrl,
+    entityId
+  }: ActivityLogParams): Promise<void> => {
+    try {
+      if (!userId) return;
 
-        const entry = {
-          user_id: user.id,
+      await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: userId,
           action,
           component,
-          page_url: pageUrl ?? window.location.pathname,
-        };
+          page_url: pageUrl || window.location.pathname,
+          entity_id: entityId
+        });
+    } catch (error) {
+      console.error('Failed to log user activity:', error);
+      // Don't throw, as this is a non-critical operation
+    }
+  };
 
-        console.log("Attempting to log activity:", entry);
-
-        const { error } = await supabase
-          .from("user_activity_logs")
-          .insert(entry);
-
-        if (error) {
-          console.warn("Failed to log user activity:", error);
-          // For debugging in development, uncomment if needed:
-          // toast.error(`Activity logging failed: ${error.message}`, {
-          //   id: "activity-log-error",
-          // });
-        } else {
-          console.log("Activity successfully logged:", entry);
-        }
-      } catch (err) {
-        console.warn("Activity logging error:", err);
-      }
-    },
-    [user]
-  );
-
-  return logActivity;
-};
-
-export default useActivityLogger;
+  return { logActivity };
+}
