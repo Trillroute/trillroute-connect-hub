@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.188.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.20.0'
 import * as crypto from "https://deno.land/std@0.188.0/crypto/mod.ts";
@@ -233,6 +232,34 @@ const logUserActivity = async (
   }
 };
 
+// Function to update order status
+const updateOrderStatus = async (
+  supabase: any,
+  orderId: string,
+  status: string,
+  metadata?: any
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        status: status,
+        metadata: metadata,
+        updated_at: new Date().toISOString()
+      })
+      .eq('order_id', orderId);
+
+    if (error) {
+      console.error('Error updating order:', error);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Error in updateOrderStatus:', error);
+    return false;
+  }
+};
+
 // Main request handler
 serve(async (req) => {
   console.log("Received request to verify-razorpay-payment");
@@ -277,6 +304,26 @@ serve(async (req) => {
     }
 
     const supabase = createSupabaseClient();
+
+    // Update order status to completed
+    const orderUpdateSuccess = await updateOrderStatus(
+      supabase,
+      requestData.razorpay_order_id,
+      'completed',
+      {
+        razorpay_payment_id: requestData.razorpay_payment_id,
+        razorpay_signature: requestData.razorpay_signature,
+        verified_at: new Date().toISOString()
+      }
+    );
+
+    if (!orderUpdateSuccess) {
+      console.error('Failed to update order status');
+      return new Response(
+        JSON.stringify({ error: 'Failed to update order status' }),
+        { headers: responseHeaders, status: 500 }
+      );
+    }
 
     // Get payment details
     const paymentData = await getPaymentDetails(supabase, requestData.payment_id);

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.188.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.20.0'
 
@@ -84,19 +83,18 @@ serve(async (req) => {
       );
     }
 
-    // Create payment record directly with the Razorpay order details
-    // We'll generate a unique ID for this payment
-    const paymentId = crypto.randomUUID();
+    // Create a unique order ID for internal tracking
+    const orderId = crypto.randomUUID();
 
-    // Create Razorpay order first
+    // Create Razorpay order
     const orderData: RazorpayOrder = {
-      amount: amount * 100, // Razorpay expects amount in smallest currency unit (paise)
+      amount: amount * 100,
       currency: "INR",
-      receipt: paymentId,
+      receipt: orderId,
       notes: {
         courseId: courseId,
         userId: userId,
-        paymentId: paymentId
+        orderId: orderId
       }
     };
 
@@ -107,10 +105,7 @@ serve(async (req) => {
       console.error('Razorpay API keys not found');
       return new Response(
         JSON.stringify({ error: 'Razorpay API keys not configured' }),
-        {
-          headers: responseHeaders,
-          status: 500,
-        }
+        { headers: responseHeaders, status: 500 }
       );
     }
 
@@ -134,37 +129,37 @@ serve(async (req) => {
     console.log('Razorpay order created:', razorpayOrder.id);
 
     try {
-      // After we have the Razorpay order, now create a local record in our custom payments table
-      const { data: payment, error: paymentError } = await supabase
-        .from('payments')
+      // Create order record in Supabase
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
         .insert({
-          id: paymentId,
-          amount: amount,
-          course_id: courseId,
+          id: orderId,
+          order_id: razorpayOrder.id,
           user_id: userId,
-          status: 'pending',
-          currency: 'INR',
-          razorpay_order_id: razorpayOrder.id
+          course_id: courseId,
+          amount: amount,
+          metadata: {
+            razorpay_order_data: razorpayOrder
+          }
         })
         .select()
         .single();
 
-      if (paymentError) {
-        console.error('Error creating payment record:', paymentError);
-        console.log('Continuing despite payment record creation error');
-      } else {
-        console.log('Payment record created:', payment);
+      if (orderError) {
+        console.error('Error creating order record:', orderError);
+        throw new Error('Failed to create order record');
       }
-    } catch (paymentError) {
-      console.error('Exception during payment record creation:', paymentError);
-      console.log('Continuing despite payment record creation error');
+
+      console.log('Order record created:', order);
+    } catch (orderError) {
+      console.error('Exception during order record creation:', orderError);
+      throw new Error('Failed to create order record');
     }
 
     return new Response(
       JSON.stringify({ 
         orderId: razorpayOrder.id,
         amount: amount,
-        paymentId: paymentId,
         key: razorpayKeyId
       }),
       {
