@@ -44,7 +44,7 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
       // First verify and get order details from our database
       const { data: orderCheck, error: checkError } = await supabase
         .from('orders')
-        .select('id, user_id, course_id, payment_id')
+        .select('id, user_id, course_id')
         .eq('order_id', orderId)
         .single();
       
@@ -73,30 +73,34 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
       }
 
       // Update or create payment record
-      const paymentData = {
-        amount: data.order.amount / 100, // Convert from paisa to INR
-        user_id: orderCheck.user_id,
-        course_id: orderCheck.course_id,
-        status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
-        razorpay_order_id: orderId,
-        metadata: data.order,
-        updated_at: new Date().toISOString()
-      };
+      if (orderCheck && orderCheck.user_id && orderCheck.course_id) {
+        const paymentData = {
+          amount: data.order.amount / 100, // Convert from paisa to INR
+          user_id: orderCheck.user_id,
+          course_id: orderCheck.course_id,
+          status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
+          razorpay_order_id: orderId,
+          metadata: data.order,
+          updated_at: new Date().toISOString()
+        };
 
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .upsert(
-          paymentData,
-          {
-            onConflict: 'razorpay_order_id',
-            ignoreDuplicates: false
-          }
-        );
+        const { error: paymentError } = await supabase
+          .from('payments')
+          .upsert(
+            paymentData,
+            {
+              onConflict: 'razorpay_order_id',
+              ignoreDuplicates: false
+            }
+          );
 
-      if (paymentError) {
-        console.error('Error updating payment record:', paymentError);
+        if (paymentError) {
+          console.error('Error updating payment record:', paymentError);
+        } else {
+          console.log('Successfully updated payment record');
+        }
       } else {
-        console.log('Successfully updated payment record');
+        console.error('Missing user_id or course_id in order record, cannot update payment table');
       }
     }
     
