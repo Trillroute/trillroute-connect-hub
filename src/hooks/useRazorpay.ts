@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 interface PaymentOptions {
   amount: number;
@@ -15,7 +15,6 @@ export const useRazorpay = () => {
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast();
 
   // Load Razorpay script on component mount
   useEffect(() => {
@@ -38,10 +37,8 @@ export const useRazorpay = () => {
       };
       script.onerror = () => {
         console.error('Failed to load Razorpay script');
-        toast({
-          title: "Payment System Error",
-          description: "Failed to load payment system. Please try again later.",
-          variant: "destructive",
+        toast.error("Payment System Error", {
+          description: "Failed to load payment system. Please try again later."
         });
       };
       document.body.appendChild(script);
@@ -54,7 +51,7 @@ export const useRazorpay = () => {
       // We don't remove the script as other components might need it
       // But we can clean up any other resources if needed
     };
-  }, [toast]);
+  }, []);
 
   // Check if Razorpay is available globally
   const isRazorpayAvailable = useCallback(() => {
@@ -69,10 +66,8 @@ export const useRazorpay = () => {
     }
 
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please login to make a payment",
-        variant: "destructive",
+      toast.error("Authentication Required", {
+        description: "Please login to make a payment"
       });
       
       if (onError) onError({ message: "Authentication required" });
@@ -95,9 +90,8 @@ export const useRazorpay = () => {
       // Ensure Razorpay is available after script loading
       if (!scriptLoaded) {
         console.log('Waiting for Razorpay script to load...');
-        toast({
-          title: "Payment System Loading",
-          description: "Payment system is still loading. Please wait a moment.",
+        toast("Payment System Loading", {
+          description: "Payment system is still loading. Please wait a moment."
         });
         
         // Wait a moment and check again - give script a chance to load
@@ -109,10 +103,8 @@ export const useRazorpay = () => {
             setLoading(false);
           } else {
             console.error('Razorpay still not available after delay');
-            toast({
-              title: "Payment System Error",
-              description: "Payment system failed to load. Please refresh the page and try again.",
-              variant: "destructive",
+            toast.error("Payment System Error", {
+              description: "Payment system failed to load. Please refresh the page and try again."
             });
             if (onError) onError({ message: "Payment system not ready" });
             setLoading(false);
@@ -171,17 +163,14 @@ export const useRazorpay = () => {
 
           if (updateError) {
             console.error('Error updating payment:', updateError);
-            toast({
-              title: "Payment Update Failed",
-              description: "Your payment was successful but we couldn't update our records. Please contact support.",
-              variant: "destructive",
+            toast.error("Payment Update Failed", {
+              description: "Your payment was successful but we couldn't update our records. Please contact support."
             });
             return;
           }
 
-          toast({
-            title: "Payment Successful",
-            description: "Your payment has been processed successfully.",
+          toast.success("Payment Successful", {
+            description: "Your payment has been processed successfully."
           });
 
           if (onSuccess) onSuccess(response);
@@ -209,10 +198,8 @@ export const useRazorpay = () => {
 
     } catch (error) {
       console.error('Payment initialization error:', error);
-      toast({
-        title: "Payment Failed",
-        description: error.message || "Failed to initialize payment",
-        variant: "destructive",
+      toast.error("Payment Failed", {
+        description: error.message || "Failed to initialize payment"
       });
       if (onError) onError(error);
       setLoading(false);

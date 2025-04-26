@@ -45,8 +45,8 @@ export const PaymentButton = ({
     
     // Check if script is loaded before proceeding
     if (!scriptLoaded) {
-      toast({
-        title: "Payment System Loading",
+      // Fix: Using the sonner toast API correctly without title property
+      toast("Payment System Loading", {
         description: "Please wait while we initialize the payment system.",
       });
       return;
