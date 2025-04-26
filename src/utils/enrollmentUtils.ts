@@ -7,8 +7,17 @@ import { toast } from '@/components/ui/sonner';
  * and incrementing the students count
  */
 export const enrollStudentInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
+  console.log(`Attempting to enroll student ${studentId} in course ${courseId}`);
+  
   try {
-    // First, fetch the current course data to get current student_ids array
+    // First, check if student is already enrolled
+    const isAlreadyEnrolled = await isStudentEnrolledInCourse(courseId, studentId);
+    if (isAlreadyEnrolled) {
+      console.log('Student is already enrolled in this course');
+      return true;
+    }
+    
+    // If not enrolled, fetch the current course data
     const { data: courseData, error: fetchError } = await supabase
       .from('courses')
       .select('student_ids, students')
@@ -23,19 +32,15 @@ export const enrollStudentInCourse = async (courseId: string, studentId: string)
       return false;
     }
 
-    // Check if student is already enrolled
-    const currentStudentIds = courseData.student_ids || [];
-    if (currentStudentIds.includes(studentId)) {
-      toast.info('Already Enrolled', {
-        description: 'You are already enrolled in this course.'
-      });
-      return true;
-    }
-
+    console.log('Current course data:', courseData);
+    
     // Add student to the course
+    const currentStudentIds = courseData.student_ids || [];
     const newStudentIds = [...currentStudentIds, studentId];
     const newStudentCount = (courseData.students || 0) + 1;
 
+    console.log(`Updating course with new student. New count: ${newStudentCount}`);
+    
     const { error: updateError } = await supabase
       .from('courses')
       .update({
@@ -54,7 +59,8 @@ export const enrollStudentInCourse = async (courseId: string, studentId: string)
 
     // Log the user activity
     await logUserActivity(studentId, 'enrollment', 'Enrolled in course', courseId);
-
+    console.log('Enrollment successful');
+    
     return true;
   } catch (error) {
     console.error('Unexpected error during enrollment:', error);
@@ -159,6 +165,7 @@ const logUserActivity = async (
  * Checks if a student is enrolled in a course
  */
 export const isStudentEnrolledInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
+  console.log(`Checking if student ${studentId} is enrolled in course ${courseId}`);
   try {
     const { data, error } = await supabase
       .from('courses')
@@ -171,7 +178,9 @@ export const isStudentEnrolledInCourse = async (courseId: string, studentId: str
       return false;
     }
 
-    return data.student_ids?.includes(studentId) || false;
+    const isEnrolled = data.student_ids?.includes(studentId) || false;
+    console.log(`Enrollment check result: ${isEnrolled}`);
+    return isEnrolled;
   } catch (error) {
     console.error('Unexpected error checking enrollment:', error);
     return false;

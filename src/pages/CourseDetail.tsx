@@ -59,27 +59,33 @@ const CourseDetail = () => {
     }
   }, [loading, courseId, isAuthenticated, user]);
 
+  // Process enrollment after successful payment
   useEffect(() => {
     const processEnrollment = async () => {
+      // Skip if already enrolled, processing, or missing required data
       if (isEnrolled || enrollmentProcessing || !user || !courseId) return;
       
+      const enrollmentStatus = searchParams.get('enrollment');
+      if (enrollmentStatus !== 'success') return;
+      
+      console.log('Payment success detected, processing enrollment');
       setEnrollmentProcessing(true);
       
       try {
-        const searchParams = new URLSearchParams(window.location.search);
-        const enrollmentStatus = searchParams.get('enrollment');
         const paymentIntent = sessionStorage.getItem('paymentIntent');
+        console.log('Retrieved payment intent from session storage:', paymentIntent);
         
-        if (enrollmentStatus === 'success' && paymentIntent) {
+        if (paymentIntent) {
           const intent = JSON.parse(paymentIntent);
           
+          // Verify the payment intent is valid for this course and user
           const isValid = 
             intent.courseId === courseId && 
             intent.userId === user.id &&
-            (new Date().getTime() - intent.timestamp) < 30 * 60 * 1000;
+            (new Date().getTime() - intent.timestamp) < 30 * 60 * 1000; // 30 minute window
             
           if (isValid) {
-            console.log('Processing enrollment for verified payment');
+            console.log('Valid payment intent confirmed, enrolling user');
             const success = await enrollStudentInCourse(courseId, user.id);
             
             if (success) {
@@ -88,19 +94,30 @@ const CourseDetail = () => {
                 description: `You are now enrolled in ${course?.title}`
               });
               
-              navigate(`/courses/${courseId}`, { replace: true });
+              // Remove payment intent from session storage and replace URL without the query params
               sessionStorage.removeItem('paymentIntent');
+              navigate(`/courses/${courseId}`, { replace: true });
             } else {
               toast.error('Enrollment Failed', {
                 description: 'Please contact support for assistance'
               });
             }
           } else {
-            console.error('Invalid or expired payment intent');
+            console.error('Invalid or expired payment intent:', {
+              storedCourseId: intent.courseId,
+              currentCourseId: courseId,
+              storedUserId: intent.userId,
+              currentUserId: user.id,
+              timestamp: intent.timestamp,
+              currentTime: new Date().getTime(),
+              timeDiff: new Date().getTime() - intent.timestamp
+            });
             toast.error('Enrollment Failed', {
               description: 'Invalid or expired payment session'
             });
           }
+        } else {
+          console.log('No payment intent found in session storage');
         }
       } catch (error) {
         console.error('Error processing enrollment:', error);
@@ -112,14 +129,17 @@ const CourseDetail = () => {
       }
     };
 
-    if (!loading && user && course) {
+    // Only process enrollment if we're not already enrolled and not already processing
+    if (!loading && user && course && !isEnrolled && !enrollmentProcessing) {
+      console.log('Checking for enrollment processing conditions');
       processEnrollment();
     }
-  }, [loading, user, course, courseId, isEnrolled, enrollmentProcessing, navigate]);
+  }, [loading, user, course, courseId, isEnrolled, enrollmentProcessing, navigate, searchParams]);
 
   const handlePaymentSuccess = async (response: any) => {
     if (user && courseId) {
       try {
+        console.log('Payment success callback triggered, enrolling student');
         const success = await enrollStudentInCourse(courseId, user.id);
         if (success) {
           setIsEnrolled(true);
@@ -187,7 +207,14 @@ const CourseDetail = () => {
             className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
             courseId={courseId as string}
           >
-            {enrollmentProcessing ? 'Processing...' : 'Enroll Now'}
+            {enrollmentProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Enroll Now'
+            )}
           </PaymentButton>
         )}
       </div>

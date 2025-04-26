@@ -52,7 +52,7 @@ export const PaymentButton = ({
         // Store the current course URL to redirect back after login
         localStorage.setItem('paymentRedirectUrl', `/courses/${courseId}`);
         
-        // Store payment intent in localStorage
+        // Store payment intent in localStorage for persistence across login
         localStorage.setItem('paymentIntent', JSON.stringify({
           courseId,
           amount,
@@ -88,14 +88,17 @@ export const PaymentButton = ({
 
       console.log('Payment link created:', data.payment_link);
       
-      // Store payment intent in sessionStorage
-      sessionStorage.setItem('paymentIntent', JSON.stringify({
+      // Store payment intent in sessionStorage with all required information
+      const paymentIntent = {
         courseId,
         amount,
         currency,
         userId: user.id,
         timestamp: new Date().getTime()
-      }));
+      };
+      
+      console.log('Storing payment intent in session storage:', paymentIntent);
+      sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
       
       // Redirect to Razorpay payment page
       window.location.href = data.payment_link;
@@ -117,7 +120,7 @@ export const PaymentButton = ({
       disabled={loading}
       className={className}
     >
-      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
       {children}
     </Button>
   );
