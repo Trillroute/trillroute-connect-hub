@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { hashPassword } from '@/integrations/supabase/client';
 import type { UserRole, StudentProfileData } from '@/types/auth';
 
 export const useRegistration = () => {
@@ -32,6 +33,7 @@ export const useRegistration = () => {
 
       const userId = crypto.randomUUID();
       const createdAt = new Date().toISOString();
+      const passwordHash = await hashPassword(password);
 
       const insertData = {
         id: userId,
@@ -40,6 +42,7 @@ export const useRegistration = () => {
         last_name: lastName,
         role: role,
         created_at: createdAt,
+        password_hash: passwordHash,
         ...(additionalData && {
           date_of_birth: additionalData.date_of_birth,
           profile_photo: additionalData.profile_photo,

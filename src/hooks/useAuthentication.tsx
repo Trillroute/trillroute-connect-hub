@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { UserData } from '@/types/auth';
+import type { UserData, UserRole } from '@/types/auth';
 
 interface AuthenticationContextType {
   loading: boolean;
@@ -80,12 +80,15 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
       const userData = users[0];
       console.log(`[AUTH] Found user with ID: ${userData.id}`);
       
+      // Ensure the role is a valid UserRole type
+      const userRole: UserRole = userData.role as UserRole;
+      
       const updatedUser: UserData = {
         id: userData.id,
         email: userData.email,
         firstName: userData.first_name,
         lastName: userData.last_name,
-        role: userData.role,
+        role: userRole,
         dateOfBirth: userData.date_of_birth,
         profilePhoto: userData.profile_photo,
         parentName: userData.parent_name,
