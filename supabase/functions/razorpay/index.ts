@@ -42,6 +42,7 @@ serve(async (req) => {
     
     console.log('Payment request received:', { amount, currency, user_id, course_id });
 
+    // Validate parameters
     if (!amount || amount <= 0) {
       console.error('Invalid amount:', amount);
       return new Response(
@@ -75,124 +76,190 @@ serve(async (req) => {
       );
     }
 
-    // Verify user exists in custom_users table instead of profiles
+    // Check Razorpay API credentials
+    const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
+    const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+    
+    if (!razorpayKeyId || !razorpayKeySecret) {
+      console.error('Missing Razorpay API credentials');
+      return new Response(
+        JSON.stringify({ error: 'Payment gateway configuration error' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500 
+        }
+      );
+    }
+
+    // User verification - log but don't prevent payment if not found
     const { data: userData, error: userError } = await supabase
       .from('custom_users')
-      .select('id')
+      .select('id, email, first_name, last_name')
       .eq('id', user_id)
-      .single();
+      .maybeSingle();
 
     if (userError) {
-      console.error('Error verifying user:', userError);
-      
-      // Continue anyway - don't block payment if user verification fails
+      console.error('Error checking user:', userError);
+      // Continue anyway - log but don't block payment
       console.log('Proceeding with payment despite user verification failure');
+    } else if (!userData) {
+      console.warn('User not found in custom_users, but continuing with payment');
+    } else {
+      console.log('User verified:', userData.id);
     }
 
     // Verify course exists
     const { data: courseData, error: courseError } = await supabase
       .from('courses')
-      .select('id, title')
+      .select('id, title, base_price, final_price')
       .eq('id', course_id)
-      .single();
+      .maybeSingle();
 
     if (courseError) {
       console.error('Error verifying course:', courseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid course ID or course not found' }),
+        JSON.stringify({ error: 'Error verifying course: ' + courseError.message }),
         { 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400 
         }
       );
     }
-
-    // Create initial payment record
-    const { data: paymentRecord, error: paymentError } = await supabase
-      .from('payments')
-      .insert({
-        user_id,
-        course_id,
-        amount,
-        currency,
-        status: 'pending',
-        metadata: {
-          timestamp: new Date().toISOString(),
-          amount_in_smallest_unit: Math.round(amount * 100)
+    
+    if (!courseData) {
+      console.error('Course not found:', course_id);
+      return new Response(
+        JSON.stringify({ error: 'Course not found' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 404 
         }
-      })
-      .select()
-      .single();
-
-    if (paymentError) {
-      console.error('Error creating payment record:', paymentError);
-      throw new Error('Failed to create payment record');
+      );
     }
+    
+    console.log('Course verified:', courseData.id, courseData.title);
 
-    console.log('Payment record created:', paymentRecord);
+    try {
+      // Create initial payment record
+      const { data: paymentRecord, error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          user_id,
+          course_id,
+          amount,
+          currency,
+          status: 'pending',
+          metadata: {
+            timestamp: new Date().toISOString(),
+            amount_in_smallest_unit: Math.round(amount * 100)
+          }
+        })
+        .select()
+        .single();
 
-    // Create a payment link
-    const paymentLinkOptions = {
-      amount: Math.round(amount * 100), // Convert to smallest currency unit (paise)
-      currency,
-      accept_partial: false,
-      description: `Course Enrollment: ${courseData?.title || 'Course Enrollment Payment'}`,
-      customer: {
-        name: 'Course Student',
-        email: 'student@example.com',
-      },
-      notify: {
-        sms: true,
-        email: true,
-      },
-      reminder_enable: true,
-      notes: {
-        user_id,
-        course_id,
-        payment_id: paymentRecord.id
-      },
-      callback_url: `${req.headers.get('origin')}/courses/${course_id}?enrollment=success&userId=${user_id}&courseId=${course_id}`,
-      callback_method: 'get'
-    };
-
-    console.log('Creating Razorpay payment link with options:', paymentLinkOptions);
-    const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
-    console.log('Razorpay payment link created:', paymentLink);
-
-    // Update payment record with Razorpay order details
-    const { error: updateError } = await supabase
-      .from('payments')
-      .update({
-        razorpay_order_id: paymentLink.order_id,
-        metadata: {
-          ...paymentRecord.metadata,
-          razorpay_payment_link: paymentLink
+      if (paymentError) {
+        console.error('Error creating payment record:', paymentError);
+        // Try to provide more detailed error information
+        let errorMessage = 'Failed to create payment record';
+        
+        if (paymentError.code === '23503') {
+          errorMessage = 'Foreign key constraint error - please check user and course IDs';
+          console.log('Foreign key details:', paymentError.details);
         }
-      })
-      .eq('id', paymentRecord.id);
-
-    if (updateError) {
-      console.error('Error updating payment record:', updateError);
-      // Don't throw here, we still want to return the payment link
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        payment_link: paymentLink.short_url,
-        payment_id: paymentRecord.id
-      }),
-      { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200 
+        
+        return new Response(
+          JSON.stringify({ error: errorMessage, details: paymentError }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400 
+          }
+        );
       }
-    );
+
+      console.log('Payment record created:', paymentRecord);
+
+      // Customer information
+      const customerName = userData ? `${userData.first_name} ${userData.last_name}`.trim() : 'Course Student';
+      const customerEmail = userData?.email || 'student@example.com';
+      
+      // Create a payment link
+      const paymentLinkOptions = {
+        amount: Math.round(amount * 100), // Convert to smallest currency unit (paise)
+        currency,
+        accept_partial: false,
+        description: `Course Enrollment: ${courseData?.title || 'Course Enrollment Payment'}`,
+        customer: {
+          name: customerName,
+          email: customerEmail,
+        },
+        notify: {
+          sms: true,
+          email: true,
+        },
+        reminder_enable: true,
+        notes: {
+          user_id,
+          course_id,
+          payment_id: paymentRecord.id
+        },
+        callback_url: `${req.headers.get('origin')}/courses/${course_id}?enrollment=success&userId=${user_id}&courseId=${course_id}`,
+        callback_method: 'get'
+      };
+
+      console.log('Creating Razorpay payment link with options:', paymentLinkOptions);
+      const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
+      console.log('Razorpay payment link created:', paymentLink);
+
+      // Update payment record with Razorpay order details
+      const { error: updateError } = await supabase
+        .from('payments')
+        .update({
+          razorpay_order_id: paymentLink.order_id,
+          metadata: {
+            ...paymentRecord.metadata,
+            razorpay_payment_link: paymentLink
+          }
+        })
+        .eq('id', paymentRecord.id);
+
+      if (updateError) {
+        console.error('Error updating payment record:', updateError);
+        // Don't throw here, we still want to return the payment link
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          payment_link: paymentLink.short_url,
+          payment_id: paymentRecord.id
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 
+        }
+      );
+    } catch (error) {
+      // Handle Razorpay API errors
+      console.error('Razorpay API error:', error);
+      const errorMessage = error.error?.description || error.message || 'An unknown error occurred with the payment gateway';
+      
+      return new Response(
+        JSON.stringify({ 
+          error: errorMessage,
+          details: error
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500 
+        }
+      );
+    }
   } catch (error) {
     console.error('Error in razorpay function:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'An unknown error occurred' }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400 
+        status: 500 
       }
     );
   }

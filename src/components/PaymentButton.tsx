@@ -59,10 +59,28 @@ export const PaymentButton = ({
         return;
       }
 
+      // Double check course ID is valid
+      if (!courseId) {
+        console.error('Missing course ID');
+        toast.error("Configuration Error", {
+          description: "Missing course information. Please try again later."
+        });
+        if (onError) onError({ message: "Missing course ID" });
+        return;
+      }
+
       console.log('Creating payment link for user:', user.id, 'course:', courseId);
 
       toast.info("Connecting to payment gateway", {
         description: "Please wait while we connect to the payment service..."
+      });
+
+      // Log full payment parameters
+      console.log('Payment parameters:', {
+        amount,
+        currency,
+        user_id: user.id,
+        course_id: courseId
       });
 
       const { data, error } = await supabase.functions.invoke('razorpay', {
@@ -83,12 +101,15 @@ export const PaymentButton = ({
         return;
       }
 
+      console.log('Response from razorpay function:', data);
+
       if (!data?.payment_link) {
         console.error('No payment link received:', data);
         toast.error("Payment Link Error", {
           description: "No payment link received from gateway. Please try again."
         });
-        throw new Error('No payment link received');
+        if (onError) onError(new Error('No payment link received'));
+        return;
       }
 
       console.log('Payment link created:', data.payment_link);
