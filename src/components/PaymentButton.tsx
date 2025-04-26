@@ -74,12 +74,20 @@ export const PaymentButton = ({
         body: { amount, courseId, userId: user.id }
       });
 
-      if (orderError || !orderData) {
+      if (orderError) {
         console.error('Error creating order:', orderError);
         toast.error("Payment Failed", {
           description: "Failed to create payment order. Please try again."
         });
         if (onError) onError(orderError);
+        return;
+      }
+
+      if (!orderData || !orderData.orderId || !orderData.key) {
+        console.error('Invalid order data received:', orderData);
+        toast.error("Payment Failed", {
+          description: "Invalid payment configuration received. Please try again."
+        });
         return;
       }
 

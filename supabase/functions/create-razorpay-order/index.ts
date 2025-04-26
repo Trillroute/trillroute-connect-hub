@@ -22,10 +22,28 @@ serve(async (req) => {
   try {
     const { amount, courseId, userId } = await req.json()
 
+    if (!amount || !courseId || !userId) {
+      throw new Error('Missing required parameters: amount, courseId, or userId')
+    }
+
+    console.log(`Creating order for user ${userId}, course ${courseId}, amount ${amount}`)
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Check if user exists in custom_users table
+    const { data: userData, error: userError } = await supabase
+      .from('custom_users')
+      .select('id')
+      .eq('id', userId)
+      .single()
+
+    if (userError || !userData) {
+      console.error('User validation error:', userError || 'User not found')
+      throw new Error('User not found. Please ensure you are logged in properly.')
+    }
 
     // Create payment record in database
     const { data: payment, error: paymentError } = await supabase
@@ -69,6 +87,7 @@ serve(async (req) => {
     const razorpayOrder = await response.json()
 
     if (!razorpayOrder.id) {
+      console.error('Razorpay API error:', razorpayOrder)
       throw new Error('Failed to create Razorpay order')
     }
 
