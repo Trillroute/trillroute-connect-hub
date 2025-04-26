@@ -7,10 +7,14 @@ import { EnrolledCoursesSection } from '@/components/dashboard/student/EnrolledC
 import { UpcomingLessonsCard } from '@/components/dashboard/student/UpcomingLessonsCard';
 import { RecommendedCoursesCard } from '@/components/dashboard/student/RecommendedCoursesCard';
 import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
+import { useSearchParams } from 'react-router-dom';
+import { OrderStatusDisplay } from '@/components/OrderStatusDisplay';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
   const { enrolledCourses, loading: coursesLoading } = useEnrolledCourses();
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get('orderId');
   
   // These would be replaced with actual API calls in a full implementation
   const upcomingLessons: UpcomingLesson[] = [];
@@ -22,6 +26,12 @@ const StudentDashboard = () => {
         <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.firstName}!</h1>
         <p className="text-gray-600 mt-2">Here's an overview of your musical journey with Trillroute.</p>
       </div>
+
+      {orderId && (
+        <div className="mb-8">
+          <OrderStatusDisplay orderId={orderId} className="w-full max-w-2xl mx-auto" />
+        </div>
+      )}
 
       <DashboardStats enrolledCoursesCount={enrolledCourses.length} />
 
