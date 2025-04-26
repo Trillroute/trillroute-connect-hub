@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,7 +51,7 @@ const SuperAdminDashboard = () => {
   const [revenueData, setRevenueData] = useState<{ name: string; Revenue: number }[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
-  const logActivity = useActivityLogger();
+  const { logActivity } = useActivityLogger();
 
   const { leads, loading: leadsLoading, fetchLeads } = useFetchLeads();
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -71,7 +70,14 @@ const SuperAdminDashboard = () => {
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
-    logActivity("CLICK_TAB", `Tab: ${tab}`);
+    if (user) {
+      logActivity({
+        userId: user.id,
+        action: "CLICK_TAB",
+        component: `Tab: ${tab}`,
+        pageUrl: window.location.pathname
+      });
+    }
   };
 
   const fetchDashboardData = async () => {
