@@ -34,6 +34,16 @@ export const PaymentButton = ({
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
+  React.useEffect(() => {
+    // Load Razorpay script if it's not already loaded
+    if (!window.Razorpay) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
   const handleClick = async () => {
     try {
       setLoading(true);
@@ -49,6 +59,16 @@ export const PaymentButton = ({
         return;
       }
 
+      // Check if Razorpay is loaded
+      if (!window.Razorpay) {
+        toast.error("Payment Gateway", {
+          description: "Payment gateway is still loading. Please try again in a moment."
+        });
+        return;
+      }
+
+      console.log('Creating Razorpay order for course:', courseId);
+
       // Create Razorpay order
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
         body: { amount, courseId, userId: user.id }
@@ -57,22 +77,25 @@ export const PaymentButton = ({
       if (orderError || !orderData) {
         console.error('Error creating order:', orderError);
         toast.error("Payment Failed", {
-          description: "Failed to create payment order"
+          description: "Failed to create payment order. Please try again."
         });
         if (onError) onError(orderError);
         return;
       }
 
+      console.log('Order created successfully:', orderData);
+
       // Initialize Razorpay
       const options = {
-        key: "lhsnzdonofweltzjpguf_key", // Replace with your Razorpay key ID
+        key: Deno.env.get('RAZORPAY_KEY_ID') || "rzp_test_key", // This will be replaced with the actual key from Supabase
         amount: amount * 100,
         currency: "INR",
-        name: "Your Course Platform",
+        name: "Music Course Platform",
         description: "Course Payment",
         order_id: orderData.orderId,
         handler: async function (response: any) {
           try {
+            console.log('Payment successful, verifying payment...');
             // Verify payment
             const { error: verificationError } = await supabase.functions.invoke('verify-razorpay-payment', {
               body: { 
@@ -91,6 +114,8 @@ export const PaymentButton = ({
               if (onError) onError(verificationError);
               return;
             }
+
+            console.log('Payment verified successfully, storing payment intent...');
 
             // Store payment intent in session storage
             sessionStorage.setItem('paymentIntent', JSON.stringify({
@@ -123,6 +148,7 @@ export const PaymentButton = ({
         }
       };
 
+      console.log('Opening Razorpay payment modal...');
       const razorpay = new window.Razorpay(options);
       razorpay.open();
 
