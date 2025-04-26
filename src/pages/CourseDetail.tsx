@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
@@ -23,6 +22,7 @@ const CourseDetail = () => {
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollmentProcessing, setEnrollmentProcessing] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -59,30 +59,64 @@ const CourseDetail = () => {
   }, [loading, courseId, isAuthenticated, user]);
 
   useEffect(() => {
-    const handleEnrollmentSuccess = async () => {
-      const enrollmentStatus = searchParams.get('enrollment');
-      if (enrollmentStatus === 'success' && user && courseId && !isEnrolled) {
-        try {
+    const processEnrollment = async () => {
+      if (isEnrolled || enrollmentProcessing || !user || !courseId) return;
+      
+      setEnrollmentProcessing(true);
+      
+      try {
+        let shouldEnroll = false;
+        let enrollmentSource = '';
+        
+        if (searchParams.get('enrollment') === 'success') {
+          shouldEnroll = true;
+          enrollmentSource = 'redirect';
+        }
+        
+        const pendingEnrollment = sessionStorage.getItem('pendingEnrollment');
+        if (pendingEnrollment) {
+          const enrollment = JSON.parse(pendingEnrollment);
+          
+          const isValid = 
+            enrollment.courseId === courseId && 
+            enrollment.userId === user.id &&
+            (new Date().getTime() - enrollment.timestamp) < 30 * 60 * 1000;
+            
+          if (isValid) {
+            shouldEnroll = true;
+            enrollmentSource = 'session';
+          }
+          
+          sessionStorage.removeItem('pendingEnrollment');
+        }
+        
+        if (shouldEnroll) {
+          console.log(`Processing enrollment from ${enrollmentSource} source for user ${user.id} in course ${courseId}`);
+          
           const success = await enrollStudentInCourse(courseId, user.id);
           if (success) {
             setIsEnrolled(true);
             toast.success('Course Enrollment', {
               description: `You are now enrolled in ${course?.title}`
             });
-            // Replace the URL without the query parameter to prevent re-enrollment on refresh
+            
             navigate(`/courses/${courseId}`, { replace: true });
+          } else {
+            toast.error('Enrollment failed. Please contact support.');
           }
-        } catch (error) {
-          console.error('Error enrolling in course:', error);
-          toast.error('Enrollment failed. Please try again.');
         }
+      } catch (error) {
+        console.error('Error processing enrollment:', error);
+        toast.error('Enrollment failed. Please try again or contact support.');
+      } finally {
+        setEnrollmentProcessing(false);
       }
     };
 
-    if (!loading && user) {
-      handleEnrollmentSuccess();
+    if (!loading && user && course) {
+      processEnrollment();
     }
-  }, [loading, courseId, user, isEnrolled, course?.title, searchParams, navigate]);
+  }, [loading, user, course, courseId, isEnrolled, searchParams, navigate, enrollmentProcessing]);
 
   const handlePaymentSuccess = async (response: any) => {
     if (user && courseId) {
@@ -127,25 +161,6 @@ const CourseDetail = () => {
       .join(', ');
   };
 
-  const handleEnrollClick = () => {
-    if (!isAuthenticated) {
-      toast.error('Please login to enroll in this course', {
-        description: 'You need to be logged in to enroll in a course.'
-      });
-      navigate('/auth/login', { 
-        state: { redirectTo: `/courses/${courseId}` } 
-      });
-      return;
-    }
-
-    if (isEnrolled) {
-      toast.info('Already Enrolled', {
-        description: 'You are already enrolled in this course.'
-      });
-      return;
-    }
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -173,7 +188,7 @@ const CourseDetail = () => {
             className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
             courseId={courseId as string}
           >
-            Enroll Now
+            {enrollmentProcessing ? 'Processing...' : 'Enroll Now'}
           </PaymentButton>
         )}
       </div>

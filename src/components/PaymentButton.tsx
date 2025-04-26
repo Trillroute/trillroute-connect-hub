@@ -54,6 +54,11 @@ export const PaymentButton = ({
         
         // Store the current course URL to redirect back after login
         localStorage.setItem('paymentRedirectUrl', `/courses/${courseId}`);
+        // Also store auth state to persist during redirect
+        localStorage.setItem('authRedirectState', JSON.stringify({
+          action: 'payment',
+          courseId: courseId
+        }));
         
         navigate('/auth/login');
         return;
@@ -82,6 +87,13 @@ export const PaymentButton = ({
       }
 
       console.log('Payment link created:', data.payment_link);
+      
+      // Store user info in sessionStorage to maintain login state during redirect
+      sessionStorage.setItem('pendingEnrollment', JSON.stringify({
+        courseId: courseId,
+        userId: user.id,
+        timestamp: new Date().getTime()
+      }));
       
       // Redirect to Razorpay payment page
       window.location.href = data.payment_link;

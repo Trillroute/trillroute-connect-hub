@@ -98,7 +98,7 @@ serve(async (req) => {
         user_id: user_id,
         course_id: course_id
       },
-      callback_url: `${req.headers.get('origin')}/courses/${course_id}?enrollment=success`,
+      callback_url: `${req.headers.get('origin')}/courses/${course_id}?enrollment=success&userId=${user_id}`,
       callback_method: 'get'
     };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Music, Mail, Lock } from 'lucide-react';
@@ -17,22 +16,38 @@ const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Check for redirect information
+  // Check for redirect information - prioritize state, then localStorage
   const redirectPath = location.state?.redirectTo || localStorage.getItem('paymentRedirectUrl') || '/dashboard';
 
   // If user is already authenticated, redirect them immediately
   useEffect(() => {
     if (isAuthenticated) {
       console.log('User already authenticated, redirecting to:', redirectPath);
+      // Check if we have pending enrollment actions
+      const authRedirectState = localStorage.getItem('authRedirectState');
+      
+      if (authRedirectState) {
+        try {
+          const redirectState = JSON.parse(authRedirectState);
+          if (redirectState.action === 'payment' && redirectState.courseId) {
+            console.log('Found pending payment action for course:', redirectState.courseId);
+          }
+        } catch (error) {
+          console.error('Error parsing redirect state:', error);
+        }
+      }
+      
+      // Navigate to the stored redirect path and clean up storage
       navigate(redirectPath);
       localStorage.removeItem('paymentRedirectUrl');
+      localStorage.removeItem('authRedirectState');
     }
   }, [isAuthenticated, navigate, redirectPath]);
 
   // Clear the stored redirect URL on component unmount
   useEffect(() => {
     return () => {
-      localStorage.removeItem('paymentRedirectUrl');
+      // We'll keep these items in storage until a successful login handles them
     };
   }, []);
 
@@ -54,9 +69,7 @@ const Login = () => {
       // Pass the raw email to login - normalization will happen there
       await login(email, password);
       
-      // Redirect to the path that was stored before login
-      navigate(redirectPath);
-      
+      // Auth state change will trigger the useEffect above to handle the redirection
     } catch (error: any) {
       console.error('Login failed in component:', error);
       // Toast is already handled in the login function
