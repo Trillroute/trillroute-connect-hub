@@ -46,6 +46,7 @@ export const CourseHeader = ({
         onError={onEnrollmentError}
         className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
         courseId={courseId}
+        amount={course.final_price || course.base_price || 0}
       >
         {enrollmentProcessing ? (
           <>
