@@ -83,28 +83,62 @@ export const PaymentButton = ({
         course_id: courseId
       });
 
-      const { data, error } = await supabase.functions.invoke('razorpay', {
-        body: { 
-          amount,
-          currency,
-          user_id: user.id,
-          course_id: courseId
-        },
-      });
+      // Include a retry mechanism
+      let attempts = 0;
+      const maxAttempts = 2;
+      let success = false;
+      let responseData = null;
+      let responseError = null;
+      
+      while (attempts < maxAttempts && !success) {
+        attempts++;
+        console.log(`Payment attempt ${attempts}/${maxAttempts}`);
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('razorpay', {
+            body: { 
+              amount,
+              currency,
+              user_id: user.id,
+              course_id: courseId
+            },
+          });
+          
+          if (error) {
+            console.error(`Razorpay function error (attempt ${attempts}):`, error);
+            responseError = error;
+            // Continue to retry
+          } else if (data) {
+            console.log(`Successful response on attempt ${attempts}:`, data);
+            responseData = data;
+            success = true;
+            break;
+          }
+        } catch (err) {
+          console.error(`Error on attempt ${attempts}:`, err);
+          responseError = err;
+        }
+        
+        // Wait before retry
+        if (!success && attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
 
-      if (error) {
-        console.error('Razorpay function error:', error);
+      if (!success) {
+        // All attempts failed
+        console.error('All payment initialization attempts failed:', responseError);
         toast.error("Payment Gateway Error", {
-          description: error.message || "Failed to connect to payment gateway. Please try again."
+          description: responseError?.message || "Failed to connect to payment gateway. Please try again."
         });
-        if (onError) onError(error);
+        if (onError) onError(responseError);
         return;
       }
 
-      console.log('Response from razorpay function:', data);
+      console.log('Response from razorpay function:', responseData);
 
-      if (!data?.payment_link) {
-        console.error('No payment link received:', data);
+      if (!responseData?.payment_link) {
+        console.error('No payment link received:', responseData);
         toast.error("Payment Link Error", {
           description: "No payment link received from gateway. Please try again."
         });
@@ -112,7 +146,7 @@ export const PaymentButton = ({
         return;
       }
 
-      console.log('Payment link created:', data.payment_link);
+      console.log('Payment link created:', responseData.payment_link);
       
       const paymentIntent = {
         courseId,
@@ -120,14 +154,14 @@ export const PaymentButton = ({
         currency,
         userId: user.id,
         timestamp: new Date().getTime(),
-        payment_id: data.payment_id
+        payment_id: responseData.payment_id
       };
       
       console.log('Storing payment intent in session storage:', paymentIntent);
       sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
       
       // Redirect to Razorpay payment page
-      window.location.href = data.payment_link;
+      window.location.href = responseData.payment_link;
 
     } catch (error) {
       console.error('Payment initialization error:', error);
