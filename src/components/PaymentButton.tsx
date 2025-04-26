@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -35,7 +34,6 @@ export const PaymentButton = ({
   const { user, isAuthenticated } = useAuth();
 
   React.useEffect(() => {
-    // Load Razorpay script if it's not already loaded
     if (!window.Razorpay) {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -59,7 +57,6 @@ export const PaymentButton = ({
         return;
       }
 
-      // Check if Razorpay is loaded
       if (!window.Razorpay) {
         toast.error("Payment Gateway", {
           description: "Payment gateway is still loading. Please try again in a moment."
@@ -70,7 +67,6 @@ export const PaymentButton = ({
       console.log('Creating Razorpay order for course:', courseId);
       console.log('User ID:', user.id);
 
-      // Create Razorpay order
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
         body: { amount, courseId, userId: user.id }
       });
@@ -94,9 +90,8 @@ export const PaymentButton = ({
 
       console.log('Order created successfully:', orderData);
 
-      // Initialize Razorpay
       const options = {
-        key: orderData.key, // Use the key provided by the edge function
+        key: orderData.key,
         amount: amount * 100,
         currency: "INR",
         name: "Music Course Platform",
@@ -105,7 +100,6 @@ export const PaymentButton = ({
         handler: async function (response: any) {
           try {
             console.log('Payment successful, verifying payment...');
-            // Verify payment
             const { error: verificationError } = await supabase.functions.invoke('verify-razorpay-payment', {
               body: { 
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -118,32 +112,25 @@ export const PaymentButton = ({
             if (verificationError) {
               console.error('Payment verification failed:', verificationError);
               toast.error("Payment Verification Failed", {
-                description: "Please contact support"
+                description: "Please contact support if your payment was deducted"
               });
               if (onError) onError(verificationError);
               return;
             }
 
-            console.log('Payment verified successfully, storing payment intent...');
+            console.log('Payment verified successfully');
+            toast.success('Payment Successful', {
+              description: 'You have been enrolled in the course'
+            });
 
-            // Store payment intent in session storage
-            sessionStorage.setItem('paymentIntent', JSON.stringify({
-              courseId,
-              userId: user.id,
-              payment_id: orderData.paymentId,
-              timestamp: new Date().getTime()
-            }));
-
-            // Call success callback
             if (onSuccess) onSuccess(response);
 
-            // Redirect with success parameter
             navigate(`/courses/${courseId}?enrollment=success`);
 
           } catch (error) {
             console.error('Error in payment handler:', error);
             toast.error("Payment Processing Failed", {
-              description: "Please try again or contact support"
+              description: "Please contact support if your payment was deducted"
             });
             if (onError) onError(error);
           }

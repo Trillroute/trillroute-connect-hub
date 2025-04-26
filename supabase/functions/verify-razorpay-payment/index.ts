@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { createHmac } from "https://deno.land/std@0.190.0/crypto/mod.ts"
+import { createHmac } from "https://deno.land/std@0.190.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,20 +14,25 @@ serve(async (req) => {
   }
 
   try {
-    const { 
-      razorpay_payment_id, 
-      razorpay_order_id, 
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
       razorpay_signature,
-      payment_id 
+      payment_id
     } = await req.json()
 
-    // Verify payment signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id
-    const expectedSignature = createHmac("sha256", Deno.env.get('RAZORPAY_KEY_SECRET') ?? '')
-      .update(body)
-      .toString("hex")
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !payment_id) {
+      throw new Error('Missing required Razorpay verification parameters')
+    }
 
-    if (expectedSignature !== razorpay_signature) {
+    // Verify the payment signature
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const secret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
+    const hmac = createHmac("sha256", secret);
+    hmac.update(body);
+    const generated_signature = hmac.digest("hex");
+
+    if (generated_signature !== razorpay_signature) {
       throw new Error('Invalid payment signature')
     }
 
@@ -36,7 +41,19 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Update payment record
+    // Get payment details to access course and user information
+    const { data: paymentData, error: paymentFetchError } = await supabase
+      .from('payments')
+      .select('course_id, user_id')
+      .eq('id', payment_id)
+      .single()
+
+    if (paymentFetchError || !paymentData) {
+      console.error('Error fetching payment data:', paymentFetchError)
+      throw new Error('Failed to fetch payment data')
+    }
+
+    // Update payment status
     const { error: updateError } = await supabase
       .from('payments')
       .update({
@@ -51,6 +68,38 @@ serve(async (req) => {
       console.error('Error updating payment:', updateError)
       throw new Error('Failed to update payment status')
     }
+
+    // Get current course data
+    const { data: courseData, error: courseError } = await supabase
+      .from('courses')
+      .select('student_ids, students')
+      .eq('id', paymentData.course_id)
+      .single()
+
+    if (courseError) {
+      console.error('Error fetching course:', courseError)
+      throw new Error('Failed to fetch course data')
+    }
+
+    // Add student to course
+    const currentStudentIds = courseData.student_ids || []
+    const newStudentIds = [...currentStudentIds, paymentData.user_id]
+    const newStudentCount = (courseData.students || 0) + 1
+
+    const { error: courseUpdateError } = await supabase
+      .from('courses')
+      .update({
+        student_ids: newStudentIds,
+        students: newStudentCount
+      })
+      .eq('id', paymentData.course_id)
+
+    if (courseUpdateError) {
+      console.error('Error updating course:', courseUpdateError)
+      throw new Error('Failed to update course enrollment')
+    }
+
+    console.log('Payment verification and enrollment completed successfully')
 
     return new Response(
       JSON.stringify({ success: true }),
