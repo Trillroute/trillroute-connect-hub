@@ -40,21 +40,20 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
       };
 
       console.log('Updating Supabase with Razorpay status:', razorpayStatus);
-      console.log('Order ID for update:', orderId);
-
-      // First verify if this is the exact order_id format stored in our database
+      
+      // First verify and get order details from our database
       const { data: orderCheck, error: checkError } = await supabase
         .from('orders')
-        .select('id')
+        .select('id, user_id, course_id, payment_id')
         .eq('order_id', orderId)
         .single();
       
       if (checkError) {
         console.error('Error checking order existence:', checkError);
-        console.log('Trying alternative order ID format search...');
-      } else {
-        console.log('Found matching order record:', orderCheck);
+        return data;
       }
+
+      console.log('Found matching order record:', orderCheck);
 
       // Update the order record with the latest status from Razorpay
       const { data: updateData, error: updateError } = await supabase
@@ -71,6 +70,33 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
         console.error('Error updating order status:', updateError);
       } else {
         console.log('Successfully updated order status in Supabase:', updateData);
+      }
+
+      // Update or create payment record
+      const paymentData = {
+        amount: data.order.amount / 100, // Convert from paisa to INR
+        user_id: orderCheck.user_id,
+        course_id: orderCheck.course_id,
+        status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
+        razorpay_order_id: orderId,
+        metadata: data.order,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .upsert(
+          paymentData,
+          {
+            onConflict: 'razorpay_order_id',
+            ignoreDuplicates: false
+          }
+        );
+
+      if (paymentError) {
+        console.error('Error updating payment record:', paymentError);
+      } else {
+        console.log('Successfully updated payment record');
       }
     }
     
