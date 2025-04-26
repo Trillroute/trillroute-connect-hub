@@ -16,3 +16,24 @@ export const getOrderStatus = async (orderId: string) => {
   console.log('Order data:', data);
   return data;
 };
+
+export const getRazorpayOrderDetails = async (orderId: string) => {
+  try {
+    console.log('Fetching detailed Razorpay order status for:', orderId);
+    
+    const { data, error } = await supabase.functions.invoke('get-razorpay-order-details', {
+      body: { orderId }
+    });
+    
+    if (error) {
+      console.error('Error fetching Razorpay order details:', error);
+      throw new Error('Failed to fetch Razorpay order details');
+    }
+    
+    console.log('Razorpay order details:', data);
+    return data;
+  } catch (error) {
+    console.error('Exception fetching Razorpay order details:', error);
+    throw new Error('Failed to fetch Razorpay order details');
+  }
+};
