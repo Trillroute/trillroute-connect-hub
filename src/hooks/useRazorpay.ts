@@ -36,12 +36,22 @@ export const useRazorpay = () => {
       }
 
       // Create order using our edge function
+      console.log('Initializing payment with user ID:', user.id);
       const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay', {
         body: { amount, currency, user_id: user.id },
       });
 
-      if (orderError) throw orderError;
-      if (!orderData) throw new Error("No data returned from payment function");
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw orderError;
+      }
+      
+      if (!orderData) {
+        console.error('No order data returned');
+        throw new Error("No data returned from payment function");
+      }
+
+      console.log('Order data received:', orderData);
 
       const options = {
         key: orderData.key_id,
@@ -51,6 +61,8 @@ export const useRazorpay = () => {
         description: "Course Payment",
         order_id: orderData.order_id,
         handler: async function (response: any) {
+          console.log('Payment success, response:', response);
+          
           // Update payment status
           const { error: updateError } = await supabase
             .from('payments')
@@ -58,7 +70,10 @@ export const useRazorpay = () => {
               status: 'completed',
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              metadata: { ...response }
+              metadata: { 
+                ...response,
+                user_id: user.id // Store user_id in metadata
+              }
             })
             .eq('razorpay_order_id', orderData.order_id);
 
