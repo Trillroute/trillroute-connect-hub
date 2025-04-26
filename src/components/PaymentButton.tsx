@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { getOrderStatus } from '@/utils/orderUtils';
 
 interface PaymentButtonProps {
   onSuccess?: (response: any) => void;
