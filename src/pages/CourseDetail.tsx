@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +14,7 @@ import { PaymentButton } from '@/components/PaymentButton';
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { getCourseById } = useCourses();
   const { teachers } = useTeachers();
   const { user, isAuthenticated } = useAuth();
@@ -44,6 +45,26 @@ const CourseDetail = () => {
       checkEnrollmentStatus();
     }
   }, [loading, courseId, isAuthenticated, user]);
+
+  useEffect(() => {
+    const handleEnrollmentSuccess = async () => {
+      const enrollmentStatus = searchParams.get('enrollment');
+      if (enrollmentStatus === 'success' && user && courseId && !isEnrolled) {
+        const success = await enrollStudentInCourse(courseId, user.id);
+        if (success) {
+          setIsEnrolled(true);
+          toast.success('Course Enrollment', {
+            description: `You are now enrolled in ${course?.title}`
+          });
+          navigate(`/courses/${courseId}`, { replace: true });
+        }
+      }
+    };
+
+    if (!loading) {
+      handleEnrollmentSuccess();
+    }
+  }, [loading, courseId, user, isEnrolled, course?.title, searchParams]);
 
   const handlePaymentSuccess = async (response: any) => {
     if (user && courseId) {
@@ -127,6 +148,7 @@ const CourseDetail = () => {
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+            courseId={courseId as string}
           >
             Enroll Now
           </PaymentButton>

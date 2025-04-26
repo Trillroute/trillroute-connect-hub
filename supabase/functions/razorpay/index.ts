@@ -1,3 +1,4 @@
+
 import Razorpay from "npm:razorpay";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -7,7 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Create a Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -17,21 +17,13 @@ const razorpay = new Razorpay({
   key_secret: Deno.env.get('RAZORPAY_KEY_SECRET') || '',
 });
 
-// Generate a shorter receipt ID (within 40 chars limit)
-function generateShortReceiptId() {
-  // Use timestamp + random chars to keep it unique but short
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 6);
-  return `rcpt_${timestamp}${random}`;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { amount, currency = 'INR', user_id } = await req.json();
+    const { amount, currency = 'INR', user_id, course_id } = await req.json();
 
     // Validate amount
     if (!amount || amount <= 0) {
@@ -45,32 +37,46 @@ serve(async (req) => {
       );
     }
 
-    const options = {
-      amount: Math.round(amount * 100), // Razorpay expects amount in smallest currency unit
+    // Create a payment link
+    const paymentLinkOptions = {
+      amount: Math.round(amount * 100), // Convert to smallest currency unit
       currency,
-      receipt: generateShortReceiptId(), // Use shorter receipt ID
+      accept_partial: false,
+      description: `Course Enrollment Payment`,
+      customer: {
+        name: 'Course Student', // This will be filled by Razorpay's form
+        email: 'student@example.com', // This will be filled by Razorpay's form
+      },
+      notify: {
+        sms: true,
+        email: true,
+      },
+      reminder_enable: true,
+      notes: {
+        user_id: user_id,
+        course_id: course_id
+      },
+      callback_url: `${req.headers.get('origin')}/courses/${course_id}?enrollment=success`,
+      callback_method: 'get'
     };
 
-    console.log('Creating Razorpay order with options:', options);
-    const order = await razorpay.orders.create(options);
-    console.log('Razorpay order created:', order);
+    console.log('Creating Razorpay payment link with options:', paymentLinkOptions);
+    const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
+    console.log('Razorpay payment link created:', paymentLink);
 
-    // Now store the payment record - with user_id as null if needed
-    // This works now that we've made the user_id column nullable
+    // Store the payment record
     const { data: payment, error } = await supabase
       .from('payments')
       .insert({
-        // We can still track the user via metadata if needed
         metadata: { 
           user_id: user_id,
-          order_details: order 
+          course_id: course_id,
+          payment_link_id: paymentLink.id
         },
         amount,
         currency,
-        status: 'created',
-        razorpay_order_id: order.id,
-        // We keep user_id as null to avoid any foreign key issues
-        user_id: null
+        status: 'pending',
+        user_id: null // Keep as null since we're using metadata
       })
       .select('id')
       .single();
@@ -84,9 +90,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        order_id: order.id,
-        payment_id: payment.id,
-        key_id: Deno.env.get('RAZORPAY_KEY_ID')
+        payment_link: paymentLink.short_url,
+        payment_id: payment.id
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
