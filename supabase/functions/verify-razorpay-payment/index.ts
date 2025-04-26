@@ -1,8 +1,8 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { create as createHmac } from "https://deno.land/std@0.168.0/crypto/hmac.ts";
-import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
+import * as crypto from "https://deno.land/std@0.177.0/crypto/mod.ts";
+import { encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -71,12 +71,26 @@ serve(async (req) => {
     console.log("Verifying signature for body:", body);
     
     try {
-      // Create HMAC signature using the updated Deno crypto functions
-      const key = new TextEncoder().encode(secret);
+      // Create HMAC signature using the updated Deno crypto API
+      const keyData = new TextEncoder().encode(secret);
       const message = new TextEncoder().encode(body);
-      const hmac = await createHmac("sha256", key);
-      const signature = await hmac.update(message).digest();
-      const generatedSignature = hexEncode(signature);
+      
+      // Create HMAC using sha256
+      const key = await crypto.subtle.importKey(
+        "raw",
+        keyData,
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      
+      const signature = await crypto.subtle.sign(
+        "HMAC",
+        key,
+        message
+      );
+      
+      const generatedSignature = encodeHex(new Uint8Array(signature));
       
       console.log("Generated signature:", generatedSignature);
       console.log("Received signature:", razorpay_signature);
