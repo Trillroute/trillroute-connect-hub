@@ -312,6 +312,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          course_id: string | null
           created_at: string | null
           currency: string
           id: string
@@ -325,6 +326,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          course_id?: string | null
           created_at?: string | null
           currency?: string
           id?: string
@@ -338,6 +340,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          course_id?: string | null
           created_at?: string | null
           currency?: string
           id?: string
@@ -349,7 +352,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       skills: {
         Row: {
