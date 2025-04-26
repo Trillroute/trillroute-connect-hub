@@ -27,24 +27,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Check if user exists in custom_users table instead of auth.users
-    const { data: userData, error: userError } = await supabase
-      .from('custom_users')
-      .select('id')
-      .eq('id', userId)
-      .single()
-
-    if (userError || !userData) {
-      console.error('Error finding user:', userError)
-      return new Response(
-        JSON.stringify({ error: 'User not found in database' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-
     // Create payment record in database
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
@@ -104,7 +86,8 @@ serve(async (req) => {
       JSON.stringify({ 
         orderId: razorpayOrder.id,
         amount: amount,
-        paymentId: payment.id
+        paymentId: payment.id,
+        key: Deno.env.get('RAZORPAY_KEY_ID')
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

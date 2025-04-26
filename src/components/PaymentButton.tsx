@@ -87,7 +87,7 @@ export const PaymentButton = ({
 
       // Initialize Razorpay
       const options = {
-        key: Deno.env.get('RAZORPAY_KEY_ID') || "rzp_test_key", // This will be replaced with the actual key from Supabase
+        key: "rzp_test_key", // This will be replaced with the actual key from Edge Function
         amount: amount * 100,
         currency: "INR",
         name: "Music Course Platform",
