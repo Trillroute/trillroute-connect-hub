@@ -1,8 +1,8 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import * as crypto from "https://deno.land/std@0.177.0/crypto/mod.ts";
-import { encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
+import { serve } from "https://deno.land/std@0.188.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.20.0'
+import * as crypto from "https://deno.land/std@0.188.0/crypto/mod.ts";
+import { encode as hexEncode } from "https://deno.land/std@0.188.0/encoding/hex.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,12 +11,15 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log("Received request to verify-razorpay-payment");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
+    console.log("Handling OPTIONS preflight request");
+    return new Response(null, { 
       headers: corsHeaders, 
-      status: 200 
-    })
+      status: 204 
+    });
   }
 
   // Add CORS headers to all responses
@@ -31,7 +34,7 @@ serve(async (req) => {
       razorpay_order_id,
       razorpay_signature,
       payment_id
-    } = await req.json()
+    } = await req.json();
 
     console.log("Received verification request with data:", { 
       razorpay_payment_id, 
@@ -96,7 +99,8 @@ serve(async (req) => {
         message
       );
       
-      const generatedSignature = encodeHex(new Uint8Array(signature));
+      // Use the correct hex encoding function from Deno std
+      const generatedSignature = hexEncode(new Uint8Array(signature));
       
       console.log("Generated signature:", generatedSignature);
       console.log("Received signature:", razorpay_signature);
@@ -165,6 +169,22 @@ serve(async (req) => {
 
     console.log("Payment data fetched:", paymentData);
 
+    // Verify user exists in custom_users table
+    const { data: userData, error: userError } = await supabase
+      .from('custom_users')
+      .select('id')
+      .eq('id', paymentData.user_id)
+      .single();
+
+    if (userError || !userData) {
+      console.error('User not found in custom_users table:', userError);
+      
+      // Don't fail the verification process, but log the warning
+      console.warn(`User with ID ${paymentData.user_id} not found in custom_users table, proceeding anyway`);
+    } else {
+      console.log('User verified in custom_users table:', userData.id);
+    }
+
     // Update payment status
     const { error: updateError } = await supabase
       .from('payments')
@@ -180,7 +200,7 @@ serve(async (req) => {
       console.error('Error updating payment:', updateError);
       
       return new Response(
-        JSON.stringify({ error: 'Failed to update payment status' }),
+        JSON.stringify({ error: `Failed to update payment status: ${updateError.message}` }),
         {
           headers: responseHeaders,
           status: 500,
@@ -201,7 +221,7 @@ serve(async (req) => {
       console.error('Error fetching course:', courseError);
       
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch course data' }),
+        JSON.stringify({ error: `Failed to fetch course data: ${courseError.message}` }),
         {
           headers: responseHeaders,
           status: 500,
@@ -247,7 +267,7 @@ serve(async (req) => {
       console.error('Error updating course:', courseUpdateError);
       
       return new Response(
-        JSON.stringify({ error: 'Failed to update course enrollment' }),
+        JSON.stringify({ error: `Failed to update course enrollment: ${courseUpdateError.message}` }),
         {
           headers: responseHeaders,
           status: 500,
@@ -256,6 +276,27 @@ serve(async (req) => {
     }
 
     console.log('Payment verification and enrollment completed successfully');
+
+    // Add entry to user activity logs
+    try {
+      const { error: logError } = await supabase
+        .from('user_activity_logs')
+        .insert({
+          user_id: paymentData.user_id,
+          action: 'payment_completed',
+          component: 'course_enrollment',
+          entity_id: paymentData.course_id,
+          page_url: '/courses/' + paymentData.course_id
+        });
+
+      if (logError) {
+        console.error('Error logging user activity:', logError);
+        // Don't fail the whole operation if logging fails
+      }
+    } catch (logError) {
+      console.error('Error during activity logging:', logError);
+      // Don't fail the whole operation if logging fails
+    }
 
     return new Response(
       JSON.stringify({ 
@@ -270,6 +311,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in payment verification:', error);
     console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     
     return new Response(
       JSON.stringify({ error: error.message || 'Payment verification failed' }),
