@@ -31,7 +31,6 @@ export const PaymentButton = ({
   const { user, isAuthenticated } = useAuth();
 
   const handleClick = async () => {
-    // Check if amount is valid
     if (!amount || amount <= 0) {
       toast.error("Invalid Amount", {
         description: "Cannot process payment for zero or negative amount"
@@ -42,17 +41,13 @@ export const PaymentButton = ({
     try {
       setLoading(true);
       
-      // Double check if user is authenticated
       if (!isAuthenticated || !user) {
         console.log('User not authenticated, redirecting to login...');
         toast.error("Authentication Required", {
           description: "Please login to make a payment"
         });
         
-        // Store the current course URL to redirect back after login
         localStorage.setItem('paymentRedirectUrl', `/courses/${courseId}`);
-        
-        // Store payment intent in localStorage for persistence across login
         localStorage.setItem('paymentIntent', JSON.stringify({
           courseId,
           amount,
@@ -66,7 +61,6 @@ export const PaymentButton = ({
 
       console.log('Creating payment link for user:', user.id, 'course:', courseId);
 
-      // Create payment link with authenticated user
       const { data, error } = await supabase.functions.invoke('razorpay', {
         body: { 
           amount,
@@ -88,19 +82,18 @@ export const PaymentButton = ({
 
       console.log('Payment link created:', data.payment_link);
       
-      // Store payment intent in sessionStorage with all required information
       const paymentIntent = {
         courseId,
         amount,
         currency,
         userId: user.id,
-        timestamp: new Date().getTime()
+        timestamp: new Date().getTime(),
+        payment_id: data.payment_id
       };
       
       console.log('Storing payment intent in session storage:', paymentIntent);
       sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
       
-      // Redirect to Razorpay payment page
       window.location.href = data.payment_link;
 
     } catch (error) {

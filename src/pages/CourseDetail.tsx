@@ -75,7 +75,6 @@ const CourseDetail = () => {
   // Process enrollment after successful payment
   useEffect(() => {
     const processEnrollment = async () => {
-      // Skip if already enrolled, processing, or missing required data
       if (isEnrolled || enrollmentProcessing || !user || !courseId) return;
       
       const enrollmentStatus = searchParams.get('enrollment');
@@ -99,6 +98,20 @@ const CourseDetail = () => {
             
           if (isValid) {
             console.log('Valid payment intent confirmed, enrolling user');
+            
+            // Update payment record status
+            const { error: paymentError } = await supabase
+              .from('payments')
+              .update({ 
+                status: 'completed',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', intent.payment_id);
+
+            if (paymentError) {
+              console.error('Error updating payment status:', paymentError);
+            }
+            
             const success = await enrollStudentInCourse(courseId, user.id);
             
             if (success) {
@@ -107,7 +120,6 @@ const CourseDetail = () => {
                 description: `You are now enrolled in ${course?.title}`
               });
               
-              // Remove payment intent from session storage and replace URL without the query params
               sessionStorage.removeItem('paymentIntent');
               navigate(`/courses/${courseId}`, { replace: true });
             } else {
@@ -142,7 +154,6 @@ const CourseDetail = () => {
       }
     };
 
-    // Only process enrollment if we're not already enrolled and not already processing
     if (!loading && user && course && !isEnrolled && !enrollmentProcessing) {
       console.log('Checking for enrollment processing conditions');
       processEnrollment();

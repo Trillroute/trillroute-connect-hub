@@ -24,7 +24,6 @@ serve(async (req) => {
   }
 
   try {
-    // Extract request payload
     let payload;
     try {
       payload = await req.json();
@@ -43,7 +42,6 @@ serve(async (req) => {
     
     console.log('Payment request received:', { amount, currency, user_id, course_id });
 
-    // Validate amount
     if (!amount || amount <= 0) {
       console.error('Invalid amount:', amount);
       return new Response(
@@ -55,7 +53,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate user_id
     if (!user_id) {
       console.error('Missing user_id parameter');
       return new Response(
@@ -67,7 +64,6 @@ serve(async (req) => {
       );
     }
 
-    // Validate course_id
     if (!course_id) {
       console.error('Missing course_id parameter');
       return new Response(
@@ -79,15 +75,37 @@ serve(async (req) => {
       );
     }
 
+    // Create initial payment record
+    const { data: paymentRecord, error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        user_id,
+        course_id,
+        amount,
+        currency,
+        status: 'pending',
+        metadata: {
+          timestamp: new Date().toISOString(),
+          amount_in_smallest_unit: Math.round(amount * 100)
+        }
+      })
+      .select()
+      .single();
+
+    if (paymentError) {
+      console.error('Error creating payment record:', paymentError);
+      throw new Error('Failed to create payment record');
+    }
+
     // Create a payment link
     const paymentLinkOptions = {
-      amount: Math.round(amount * 100), // Convert to smallest currency unit
+      amount: Math.round(amount * 100),
       currency,
       accept_partial: false,
       description: `Course Enrollment Payment`,
       customer: {
-        name: 'Course Student', // This will be filled by Razorpay's form
-        email: 'student@example.com', // This will be filled by Razorpay's form
+        name: 'Course Student',
+        email: 'student@example.com',
       },
       notify: {
         sms: true,
@@ -95,8 +113,9 @@ serve(async (req) => {
       },
       reminder_enable: true,
       notes: {
-        user_id: user_id,
-        course_id: course_id
+        user_id,
+        course_id,
+        payment_id: paymentRecord.id
       },
       callback_url: `${req.headers.get('origin')}/courses/${course_id}?enrollment=success&userId=${user_id}&courseId=${course_id}`,
       callback_method: 'get'
@@ -106,12 +125,27 @@ serve(async (req) => {
     const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
     console.log('Razorpay payment link created:', paymentLink);
 
-    // Skip storing payment record in the database as it's causing the foreign key error
-    // We'll track this via the paymentLink ID instead
+    // Update payment record with Razorpay order details
+    const { error: updateError } = await supabase
+      .from('payments')
+      .update({
+        razorpay_order_id: paymentLink.order_id,
+        metadata: {
+          ...paymentRecord.metadata,
+          razorpay_payment_link: paymentLink
+        }
+      })
+      .eq('id', paymentRecord.id);
+
+    if (updateError) {
+      console.error('Error updating payment record:', updateError);
+      // Don't throw here, we still want to return the payment link
+    }
 
     return new Response(
       JSON.stringify({ 
         payment_link: paymentLink.short_url,
+        payment_id: paymentRecord.id
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
