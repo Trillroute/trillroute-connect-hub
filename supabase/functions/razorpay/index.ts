@@ -75,6 +75,24 @@ serve(async (req) => {
       );
     }
 
+    // Verify user exists before creating payment record
+    const { data: userData, error: userError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user_id)
+      .single();
+
+    if (userError) {
+      console.error('Error verifying user:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid user ID or user not found' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400 
+        }
+      );
+    }
+
     // Create initial payment record
     const { data: paymentRecord, error: paymentError } = await supabase
       .from('payments')
