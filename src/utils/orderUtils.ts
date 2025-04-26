@@ -39,19 +39,38 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
         ...data.order
       };
 
-      const { error: updateError } = await supabase
+      console.log('Updating Supabase with Razorpay status:', razorpayStatus);
+      console.log('Order ID for update:', orderId);
+
+      // First verify if this is the exact order_id format stored in our database
+      const { data: orderCheck, error: checkError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('order_id', orderId)
+        .single();
+      
+      if (checkError) {
+        console.error('Error checking order existence:', checkError);
+        console.log('Trying alternative order ID format search...');
+      } else {
+        console.log('Found matching order record:', orderCheck);
+      }
+
+      // Update the order record with the latest status from Razorpay
+      const { data: updateData, error: updateError } = await supabase
         .from('orders')
         .update({ 
           status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
           metadata,
           updated_at: new Date().toISOString()
         })
-        .eq('order_id', orderId);
+        .eq('order_id', orderId)
+        .select();
 
       if (updateError) {
         console.error('Error updating order status:', updateError);
       } else {
-        console.log('Successfully updated order status in Supabase');
+        console.log('Successfully updated order status in Supabase:', updateData);
       }
     }
     
@@ -62,4 +81,3 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
     throw new Error('Failed to fetch Razorpay order details');
   }
 };
-

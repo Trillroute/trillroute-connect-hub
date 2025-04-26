@@ -24,11 +24,21 @@ export const OrderStatusDisplay = ({ orderId, className }: OrderStatusDisplayPro
       
       // Fetch order from our database
       const dbOrderData = await getOrderStatus(orderId);
+      console.log('Initial order data from DB:', dbOrderData);
       setOrderData(dbOrderData);
       
-      // Fetch detailed order from Razorpay
+      // Fetch detailed order from Razorpay and update our database
       const razorpayOrderData = await getRazorpayOrderDetails(orderId);
       setRazorpayData(razorpayOrderData);
+      
+      // After updating with Razorpay data, fetch the latest from our database again
+      const updatedDbData = await getOrderStatus(orderId);
+      console.log('Updated order data after sync:', updatedDbData);
+      setOrderData(updatedDbData);
+      
+      toast.success('Order Status Updated', {
+        description: 'Latest order information retrieved'
+      });
     } catch (err: any) {
       console.error('Error fetching order data:', err);
       setError(err.message || 'Failed to fetch order details');
