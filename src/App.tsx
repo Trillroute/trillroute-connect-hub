@@ -44,6 +44,7 @@ const App = () => (
       <AuthProvider>
         <TooltipProvider>
           <Layout>
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
             <Routes>
               {/* Main Pages */}
               <Route path="/" element={<Index />} />
