@@ -9,8 +9,8 @@ interface CourseHeaderProps {
   isEnrolled: boolean;
   enrollmentProcessing: boolean;
   onNavigateBack: () => void;
-  onPaymentSuccess: (response: any) => void;
-  onPaymentError: (error: any) => void;
+  onEnrollmentSuccess: (response: any) => void;
+  onEnrollmentError: (error: any) => void;
   courseId: string;
 }
 
@@ -19,8 +19,8 @@ export const CourseHeader = ({
   isEnrolled,
   enrollmentProcessing,
   onNavigateBack,
-  onPaymentSuccess,
-  onPaymentError,
+  onEnrollmentSuccess,
+  onEnrollmentError,
   courseId
 }: CourseHeaderProps) => (
   <div className="flex justify-between items-center mb-6">
@@ -42,9 +42,8 @@ export const CourseHeader = ({
       </Button>
     ) : (
       <PaymentButton
-        amount={course.final_price || course.base_price || 0}
-        onSuccess={onPaymentSuccess}
-        onError={onPaymentError}
+        onSuccess={onEnrollmentSuccess}
+        onError={onEnrollmentError}
         className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
         courseId={courseId}
       >
