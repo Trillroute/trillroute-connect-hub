@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { createHmac } from "https://deno.land/std@0.190.0/crypto/mod.ts";
+import * as crypto from "https://deno.land/std@0.190.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +12,10 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders, status: 200 })
+    return new Response('ok', { 
+      headers: corsHeaders, 
+      status: 200 
+    })
   }
 
   try {
@@ -30,9 +33,26 @@ serve(async (req) => {
     // Verify the payment signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const secret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
-    const hmac = createHmac("sha256", secret);
-    hmac.update(body);
-    const generated_signature = hmac.digest("hex");
+    
+    // Create HMAC signature
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    
+    const signature = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(body)
+    );
+    
+    // Convert to hex
+    const generated_signature = Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
 
     if (generated_signature !== razorpay_signature) {
       throw new Error('Invalid payment signature')
