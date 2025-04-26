@@ -1,18 +1,20 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCourses } from '@/hooks/useCourses';
 import { useTeachers } from '@/hooks/useTeachers';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/components/ui/sonner';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { getCourseById } = useCourses();
   const { teachers } = useTeachers();
+  const { user, isAuthenticated } = useAuth();
   const [course, setCourse] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
 
@@ -26,6 +28,23 @@ const CourseDetail = () => {
     };
     fetchCourse();
   }, [courseId, getCourseById]);
+
+  const handleEnrollNow = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to enroll in this course', {
+        description: 'You need to be logged in to enroll in a course.'
+      });
+      navigate('/auth/login', { 
+        state: { redirectTo: `/courses/${courseId}` } 
+      });
+      return;
+    }
+
+    // TODO: Implement actual enrollment logic
+    toast.success('Course Enrollment', {
+      description: `You are now enrolled in ${course.title}`
+    });
+  };
 
   if (loading) {
     return <CourseDetailSkeleton />;
@@ -49,17 +68,24 @@ const CourseDetail = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Back button */}
-      <Button
-        variant="ghost"
-        onClick={() => navigate(-1)}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Courses
-      </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Courses
+        </Button>
+        
+        <Button 
+          onClick={handleEnrollNow}
+          className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+        >
+          <Check className="mr-2 h-4 w-4" />
+          Enroll Now
+        </Button>
+      </div>
 
-      {/* Course header */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         <div className="md:col-span-2">
           <h1 className="text-3xl font-bold mb-4">{course.title}</h1>
@@ -82,7 +108,6 @@ const CourseDetail = () => {
         </div>
       </div>
 
-      {/* Course content tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
