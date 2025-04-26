@@ -28,7 +28,7 @@ export const PaymentButton = ({
 }: PaymentButtonProps) => {
   const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth(); // Use our auth hook to get current auth state
+  const { user, isAuthenticated } = useAuth();
 
   const handleClick = async () => {
     // Check if amount is valid
@@ -45,7 +45,7 @@ export const PaymentButton = ({
     try {
       setLoading(true);
       
-      // Check if user is authenticated
+      // Double check if user is authenticated
       if (!isAuthenticated || !user) {
         console.log('User not authenticated, redirecting to login...');
         toast.error("Authentication Required", {

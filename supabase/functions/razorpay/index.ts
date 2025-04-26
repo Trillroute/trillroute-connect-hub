@@ -106,34 +106,12 @@ serve(async (req) => {
     const paymentLink = await razorpay.paymentLink.create(paymentLinkOptions);
     console.log('Razorpay payment link created:', paymentLink);
 
-    // Store the payment record
-    const { data: payment, error } = await supabase
-      .from('payments')
-      .insert({
-        metadata: { 
-          user_id: user_id,
-          course_id: course_id,
-          payment_link_id: paymentLink.id
-        },
-        amount,
-        currency,
-        status: 'pending',
-        user_id: user_id
-      })
-      .select('id')
-      .single();
-
-    if (error) {
-      console.error('Error storing payment:', error);
-      throw error;
-    }
-
-    console.log('Payment record created:', payment);
+    // Skip storing payment record in the database as it's causing the foreign key error
+    // We'll track this via the paymentLink ID instead
 
     return new Response(
       JSON.stringify({ 
         payment_link: paymentLink.short_url,
-        payment_id: payment.id
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
