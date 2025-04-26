@@ -29,6 +29,31 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
       console.error('Error fetching Razorpay order details:', error);
       throw new Error('Failed to fetch Razorpay order details');
     }
+
+    // Update order status in Supabase if Razorpay data is available
+    if (data?.order) {
+      const razorpayStatus = data.order.status;
+      const metadata = {
+        razorpay_status: razorpayStatus,
+        last_checked: new Date().toISOString(),
+        ...data.order
+      };
+
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({ 
+          status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
+          metadata,
+          updated_at: new Date().toISOString()
+        })
+        .eq('order_id', orderId);
+
+      if (updateError) {
+        console.error('Error updating order status:', updateError);
+      } else {
+        console.log('Successfully updated order status in Supabase');
+      }
+    }
     
     console.log('Razorpay order details:', data);
     return data;
@@ -37,3 +62,4 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
     throw new Error('Failed to fetch Razorpay order details');
   }
 };
+
