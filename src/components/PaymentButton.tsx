@@ -87,7 +87,7 @@ export const PaymentButton = ({
 
       // Initialize Razorpay
       const options = {
-        key: "rzp_test_key", // This will be replaced with the actual key from Edge Function
+        key: orderData.key, // Use the key provided by the edge function
         amount: amount * 100,
         currency: "INR",
         name: "Music Course Platform",

@@ -82,12 +82,15 @@ serve(async (req) => {
       console.error('Error updating payment record:', updateError)
     }
 
+    // Get the Razorpay key ID to send to the client
+    const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID')
+
     return new Response(
       JSON.stringify({ 
         orderId: razorpayOrder.id,
         amount: amount,
         paymentId: payment.id,
-        key: Deno.env.get('RAZORPAY_KEY_ID')
+        key: razorpayKeyId
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
