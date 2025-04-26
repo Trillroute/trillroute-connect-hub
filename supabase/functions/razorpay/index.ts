@@ -118,7 +118,7 @@ serve(async (req) => {
         amount,
         currency,
         status: 'pending',
-        user_id: user_id  // Store the actual user_id
+        user_id: user_id
       })
       .select('id')
       .single();

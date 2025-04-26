@@ -12,7 +12,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
@@ -20,8 +20,17 @@ const Login = () => {
   // Check for redirect information
   const redirectPath = location.state?.redirectTo || localStorage.getItem('paymentRedirectUrl') || '/dashboard';
 
+  // If user is already authenticated, redirect them immediately
   useEffect(() => {
-    // Clear the stored redirect URL on component mount
+    if (isAuthenticated) {
+      console.log('User already authenticated, redirecting to:', redirectPath);
+      navigate(redirectPath);
+      localStorage.removeItem('paymentRedirectUrl');
+    }
+  }, [isAuthenticated, navigate, redirectPath]);
+
+  // Clear the stored redirect URL on component unmount
+  useEffect(() => {
     return () => {
       localStorage.removeItem('paymentRedirectUrl');
     };

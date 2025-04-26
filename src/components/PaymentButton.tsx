@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PaymentButtonProps {
   amount: number;
@@ -27,6 +28,7 @@ export const PaymentButton = ({
 }: PaymentButtonProps) => {
   const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth(); // Use our auth hook to get current auth state
 
   const handleClick = async () => {
     // Check if amount is valid
@@ -42,17 +44,10 @@ export const PaymentButton = ({
 
     try {
       setLoading(true);
-
-      // Get the current session instead of just the user
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError) {
-        console.error('Error getting current session:', sessionError);
-        throw new Error('Authentication error: ' + (sessionError.message || 'Failed to get session'));
-      }
-      
-      if (!session || !session.user) {
-        console.error('No active session found');
+      // Check if user is authenticated
+      if (!isAuthenticated || !user) {
+        console.log('User not authenticated, redirecting to login...');
         toast.error("Authentication Required", {
           description: "Please login to make a payment"
         });
@@ -64,8 +59,7 @@ export const PaymentButton = ({
         return;
       }
 
-      const user = session.user;
-      console.log('Current user found:', user.id);
+      console.log('User authenticated:', user.id);
 
       // Create payment link with authenticated user
       const { data, error } = await supabase.functions.invoke('razorpay', {
