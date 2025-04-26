@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -100,13 +101,19 @@ export const PaymentButton = ({
         handler: async function (response: any) {
           try {
             console.log('Payment successful, verifying payment...');
-            const { error: verificationError } = await supabase.functions.invoke('verify-razorpay-payment', {
-              body: { 
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                payment_id: orderData.paymentId
-              }
+            console.log('Payment response:', response);
+            
+            const verificationData = {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              payment_id: orderData.paymentId
+            };
+            
+            console.log('Sending verification data:', verificationData);
+            
+            const { data: verificationResult, error: verificationError } = await supabase.functions.invoke('verify-razorpay-payment', {
+              body: verificationData
             });
 
             if (verificationError) {
@@ -118,7 +125,7 @@ export const PaymentButton = ({
               return;
             }
 
-            console.log('Payment verified successfully');
+            console.log('Payment verified successfully:', verificationResult);
             toast.success('Payment Successful', {
               description: 'You have been enrolled in the course'
             });

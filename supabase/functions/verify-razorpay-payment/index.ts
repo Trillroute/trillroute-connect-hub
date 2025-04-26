@@ -1,16 +1,18 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
-import { createHmac } from "https://deno.land/std@0.190.0/crypto/mod.ts";
+import { createHmac } from "https://deno.land/std@0.190.0/crypto/hmac.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders, status: 200 })
   }
 
   try {
@@ -28,9 +30,9 @@ serve(async (req) => {
     // Verify the payment signature
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const secret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
-    const hmac = createHmac("sha256", secret);
+    const hmac = new createHmac("sha256", secret);
     hmac.update(body);
-    const generated_signature = hmac.digest("hex");
+    const generated_signature = hmac.toString();
 
     if (generated_signature !== razorpay_signature) {
       throw new Error('Invalid payment signature')
@@ -102,7 +104,10 @@ serve(async (req) => {
     console.log('Payment verification and enrollment completed successfully')
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true,
+        message: 'Payment verification and enrollment completed successfully'
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
