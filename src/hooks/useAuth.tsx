@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, hashPassword, verifyPassword } from '@/integrations/supabase/client';
@@ -25,6 +26,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userData = JSON.parse(storedUser);
         setUser(userData);
         console.log('Restored user from storage:', userData);
+        
+        // Additionally verify with Supabase that the session is still valid
+        supabase.auth.getSession().then(({ data, error }) => {
+          if (error || !data.session) {
+            console.log('Stored session invalid, clearing local storage');
+            localStorage.removeItem('user');
+            setUser(null);
+          }
+        });
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         localStorage.removeItem('user');
@@ -39,17 +49,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const normalizedEmail = email.trim().toLowerCase();
       console.log(`[AUTH] Login attempt for email: ${normalizedEmail}`);
       
-      console.log(`[AUTH] DEBUG - querying for email: ${normalizedEmail}`);
+      // First, authenticate with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password: password,
+      });
       
-      const { data: allUsers, error: allUsersError } = await supabase
-        .from('custom_users')
-        .select('email');
-        
-      if (allUsersError) {
-        console.error('[AUTH] Error fetching all users:', allUsersError);
-      } else {
-        console.log('[AUTH] All users in database:', allUsers);
+      if (authError) {
+        console.error('[AUTH] Supabase auth error:', authError);
       }
+      
+      // Regardless of Supabase auth result, check our custom user table
+      // This is a temporary approach until we fully transition to Supabase Auth
+      console.log(`[AUTH] DEBUG - querying for email: ${normalizedEmail}`);
       
       const { data: users, error: queryError } = await supabase
         .from('custom_users')
@@ -109,12 +121,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: `Welcome back, ${authUser.firstName}!`,
         duration: 3000,
       });
-      
-      if (authUser.role === 'superadmin') {
-        navigate('/dashboard/superadmin');
-      } else {
-        navigate(`/dashboard/${authUser.role}`);
-      }
     } catch (error: any) {
       console.error('[AUTH] Login error:', error);
       toast({

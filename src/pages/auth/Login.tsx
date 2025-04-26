@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Music, Mail, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,18 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Check for redirect information
+  const redirectPath = location.state?.redirectTo || localStorage.getItem('paymentRedirectUrl') || '/dashboard';
+
+  useEffect(() => {
+    // Clear the stored redirect URL on component mount
+    return () => {
+      localStorage.removeItem('paymentRedirectUrl');
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +44,10 @@ const Login = () => {
       console.log('Attempting login with:', { email });
       // Pass the raw email to login - normalization will happen there
       await login(email, password);
-      // Redirect handled in login function
+      
+      // Redirect to the path that was stored before login
+      navigate(redirectPath);
+      
     } catch (error: any) {
       console.error('Login failed in component:', error);
       // Toast is already handled in the login function
@@ -55,6 +70,11 @@ const Login = () => {
               create a new account
             </Link>
           </p>
+          {redirectPath && redirectPath !== '/dashboard' && (
+            <p className="mt-2 text-sm text-blue-600">
+              You'll be redirected back after login
+            </p>
+          )}
         </div>
         
         <Card>

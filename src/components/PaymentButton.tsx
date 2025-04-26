@@ -43,27 +43,31 @@ export const PaymentButton = ({
     try {
       setLoading(true);
 
-      // Get the current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      // Get the current session instead of just the user
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (userError) {
-        console.error('Error getting current user:', userError);
-        throw new Error('Authentication error');
+      if (sessionError) {
+        console.error('Error getting current session:', sessionError);
+        throw new Error('Authentication error: ' + (sessionError.message || 'Failed to get session'));
       }
       
-      if (!user) {
+      if (!session || !session.user) {
+        console.error('No active session found');
         toast.error("Authentication Required", {
           description: "Please login to make a payment"
         });
-        navigate('/auth/login', { 
-          state: { redirectTo: `/courses/${courseId}` } 
-        });
+        
+        // Store the current course URL to redirect back after login
+        localStorage.setItem('paymentRedirectUrl', `/courses/${courseId}`);
+        
+        navigate('/auth/login');
         return;
       }
 
+      const user = session.user;
       console.log('Current user found:', user.id);
 
-      // Create payment link
+      // Create payment link with authenticated user
       const { data, error } = await supabase.functions.invoke('razorpay', {
         body: { 
           amount,

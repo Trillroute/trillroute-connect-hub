@@ -24,7 +24,22 @@ serve(async (req) => {
   }
 
   try {
-    const { amount, currency = 'INR', user_id, course_id } = await req.json();
+    // Extract request payload
+    let payload;
+    try {
+      payload = await req.json();
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request payload' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400 
+        }
+      );
+    }
+    
+    const { amount, currency = 'INR', user_id, course_id } = payload;
     
     console.log('Payment request received:', { amount, currency, user_id, course_id });
 
@@ -45,6 +60,18 @@ serve(async (req) => {
       console.error('Missing user_id parameter');
       return new Response(
         JSON.stringify({ error: 'User ID is required' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400 
+        }
+      );
+    }
+
+    // Validate course_id
+    if (!course_id) {
+      console.error('Missing course_id parameter');
+      return new Response(
+        JSON.stringify({ error: 'Course ID is required' }),
         { 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400 
@@ -91,7 +118,7 @@ serve(async (req) => {
         amount,
         currency,
         status: 'pending',
-        user_id: user_id  // Store the actual user_id instead of null
+        user_id: user_id  // Store the actual user_id
       })
       .select('id')
       .single();
