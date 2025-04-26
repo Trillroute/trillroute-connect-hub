@@ -31,11 +31,15 @@ export const useRazorpay = () => {
     try {
       setLoading(true);
       
+      // Handle free courses (amount <= 0)
       if (amount <= 0) {
-        throw new Error("Payment amount must be greater than 0");
+        console.log("Free enrollment, bypassing payment");
+        if (onSuccess) {
+          onSuccess({ free_enrollment: true });
+        }
+        return;
       }
 
-      // Create order using our edge function
       console.log('Initializing payment with user ID:', user.id);
       const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay', {
         body: { amount, currency, user_id: user.id },

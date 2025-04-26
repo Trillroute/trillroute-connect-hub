@@ -321,7 +321,7 @@ export type Database = {
           razorpay_signature: string | null
           status: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -334,7 +334,7 @@ export type Database = {
           razorpay_signature?: string | null
           status: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -347,7 +347,7 @@ export type Database = {
           razorpay_signature?: string | null
           status?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

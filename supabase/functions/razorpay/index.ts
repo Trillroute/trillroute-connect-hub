@@ -1,4 +1,3 @@
-
 import Razorpay from "npm:razorpay";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -56,13 +55,12 @@ serve(async (req) => {
     const order = await razorpay.orders.create(options);
     console.log('Razorpay order created:', order);
 
-    // Store payment record WITHOUT the user_id foreign key constraint
-    // This avoids the error with the users table reference
+    // Now store the payment record - with user_id as null if needed
+    // This works now that we've made the user_id column nullable
     const { data: payment, error } = await supabase
       .from('payments')
       .insert({
-        // Use a custom field to store the user information instead of user_id
-        // to avoid the foreign key constraint error
+        // We can still track the user via metadata if needed
         metadata: { 
           user_id: user_id,
           order_details: order 
@@ -70,7 +68,9 @@ serve(async (req) => {
         amount,
         currency,
         status: 'created',
-        razorpay_order_id: order.id
+        razorpay_order_id: order.id,
+        // We keep user_id as null to avoid any foreign key issues
+        user_id: null
       })
       .select('id')
       .single();
@@ -79,6 +79,8 @@ serve(async (req) => {
       console.error('Error storing payment:', error);
       throw error;
     }
+
+    console.log('Payment record created:', payment);
 
     return new Response(
       JSON.stringify({ 
