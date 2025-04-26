@@ -13,7 +13,7 @@ interface PaymentButtonProps {
   onError?: (error: any) => void;
   className?: string;
   children?: React.ReactNode;
-  courseId: string; // Add courseId prop
+  courseId: string;
 }
 
 export const PaymentButton = ({
@@ -44,7 +44,12 @@ export const PaymentButton = ({
       setLoading(true);
 
       // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('Error getting current user:', userError);
+        throw new Error('Authentication error');
+      }
       
       if (!user) {
         toast.error("Authentication Required", {
@@ -55,6 +60,8 @@ export const PaymentButton = ({
         });
         return;
       }
+
+      console.log('Current user found:', user.id);
 
       // Create payment link
       const { data, error } = await supabase.functions.invoke('razorpay', {
@@ -67,13 +74,17 @@ export const PaymentButton = ({
       });
 
       if (error) {
+        console.error('Razorpay function error:', error);
         throw error;
       }
 
       if (!data?.payment_link) {
+        console.error('No payment link received:', data);
         throw new Error('No payment link received');
       }
 
+      console.log('Payment link created:', data.payment_link);
+      
       // Redirect to Razorpay payment page
       window.location.href = data.payment_link;
 

@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,13 +8,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useCourses } from '@/hooks/useCourses';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { enrollStudentInCourse, isStudentEnrolledInCourse } from '@/utils/enrollmentUtils';
 import { PaymentButton } from '@/components/PaymentButton';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { getCourseById } = useCourses();
   const { teachers } = useTeachers();
@@ -25,9 +27,15 @@ const CourseDetail = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       if (courseId) {
-        const courseData = await getCourseById(courseId);
-        setCourse(courseData);
-        setLoading(false);
+        try {
+          const courseData = await getCourseById(courseId);
+          setCourse(courseData);
+        } catch (error) {
+          console.error('Error fetching course:', error);
+          toast.error('Failed to load course information');
+        } finally {
+          setLoading(false);
+        }
       }
     };
     fetchCourse();
@@ -36,12 +44,16 @@ const CourseDetail = () => {
   useEffect(() => {
     const checkEnrollmentStatus = async () => {
       if (isAuthenticated && user && courseId) {
-        const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
-        setIsEnrolled(enrolled);
+        try {
+          const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
+          setIsEnrolled(enrolled);
+        } catch (error) {
+          console.error('Error checking enrollment status:', error);
+        }
       }
     };
 
-    if (!loading) {
+    if (!loading && user) {
       checkEnrollmentStatus();
     }
   }, [loading, courseId, isAuthenticated, user]);
@@ -50,30 +62,41 @@ const CourseDetail = () => {
     const handleEnrollmentSuccess = async () => {
       const enrollmentStatus = searchParams.get('enrollment');
       if (enrollmentStatus === 'success' && user && courseId && !isEnrolled) {
-        const success = await enrollStudentInCourse(courseId, user.id);
-        if (success) {
-          setIsEnrolled(true);
-          toast.success('Course Enrollment', {
-            description: `You are now enrolled in ${course?.title}`
-          });
-          navigate(`/courses/${courseId}`, { replace: true });
+        try {
+          const success = await enrollStudentInCourse(courseId, user.id);
+          if (success) {
+            setIsEnrolled(true);
+            toast.success('Course Enrollment', {
+              description: `You are now enrolled in ${course?.title}`
+            });
+            // Replace the URL without the query parameter to prevent re-enrollment on refresh
+            navigate(`/courses/${courseId}`, { replace: true });
+          }
+        } catch (error) {
+          console.error('Error enrolling in course:', error);
+          toast.error('Enrollment failed. Please try again.');
         }
       }
     };
 
-    if (!loading) {
+    if (!loading && user) {
       handleEnrollmentSuccess();
     }
-  }, [loading, courseId, user, isEnrolled, course?.title, searchParams]);
+  }, [loading, courseId, user, isEnrolled, course?.title, searchParams, navigate]);
 
   const handlePaymentSuccess = async (response: any) => {
     if (user && courseId) {
-      const success = await enrollStudentInCourse(courseId, user.id);
-      if (success) {
-        setIsEnrolled(true);
-        toast.success('Course Enrollment', {
-          description: `You are now enrolled in ${course.title}`
-        });
+      try {
+        const success = await enrollStudentInCourse(courseId, user.id);
+        if (success) {
+          setIsEnrolled(true);
+          toast.success('Course Enrollment', {
+            description: `You are now enrolled in ${course.title}`
+          });
+        }
+      } catch (error) {
+        console.error('Error enrolling in course:', error);
+        toast.error('Enrollment failed. Please try again.');
       }
     }
   };

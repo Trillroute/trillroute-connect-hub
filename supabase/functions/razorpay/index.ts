@@ -18,18 +18,33 @@ const razorpay = new Razorpay({
 });
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { amount, currency = 'INR', user_id, course_id } = await req.json();
+    
+    console.log('Payment request received:', { amount, currency, user_id, course_id });
 
     // Validate amount
     if (!amount || amount <= 0) {
       console.error('Invalid amount:', amount);
       return new Response(
         JSON.stringify({ error: 'Invalid amount. Amount must be greater than 0.' }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400 
+        }
+      );
+    }
+
+    // Validate user_id
+    if (!user_id) {
+      console.error('Missing user_id parameter');
+      return new Response(
+        JSON.stringify({ error: 'User ID is required' }),
         { 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400 
@@ -76,7 +91,7 @@ serve(async (req) => {
         amount,
         currency,
         status: 'pending',
-        user_id: null // Keep as null since we're using metadata
+        user_id: user_id  // Store the actual user_id instead of null
       })
       .select('id')
       .single();
