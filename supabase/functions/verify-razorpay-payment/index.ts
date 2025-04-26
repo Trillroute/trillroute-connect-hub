@@ -19,6 +19,12 @@ serve(async (req) => {
     })
   }
 
+  // Add CORS headers to all responses
+  const responseHeaders = {
+    ...corsHeaders,
+    'Content-Type': 'application/json'
+  };
+
   try {
     const {
       razorpay_payment_id,
@@ -47,7 +53,7 @@ serve(async (req) => {
           error: 'Missing required Razorpay verification parameters' 
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 400,
         }
       );
@@ -62,7 +68,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Razorpay secret key is not configured' }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 500,
         }
       );
@@ -103,7 +109,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: 'Invalid payment signature' }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            headers: responseHeaders,
             status: 400,
           }
         );
@@ -116,7 +122,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: `Signature verification error: ${signError.message}` }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 400,
         }
       );
@@ -130,7 +136,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Database credentials are not configured' }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 500,
         }
       );
@@ -151,7 +157,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Failed to fetch payment data' }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 400,
         }
       );
@@ -176,7 +182,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Failed to update payment status' }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 500,
         }
       );
@@ -197,7 +203,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Failed to fetch course data' }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 500,
         }
       );
@@ -217,7 +223,7 @@ serve(async (req) => {
           message: 'Payment verified successfully, student already enrolled'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 200,
         }
       );
@@ -243,7 +249,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Failed to update course enrollment' }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: responseHeaders,
           status: 500,
         }
       );
@@ -257,7 +263,7 @@ serve(async (req) => {
         message: 'Payment verification and enrollment completed successfully'
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: responseHeaders,
         status: 200,
       }
     );
@@ -268,7 +274,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message || 'Payment verification failed' }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: responseHeaders,
         status: 400,
       }
     );
