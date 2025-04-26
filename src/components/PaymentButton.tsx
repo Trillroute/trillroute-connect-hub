@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { toast } from '@/components/ui/sonner';
+import { Loader2 } from 'lucide-react';
 
 interface PaymentButtonProps {
   amount: number;
@@ -20,7 +22,7 @@ export const PaymentButton = ({
   className,
   children = 'Pay Now'
 }: PaymentButtonProps) => {
-  const { initializePayment, loading } = useRazorpay();
+  const { initializePayment, loading, scriptLoaded } = useRazorpay();
 
   const handleClick = () => {
     // Check if the amount is valid (greater than 0)
@@ -45,13 +47,21 @@ export const PaymentButton = ({
     });
   };
 
+  // Determine button text based on state
+  const buttonText = () => {
+    if (loading) return 'Processing...';
+    if (!scriptLoaded) return 'Loading Payment...';
+    return amount > 0 ? children : 'Enroll for Free';
+  };
+
   return (
     <Button
       onClick={handleClick}
-      disabled={loading}
+      disabled={loading || (!scriptLoaded && amount > 0)}
       className={className}
     >
-      {loading ? 'Processing...' : amount > 0 ? children : 'Enroll for Free'}
+      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {buttonText()}
     </Button>
   );
 };

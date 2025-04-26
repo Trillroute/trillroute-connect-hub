@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -13,8 +13,39 @@ interface PaymentOptions {
 
 export const useRazorpay = () => {
   const [loading, setLoading] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Load Razorpay script on component mount
+  useEffect(() => {
+    const loadRazorpayScript = () => {
+      // Check if script is already loaded
+      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+        setScriptLoaded(true);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => {
+        console.log('Razorpay script loaded successfully');
+        setScriptLoaded(true);
+      };
+      script.onerror = () => {
+        console.error('Failed to load Razorpay script');
+        toast({
+          title: "Payment System Error",
+          description: "Failed to load payment system. Please try again later.",
+          variant: "destructive",
+        });
+      };
+      document.body.appendChild(script);
+    };
+
+    loadRazorpayScript();
+  }, [toast]);
 
   const initializePayment = async ({ amount, currency = 'INR', onSuccess, onError }: PaymentOptions) => {
     if (!user) {
@@ -40,6 +71,18 @@ export const useRazorpay = () => {
         return;
       }
 
+      // Check if Razorpay script is loaded
+      if (!scriptLoaded) {
+        console.error('Razorpay script not loaded yet');
+        toast({
+          title: "Payment System Loading",
+          description: "Payment system is still loading. Please try again in a moment.",
+          variant: "destructive",
+        });
+        if (onError) onError({ message: "Payment system not ready yet" });
+        return;
+      }
+
       console.log('Initializing payment with user ID:', user.id);
       const { data: orderData, error: orderError } = await supabase.functions.invoke('razorpay', {
         body: { amount, currency, user_id: user.id },
@@ -56,6 +99,11 @@ export const useRazorpay = () => {
       }
 
       console.log('Order data received:', orderData);
+
+      // Check again if Razorpay is available
+      if (!(window as any).Razorpay) {
+        throw new Error("Razorpay SDK not loaded. Please refresh the page and try again.");
+      }
 
       const options = {
         key: orderData.key_id,
@@ -113,11 +161,6 @@ export const useRazorpay = () => {
         }
       };
 
-      // Check if Razorpay is loaded
-      if (!(window as any).Razorpay) {
-        throw new Error("Razorpay SDK not loaded. Please refresh the page and try again.");
-      }
-
       const razorpayInstance = new (window as any).Razorpay(options);
       razorpayInstance.open();
 
@@ -134,5 +177,5 @@ export const useRazorpay = () => {
     }
   };
 
-  return { initializePayment, loading };
+  return { initializePayment, loading, scriptLoaded };
 };
