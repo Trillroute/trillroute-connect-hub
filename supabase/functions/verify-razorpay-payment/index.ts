@@ -26,7 +26,10 @@ serve(async (req) => {
       payment_id
     } = await req.json()
 
+    console.log("Received verification request with data:", { razorpay_payment_id, razorpay_order_id, razorpay_signature, payment_id });
+
     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !payment_id) {
+      console.error("Missing required parameters:", { razorpay_payment_id, razorpay_order_id, razorpay_signature, payment_id });
       throw new Error('Missing required Razorpay verification parameters')
     }
 
@@ -34,29 +37,47 @@ serve(async (req) => {
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const secret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
     
+    if (!secret) {
+      console.error("RAZORPAY_KEY_SECRET is not defined in environment variables");
+      throw new Error('Razorpay secret key is not configured');
+    }
+    
+    console.log("Verifying signature for body:", body);
+    
     // Create HMAC signature
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    
     const key = await crypto.subtle.importKey(
       "raw",
-      new TextEncoder().encode(secret),
+      keyData,
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"]
     );
     
-    const signature = await crypto.subtle.sign(
+    const signatureData = await crypto.subtle.sign(
       "HMAC",
       key,
-      new TextEncoder().encode(body)
+      encoder.encode(body)
     );
     
     // Convert to hex
-    const generated_signature = Array.from(new Uint8Array(signature))
+    const generated_signature = Array.from(new Uint8Array(signatureData))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
+    
+    console.log("Generated signature:", generated_signature);
+    console.log("Received signature:", razorpay_signature);
 
     if (generated_signature !== razorpay_signature) {
+      console.error("Signature verification failed");
+      console.error("Expected:", generated_signature);
+      console.error("Received:", razorpay_signature);
       throw new Error('Invalid payment signature')
     }
+
+    console.log("Signature verified successfully");
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -75,6 +96,8 @@ serve(async (req) => {
       throw new Error('Failed to fetch payment data')
     }
 
+    console.log("Payment data fetched:", paymentData);
+
     // Update payment status
     const { error: updateError } = await supabase
       .from('payments')
@@ -91,6 +114,8 @@ serve(async (req) => {
       throw new Error('Failed to update payment status')
     }
 
+    console.log("Payment status updated to completed");
+
     // Get current course data
     const { data: courseData, error: courseError } = await supabase
       .from('courses')
@@ -103,10 +128,15 @@ serve(async (req) => {
       throw new Error('Failed to fetch course data')
     }
 
+    console.log("Course data fetched:", courseData);
+    
     // Add student to course
     const currentStudentIds = courseData.student_ids || []
     const newStudentIds = [...currentStudentIds, paymentData.user_id]
     const newStudentCount = (courseData.students || 0) + 1
+
+    console.log("Updating course with new student. Current IDs:", currentStudentIds);
+    console.log("New student IDs:", newStudentIds);
 
     const { error: courseUpdateError } = await supabase
       .from('courses')
@@ -134,9 +164,11 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in payment verification:', error)
+    console.error('Error message:', error.message)
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Payment verification failed' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
