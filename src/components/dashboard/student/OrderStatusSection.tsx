@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { OrderStatusDisplay } from '@/components/OrderStatusDisplay';
 import { ArrowRight, ShoppingBag } from 'lucide-react';
@@ -12,10 +12,12 @@ interface OrderStatusSectionProps {
 export const OrderStatusSection = ({ orderId }: OrderStatusSectionProps) => {
   const [manualOrderId, setManualOrderId] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const navigate = useNavigate();
 
   const handleViewOrder = () => {
     if (!manualOrderId.trim()) return;
-    window.location.href = `/dashboard/student?orderId=${manualOrderId.trim()}`;
+    // Use navigate instead of window.location.href to prevent full page reload
+    navigate(`/dashboard/student?orderId=${manualOrderId.trim()}`);
   };
 
   if (!orderId && !showManualInput) {

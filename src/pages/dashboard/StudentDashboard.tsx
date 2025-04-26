@@ -20,10 +20,18 @@ const StudentDashboard = () => {
   const upcomingLessons: UpcomingLesson[] = [];
   const recommendations: RecommendedCourse[] = [];
 
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6 text-center">
+        <p className="text-lg text-gray-600">Loading user data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.firstName}!</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user.firstName}!</h1>
         <p className="text-gray-600 mt-2">Here's an overview of your musical journey with Trillroute.</p>
       </div>
 
