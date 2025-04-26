@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
@@ -10,6 +9,7 @@ import { useTeachers } from '@/hooks/useTeachers';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/sonner';
 import { enrollStudentInCourse, isStudentEnrolledInCourse } from '@/utils/enrollmentUtils';
+import { PaymentButton } from '@/components/PaymentButton';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -19,7 +19,6 @@ const CourseDetail = () => {
   const { user, isAuthenticated } = useAuth();
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [enrolling, setEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
@@ -46,25 +45,7 @@ const CourseDetail = () => {
     }
   }, [loading, courseId, isAuthenticated, user]);
 
-  const handleEnrollNow = async () => {
-    if (!isAuthenticated) {
-      toast.error('Please login to enroll in this course', {
-        description: 'You need to be logged in to enroll in a course.'
-      });
-      navigate('/auth/login', { 
-        state: { redirectTo: `/courses/${courseId}` } 
-      });
-      return;
-    }
-
-    if (isEnrolled) {
-      toast.info('Already Enrolled', {
-        description: 'You are already enrolled in this course.'
-      });
-      return;
-    }
-
-    setEnrolling(true);
+  const handlePaymentSuccess = async (response: any) => {
     if (user && courseId) {
       const success = await enrollStudentInCourse(courseId, user.id);
       if (success) {
@@ -74,7 +55,12 @@ const CourseDetail = () => {
         });
       }
     }
-    setEnrolling(false);
+  };
+
+  const handlePaymentError = (error: any) => {
+    toast.error('Payment Failed', {
+      description: error.message || 'There was an error processing your payment.'
+    });
   };
 
   if (loading) {
@@ -97,6 +83,25 @@ const CourseDetail = () => {
       .join(', ');
   };
 
+  const handleEnrollClick = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to enroll in this course', {
+        description: 'You need to be logged in to enroll in a course.'
+      });
+      navigate('/auth/login', { 
+        state: { redirectTo: `/courses/${courseId}` } 
+      });
+      return;
+    }
+
+    if (isEnrolled) {
+      toast.info('Already Enrolled', {
+        description: 'You are already enrolled in this course.'
+      });
+      return;
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -108,18 +113,24 @@ const CourseDetail = () => {
           Back to Courses
         </Button>
         
-        <Button 
-          onClick={handleEnrollNow}
-          className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
-          disabled={enrolling || isEnrolled}
-        >
-          {enrolling ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
+        {isEnrolled ? (
+          <Button 
+            className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+            disabled={true}
+          >
             <Check className="mr-2 h-4 w-4" />
-          )}
-          {isEnrolled ? 'Enrolled' : 'Enroll Now'}
-        </Button>
+            Enrolled
+          </Button>
+        ) : (
+          <PaymentButton
+            amount={course.final_price || course.base_price || 0}
+            onSuccess={handlePaymentSuccess}
+            onError={handlePaymentError}
+            className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+          >
+            Enroll Now
+          </PaymentButton>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
