@@ -23,17 +23,19 @@ export const RecommendedCoursesCard = ({ courses }: RecommendedCoursesCardProps)
               <div key={course.id} className="flex rounded-lg overflow-hidden border border-gray-100 hover:border-music-200 transition-colors">
                 <div className="h-24 w-24 flex-shrink-0">
                   <img 
-                    src={course.imageUrl} 
+                    src={course.image || course.imageUrl || '/placeholder.svg'} 
                     alt={course.title} 
                     className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="p-3 flex-grow">
                   <h5 className="font-medium text-sm">{course.title}</h5>
-                  <p className="text-xs text-gray-600">{course.instructor}</p>
+                  <p className="text-xs text-gray-600">
+                    {course.instructor || (course.instructors && course.instructors.length > 0 ? course.instructors[0] : 'Unknown')}
+                  </p>
                   <div className="flex items-center mt-1">
                     <Star className="h-3 w-3 text-yellow-400 fill-current" />
-                    <span className="text-xs ml-1">{course.rating} • {course.level}</span>
+                    <span className="text-xs ml-1">{course.rating || 5} • {course.level}</span>
                   </div>
                 </div>
               </div>

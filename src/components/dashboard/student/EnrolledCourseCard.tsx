@@ -15,14 +15,16 @@ export const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
     <Card className="overflow-hidden music-card-hover">
       <div className="h-48 overflow-hidden">
         <img 
-          src={course.imageUrl} 
+          src={course.image || course.imageUrl || '/placeholder.svg'} 
           alt={course.title} 
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
         />
       </div>
       <CardHeader>
         <CardTitle>{course.title}</CardTitle>
-        <CardDescription>Instructor: {course.instructor}</CardDescription>
+        <CardDescription>
+          Instructor: {course.instructor || (course.instructors && course.instructors.length > 0 ? course.instructors[0] : 'Unknown')}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -37,7 +39,7 @@ export const EnrolledCourseCard = ({ course }: EnrolledCourseCardProps) => {
           <div className="text-sm font-medium mb-1">Next Lesson:</div>
           <div className="flex items-center text-sm text-gray-600">
             <BookOpen className="h-4 w-4 mr-1 text-music-500" />
-            <span>{course.nextLesson}</span>
+            <span>{course.nextLesson || (course.nextLessonDate ? new Date(course.nextLessonDate).toLocaleDateString() : 'Not scheduled')}</span>
           </div>
         </div>
         

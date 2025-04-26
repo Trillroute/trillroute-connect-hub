@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import ClassTypeManagement from "@/components/admin/class-types/ClassTypeManagement";
 import SuperAdminSidebar, { ActiveTab } from "@/components/admin/SuperAdminSidebar";
-import useActivityLogger from "@/hooks/useActivityLogger";
+import { useActivityLogger } from "@/hooks/useActivityLogger";
 import UserActivityReport from "@/components/admin/reports/UserActivityReport";
 import LeadKanbanBoard from "@/components/admin/leads/LeadKanbanBoard";
 import { useFetchLeads } from "@/hooks/useFetchLeads";

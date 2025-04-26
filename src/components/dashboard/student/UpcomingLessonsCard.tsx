@@ -24,7 +24,7 @@ export const UpcomingLessonsCard = ({ lessons }: UpcomingLessonsCardProps) => {
                   <Calendar className="h-6 w-6 text-music-700" />
                 </div>
                 <div className="flex-grow">
-                  <h4 className="font-medium text-gray-900">{lesson.title}</h4>
+                  <h4 className="font-medium text-gray-900">{lesson.title || lesson.courseName}</h4>
                   <p className="text-sm text-gray-600">with {lesson.instructor}</p>
                   <div className="flex items-center mt-2 space-x-4">
                     <div className="flex items-center text-xs text-gray-500">
@@ -37,7 +37,7 @@ export const UpcomingLessonsCard = ({ lessons }: UpcomingLessonsCardProps) => {
                     </div>
                     <div className="flex items-center text-xs text-gray-500">
                       <Music2 className="h-3 w-3 mr-1" />
-                      <span>{lesson.duration}</span>
+                      <span>{lesson.duration || "1 hour"}</span>
                     </div>
                   </div>
                 </div>
