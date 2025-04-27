@@ -212,6 +212,11 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
         }
       }
       
+      if (!authData.user) {
+        console.error('[AUTH] Auth successful but no user returned');
+        throw new Error("Authentication error. Please try again.");
+      }
+      
       console.log(`[AUTH] DEBUG - querying for email: ${normalizedEmail}`);
       
       const { data: users, error: queryError } = await supabase
