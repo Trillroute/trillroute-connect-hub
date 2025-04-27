@@ -53,7 +53,13 @@ const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
   const { logActivity } = useActivityLogger();
 
-  const { leads = [], loading: leadsLoading = true, fetchLeads } = useFetchLeads() || {};
+  const fetchLeadsResult = useFetchLeads();
+  const leads = fetchLeadsResult?.leads || [];
+  const leadsLoading = fetchLeadsResult?.loading || false;
+  const fetchLeads = fetchLeadsResult?.fetchLeads || (() => {
+    console.log('Fetch leads function not available');
+  });
+  
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -419,8 +425,8 @@ const SuperAdminDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <LeadKanbanBoard
-                      leads={leads || []}
-                      loading={leadsLoading || false}
+                      leads={leads}
+                      loading={leadsLoading}
                       onEdit={openEditDialog}
                       onDelete={openDeleteDialog}
                     />

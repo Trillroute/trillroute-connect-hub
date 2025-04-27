@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,14 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const { leads, loading, fetchLeads } = useFetchLeads();
+  
+  const fetchLeadsResult = useFetchLeads();
+  const leads = fetchLeadsResult?.leads || [];
+  const loading = fetchLeadsResult?.loading || false;
+  const fetchLeads = fetchLeadsResult?.fetchLeads || (() => {
+    console.log('Fetch leads function not available');
+  });
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile' | 'cards'>('list');
@@ -52,15 +58,17 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
 
   useEffect(() => {
     if (!searchQuery.trim()) {
-      setFilteredLeads(leads);
+      setFilteredLeads(leads || []);
       return;
     }
     
-    const filtered = leads.filter(lead => {
+    const leadsArray = Array.isArray(leads) ? leads : [];
+    
+    const filtered = leadsArray.filter(lead => {
       const query = searchQuery.toLowerCase();
       return (
-        lead.name.toLowerCase().includes(query) ||
-        lead.email.toLowerCase().includes(query) ||
+        (lead.name || '').toLowerCase().includes(query) ||
+        (lead.email || '').toLowerCase().includes(query) ||
         (lead.phone && lead.phone.toLowerCase().includes(query)) ||
         (lead.stage && lead.stage.toLowerCase().includes(query)) ||
         (lead.source && lead.source.toLowerCase().includes(query))

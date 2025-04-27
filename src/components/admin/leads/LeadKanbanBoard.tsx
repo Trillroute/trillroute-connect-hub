@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Lead } from '@/types/lead';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
@@ -29,7 +30,10 @@ interface LeadKanbanBoardProps {
 }
 
 const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
-  leads, loading, onEdit, onDelete
+  leads = [], // Default to empty array if undefined
+  loading = false, // Default to false if undefined
+  onEdit,
+  onDelete
 }) => {
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -37,7 +41,12 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    setLocalLeads(leads);
+    // Only update local state when leads is defined and valid
+    if (Array.isArray(leads)) {
+      setLocalLeads(leads);
+    } else {
+      setLocalLeads([]);
+    }
   }, [leads]);
 
   if (loading) {
@@ -61,18 +70,24 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     );
   }
 
+  // Initialize leadsByStage with empty arrays for each status
   const leadsByStage: { [stage: string]: Lead[] } = {};
   STATUS_COLUMNS.forEach(s => leadsByStage[s.key] = []);
   
-  leads.forEach(lead => {
-    const stageKey = lead.stage || 'New';
-    
-    if (leadsByStage[stageKey]) {
-      leadsByStage[stageKey].push(lead);
-    } else {
-      leadsByStage['New'].push(lead);
-    }
-  });
+  // Safely categorize leads by stage
+  if (Array.isArray(localLeads)) {
+    localLeads.forEach(lead => {
+      if (lead && typeof lead === 'object') {
+        const stageKey = lead.stage || 'New';
+        
+        if (leadsByStage[stageKey]) {
+          leadsByStage[stageKey].push(lead);
+        } else {
+          leadsByStage['New'].push(lead);
+        }
+      }
+    });
+  }
 
   const handleDragStart = (lead: Lead) => {
     setDraggedLead(lead);
@@ -92,12 +107,13 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
       return;
     }
     
+    // Update local state optimistically
     setLocalLeads(prev => 
-      prev.map(lead => 
+      Array.isArray(prev) ? prev.map(lead => 
         lead.id === draggedLead.id 
           ? { ...lead, stage: newStage as Lead['stage'] } 
           : lead
-      )
+      ) : []
     );
     
     try {
@@ -115,7 +131,10 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
     } catch (error) {
       console.error('Error updating lead:', error);
       
-      setLocalLeads(leads);
+      // Revert to original state on error
+      if (Array.isArray(leads)) {
+        setLocalLeads(leads);
+      }
       
       toast({
         variant: "destructive",
@@ -141,10 +160,10 @@ const LeadKanbanBoard: React.FC<LeadKanbanBoardProps> = ({
             <CardTitle className="text-center py-2 font-semibold text-base">{column.label}</CardTitle>
             <CardContent>
               <div className="flex flex-col gap-3 min-h-[100px]">
-                {leadsByStage[column.key].length === 0 && (
+                {(leadsByStage[column.key]?.length || 0) === 0 && (
                   <div className="text-xs text-gray-400 text-center py-4">No leads</div>
                 )}
-                {leadsByStage[column.key].map(lead => (
+                {leadsByStage[column.key]?.map(lead => (
                   <div
                     key={lead.id}
                     className={`bg-white rounded-lg shadow border p-3 flex flex-col gap-2 hover:shadow-md animate-fade-in cursor-move ${

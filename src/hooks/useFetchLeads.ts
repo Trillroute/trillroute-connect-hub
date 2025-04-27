@@ -22,27 +22,31 @@ export const useFetchLeads = () => {
       
       console.log('Raw lead data from database:', data);
       
-      // Map the database response to match our Lead type
-      const typedLeads = (data || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        email: item.email,
-        phone: item.phone,
-        stage: item.stage || item.status || 'New' as Lead['stage'],
-        secondary_phone: item.secondary_phone || null,
-        whatsapp_enabled: item.whatsapp_enabled || false,
-        age: item.age || null,
-        location: (item.location as Lead['location']) || null,
-        channel: (item.channel as Lead['channel']) || null,
-        remarks: item.remarks || null,
-        lead_quality: item.lead_quality || null,
-        owner: item.owner || null,
-        interested_courses: item.interested_courses || null,
-        interested_skills: item.interested_skills || null,
-        source: item.source || null,
-        created_at: item.created_at,
-        user_id: item.user_id
-      })) as Lead[];
+      // Ensure data is an array before mapping
+      const typedLeads = (Array.isArray(data) ? data : []).map(item => {
+        if (!item) return null;
+        
+        return {
+          id: item.id,
+          name: item.name || '',
+          email: item.email || '',
+          phone: item.phone || null,
+          stage: (item.stage || item.status || 'New') as Lead['stage'],
+          secondary_phone: item.secondary_phone || null,
+          whatsapp_enabled: Boolean(item.whatsapp_enabled) || false,
+          age: item.age || null,
+          location: (item.location as Lead['location']) || null,
+          channel: (item.channel as Lead['channel']) || null,
+          remarks: item.remarks || null,
+          lead_quality: item.lead_quality || null,
+          owner: item.owner || null,
+          interested_courses: Array.isArray(item.interested_courses) ? item.interested_courses : [],
+          interested_skills: Array.isArray(item.interested_skills) ? item.interested_skills : [],
+          source: item.source || null,
+          created_at: item.created_at || new Date().toISOString(),
+          user_id: item.user_id
+        };
+      }).filter(Boolean) as Lead[]; // Remove any null values
       
       setLeads(typedLeads);
     } catch (error) {
@@ -52,6 +56,8 @@ export const useFetchLeads = () => {
         title: "Error",
         description: "Failed to load leads. Please try again.",
       });
+      // Set empty array on error to avoid undefined
+      setLeads([]);
     } finally {
       setLoading(false);
     }
