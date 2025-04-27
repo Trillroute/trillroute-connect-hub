@@ -169,7 +169,11 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
       
       if (checkError) {
         console.error('[AUTH] Error checking user existence:', checkError);
-      } else if (!usersCheck || usersCheck.length === 0) {
+        throw new Error("Error connecting to the database. Please try again.");
+      } 
+      
+      if (!usersCheck || usersCheck.length === 0) {
+        console.error('[AUTH] No account found with email:', normalizedEmail);
         toast({
           title: "Account Not Found",
           description: "No account found with this email address. Please check your email or register for a new account.",

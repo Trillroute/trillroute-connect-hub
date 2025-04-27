@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 // Create a schema for form validation
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(1, { message: "Password is required" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   rememberMe: z.boolean().optional(),
 });
 
@@ -23,6 +23,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
@@ -66,22 +67,25 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate, redirectPath]);
 
-  // Clear the stored redirect URL on component unmount
+  // Clear login error when form values change
   useEffect(() => {
-    return () => {
-      // We'll keep these items in storage until a successful login handles them
-    };
-  }, []);
+    const subscription = form.watch(() => {
+      if (loginError) setLoginError(null);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, loginError]);
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    setLoginError(null);
+    
     try {
       console.log('Attempting login with:', { email: data.email });
       await login(data.email, data.password);
       // Auth state change will trigger the useEffect above to handle the redirection
     } catch (error: any) {
       console.error('Login failed in component:', error);
-      // Toast is already handled in the login function
+      setLoginError(error.message || 'Login failed. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -119,6 +123,12 @@ const Login = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <CardContent className="space-y-4">
+                {loginError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+                    {loginError}
+                  </div>
+                )}
+                
                 <FormField
                   control={form.control}
                   name="email"
