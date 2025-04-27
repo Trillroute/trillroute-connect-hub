@@ -46,10 +46,15 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
         .from('orders')
         .select('id, user_id, course_id')
         .eq('order_id', orderId)
-        .single();
+        .maybeSingle();
       
       if (checkError) {
         console.error('Error checking order existence:', checkError);
+        return data;
+      }
+
+      if (!orderCheck) {
+        console.error('No matching order found in database');
         return data;
       }
 
@@ -72,35 +77,33 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
         console.log('Successfully updated order status in Supabase:', updateData);
       }
 
-      // Update or create payment record
-      if (orderCheck && orderCheck.user_id && orderCheck.course_id) {
-        const paymentData = {
-          amount: data.order.amount / 100, // Convert from paisa to INR
-          user_id: orderCheck.user_id,
-          course_id: orderCheck.course_id,
-          status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
-          razorpay_order_id: orderId,
-          metadata: data.order,
-          updated_at: new Date().toISOString()
-        };
+      // Always attempt to create/update payment record when we have Razorpay data
+      const paymentData = {
+        amount: data.order.amount / 100, // Convert from paisa to INR
+        user_id: orderCheck.user_id,
+        course_id: orderCheck.course_id,
+        status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
+        razorpay_order_id: orderId,
+        razorpay_payment_id: data.order.payments?.[0]?.payment_id,
+        razorpay_signature: data.order.payments?.[0]?.signature,
+        metadata: data.order,
+        updated_at: new Date().toISOString()
+      };
 
-        const { error: paymentError } = await supabase
-          .from('payments')
-          .upsert(
-            paymentData,
-            {
-              onConflict: 'razorpay_order_id',
-              ignoreDuplicates: false
-            }
-          );
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .upsert(
+          paymentData,
+          {
+            onConflict: 'razorpay_order_id',
+            ignoreDuplicates: false
+          }
+        );
 
-        if (paymentError) {
-          console.error('Error updating payment record:', paymentError);
-        } else {
-          console.log('Successfully updated payment record');
-        }
+      if (paymentError) {
+        console.error('Error updating payment record:', paymentError);
       } else {
-        console.error('Missing user_id or course_id in order record, cannot update payment table');
+        console.log('Successfully updated payment record:', paymentData);
       }
     }
     
