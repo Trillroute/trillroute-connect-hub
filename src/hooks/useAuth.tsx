@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = (): AuthContextType => {
-  const { user, loading, login, logout, isAuthenticated } = useAuthentication();
+  const { user, loading, login, logout, isAuthenticated, refreshSession } = useAuthentication();
   const { register } = useRegistration();
   const { isAdmin, isSuperAdmin, role } = useRoleManagement();
 
@@ -28,6 +28,7 @@ export const useAuth = (): AuthContextType => {
     isAuthenticated,
     isAdmin,
     isSuperAdmin,
+    refreshSession,
   };
 };
 

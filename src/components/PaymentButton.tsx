@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -43,6 +44,28 @@ export const PaymentButton = ({
     }
   }, []);
 
+  // Ensure we have a valid session before proceeding
+  const checkAndRefreshSession = async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Session refresh error:', error);
+        return false;
+      }
+      
+      if (!data.session) {
+        console.error('No valid session found');
+        return false;
+      }
+      
+      console.log('Valid session confirmed');
+      return true;
+    } catch (error) {
+      console.error('Error checking session:', error);
+      return false;
+    }
+  };
+
   const checkExistingOrder = async (orderId: string) => {
     try {
       const orderData = await getOrderStatus(orderId);
@@ -72,6 +95,16 @@ export const PaymentButton = ({
         
         localStorage.setItem('enrollRedirectUrl', `/courses/${courseId}`);
         navigate('/auth/login');
+        return;
+      }
+
+      // Ensure we have a valid session before proceeding with payment
+      const sessionValid = await checkAndRefreshSession();
+      if (!sessionValid) {
+        toast.error("Session Expired", {
+          description: "Your session has expired. Please login again."
+        });
+        navigate('/auth/login', { state: { redirectTo: `/courses/${courseId}` } });
         return;
       }
 
@@ -135,6 +168,13 @@ export const PaymentButton = ({
           try {
             console.log('Payment successful, verifying payment...');
             console.log('Payment response:', response);
+            
+            // Double check the session before proceeding with verification
+            const sessionValid = await checkAndRefreshSession();
+            if (!sessionValid) {
+              console.warn('Session validation failed during payment verification');
+              // Continue anyway, but log the issue
+            }
             
             const verificationData = {
               razorpay_payment_id: response.razorpay_payment_id,

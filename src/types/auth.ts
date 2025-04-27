@@ -65,4 +65,5 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: () => boolean;
   isSuperAdmin: () => boolean;
+  refreshSession: () => Promise<boolean>;
 }

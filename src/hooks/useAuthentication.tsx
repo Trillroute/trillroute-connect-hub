@@ -10,6 +10,7 @@ interface AuthenticationContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  refreshSession: () => Promise<boolean>;
 }
 
 const AuthenticationContext = createContext<AuthenticationContextType | undefined>(undefined);
@@ -19,28 +20,138 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        console.log('Restored user from storage:', userData);
-        
-        // Verify with Supabase that the session is still valid
-        supabase.auth.getSession().then(({ data, error }) => {
-          if (error || !data.session) {
-            console.log('Stored session invalid, clearing local storage');
-            localStorage.removeItem('user');
-            setUser(null);
-          }
-        });
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('user');
+  // Function to refresh the session
+  const refreshSession = async () => {
+    try {
+      console.log('Attempting to refresh session...');
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error refreshing session:', error);
+        return false;
       }
+      
+      if (!data.session) {
+        console.log('No active session found during refresh');
+        return false;
+      }
+      
+      // If we have a session but no user data, attempt to restore from localStorage
+      if (!user) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            setUser(userData);
+            console.log('Restored user from storage during refresh:', userData);
+          } catch (parseError) {
+            console.error('Error parsing stored user data:', parseError);
+          }
+        }
+      }
+      
+      console.log('Session refreshed successfully');
+      return true;
+    } catch (error) {
+      console.error('Exception during session refresh:', error);
+      return false;
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          console.log('Restored user from storage:', userData);
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+          localStorage.removeItem('user');
+        }
+      }
+
+      // Set up auth state listener to catch changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state change event:', event);
+        
+        if (event === 'SIGNED_IN') {
+          // If we get a SIGNED_IN event but already have a user, no need to refetch
+          if (!user && session?.user?.email) {
+            console.log('User signed in, fetching user data');
+            try {
+              const { data: users, error: queryError } = await supabase
+                .from('custom_users')
+                .select('*')
+                .eq('email', session.user.email.toLowerCase());
+              
+              if (queryError) {
+                console.error('Error fetching user data on auth state change:', queryError);
+                return;
+              }
+              
+              if (users && users.length > 0) {
+                const userData = users[0];
+                const userRole: UserRole = userData.role as UserRole;
+                
+                const updatedUser: UserData = {
+                  id: userData.id,
+                  email: userData.email,
+                  firstName: userData.first_name,
+                  lastName: userData.last_name,
+                  role: userRole,
+                  dateOfBirth: userData.date_of_birth,
+                  profilePhoto: userData.profile_photo,
+                  parentName: userData.parent_name,
+                  guardianRelation: userData.guardian_relation,
+                  primaryPhone: userData.primary_phone,
+                  secondaryPhone: userData.secondary_phone,
+                  whatsappEnabled: userData.whatsapp_enabled,
+                  address: userData.address,
+                  idProof: userData.id_proof,
+                  createdAt: userData.created_at,
+                  adminRoleName: userData.admin_level_name
+                };
+                
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                console.log('User data updated from auth state change');
+              }
+            } catch (error) {
+              console.error('Exception when handling auth state change:', error);
+            }
+          }
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out, clearing user data');
+          setUser(null);
+          localStorage.removeItem('user');
+        }
+      });
+      
+      // Initial session check
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error checking initial session:', error);
+      } else if (!data.session) {
+        console.log('No active session found during initialization');
+        // Clear any stale user data if no active session
+        if (user) {
+          setUser(null);
+          localStorage.removeItem('user');
+        }
+      } else {
+        console.log('Active session found during initialization');
+      }
+      
+      setLoading(false);
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+    
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -56,6 +167,7 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
       
       if (authError) {
         console.error('[AUTH] Supabase auth error:', authError);
+        throw new Error(authError.message || 'Login failed');
       }
       
       console.log(`[AUTH] DEBUG - querying for email: ${normalizedEmail}`);
@@ -126,6 +238,10 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
 
   const logout = async () => {
     try {
+      // Sign out from Supabase auth
+      await supabase.auth.signOut();
+      
+      // Clear local state
       setUser(null);
       localStorage.removeItem('user');
       
@@ -150,6 +266,7 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
     login,
     logout,
     isAuthenticated: !!user,
+    refreshSession,
   };
 
   return <AuthenticationContext.Provider value={value}>{children}</AuthenticationContext.Provider>;
