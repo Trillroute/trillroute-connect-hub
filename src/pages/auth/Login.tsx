@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Music, Mail, Lock } from 'lucide-react';
@@ -6,16 +7,37 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// Create a schema for form validation
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(1, { message: "Password is required" }),
+  rememberMe: z.boolean().optional(),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Initialize form with validation
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
+  });
+  
   // Check for redirect information - prioritize state, then localStorage
   const redirectPath = location.state?.redirectTo || localStorage.getItem('paymentRedirectUrl') || '/dashboard';
 
@@ -51,24 +73,11 @@ const Login = () => {
     };
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      console.log('Attempting login with:', { email });
-      // Pass the raw email to login - normalization will happen there
-      await login(email, password);
-      
+      console.log('Attempting login with:', { email: data.email });
+      await login(data.email, data.password);
       // Auth state change will trigger the useEffect above to handle the redirection
     } catch (error: any) {
       console.error('Login failed in component:', error);
@@ -107,79 +116,96 @@ const Login = () => {
             </CardDescription>
           </CardHeader>
           
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-music-500 focus:ring-music-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                    Remember me
-                  </label>
-                </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardContent className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Mail className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            placeholder="you@example.com"
+                            className="pl-10"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-music-500 hover:text-music-600">
-                    Forgot your password?
-                  </a>
-                </div>
-              </div>
-            </CardContent>
-            
-            <CardFooter>
-              <Button
-                type="submit"
-                className="w-full bg-music-500 hover:bg-music-600 text-white"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
-            </CardFooter>
-          </form>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Lock className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="password"
+                            placeholder="••••••••"
+                            className="pl-10"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <input
+                          id="rememberMe"
+                          type="checkbox"
+                          className="h-4 w-4 text-music-500 focus:ring-music-500 border-gray-300 rounded"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                        <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+                          Remember me
+                        </label>
+                      </div>
+                      
+                      <div className="text-sm">
+                        <a href="#" className="font-medium text-music-500 hover:text-music-600">
+                          Forgot your password?
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                />
+              </CardContent>
+              
+              <CardFooter>
+                <Button
+                  type="submit"
+                  className="w-full bg-music-500 hover:bg-music-600 text-white"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Signing in..." : "Sign in"}
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
         </Card>
       </div>
     </div>

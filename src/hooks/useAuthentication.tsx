@@ -160,6 +160,26 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
       const normalizedEmail = email.trim().toLowerCase();
       console.log(`[AUTH] Login attempt for email: ${normalizedEmail}`);
       
+      // Check if email exists in the database first
+      const { data: usersCheck, error: checkError } = await supabase
+        .from('custom_users')
+        .select('email')
+        .eq('email', normalizedEmail)
+        .limit(1);
+      
+      if (checkError) {
+        console.error('[AUTH] Error checking user existence:', checkError);
+      } else if (!usersCheck || usersCheck.length === 0) {
+        toast({
+          title: "Account Not Found",
+          description: "No account found with this email address. Please check your email or register for a new account.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        throw new Error("Account not found");
+      }
+      
+      // Proceed with authentication attempt
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: password,
@@ -167,7 +187,25 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
       
       if (authError) {
         console.error('[AUTH] Supabase auth error:', authError);
-        throw new Error(authError.message || 'Login failed');
+        
+        // Provide more specific error messages based on the error code
+        if (authError.message.includes('Invalid login')) {
+          toast({
+            title: "Incorrect Password",
+            description: "The password you entered is incorrect. Please try again.",
+            variant: "destructive",
+            duration: 3000,
+          });
+          throw new Error("Incorrect password");
+        } else {
+          toast({
+            title: "Login Failed",
+            description: authError.message || "Unable to sign in. Please try again.",
+            variant: "destructive",
+            duration: 3000,
+          });
+          throw new Error(authError.message || 'Login failed');
+        }
       }
       
       console.log(`[AUTH] DEBUG - querying for email: ${normalizedEmail}`);
@@ -186,7 +224,7 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
       
       if (!users || users.length === 0) {
         console.error('[AUTH] No user found with email:', normalizedEmail);
-        throw new Error('Invalid email or password');
+        throw new Error('User account data not found');
       }
       
       const userData = users[0];
@@ -224,12 +262,15 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
       });
     } catch (error: any) {
       console.error('[AUTH] Login error:', error);
-      toast({
-        title: "Login Failed",
-        description: error?.message || "Invalid credentials. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+      // Only show toast if it wasn't already shown in specific error handling
+      if (!error.message || (error.message !== "Account not found" && error.message !== "Incorrect password")) {
+        toast({
+          title: "Login Failed",
+          description: error?.message || "Something went wrong. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
       throw error;
     } finally {
       setLoading(false);
