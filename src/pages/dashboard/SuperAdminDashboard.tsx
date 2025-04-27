@@ -53,7 +53,7 @@ const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
   const { logActivity } = useActivityLogger();
 
-  const { leads, loading: leadsLoading, fetchLeads } = useFetchLeads();
+  const { leads = [], loading: leadsLoading = true, fetchLeads } = useFetchLeads() || {};
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -419,8 +419,8 @@ const SuperAdminDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <LeadKanbanBoard
-                      leads={leads}
-                      loading={leadsLoading}
+                      leads={leads || []}
+                      loading={leadsLoading || false}
                       onEdit={openEditDialog}
                       onDelete={openDeleteDialog}
                     />
