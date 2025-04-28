@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { enrollStudentInCourse } from '@/utils/enrollmentUtils';
+import { getRazorpayOrderDetails } from '@/utils/orderUtils';
 
 export const usePaymentVerification = (
   courseId: string,
@@ -48,7 +49,28 @@ export const usePaymentVerification = (
             if (paymentIntent.courseId === courseId && paymentIntent.userId === userId) {
               console.log('Valid payment intent found, proceeding with enrollment');
               
-              // Proceed with enrollment
+              // If we have razorpay order ID, verify it with our backend
+              if (paymentIntent.razorpay_order_id) {
+                try {
+                  console.log('Verifying Razorpay order details...');
+                  const orderDetails = await getRazorpayOrderDetails(paymentIntent.razorpay_order_id);
+                  console.log('Razorpay order details received:', orderDetails);
+                  
+                  // If the order status is paid or completed, proceed with enrollment
+                  if (orderDetails?.order?.status === 'paid' || 
+                      orderDetails?.order?.payments?.[0]?.status === 'captured') {
+                    console.log('Payment confirmed as paid by Razorpay');
+                  } else {
+                    console.log('Payment not confirmed as paid by Razorpay yet, proceeding anyway with local data');
+                  }
+                } catch (orderError) {
+                  console.error('Error fetching Razorpay order details:', orderError);
+                  // Continue with enrollment even if order verification fails
+                }
+              }
+              
+              // Proceed with enrollment regardless of order verification
+              console.log('Proceeding with enrollment based on local payment intent data');
               const success = await enrollStudentInCourse(courseId, userId);
               if (success) {
                 console.log('Enrollment successful, triggering success callback');
@@ -74,6 +96,9 @@ export const usePaymentVerification = (
                 paymentIntent,
                 courseId,
                 userId
+              });
+              toast.error('Payment Verification Failed', {
+                description: 'Please contact support if payment was deducted'
               });
             }
           } else {

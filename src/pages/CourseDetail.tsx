@@ -11,6 +11,8 @@ import { CourseDetailTabs } from '@/components/courses/CourseDetailTabs';
 import { CourseDetailLoading } from '@/components/courses/CourseDetailLoading';
 import { CourseDetailError } from '@/components/courses/CourseDetailError';
 import { usePaymentVerification } from '@/hooks/usePaymentVerification';
+import { toast } from 'sonner';
+import { isStudentEnrolledInCourse } from '@/utils/enrollmentUtils';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -22,6 +24,7 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentProcessing, setEnrollmentProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentVerified, setPaymentVerified] = useState(false);
 
   // Check for payment intent in session storage on initial load
   useEffect(() => {
@@ -31,8 +34,30 @@ const CourseDetail = () => {
         try {
           const paymentIntent = JSON.parse(paymentIntentString);
           console.log('CourseDetail: Found payment intent in session storage:', paymentIntent);
-          if (paymentIntent.courseId === courseId && paymentIntent.completed && !paymentIntent.handled) {
-            console.log('CourseDetail: Found unhandled completed payment for current course');
+          
+          // If payment intent exists for the current course
+          if (paymentIntent.courseId === courseId) {
+            if (paymentIntent.completed && !paymentIntent.handled) {
+              console.log('CourseDetail: Found unhandled completed payment for current course');
+              // Display toast to inform user we're processing their payment
+              toast.info('Verifying Payment', {
+                description: 'Please wait while we verify your payment...'
+              });
+            } else if (paymentIntent.completed && paymentIntent.handled) {
+              console.log('CourseDetail: Payment was already handled');
+              // Check enrollment status to make sure it was actually processed
+              if (user && !isEnrolled && !loading) {
+                isStudentEnrolledInCourse(courseId || '', user.id)
+                  .then(enrolled => {
+                    if (enrolled && !isEnrolled) {
+                      console.log('User is enrolled but state doesn\'t reflect it. Refreshing...');
+                      setIsEnrolled(true);
+                      fetchCourse();
+                    }
+                  })
+                  .catch(err => console.error('Error checking enrollment:', err));
+              }
+            }
           }
         } catch (error) {
           console.error('Error parsing payment intent:', error);
@@ -40,8 +65,10 @@ const CourseDetail = () => {
       }
     };
     
-    checkPaymentIntent();
-  }, [courseId]);
+    if (courseId && user) {
+      checkPaymentIntent();
+    }
+  }, [courseId, user, isEnrolled, loading]);
 
   const fetchCourse = useCallback(async () => {
     if (courseId) {
@@ -53,6 +80,7 @@ const CourseDetail = () => {
         if (!courseData) {
           console.error('Course not found for ID:', courseId);
           setError("Course not found. It may have been removed or is temporarily unavailable.");
+          setLoading(false);
           return;
         }
         
@@ -66,10 +94,11 @@ const CourseDetail = () => {
           console.log('User enrollment status:', userIsEnrolled);
           setIsEnrolled(userIsEnrolled);
         }
+        
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching course:', error);
         setError("Failed to load course information. Please check your connection and try again.");
-      } finally {
         setLoading(false);
       }
     }
@@ -78,7 +107,9 @@ const CourseDetail = () => {
   const handleEnrollmentSuccess = useCallback(() => {
     console.log('Enrollment success callback triggered');
     setIsEnrolled(true);
-  }, []);
+    // Refetch course data to get updated student list
+    fetchCourse();
+  }, [fetchCourse]);
 
   // Initial course fetch
   useEffect(() => {
@@ -86,15 +117,15 @@ const CourseDetail = () => {
     fetchCourse();
   }, [fetchCourse]);
   
-  // Refetch course data when user or courseId changes
+  // Refetch course data when user changes
   useEffect(() => {
     if (user) {
-      console.log('User or courseId changed, refetching course data');
+      console.log('User changed, refetching course data');
       fetchCourse();
     }
-  }, [user, courseId, fetchCourse]);
+  }, [user, fetchCourse]);
 
-  // Payment verification effect
+  // Initialize payment verification hook
   usePaymentVerification(
     courseId || '',
     user?.id,

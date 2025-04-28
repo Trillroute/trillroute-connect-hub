@@ -43,6 +43,29 @@ export const PaymentButton = ({
     }
   }, []);
 
+  // Clear any stale payment intents on component mount
+  useEffect(() => {
+    const clearStalePaymentIntents = () => {
+      const paymentIntentString = sessionStorage.getItem('paymentIntent');
+      if (paymentIntentString) {
+        try {
+          const paymentIntent = JSON.parse(paymentIntentString);
+          // Check if this is for a different course or old
+          if (paymentIntent.courseId !== courseId || 
+              paymentIntent.timestamp < (Date.now() - 3600000)) { // 1 hour old
+            console.log('Clearing stale payment intent', paymentIntent);
+            sessionStorage.removeItem('paymentIntent');
+          }
+        } catch (e) {
+          console.error('Error parsing payment intent:', e);
+          sessionStorage.removeItem('paymentIntent');
+        }
+      }
+    };
+    
+    clearStalePaymentIntents();
+  }, [courseId]);
+
   const handleClick = async () => {
     try {
       setLoading(true);
@@ -69,7 +92,8 @@ export const PaymentButton = ({
         courseId,
         userId: user.id,
         timestamp: new Date().getTime(),
-        completed: false  // Will be set to true after successful payment
+        completed: false,  // Will be set to true after successful payment
+        initiation_time: new Date().toISOString()
       };
       sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
       console.log('Payment intent created:', paymentIntent);
@@ -97,14 +121,14 @@ export const PaymentButton = ({
         return;
       }
 
-      // Store payment ID in the paymentIntent for verification after redirection
-      if (orderData.paymentId) {
-        const updatedIntent = {
-          ...paymentIntent,
-          payment_id: orderData.paymentId,
-        };
-        sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
-      }
+      // Update payment intent with order information
+      const updatedIntent = {
+        ...paymentIntent,
+        razorpay_order_id: orderData.orderId,
+        payment_id: orderData.paymentId,
+      };
+      sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
+      console.log('Payment intent updated with order ID:', updatedIntent);
 
       const options = {
         key: orderData.key,
@@ -124,10 +148,16 @@ export const PaymentButton = ({
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
-              completed: true
+              completed: true,
+              completed_time: new Date().toISOString()
             };
             console.log('Updating payment intent with completion data:', updatedIntent);
             sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
+
+            // Show success toast immediately to give user feedback
+            toast.success('Payment Successful', {
+              description: 'Processing your enrollment...'
+            });
 
             // Verify payment on server before redirecting
             supabase.functions.invoke('verify-razorpay-payment', {
@@ -135,7 +165,7 @@ export const PaymentButton = ({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                payment_id: orderData.paymentId
+                payment_id: orderData.paymentId || 'unknown'
               }
             }).then(({data, error}) => {
               if (error) {
@@ -146,20 +176,14 @@ export const PaymentButton = ({
                 return;
               }
               
-              console.log('Payment verified:', data);
+              console.log('Payment verified by backend:', data);
               
-              if (data && data.redirectUrl) {
-                console.log('Redirecting to', data.redirectUrl);
-                // Force redirect to the course page with success parameter
-                window.location.href = data.redirectUrl;
-              } else {
-                // Fallback redirect
-                console.log('Fallback redirect to', `/courses/${courseId}?enrollment=success`);
-                window.location.href = `/courses/${courseId}?enrollment=success`;
-              }
+              // Force redirect to the course page with success parameter
+              console.log('Redirecting to', `/courses/${courseId}?enrollment=success`);
+              window.location.href = `/courses/${courseId}?enrollment=success`;
+              
+              if (onSuccess) onSuccess(response);
             });
-            
-            if (onSuccess) onSuccess(response);
           } catch (error) {
             console.error('Error in payment handler:', error);
             toast.error("Payment Processing Failed", {
@@ -168,7 +192,7 @@ export const PaymentButton = ({
           }
         },
         prefill: {
-          name: `${user.firstName} ${user.lastName}`,
+          name: user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user.email,
           email: user.email
         },
         theme: {
