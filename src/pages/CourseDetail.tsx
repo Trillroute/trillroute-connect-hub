@@ -23,6 +23,26 @@ const CourseDetail = () => {
   const [enrollmentProcessing, setEnrollmentProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Check for payment intent in session storage on initial load
+  useEffect(() => {
+    const checkPaymentIntent = () => {
+      const paymentIntentString = sessionStorage.getItem('paymentIntent');
+      if (paymentIntentString) {
+        try {
+          const paymentIntent = JSON.parse(paymentIntentString);
+          console.log('CourseDetail: Found payment intent in session storage:', paymentIntent);
+          if (paymentIntent.courseId === courseId && paymentIntent.completed && !paymentIntent.handled) {
+            console.log('CourseDetail: Found unhandled completed payment for current course');
+          }
+        } catch (error) {
+          console.error('Error parsing payment intent:', error);
+        }
+      }
+    };
+    
+    checkPaymentIntent();
+  }, [courseId]);
+
   const fetchCourse = useCallback(async () => {
     if (courseId) {
       try {
@@ -65,6 +85,14 @@ const CourseDetail = () => {
     console.log('CourseDetail component mounted with courseId:', courseId);
     fetchCourse();
   }, [fetchCourse]);
+  
+  // Refetch course data when user or courseId changes
+  useEffect(() => {
+    if (user) {
+      console.log('User or courseId changed, refetching course data');
+      fetchCourse();
+    }
+  }, [user, courseId, fetchCourse]);
 
   // Payment verification effect
   usePaymentVerification(

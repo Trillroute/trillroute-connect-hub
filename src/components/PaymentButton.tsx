@@ -69,8 +69,10 @@ export const PaymentButton = ({
         courseId,
         userId: user.id,
         timestamp: new Date().getTime(),
+        completed: false  // Will be set to true after successful payment
       };
       sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
+      console.log('Payment intent created:', paymentIntent);
 
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
         body: { amount, courseId, userId: user.id }
@@ -115,7 +117,7 @@ export const PaymentButton = ({
           try {
             console.log('Payment successful:', response);
             
-            // Update the payment intent with the response data
+            // Update the payment intent with the response data and mark as completed
             const currentIntent = JSON.parse(sessionStorage.getItem('paymentIntent') || '{}');
             const updatedIntent = {
               ...currentIntent,
@@ -124,6 +126,7 @@ export const PaymentButton = ({
               razorpay_signature: response.razorpay_signature,
               completed: true
             };
+            console.log('Updating payment intent with completion data:', updatedIntent);
             sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
 
             // Verify payment on server before redirecting
@@ -146,10 +149,12 @@ export const PaymentButton = ({
               console.log('Payment verified:', data);
               
               if (data && data.redirectUrl) {
+                console.log('Redirecting to', data.redirectUrl);
                 // Force redirect to the course page with success parameter
                 window.location.href = data.redirectUrl;
               } else {
                 // Fallback redirect
+                console.log('Fallback redirect to', `/courses/${courseId}?enrollment=success`);
                 window.location.href = `/courses/${courseId}?enrollment=success`;
               }
             });
