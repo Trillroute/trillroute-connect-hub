@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { UserData, UserRole } from '@/types/auth';
@@ -37,7 +36,7 @@ export const useAuthActions = (
         throw new Error("Account not found");
       }
       
-      // Sign in using Supabase Auth
+      // Sign in using Supabase Auth for session management only
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: password,
@@ -140,7 +139,6 @@ const handleAuthError = (error: any) => {
   // Provide more specific error messages based on the error code
   if (error.message.includes('Invalid login')) {
     console.log('[AUTH] Invalid login credentials error');
-    // This could be wrong password OR account doesn't exist in auth but exists in custom_users
     throw new Error("Login failed. Please check your credentials.");
   }
   
