@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.188.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.20.0";
 import * as crypto from "https://deno.land/std@0.188.0/crypto/mod.ts";
