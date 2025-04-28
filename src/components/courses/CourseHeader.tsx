@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
-import { enrollStudentInCourse, isStudentEnrolledInCourse } from '@/utils/enrollment';
+import { enrollStudentInCourse, isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
 
 interface CourseHeaderProps {
   course: Course;
@@ -29,25 +29,35 @@ export const CourseHeader = ({
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
+  const [enrollmentVerified, setEnrollmentVerified] = useState(false);
   
-  // Verify enrollment status directly from the database on load
+  // Verify enrollment status directly from the database on every mount
   useEffect(() => {
     const verifyEnrollmentStatus = async () => {
       if (user && courseId) {
         try {
-          const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
-          if (enrolled !== initialIsEnrolled) {
-            console.log('Enrollment status mismatch detected, updating from database');
+          console.log('Performing force verification of enrollment status');
+          const enrolled = await forceVerifyEnrollment(courseId, user.id);
+          
+          if (enrolled !== isEnrolled) {
+            console.log(`Enrollment status correction needed. DB says: ${enrolled}, UI shows: ${isEnrolled}`);
             setIsEnrolled(enrolled);
           }
+          
+          setEnrollmentVerified(true);
         } catch (error) {
-          console.error('Error verifying enrollment status:', error);
+          console.error('Error during enrollment verification:', error);
+          // Default to not enrolled on error to prevent false positives
+          setIsEnrolled(false);
+          setEnrollmentVerified(true);
         }
+      } else {
+        setEnrollmentVerified(true);
       }
     };
     
     verifyEnrollmentStatus();
-  }, [courseId, user, initialIsEnrolled]);
+  }, [courseId, user, isEnrolled]);
   
   const canEnroll = () => {
     return user && user.role === 'student';
@@ -63,11 +73,22 @@ export const CourseHeader = ({
     try {
       const success = await enrollStudentInCourse(courseId, user.id);
       if (success) {
-        setIsEnrolled(true);
-        toast.success("Successfully Enrolled", {
-          description: "You have been enrolled in the course"
-        });
-        onEnrollmentSuccess({ courseId });
+        // After successful enrollment, verify it immediately
+        const enrollmentConfirmed = await forceVerifyEnrollment(courseId, user.id);
+        
+        if (enrollmentConfirmed) {
+          setIsEnrolled(true);
+          toast.success("Successfully Enrolled", {
+            description: "You have been enrolled in the course"
+          });
+          onEnrollmentSuccess({ courseId });
+        } else {
+          // This should be rare but handles the case where enrollment process succeeded but DB verification failed
+          toast.error("Enrollment Status Inconsistent", {
+            description: "There was an issue confirming your enrollment. Please refresh the page."
+          });
+          onEnrollmentError({ message: "Inconsistent enrollment state" });
+        }
       }
     } catch (error) {
       console.error('Error during enrollment:', error);
@@ -78,6 +99,18 @@ export const CourseHeader = ({
   };
 
   const renderEnrollmentButton = () => {
+    if (!enrollmentVerified) {
+      return (
+        <Button
+          disabled={true}
+          className="bg-gray-400 text-white cursor-not-allowed opacity-70"
+        >
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Verifying...
+        </Button>
+      );
+    }
+    
     if (!user) {
       return (
         <Button

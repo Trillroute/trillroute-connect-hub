@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { enrollStudentInCourse, isStudentEnrolledInCourse } from '@/utils/enrollment';
+import { enrollStudentInCourse, isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
 import { checkPaymentProcessed } from '@/utils/orderUtils';
 
 /**
@@ -42,6 +42,19 @@ export const usePaymentVerification = (
         setEnrollmentProcessing(true);
         
         try {
+          // Always verify enrollment from database first
+          const actuallyEnrolled = await forceVerifyEnrollment(courseId, userId);
+          
+          if (actuallyEnrolled) {
+            console.log('User is already enrolled according to database check');
+            onEnrollmentSuccess();
+            toast.success('You are already enrolled in this course');
+            navigate(`/courses/${courseId}`, { replace: true });
+            setIsProcessing(false);
+            setEnrollmentProcessing(false);
+            return;
+          }
+          
           // First check if payment has been processed in the database
           const isPaymentProcessed = await checkPaymentProcessed(courseId, userId);
           console.log('Payment processed status from database:', isPaymentProcessed);
@@ -54,10 +67,19 @@ export const usePaymentVerification = (
             
             if (success) {
               console.log('Enrollment successful');
-              onEnrollmentSuccess();
-              toast.success('Enrollment Successful', {
-                description: 'You are now enrolled in the course'
-              });
+              
+              // Double verify enrollment was successful
+              const enrollmentConfirmed = await forceVerifyEnrollment(courseId, userId);
+              if (enrollmentConfirmed) {
+                onEnrollmentSuccess();
+                toast.success('Enrollment Successful', {
+                  description: 'You are now enrolled in the course'
+                });
+              } else {
+                toast.error('Enrollment Status Issue', {
+                  description: 'There was an issue with your enrollment. Please contact support.'
+                });
+              }
               
               // Remove enrollment parameter from URL
               navigate(`/courses/${courseId}`, { replace: true });
@@ -90,17 +112,27 @@ export const usePaymentVerification = (
                 
                 if (success) {
                   console.log('Enrollment successful');
-                  onEnrollmentSuccess();
-                  toast.success('Enrollment Successful', {
-                    description: 'You are now enrolled in the course'
-                  });
+                  
+                  // Double verify enrollment was successful
+                  const enrollmentConfirmed = await forceVerifyEnrollment(courseId, userId);
+                  if (enrollmentConfirmed) {
+                    onEnrollmentSuccess();
+                    toast.success('Enrollment Successful', {
+                      description: 'You are now enrolled in the course'
+                    });
+                  } else {
+                    toast.error('Enrollment Status Issue', {
+                      description: 'There was an issue with your enrollment. Please refresh or contact support.'
+                    });
+                  }
                   
                   // Mark payment as processed in session storage
                   const updatedPaymentData = {
                     ...paymentData,
                     processed: true,
                     enrollmentCompleted: true,
-                    enrollmentTime: Date.now()
+                    enrollmentTime: Date.now(),
+                    enrollmentVerified: enrollmentConfirmed
                   };
                   sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedPaymentData));
                   
@@ -124,11 +156,17 @@ export const usePaymentVerification = (
               const success = await enrollStudentInCourse(courseId, userId);
               
               if (success) {
-                console.log('Enrollment successful via direct attempt');
-                onEnrollmentSuccess();
-                toast.success('Enrollment Successful', {
-                  description: 'You are now enrolled in the course'
-                });
+                // Double verify enrollment was successful
+                const enrollmentConfirmed = await forceVerifyEnrollment(courseId, userId);
+                if (enrollmentConfirmed) {
+                  console.log('Enrollment successful via direct attempt');
+                  onEnrollmentSuccess();
+                  toast.success('Enrollment Successful', {
+                    description: 'You are now enrolled in the course'
+                  });
+                } else {
+                  console.error('Database verification failed after enrollment');
+                }
               }
               
               // Always clean up the URL

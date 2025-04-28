@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCourses } from '@/hooks/useCourses';
@@ -11,7 +12,7 @@ import { CourseDetailLoading } from '@/components/courses/CourseDetailLoading';
 import { CourseDetailError } from '@/components/courses/CourseDetailError';
 import { usePaymentVerification } from '@/hooks/usePaymentVerification';
 import { toast } from 'sonner';
-import { isStudentEnrolledInCourse } from '@/utils/enrollment';
+import { isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -55,16 +56,20 @@ const CourseDetail = () => {
     if (courseId && user?.id) {
       try {
         console.log('Checking enrollment status from database');
-        const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
+        // Always use forceVerifyEnrollment to ensure we get the latest database state
+        const enrolled = await forceVerifyEnrollment(courseId, user.id);
         console.log('Enrollment status from database:', enrolled);
         setIsEnrolled(enrolled);
         setEnrollmentChecked(true);
         return enrolled;
       } catch (error) {
         console.error('Error checking enrollment status:', error);
+        setIsEnrolled(false); // Default to not enrolled on error
+        setEnrollmentChecked(true);
         return false;
       }
     }
+    setEnrollmentChecked(true);
     return false;
   }, [courseId, user]);
 
@@ -102,9 +107,11 @@ const CourseDetail = () => {
 
   const handleEnrollmentSuccess = useCallback(() => {
     console.log('Enrollment success callback triggered');
-    setIsEnrolled(true);
-    fetchCourse();
-  }, [fetchCourse]);
+    checkEnrollmentStatus().then(() => {
+      // Re-fetch course to get updated student count and student_ids
+      fetchCourse();
+    });
+  }, [checkEnrollmentStatus, fetchCourse]);
 
   useEffect(() => {
     console.log('CourseDetail component mounted with courseId:', courseId);
