@@ -1,7 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Course } from '@/types/course';
 import DataTable, { Column } from '@/components/ui/data-table/DataTable';
+import DeleteCourseDialog from './DeleteCourseDialog';
+import EditCourseDialog from './EditCourseDialog';
 
 interface CourseTableProps {
   courses: Course[];
