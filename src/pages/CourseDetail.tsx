@@ -42,28 +42,6 @@ const CourseDetail = () => {
               description: 'Please wait while we process your enrollment...'
             });
           }
-          
-          if (user.id) {
-            const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
-            
-            if (enrolled && !isEnrolled) {
-              console.log('User is enrolled but state does not reflect it, updating...');
-              setIsEnrolled(true);
-              fetchCourse();
-            }
-            
-            if (paymentData.completed && !enrolled && !enrollmentProcessing) {
-              console.log('Payment completed but enrollment not processed');
-              if (!window.location.href.includes('enrollment=success')) {
-                window.history.replaceState(
-                  {}, 
-                  '', 
-                  `${window.location.pathname}?enrollment=success`
-                );
-                window.location.reload();
-              }
-            }
-          }
         } catch (error) {
           console.error('Error checking payment data:', error);
         }
@@ -71,7 +49,24 @@ const CourseDetail = () => {
     };
     
     checkPaymentData();
-  }, [courseId, user, isEnrolled, enrollmentProcessing]);
+  }, [courseId, user]);
+
+  const checkEnrollmentStatus = useCallback(async () => {
+    if (courseId && user?.id) {
+      try {
+        console.log('Checking enrollment status from database');
+        const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
+        console.log('Enrollment status from database:', enrolled);
+        setIsEnrolled(enrolled);
+        setEnrollmentChecked(true);
+        return enrolled;
+      } catch (error) {
+        console.error('Error checking enrollment status:', error);
+        return false;
+      }
+    }
+    return false;
+  }, [courseId, user]);
 
   const fetchCourse = useCallback(async () => {
     if (courseId) {
@@ -90,12 +85,8 @@ const CourseDetail = () => {
         console.log('Course data received:', courseData);
         setCourse(courseData);
         
-        if (user && courseData.student_ids) {
-          const userIsEnrolled = Array.isArray(courseData.student_ids) && 
-                                courseData.student_ids.includes(user.id);
-          console.log('User enrollment status:', userIsEnrolled);
-          setIsEnrolled(userIsEnrolled);
-          setEnrollmentChecked(true);
+        if (user) {
+          await checkEnrollmentStatus();
         } else {
           setEnrollmentChecked(true);
         }
@@ -107,7 +98,7 @@ const CourseDetail = () => {
         setLoading(false);
       }
     }
-  }, [courseId, getCourseById, user]);
+  }, [courseId, getCourseById, user, checkEnrollmentStatus]);
 
   const handleEnrollmentSuccess = useCallback(() => {
     console.log('Enrollment success callback triggered');
@@ -128,25 +119,11 @@ const CourseDetail = () => {
   }, [user, fetchCourse]);
   
   useEffect(() => {
-    const checkEnrollmentStatus = async () => {
-      if (courseId && user?.id && enrollmentChecked && 
-          window.location.href.includes('enrollment=success')) {
-        try {
-          console.log('Double-checking enrollment status');
-          const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
-          if (enrolled && !isEnrolled) {
-            console.log('User is enrolled but state does not match, updating');
-            setIsEnrolled(true);
-            fetchCourse();
-          }
-        } catch (error) {
-          console.error('Error checking enrollment status:', error);
-        }
-      }
-    };
-    
-    checkEnrollmentStatus();
-  }, [courseId, user, enrollmentChecked, isEnrolled, fetchCourse]);
+    if (courseId && user?.id && enrollmentChecked && 
+        window.location.href.includes('enrollment=success')) {
+      checkEnrollmentStatus();
+    }
+  }, [courseId, user, enrollmentChecked, checkEnrollmentStatus]);
 
   usePaymentVerification(
     courseId || '',

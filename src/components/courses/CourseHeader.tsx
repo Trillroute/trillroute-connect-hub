@@ -1,10 +1,11 @@
+
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
-import { enrollStudentInCourse } from '@/utils/enrollment';
+import { enrollStudentInCourse, isStudentEnrolledInCourse } from '@/utils/enrollment';
 
 interface CourseHeaderProps {
   course: Course;
@@ -18,7 +19,7 @@ interface CourseHeaderProps {
 
 export const CourseHeader = ({
   course,
-  isEnrolled,
+  isEnrolled: initialIsEnrolled,
   enrollmentProcessing,
   onNavigateBack,
   onEnrollmentSuccess,
@@ -27,6 +28,26 @@ export const CourseHeader = ({
 }: CourseHeaderProps) => {
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
+  
+  // Verify enrollment status directly from the database on load
+  useEffect(() => {
+    const verifyEnrollmentStatus = async () => {
+      if (user && courseId) {
+        try {
+          const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
+          if (enrolled !== initialIsEnrolled) {
+            console.log('Enrollment status mismatch detected, updating from database');
+            setIsEnrolled(enrolled);
+          }
+        } catch (error) {
+          console.error('Error verifying enrollment status:', error);
+        }
+      }
+    };
+    
+    verifyEnrollmentStatus();
+  }, [courseId, user, initialIsEnrolled]);
   
   const canEnroll = () => {
     return user && user.role === 'student';
@@ -42,6 +63,7 @@ export const CourseHeader = ({
     try {
       const success = await enrollStudentInCourse(courseId, user.id);
       if (success) {
+        setIsEnrolled(true);
         toast.success("Successfully Enrolled", {
           description: "You have been enrolled in the course"
         });
