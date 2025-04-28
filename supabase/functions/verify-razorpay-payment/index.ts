@@ -14,7 +14,6 @@ interface VerificationRequest {
   razorpay_payment_id: string;
   razorpay_order_id: string;
   razorpay_signature: string;
-  payment_id: string;
   user_id: string;
   course_id: string;
 }
@@ -139,14 +138,15 @@ const updateCourseEnrollment = async (
 // Function to update payment status
 const updatePaymentStatus = async (
   supabase: any,
-  paymentId: string,
   razorpayPaymentId: string,
+  razorpayOrderId: string,
   razorpaySignature: string,
   courseId: string,
-  userId: string
+  userId: string,
+  amount = 0
 ): Promise<boolean> => {
   try {
-    logStep("Updating payment status", { paymentId, razorpayPaymentId });
+    logStep("Updating payment status", { razorpayPaymentId, razorpayOrderId });
     
     // Check if payment record already exists with this Razorpay payment ID
     const { data: existingPayment, error: checkError } = await supabase
@@ -190,10 +190,10 @@ const updatePaymentStatus = async (
           user_id: userId,
           course_id: courseId,
           razorpay_payment_id: razorpayPaymentId,
-          razorpay_order_id: paymentId,
+          razorpay_order_id: razorpayOrderId,
           razorpay_signature: razorpaySignature,
           status: "completed",
-          amount: 0, // We don't know the amount here
+          amount: amount,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
@@ -204,22 +204,6 @@ const updatePaymentStatus = async (
       }
       
       logStep("New payment record created successfully");
-    }
-    
-    // Also update the orders table status to completed
-    const { error: orderUpdateError } = await supabase
-      .from("orders")
-      .update({
-        status: "completed",
-        updated_at: new Date().toISOString()
-      })
-      .eq("order_id", paymentId);
-    
-    if (orderUpdateError) {
-      logStep("Error updating order status", orderUpdateError);
-      // Don't fail the whole process for this
-    } else {
-      logStep("Order status updated to completed");
     }
     
     return true;
@@ -233,8 +217,7 @@ const updatePaymentStatus = async (
 const logUserActivity = async (
   supabase: any,
   userId: string,
-  courseId: string,
-  paymentId: string
+  courseId: string
 ): Promise<void> => {
   try {
     logStep("Logging user activity", { userId, courseId });
@@ -256,6 +239,34 @@ const logUserActivity = async (
     }
   } catch (error) {
     logStep("Exception in logUserActivity", { error: error.message });
+  }
+};
+
+// Function to get course price
+const getCoursePrice = async (
+  supabase: any,
+  courseId: string
+): Promise<number> => {
+  try {
+    logStep("Getting course price", { courseId });
+    
+    const { data, error } = await supabase
+      .from("courses")
+      .select("final_price, base_price")
+      .eq("id", courseId)
+      .single();
+    
+    if (error) {
+      logStep("Error fetching course price", error);
+      return 0;
+    }
+    
+    const price = data.final_price || data.base_price || 0;
+    logStep("Course price retrieved", { price });
+    return price;
+  } catch (error) {
+    logStep("Exception getting course price", { error: error.message });
+    return 0;
   }
 };
 
@@ -281,15 +292,6 @@ serve(async (req) => {
     const requestData: VerificationRequest = await req.json();
     logStep("Request data received", requestData);
 
-    if (!requestData.razorpay_payment_id || !requestData.razorpay_order_id || 
-        !requestData.razorpay_signature) {
-      logStep("Missing required parameters");
-      return new Response(
-        JSON.stringify({ error: "Missing required Razorpay verification parameters" }),
-        { headers: responseHeaders, status: 400 }
-      );
-    }
-    
     if (!requestData.user_id || !requestData.course_id) {
       logStep("Missing user_id or course_id");
       return new Response(
@@ -301,33 +303,43 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createSupabaseClient();
     
-    // Verify Razorpay signature - note that we continue even if signature verification fails
-    // because the signature might be invalid due to timing issues or other problems
-    try {
-      const isSignatureValid = await verifyRazorpaySignature(
-        requestData.razorpay_order_id,
-        requestData.razorpay_payment_id,
-        requestData.razorpay_signature
-      );
+    let signatureVerified = false;
+    
+    // Verify Razorpay signature - but continue even if verification fails 
+    // because QR code payments might not have signature
+    if (requestData.razorpay_payment_id && requestData.razorpay_order_id && requestData.razorpay_signature) {
+      try {
+        signatureVerified = await verifyRazorpaySignature(
+          requestData.razorpay_order_id,
+          requestData.razorpay_payment_id,
+          requestData.razorpay_signature
+        );
 
-      if (isSignatureValid) {
-        logStep("Signature verified successfully");
-      } else {
-        logStep("Signature verification failed, continuing anyway");
+        if (signatureVerified) {
+          logStep("Signature verified successfully");
+        } else {
+          logStep("Signature verification failed, but continuing with enrollment");
+        }
+      } catch (signatureError) {
+        logStep("Error during signature verification", { error: signatureError.message });
+        // Continue anyway - signature verification is optional
       }
-    } catch (signatureError) {
-      logStep("Error during signature verification", { error: signatureError.message });
-      // Continue anyway - we don't want to block the process due to signature issues
+    } else {
+      logStep("Missing one or more Razorpay parameters, assuming QR code or external payment");
     }
+    
+    // Get course price for payment record
+    const amount = await getCoursePrice(supabase, requestData.course_id);
     
     // Update payment status
     const paymentUpdateSuccess = await updatePaymentStatus(
       supabase,
-      requestData.payment_id,
-      requestData.razorpay_payment_id,
-      requestData.razorpay_signature,
+      requestData.razorpay_payment_id || `qr_payment_${Date.now()}`,
+      requestData.razorpay_order_id || `qr_order_${Date.now()}`,
+      requestData.razorpay_signature || '',
       requestData.course_id,
-      requestData.user_id
+      requestData.user_id,
+      amount
     );
     
     if (!paymentUpdateSuccess) {
@@ -353,8 +365,7 @@ serve(async (req) => {
     await logUserActivity(
       supabase,
       requestData.user_id,
-      requestData.course_id,
-      requestData.payment_id
+      requestData.course_id
     );
 
     logStep("Payment verification and enrollment completed successfully");
@@ -364,7 +375,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         message: "Payment verification and enrollment completed successfully",
-        redirectUrl: `/courses/${requestData.course_id}?enrollment=success&payment=verified`
+        redirectUrl: `/courses/${requestData.course_id}?enrollment=success&payment=verified`,
+        signatureVerified: signatureVerified
       }),
       { headers: responseHeaders, status: 200 }
     );

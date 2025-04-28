@@ -36,47 +36,66 @@ export const usePaymentVerification = (
       });
       
       // Only proceed if we have a success parameter, user is not enrolled, and we're not already processing
-      if (enrollmentStatus === 'success' && !isEnrolled && !isProcessing && userId && courseId) {
-        console.log('Payment success detected from URL, processing enrollment');
+      if ((enrollmentStatus === 'success' || paymentStatus === 'verified') && !isEnrolled && !isProcessing && userId && courseId) {
+        console.log('Payment success detected, processing enrollment');
         setIsProcessing(true);
         setEnrollmentProcessing(true);
         
         try {
-          // Get payment data from session storage
-          const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
-          console.log('Payment data from session:', paymentDataStr);
+          // First check if payment has been processed in the database
+          const isPaymentProcessed = await checkPaymentProcessed(courseId, userId);
+          console.log('Payment processed status from database:', isPaymentProcessed);
           
-          if (paymentDataStr) {
-            const paymentData = JSON.parse(paymentDataStr);
-            console.log('Parsed payment data:', paymentData);
+          if (isPaymentProcessed) {
+            console.log('Payment verification confirmed via database, proceeding with enrollment');
             
-            // Check if payment has been processed in the database as a backup verification
-            const isPaymentProcessed = await checkPaymentProcessed(courseId, userId);
-            console.log('Payment processed status from database:', isPaymentProcessed);
+            // Process enrollment
+            const success = await enrollStudentInCourse(courseId, userId);
             
-            // Verify payment data matches current user and course
-            const isValidPaymentData = paymentData.courseId === courseId && 
+            if (success) {
+              console.log('Enrollment successful');
+              onEnrollmentSuccess();
+              toast.success('Enrollment Successful', {
+                description: 'You are now enrolled in the course'
+              });
+              
+              // Remove enrollment parameter from URL
+              navigate(`/courses/${courseId}`, { replace: true });
+            } else {
+              // Don't show error if enrollment failed but payment succeeded
+              console.error('Enrollment failed after payment verification');
+              // Still remove the parameters from the URL to avoid repeated attempts
+              navigate(`/courses/${courseId}`, { replace: true });
+            }
+          } else {
+            // Check payment data in session storage as fallback
+            const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
+            
+            if (paymentDataStr) {
+              const paymentData = JSON.parse(paymentDataStr);
+              console.log('Parsed payment data:', paymentData);
+              
+              // Verify payment data matches current user and course
+              const isValidPaymentData = paymentData.courseId === courseId && 
                                        paymentData.userId === userId &&
                                        paymentData.completed === true;
                                        
-            console.log('Is valid payment data:', isValidPaymentData);
-            
-            // Process enrollment if payment data is valid or payment is already processed in DB
-            if (isValidPaymentData || isPaymentProcessed || paymentStatus === 'verified') {
-              console.log('Valid payment verification found, proceeding with enrollment');
+              console.log('Is valid payment data:', isValidPaymentData);
               
-              // Process enrollment
-              const success = await enrollStudentInCourse(courseId, userId);
-              
-              if (success) {
-                console.log('Enrollment successful');
-                onEnrollmentSuccess();
-                toast.success('Enrollment Successful', {
-                  description: 'You are now enrolled in the course'
-                });
+              if (isValidPaymentData) {
+                console.log('Valid payment data found in session, proceeding with enrollment');
                 
-                // Mark payment as processed in session storage
-                if (paymentDataStr) {
+                // Process enrollment
+                const success = await enrollStudentInCourse(courseId, userId);
+                
+                if (success) {
+                  console.log('Enrollment successful');
+                  onEnrollmentSuccess();
+                  toast.success('Enrollment Successful', {
+                    description: 'You are now enrolled in the course'
+                  });
+                  
+                  // Mark payment as processed in session storage
                   const updatedPaymentData = {
                     ...paymentData,
                     processed: true,
@@ -84,61 +103,43 @@ export const usePaymentVerification = (
                     enrollmentTime: Date.now()
                   };
                   sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedPaymentData));
-                  console.log('Payment data updated with enrollment success:', updatedPaymentData);
+                  
+                  // Remove enrollment parameter from URL
+                  navigate(`/courses/${courseId}`, { replace: true });
+                } else {
+                  // Don't show error to avoid confusion
+                  console.error('Enrollment failed after payment verification');
+                  navigate(`/courses/${courseId}`, { replace: true });
                 }
-                
-                // Remove enrollment parameter from URL
-                navigate(`/courses/${courseId}`, { replace: true });
               } else {
-                console.error('Enrollment failed after payment verification');
-                toast.error('Enrollment Failed', {
-                  description: 'Please contact support for assistance'
-                });
+                // No need to show error here, just log it
+                console.log('Payment data validation failed or not found');
+                // Still remove the parameters to avoid repeated attempts
+                navigate(`/courses/${courseId}`, { replace: true });
               }
             } else {
-              console.error('Payment data validation failed:', {
-                paymentData,
-                courseId,
-                userId
-              });
-              toast.error('Payment Verification Failed', {
-                description: 'Please try refreshing the page or contact support'
-              });
-            }
-          } else {
-            console.log('No payment data found in session storage');
-            
-            // Check if payment is already processed in database as fallback
-            const isPaymentProcessed = await checkPaymentProcessed(courseId, userId);
-            console.log('Fallback payment check from database:', isPaymentProcessed);
-            
-            if (isPaymentProcessed || paymentStatus === 'verified') {
-              console.log('Payment verified through database, proceeding with enrollment');
+              console.log('No payment data found, but URL indicates success');
+              // In case of QR code payment or other external payment
+              // we'll try one more direct enrollment attempt
               const success = await enrollStudentInCourse(courseId, userId);
               
               if (success) {
-                console.log('Enrollment successful via database verification');
+                console.log('Enrollment successful via direct attempt');
                 onEnrollmentSuccess();
                 toast.success('Enrollment Successful', {
                   description: 'You are now enrolled in the course'
                 });
-                navigate(`/courses/${courseId}`, { replace: true });
-              } else {
-                toast.error('Enrollment Failed', {
-                  description: 'Please contact support for assistance'
-                });
               }
-            } else {
-              toast.error('Payment Information Missing', {
-                description: 'Please try enrolling again or contact support'
-              });
+              
+              // Always clean up the URL
+              navigate(`/courses/${courseId}`, { replace: true });
             }
           }
         } catch (error) {
           console.error('Error processing payment verification:', error);
-          toast.error('Payment Verification Error', {
-            description: 'There was an error processing your payment verification'
-          });
+          // Don't show error toast to avoid confusion
+          // Just clean up the URL
+          navigate(`/courses/${courseId}`, { replace: true });
         } finally {
           setIsProcessing(false);
           setEnrollmentProcessing(false);

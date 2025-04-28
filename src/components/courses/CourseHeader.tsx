@@ -51,7 +51,7 @@ export const CourseHeader = ({
   
   const handlePaymentSuccess = (response: any) => {
     toast.success("Payment Successful", {
-      description: "Your payment has been processed successfully."
+      description: "Your enrollment is being processed."
     });
     onEnrollmentSuccess(response);
   };

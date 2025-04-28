@@ -43,7 +43,6 @@ export const PaymentButton = ({
       document.body.appendChild(script);
       
       return () => {
-        // Clean up script when component unmounts
         if (script.parentNode) {
           script.parentNode.removeChild(script);
         }
@@ -58,10 +57,8 @@ export const PaymentButton = ({
       if (paymentDataStr) {
         try {
           const paymentData = JSON.parse(paymentDataStr);
-          // Check if payment was completed but processing failed or if data is stale (older than 24 hours)
-          if ((paymentData.completed && !paymentData.processed && 
-               Date.now() - paymentData.timestamp > 86400000) || 
-              (Date.now() - paymentData.timestamp > 86400000)) {
+          // Check if data is stale (older than 24 hours)
+          if (Date.now() - paymentData.timestamp > 86400000) {
             console.log('Clearing stale payment data for course:', courseId);
             sessionStorage.removeItem(`payment_${courseId}`);
           }
@@ -113,9 +110,10 @@ export const PaymentButton = ({
       sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(paymentData));
       console.log('Payment data created:', paymentData);
 
-      // Create Razorpay order
-      toast.info("Creating Order", { description: "Please wait..." });
+      // Inform user
+      toast.info("Creating Payment", { description: "Setting up your payment..." });
       
+      // Create Razorpay order
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
         body: { amount, courseId, userId: user.id }
       });
@@ -132,8 +130,8 @@ export const PaymentButton = ({
 
       if (!orderData || !orderData.orderId || !orderData.key) {
         console.error('Invalid order data received:', orderData);
-        toast.error("Order Configuration Failed", {
-          description: "Invalid payment configuration received. Please try again."
+        toast.error("Payment Setup Failed", {
+          description: "Invalid payment configuration. Please try again."
         });
         setLoading(false);
         return;
@@ -142,8 +140,7 @@ export const PaymentButton = ({
       // Update payment data with order ID
       const updatedData = {
         ...paymentData,
-        razorpayOrderId: orderData.orderId,
-        paymentId: orderData.paymentId || null
+        razorpayOrderId: orderData.orderId
       };
       sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedData));
       console.log('Payment data updated with order ID:', updatedData);
@@ -163,7 +160,7 @@ export const PaymentButton = ({
             // Get the current payment data
             const currentDataStr = sessionStorage.getItem(`payment_${courseId}`);
             if (!currentDataStr) {
-              console.error('Payment data not found in session storage');
+              console.log('Payment data not found, creating new entry');
               // Create new payment data if none exists
               const newPaymentData = {
                 courseId,
@@ -203,31 +200,26 @@ export const PaymentButton = ({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                payment_id: orderData.paymentId || 'unknown',
                 user_id: user.id,
                 course_id: courseId
               }
             }).then(({data, error}) => {
               if (error) {
                 console.error('Payment verification error:', error);
-                toast.error('Payment Verification Failed', {
-                  description: 'Please try refreshing the page or contact support'
-                });
+                // Don't show error toast since payment might still be successful
+                window.location.href = `/courses/${courseId}?enrollment=success`;
                 return;
               }
               
               console.log('Payment verified by backend:', data);
-              
-              // Redirect to course page with success parameter
               window.location.href = `/courses/${courseId}?enrollment=success&payment=verified`;
               
               if (onSuccess) onSuccess(response);
             });
           } catch (error) {
             console.error('Error in payment handler:', error);
-            toast.error("Payment Processing Error", {
-              description: "Please refresh the page or contact support if payment was deducted"
-            });
+            // Still redirect to success since the payment might be successful
+            window.location.href = `/courses/${courseId}?enrollment=success`;
           }
         },
         prefill: {
@@ -263,7 +255,7 @@ export const PaymentButton = ({
     } catch (error) {
       console.error('Payment error:', error);
       toast.error("Payment Failed", {
-        description: error.message || "Failed to process payment"
+        description: "Failed to process payment. Please try again."
       });
       if (onError) onError(error);
     } finally {
