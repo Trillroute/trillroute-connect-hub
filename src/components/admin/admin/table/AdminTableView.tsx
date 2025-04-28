@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserManagementUser } from '@/types/student';
-import DataTable from '@/components/ui/data-table/DataTable';
+import DataTable from '@/components/ui/data-table';
 import { getAdminTableColumns } from './columns';
 
 interface AdminTableViewProps {

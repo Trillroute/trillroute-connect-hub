@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Course } from '@/types/course';
-import DataTable, { Column } from '@/components/ui/data-table/DataTable';
+import DataTable from '@/components/ui/data-table';
+import type { Column } from '@/components/ui/data-table/types';
 import DeleteCourseDialog from './DeleteCourseDialog';
 import EditCourseDialog from './EditCourseDialog';
 

@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Lead } from '@/types/lead';
-import DataTable, { Column } from '@/components/ui/data-table/DataTable';
+import DataTable from '@/components/ui/data-table';
+import type { Column } from '@/components/ui/data-table/types';
 import { Badge } from '@/components/ui/badge';
 
 interface LeadTableProps {

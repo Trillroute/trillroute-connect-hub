@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import SuperAdminSidebar, { ActiveTab } from "@/components/admin/SuperAdminSidebar";
 import { useToast } from '@/hooks/use-toast';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useDashboardData } from '@/components/superadmin/hooks/useDashboardData';
 import { useFetchLeads } from "@/hooks/useFetchLeads";
 import EditLeadDialog from "@/components/admin/leads/EditLeadDialog";

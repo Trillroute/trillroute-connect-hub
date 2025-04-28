@@ -9,6 +9,11 @@ interface AdminTableProps {
   onEditAdmin: (admin: UserManagementUser) => void;
   onDeleteAdmin: (admin: UserManagementUser) => void;
   onEditUserDetails?: (admin: UserManagementUser) => void;
+  viewMode?: string;
+  selectedIds?: string[];
+  setSelectedIds?: React.Dispatch<React.SetStateAction<string[]>>;
+  canEditAdmin?: (admin: UserManagementUser) => boolean; 
+  canDeleteAdmin?: (admin: UserManagementUser) => boolean;
 }
 
 const AdminTable: React.FC<AdminTableProps> = (props) => {

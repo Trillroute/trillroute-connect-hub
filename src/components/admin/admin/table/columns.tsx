@@ -1,7 +1,7 @@
 
 import { Shield } from 'lucide-react';
 import { format } from 'date-fns';
-import { Column } from '@/components/ui/data-table/DataTable';
+import type { Column } from '@/components/ui/data-table/types';
 import { UserManagementUser } from '@/types/student';
 
 export const getAdminTableColumns = (): Column[] => [

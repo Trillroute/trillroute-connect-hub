@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import type { Column, DataTableProps } from './types';
 import DataTableFilters from './DataTableFilters';
 import DataTableActions from './DataTableActions';
