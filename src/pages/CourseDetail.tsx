@@ -74,7 +74,7 @@ const CourseDetail = () => {
     }
   }, [loading, checkEnrollmentStatus, user, error]);
 
-  // Check for payment success from URL parameters
+  // Check for payment success from URL parameters and session storage
   useEffect(() => {
     const enrollmentStatus = searchParams.get('enrollment');
     
@@ -85,56 +85,66 @@ const CourseDetail = () => {
       // Check for payment intent in session storage
       const paymentIntentString = sessionStorage.getItem('paymentIntent');
       if (paymentIntentString) {
-        const paymentIntent = JSON.parse(paymentIntentString);
-        
-        // Check if the payment intent is for this course and user
-        if (paymentIntent.courseId === courseId && paymentIntent.userId === user.id && paymentIntent.completed) {
-          console.log('Valid payment intent found, proceeding with enrollment');
+        try {
+          const paymentIntent = JSON.parse(paymentIntentString);
           
-          // Process the enrollment
-          enrollStudentInCourse(courseId, user.id)
-            .then(success => {
-              if (success) {
-                setIsEnrolled(true);
-                toast.success('Enrollment Successful', {
-                  description: `You are now enrolled in ${course?.title}`
+          // Check if the payment intent is for this course and user
+          if (paymentIntent.courseId === courseId && paymentIntent.userId === user.id && paymentIntent.completed) {
+            console.log('Valid payment intent found, proceeding with enrollment');
+            
+            // Process the enrollment
+            enrollStudentInCourse(courseId, user.id)
+              .then(success => {
+                if (success) {
+                  setIsEnrolled(true);
+                  toast.success('Enrollment Successful', {
+                    description: `You are now enrolled in ${course?.title}`
+                  });
+                  
+                  // Mark the payment intent as handled
+                  paymentIntent.handled = true;
+                  sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
+                  
+                  // Clear the URL parameter
+                  navigate(`/courses/${courseId}`, { replace: true });
+                } else {
+                  toast.error('Enrollment Failed', {
+                    description: 'Please contact support for assistance'
+                  });
+                }
+              })
+              .catch(error => {
+                console.error('Error during enrollment:', error);
+                toast.error('Enrollment Error', {
+                  description: 'Please try again or contact support'
                 });
-                
-                // Clear the URL parameter
-                navigate(`/courses/${courseId}`, { replace: true });
-              } else {
-                toast.error('Enrollment Failed', {
-                  description: 'Please contact support for assistance'
-                });
-              }
-            })
-            .catch(error => {
-              console.error('Error during enrollment:', error);
-              toast.error('Enrollment Error', {
-                description: 'Please try again or contact support'
+              })
+              .finally(() => {
+                setEnrollmentProcessing(false);
               });
-            })
-            .finally(() => {
-              setEnrollmentProcessing(false);
-              // Clear the payment intent
-              sessionStorage.removeItem('paymentIntent');
+          } else {
+            console.error('Payment intent mismatch or not completed:', {
+              storedCourseId: paymentIntent.courseId,
+              currentCourseId: courseId,
+              storedUserId: paymentIntent.userId,
+              currentUserId: user.id,
+              completed: paymentIntent.completed
             });
-        } else {
-          console.error('Payment intent mismatch or not completed:', {
-            storedCourseId: paymentIntent.courseId,
-            currentCourseId: courseId,
-            storedUserId: paymentIntent.userId,
-            currentUserId: user.id,
-            completed: paymentIntent.completed
-          });
-          
-          if (!paymentIntent.completed) {
-            toast.error('Payment Not Completed', {
-              description: 'Your payment was not marked as completed. Please try again.'
-            });
+            
+            if (!paymentIntent.completed) {
+              toast.error('Payment Not Completed', {
+                description: 'Your payment was not marked as completed. Please try again.'
+              });
+            }
+            
+            setEnrollmentProcessing(false);
           }
-          
+        } catch (error) {
+          console.error('Error parsing payment intent:', error);
           setEnrollmentProcessing(false);
+          toast.error('Payment Data Error', {
+            description: 'There was an error processing your payment data'
+          });
         }
       } else {
         console.log('No payment intent found in session storage');
@@ -144,7 +154,12 @@ const CourseDetail = () => {
         setEnrollmentProcessing(false);
       }
     }
-  }, [searchParams, isEnrolled, enrollmentProcessing, user, courseId, course, navigate]);
+    
+    // Check enrollment status again regardless to ensure UI is up-to-date
+    if (user && courseId && !loading) {
+      checkEnrollmentStatus();
+    }
+  }, [searchParams, isEnrolled, enrollmentProcessing, user, courseId, course, navigate, loading, checkEnrollmentStatus]);
 
   const handleEnrollmentSuccess = async (response: any) => {
     // This function will be called by the PaymentButton on successful payment

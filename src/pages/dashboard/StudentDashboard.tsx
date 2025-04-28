@@ -22,26 +22,34 @@ const StudentDashboard = () => {
 
   // Check for payment success via sessionStorage
   useEffect(() => {
-    const paymentIntent = sessionStorage.getItem('paymentIntent');
+    const paymentIntentString = sessionStorage.getItem('paymentIntent');
     
-    if (paymentIntent) {
-      const intent = JSON.parse(paymentIntent);
-      
-      if (intent.completed) {
-        toast.success('Enrollment Successful', {
-          description: 'You have been successfully enrolled in the course'
-        });
+    if (paymentIntentString) {
+      try {
+        const intent = JSON.parse(paymentIntentString);
         
-        // Clear the payment intent
-        sessionStorage.removeItem('paymentIntent');
-        
-        // Refresh enrolled courses to show the new one
-        refreshCourses();
-        
-        // If we have a courseId, navigate to it
-        if (intent.courseId) {
-          navigate(`/courses/${intent.courseId}`);
+        // Only process completed intents that haven't been handled yet
+        if (intent.completed && !intent.handled) {
+          console.log('Processing completed payment intent:', intent);
+          
+          toast.success('Enrollment Successful', {
+            description: 'You have been successfully enrolled in the course'
+          });
+          
+          // Mark the intent as handled to prevent duplicate processing
+          intent.handled = true;
+          sessionStorage.setItem('paymentIntent', JSON.stringify(intent));
+          
+          // Refresh enrolled courses to show the new one
+          refreshCourses();
+          
+          // If we have a courseId, navigate to it
+          if (intent.courseId) {
+            navigate(`/courses/${intent.courseId}`);
+          }
         }
+      } catch (error) {
+        console.error('Error processing payment intent:', error);
       }
     }
   }, [navigate, refreshCourses]);

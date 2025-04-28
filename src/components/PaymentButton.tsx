@@ -82,6 +82,7 @@ export const PaymentButton = ({
           description: "Failed to create payment. Please try again."
         });
         if (onError) onError(orderError);
+        setLoading(false);
         return;
       }
 
@@ -90,6 +91,7 @@ export const PaymentButton = ({
         toast.error("Payment Failed", {
           description: "Invalid payment configuration received. Please try again."
         });
+        setLoading(false);
         return;
       }
 
@@ -123,9 +125,36 @@ export const PaymentButton = ({
               completed: true
             };
             sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
+
+            // Verify payment on server before redirecting
+            supabase.functions.invoke('verify-razorpay-payment', {
+              body: {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                payment_id: orderData.paymentId
+              }
+            }).then(({data, error}) => {
+              if (error) {
+                console.error('Payment verification error:', error);
+                toast.error('Payment Verification Failed', {
+                  description: 'Please contact support if payment was deducted'
+                });
+                return;
+              }
+              
+              console.log('Payment verified:', data);
+              
+              if (data && data.redirectUrl) {
+                // Force redirect to the course page with success parameter
+                window.location.href = data.redirectUrl;
+              } else {
+                // Fallback redirect
+                window.location.href = `/courses/${courseId}?enrollment=success`;
+              }
+            });
             
-            // Force redirection to the course page with enrollment success parameter
-            window.location.href = `/courses/${courseId}?enrollment=success`;
+            if (onSuccess) onSuccess(response);
           } catch (error) {
             console.error('Error in payment handler:', error);
             toast.error("Payment Processing Failed", {

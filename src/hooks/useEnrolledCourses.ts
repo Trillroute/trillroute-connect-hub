@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { EnrolledCourse } from '@/types/student-dashboard';
 import { Course } from '@/types/course';
 import { formatClassTypesData } from '@/utils/courseHelpers';
+import { toast } from 'sonner';
 
 export function useEnrolledCourses() {
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
@@ -30,6 +31,9 @@ export function useEnrolledCourses() {
 
       if (error) {
         console.error('Error fetching enrolled courses:', error);
+        toast.error('Failed to load your courses', {
+          description: 'Please refresh the page to try again'
+        });
         setEnrolledCourses([]);
         setLoading(false);
         return;
@@ -71,6 +75,9 @@ export function useEnrolledCourses() {
       setEnrolledCourses(formatted);
     } catch (error) {
       console.error('Unexpected error fetching enrolled courses:', error);
+      toast.error('Failed to load your courses', {
+        description: 'An unexpected error occurred'
+      });
       setEnrolledCourses([]);
     } finally {
       setLoading(false);
