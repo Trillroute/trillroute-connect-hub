@@ -17,7 +17,7 @@ export const useAuthActions = (
       
       const { data: usersCheck, error: checkError } = await supabase
         .from('custom_users')
-        .select('email')
+        .select('email, password_hash')
         .eq('email', normalizedEmail)
         .limit(1);
       
@@ -37,12 +37,51 @@ export const useAuthActions = (
         throw new Error("Account not found");
       }
       
+      // Sign in using Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: password,
       });
+
+      console.log('[AUTH] Auth response:', authError ? 'Error' : 'Success', authError);
       
       if (authError) {
+        // Check if this is a valid user in our custom table but auth failed
+        // This can happen when the custom_users table has a user but auth doesn't
+        if (usersCheck && usersCheck.length > 0) {
+          console.log('[AUTH] User exists in custom_users but auth failed. Creating auth user...');
+          
+          // Try to sign up the user first
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: normalizedEmail,
+            password: password,
+          });
+          
+          if (!signUpError) {
+            // Try login again
+            const { data: retryAuth, error: retryError } = await supabase.auth.signInWithPassword({
+              email: normalizedEmail,
+              password: password,
+            });
+            
+            if (!retryError) {
+              console.log('[AUTH] Successfully created and logged in auth user');
+              await fetchAndSetUserData(normalizedEmail, setUser);
+              
+              toast({
+                title: "Login Successful",
+                description: `Welcome back!`,
+                duration: 3000,
+              });
+              return;
+            } else {
+              console.error('[AUTH] Retry login failed:', retryError);
+            }
+          } else {
+            console.error('[AUTH] Failed to create auth user:', signUpError);
+          }
+        }
+        
         handleAuthError(authError);
         throw new Error(authError.message || 'Login failed');
       }
@@ -97,15 +136,20 @@ export const useAuthActions = (
 // Helper functions
 const handleAuthError = (error: any) => {
   console.error('[AUTH] Supabase auth error:', error);
+  
+  // Provide more specific error messages based on the error code
   if (error.message.includes('Invalid login')) {
-    throw new Error("Incorrect password");
+    console.log('[AUTH] Invalid login credentials error');
+    // This could be wrong password OR account doesn't exist in auth but exists in custom_users
+    throw new Error("Login failed. Please check your credentials.");
   }
+  
   throw error;
 };
 
 const handleLoginError = (error: any) => {
   console.error('[AUTH] Login error:', error);
-  if (!error.message || (error.message !== "Account not found" && error.message !== "Incorrect password")) {
+  if (!error.message || (error.message !== "Account not found" && error.message !== "Login failed. Please check your credentials.")) {
     throw new Error(error?.message || "Something went wrong. Please try again.");
   }
   throw error;
