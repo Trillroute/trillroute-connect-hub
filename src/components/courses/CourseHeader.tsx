@@ -45,7 +45,7 @@ export const CourseHeader = ({
       
       {isEnrolled ? (
         <Button 
-          className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+          className="bg-green-500 hover:bg-green-600 text-white transition-colors"
           disabled={true}
         >
           <Check className="mr-2 h-4 w-4" />

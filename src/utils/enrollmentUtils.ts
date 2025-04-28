@@ -1,13 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 /**
  * Enrolls a student in a course by updating the course's student_ids array
  * and incrementing the students count
  */
 export const enrollStudentInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
-  console.log(`Attempting to enroll student ${studentId} in course ${courseId}`);
+  console.log(`Enrolling student ${studentId} in course ${courseId}`);
   
   try {
     // First, check if student is already enrolled
@@ -165,8 +165,14 @@ const logUserActivity = async (
  * Checks if a student is enrolled in a course
  */
 export const isStudentEnrolledInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
-  console.log(`Checking if student ${studentId} is enrolled in course ${courseId}`);
+  if (!courseId || !studentId) {
+    console.error('Missing courseId or studentId in isStudentEnrolledInCourse');
+    return false;
+  }
+  
   try {
+    console.log(`Checking if student ${studentId} is enrolled in course ${courseId}`);
+    
     const { data, error } = await supabase
       .from('courses')
       .select('student_ids')
@@ -178,7 +184,7 @@ export const isStudentEnrolledInCourse = async (courseId: string, studentId: str
       return false;
     }
 
-    const isEnrolled = data.student_ids?.includes(studentId) || false;
+    const isEnrolled = Array.isArray(data.student_ids) && data.student_ids.includes(studentId);
     console.log(`Enrollment check result: ${isEnrolled}`);
     return isEnrolled;
   } catch (error) {

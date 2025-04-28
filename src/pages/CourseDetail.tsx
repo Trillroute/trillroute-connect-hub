@@ -24,52 +24,64 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentProcessing, setEnrollmentProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [enrollmentChecked, setEnrollmentChecked] = useState(false);
 
-  // Check for payment intent in session storage on initial load
+  // Check for payment data on initial load
   useEffect(() => {
-    const checkPaymentIntent = () => {
-      const paymentIntentString = sessionStorage.getItem('paymentIntent');
-      if (paymentIntentString) {
+    if (!courseId || !user) return;
+    
+    const checkPaymentData = async () => {
+      // Check for payment data in session storage
+      const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
+      
+      if (paymentDataStr) {
         try {
-          const paymentIntent = JSON.parse(paymentIntentString);
-          console.log('CourseDetail: Found payment intent in session storage:', paymentIntent);
+          const paymentData = JSON.parse(paymentDataStr);
           
-          // If payment intent exists for the current course
-          if (paymentIntent.courseId === courseId) {
-            if (paymentIntent.completed && !paymentIntent.handled) {
-              console.log('CourseDetail: Found unhandled completed payment for current course');
-              // Display toast to inform user we're processing their payment
-              toast.info('Verifying Payment', {
-                description: 'Please wait while we verify your payment...'
-              });
-            } else if (paymentIntent.completed && paymentIntent.handled) {
-              console.log('CourseDetail: Payment was already handled');
-              // Check enrollment status to make sure it was actually processed
-              if (user && !isEnrolled && !loading) {
-                isStudentEnrolledInCourse(courseId || '', user.id)
-                  .then(enrolled => {
-                    if (enrolled && !isEnrolled) {
-                      console.log('User is enrolled but state doesn\'t reflect it. Refreshing...');
-                      setIsEnrolled(true);
-                      fetchCourse();
-                    }
-                  })
-                  .catch(err => console.error('Error checking enrollment:', err));
+          console.log('Found payment data for course:', courseId, paymentData);
+          
+          // If payment was completed but not processed, show info toast
+          if (paymentData.completed && !paymentData.processed) {
+            toast.info('Verifying Your Payment', {
+              description: 'Please wait while we process your enrollment...'
+            });
+          }
+          
+          // Check enrollment status directly
+          if (user.id) {
+            const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
+            
+            // If user is enrolled but our state doesn't show it, update state and refetch course
+            if (enrolled && !isEnrolled) {
+              console.log('User is enrolled but state does not reflect it, updating...');
+              setIsEnrolled(true);
+              fetchCourse();
+            }
+            
+            // If payment is completed but user is not enrolled, something went wrong
+            if (paymentData.completed && !enrolled && !enrollmentProcessing) {
+              console.log('Payment completed but enrollment not processed');
+              // Add enrollment=success to URL to trigger usePaymentVerification
+              if (!window.location.href.includes('enrollment=success')) {
+                window.history.replaceState(
+                  {}, 
+                  '', 
+                  `${window.location.pathname}?enrollment=success`
+                );
+                window.location.reload();
               }
             }
           }
         } catch (error) {
-          console.error('Error parsing payment intent:', error);
+          console.error('Error checking payment data:', error);
         }
       }
     };
     
-    if (courseId && user) {
-      checkPaymentIntent();
-    }
-  }, [courseId, user, isEnrolled, loading]);
+    checkPaymentData();
+  }, [courseId, user, isEnrolled, enrollmentProcessing]);
 
+  // Fetch course data
   const fetchCourse = useCallback(async () => {
     if (courseId) {
       try {
@@ -93,6 +105,9 @@ const CourseDetail = () => {
                                 courseData.student_ids.includes(user.id);
           console.log('User enrollment status:', userIsEnrolled);
           setIsEnrolled(userIsEnrolled);
+          setEnrollmentChecked(true);
+        } else {
+          setEnrollmentChecked(true);
         }
         
         setLoading(false);
@@ -104,10 +119,10 @@ const CourseDetail = () => {
     }
   }, [courseId, getCourseById, user]);
 
+  // Handle successful enrollment
   const handleEnrollmentSuccess = useCallback(() => {
     console.log('Enrollment success callback triggered');
     setIsEnrolled(true);
-    // Refetch course data to get updated student list
     fetchCourse();
   }, [fetchCourse]);
 
@@ -124,6 +139,28 @@ const CourseDetail = () => {
       fetchCourse();
     }
   }, [user, fetchCourse]);
+  
+  // Double-check enrollment status if payment verification is present in URL
+  useEffect(() => {
+    const checkEnrollmentStatus = async () => {
+      if (courseId && user?.id && enrollmentChecked && 
+          window.location.href.includes('enrollment=success')) {
+        try {
+          console.log('Double-checking enrollment status');
+          const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
+          if (enrolled && !isEnrolled) {
+            console.log('User is enrolled but state does not match, updating');
+            setIsEnrolled(true);
+            fetchCourse();
+          }
+        } catch (error) {
+          console.error('Error checking enrollment status:', error);
+        }
+      }
+    };
+    
+    checkEnrollmentStatus();
+  }, [courseId, user, enrollmentChecked, isEnrolled, fetchCourse]);
 
   // Initialize payment verification hook
   usePaymentVerification(
@@ -173,6 +210,9 @@ const CourseDetail = () => {
         onEnrollmentSuccess={handleEnrollmentSuccess}
         onEnrollmentError={(error) => {
           console.error('Enrollment error:', error);
+          toast.error("Enrollment Error", {
+            description: "Please try again or contact support"
+          });
         }}
         courseId={courseId as string}
       />

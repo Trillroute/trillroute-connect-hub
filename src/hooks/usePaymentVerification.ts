@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { enrollStudentInCourse } from '@/utils/enrollmentUtils';
-import { getRazorpayOrderDetails } from '@/utils/orderUtils';
 
+/**
+ * Hook to verify payment and handle enrollment after Razorpay checkout
+ */
 export const usePaymentVerification = (
   courseId: string,
   userId: string | undefined,
@@ -18,11 +20,13 @@ export const usePaymentVerification = (
 
   useEffect(() => {
     const verifyPayment = async () => {
-      // Check URL parameters for enrollment status
+      // Get enrollment status from URL parameters
       const enrollmentStatus = searchParams.get('enrollment');
+      const paymentStatus = searchParams.get('payment');
       
       console.log('Payment verification checking state:', {
         enrollmentStatus,
+        paymentStatus,
         isEnrolled,
         isProcessing,
         userId,
@@ -37,80 +41,60 @@ export const usePaymentVerification = (
         setEnrollmentProcessing(true);
         
         try {
-          // Retrieve payment intent from session storage
-          const paymentIntentString = sessionStorage.getItem('paymentIntent');
-          console.log('Payment intent from session:', paymentIntentString);
+          // Get payment data from session storage
+          const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
+          console.log('Payment data from session:', paymentDataStr);
           
-          if (paymentIntentString) {
-            const paymentIntent = JSON.parse(paymentIntentString);
-            console.log('Parsed payment intent:', paymentIntent);
+          if (paymentDataStr) {
+            const paymentData = JSON.parse(paymentDataStr);
+            console.log('Parsed payment data:', paymentData);
             
-            // Verify that the payment intent matches the current course and user
-            if (paymentIntent.courseId === courseId && paymentIntent.userId === userId) {
-              console.log('Valid payment intent found, proceeding with enrollment');
+            // Verify payment data matches current user and course
+            if (paymentData.courseId === courseId && paymentData.userId === userId) {
+              console.log('Valid payment data found, proceeding with enrollment');
               
-              // If we have razorpay order ID, verify it with our backend
-              if (paymentIntent.razorpay_order_id) {
-                try {
-                  console.log('Verifying Razorpay order details...');
-                  const orderDetails = await getRazorpayOrderDetails(paymentIntent.razorpay_order_id);
-                  console.log('Razorpay order details received:', orderDetails);
-                  
-                  // If the order status is paid or completed, proceed with enrollment
-                  if (orderDetails?.order?.status === 'paid' || 
-                      orderDetails?.order?.payments?.[0]?.status === 'captured') {
-                    console.log('Payment confirmed as paid by Razorpay');
-                  } else {
-                    console.log('Payment not confirmed as paid by Razorpay yet, proceeding anyway with local data');
-                  }
-                } catch (orderError) {
-                  console.error('Error fetching Razorpay order details:', orderError);
-                  // Continue with enrollment even if order verification fails
-                }
-              }
-              
-              // Proceed with enrollment regardless of order verification
-              console.log('Proceeding with enrollment based on local payment intent data');
+              // Process enrollment
               const success = await enrollStudentInCourse(courseId, userId);
+              
               if (success) {
-                console.log('Enrollment successful, triggering success callback');
+                console.log('Enrollment successful');
                 onEnrollmentSuccess();
                 toast.success('Enrollment Successful', {
                   description: 'You are now enrolled in the course'
                 });
                 
-                // Mark payment as handled and update session storage
-                paymentIntent.handled = true;
-                sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
+                // Mark payment as processed in session storage
+                paymentData.processed = true;
+                sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(paymentData));
                 
                 // Remove enrollment parameter from URL
                 navigate(`/courses/${courseId}`, { replace: true });
               } else {
-                console.error('Enrollment failed after payment');
+                console.error('Enrollment failed after payment verification');
                 toast.error('Enrollment Failed', {
                   description: 'Please contact support for assistance'
                 });
               }
             } else {
-              console.error('Payment intent mismatch:', {
-                paymentIntent,
+              console.error('Payment data mismatch:', {
+                paymentData,
                 courseId,
                 userId
               });
               toast.error('Payment Verification Failed', {
-                description: 'Please contact support if payment was deducted'
+                description: 'Payment data does not match this course or user'
               });
             }
           } else {
-            console.log('No payment intent found in session storage');
+            console.log('No payment data found in session storage');
             toast.error('Payment Information Missing', {
-              description: 'Payment information was lost. Please try again or contact support.'
+              description: 'Please try enrolling again or contact support'
             });
           }
         } catch (error) {
           console.error('Error processing payment verification:', error);
-          toast.error('Payment Data Error', {
-            description: 'There was an error processing your payment data'
+          toast.error('Payment Verification Error', {
+            description: 'There was an error processing your payment verification'
           });
         } finally {
           setIsProcessing(false);

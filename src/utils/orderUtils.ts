@@ -1,25 +1,38 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Get the status of an order from the Supabase database
+ */
 export const getOrderStatus = async (orderId: string) => {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('status, amount, metadata')
-    .eq('order_id', orderId)
-    .single();
+  try {
+    console.log('Fetching order status:', orderId);
+    
+    const { data, error } = await supabase
+      .from('orders')
+      .select('status, amount, metadata')
+      .eq('order_id', orderId)
+      .single();
 
-  if (error) {
-    console.error('Error fetching order:', error);
-    throw new Error('Failed to fetch order status');
+    if (error) {
+      console.error('Error fetching order:', error);
+      throw new Error('Failed to fetch order status');
+    }
+
+    console.log('Order data:', data);
+    return data;
+  } catch (error) {
+    console.error('Exception in getOrderStatus:', error);
+    throw error;
   }
-
-  console.log('Order data:', data);
-  return data;
 };
 
+/**
+ * Get detailed Razorpay order information via the edge function
+ */
 export const getRazorpayOrderDetails = async (orderId: string) => {
   try {
-    console.log('Fetching detailed Razorpay order status for:', orderId);
+    console.log('Fetching Razorpay order details for:', orderId);
     
     const { data, error } = await supabase.functions.invoke('get-razorpay-order-details', {
       body: { orderId }
@@ -27,90 +40,38 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
     
     if (error) {
       console.error('Error fetching Razorpay order details:', error);
-      throw new Error('Failed to fetch Razorpay order details');
+      throw error;
     }
 
-    // Update order status in Supabase if Razorpay data is available
-    if (data?.order) {
-      const razorpayStatus = data.order.status;
-      const metadata = {
-        razorpay_status: razorpayStatus,
-        last_checked: new Date().toISOString(),
-        ...data.order
-      };
-
-      console.log('Updating Supabase with Razorpay status:', razorpayStatus);
-      
-      // First verify and get order details from our database
-      const { data: orderCheck, error: checkError } = await supabase
-        .from('orders')
-        .select('id, user_id, course_id')
-        .eq('order_id', orderId)
-        .maybeSingle();
-      
-      if (checkError) {
-        console.error('Error checking order existence:', checkError);
-        return data;
-      }
-
-      if (!orderCheck) {
-        console.error('No matching order found in database');
-        return data;
-      }
-
-      console.log('Found matching order record:', orderCheck);
-
-      // Update the order record with the latest status from Razorpay
-      const { data: updateData, error: updateError } = await supabase
-        .from('orders')
-        .update({ 
-          status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
-          metadata,
-          updated_at: new Date().toISOString()
-        })
-        .eq('order_id', orderId)
-        .select();
-
-      if (updateError) {
-        console.error('Error updating order status:', updateError);
-      } else {
-        console.log('Successfully updated order status in Supabase:', updateData);
-      }
-
-      // Always attempt to create/update payment record when we have Razorpay data
-      const paymentData = {
-        amount: data.order.amount / 100, // Convert from paisa to INR
-        user_id: orderCheck.user_id,
-        course_id: orderCheck.course_id,
-        status: razorpayStatus === 'paid' ? 'completed' : razorpayStatus,
-        razorpay_order_id: orderId,
-        razorpay_payment_id: data.order.payments?.[0]?.payment_id,
-        razorpay_signature: data.order.payments?.[0]?.signature,
-        metadata: data.order,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error: paymentError } = await supabase
-        .from('payments')
-        .upsert(
-          paymentData,
-          {
-            onConflict: 'razorpay_order_id',
-            ignoreDuplicates: false
-          }
-        );
-
-      if (paymentError) {
-        console.error('Error updating payment record:', paymentError);
-      } else {
-        console.log('Successfully updated payment record:', paymentData);
-      }
-    }
-    
-    console.log('Razorpay order details:', data);
+    console.log('Razorpay order details received:', data);
     return data;
   } catch (error) {
     console.error('Exception fetching Razorpay order details:', error);
-    throw new Error('Failed to fetch Razorpay order details');
+    throw error;
+  }
+};
+
+/**
+ * Check if a payment has been processed for a specific course and user
+ */
+export const checkPaymentProcessed = async (courseId: string, userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('status')
+      .eq('course_id', courseId)
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error checking payment status:', error);
+      return false;
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error('Exception checking payment status:', error);
+    return false;
   }
 };
