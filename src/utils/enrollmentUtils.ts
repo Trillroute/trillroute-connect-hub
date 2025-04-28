@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -92,6 +91,70 @@ export const enrollStudentInCourse = async (courseId: string, studentId: string)
 };
 
 /**
+ * Checks if a student is enrolled in a course by checking the students count
+ * and student_ids array
+ */
+export const isStudentEnrolledInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
+  if (!courseId || !studentId) {
+    console.error('Missing courseId or studentId in isStudentEnrolledInCourse');
+    return false;
+  }
+  
+  try {
+    console.log(`Checking if student ${studentId} is enrolled in course ${courseId}`);
+    
+    const { data, error } = await supabase
+      .from('courses')
+      .select('student_ids, students')
+      .eq('id', courseId)
+      .single();
+
+    if (error) {
+      console.error('Error checking enrollment status:', error);
+      return false;
+    }
+
+    const isEnrolled = data.students > 0 && 
+                      Array.isArray(data.student_ids) && 
+                      data.student_ids.includes(studentId);
+                      
+    console.log(`Enrollment check result: ${isEnrolled}`);
+    return isEnrolled;
+  } catch (error) {
+    console.error('Unexpected error checking enrollment:', error);
+    return false;
+  }
+};
+
+/**
+ * Logs user activity to the database
+ */
+const logUserActivity = async (
+  userId: string,
+  action: string,
+  component: string,
+  entityId?: string
+): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('user_activity_logs')
+      .insert({
+        user_id: userId,
+        action,
+        component,
+        page_url: window.location.pathname,
+        entity_id: entityId
+      });
+
+    if (error) {
+      console.error('Error logging user activity:', error);
+    }
+  } catch (error) {
+    console.error('Failed to log user activity:', error);
+  }
+};
+
+/**
  * Unenrolls a student from a course
  */
 export const unenrollStudentFromCourse = async (courseId: string, studentId: string): Promise<boolean> => {
@@ -149,66 +212,6 @@ export const unenrollStudentFromCourse = async (courseId: string, studentId: str
     toast.error('Unenrollment Error', {
       description: 'An unexpected error occurred. Please try again.'
     });
-    return false;
-  }
-};
-
-/**
- * Logs user activity to the database
- */
-const logUserActivity = async (
-  userId: string,
-  action: string,
-  component: string,
-  entityId?: string
-): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('user_activity_logs')
-      .insert({
-        user_id: userId,
-        action,
-        component,
-        page_url: window.location.pathname,
-        entity_id: entityId
-      });
-
-    if (error) {
-      console.error('Error logging user activity:', error);
-    }
-  } catch (error) {
-    console.error('Failed to log user activity:', error);
-  }
-};
-
-/**
- * Checks if a student is enrolled in a course
- */
-export const isStudentEnrolledInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
-  if (!courseId || !studentId) {
-    console.error('Missing courseId or studentId in isStudentEnrolledInCourse');
-    return false;
-  }
-  
-  try {
-    console.log(`Checking if student ${studentId} is enrolled in course ${courseId}`);
-    
-    const { data, error } = await supabase
-      .from('courses')
-      .select('student_ids')
-      .eq('id', courseId)
-      .single();
-
-    if (error) {
-      console.error('Error checking enrollment status:', error);
-      return false;
-    }
-
-    const isEnrolled = Array.isArray(data.student_ids) && data.student_ids.includes(studentId);
-    console.log(`Enrollment check result: ${isEnrolled}`);
-    return isEnrolled;
-  } catch (error) {
-    console.error('Unexpected error checking enrollment:', error);
     return false;
   }
 };

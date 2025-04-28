@@ -1,11 +1,11 @@
 
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
-import { PaymentButton } from '@/components/PaymentButton';
-import { Course } from '@/types/course';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { Course } from '@/types/course';
+import { enrollStudentInCourse } from '@/utils/enrollmentUtils';
 
 interface CourseHeaderProps {
   course: Course;
@@ -27,43 +27,34 @@ export const CourseHeader = ({
   courseId
 }: CourseHeaderProps) => {
   const { user } = useAuth();
-  const displayPrice = course.final_price || course.base_price || 0;
-  const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  const [processing, setProcessing] = useState(false);
   
   // Function to check if user can enroll
   const canEnroll = () => {
-    // User must be logged in and have the student role
     return user && user.role === 'student';
   };
   
-  useEffect(() => {
-    // Check if there's any pending enrollment data in the session
-    const checkPendingEnrollment = () => {
-      try {
-        const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
-        if (paymentDataStr) {
-          const paymentData = JSON.parse(paymentDataStr);
-          if (paymentData.completed && !paymentData.processed) {
-            setCheckingEnrollment(true);
-            // Auto-clear checking status after 5 seconds
-            setTimeout(() => setCheckingEnrollment(false), 5000);
-          }
-        }
-      } catch (err) {
-        console.error('Error checking pending enrollment:', err);
-      }
-    };
-    
-    if (canEnroll()) {
-      checkPendingEnrollment();
+  const handleEnrollment = async () => {
+    if (!user || !canEnroll()) {
+      toast.error("Only students can enroll in courses");
+      return;
     }
-  }, [courseId]);
-  
-  const handlePaymentSuccess = (response: any) => {
-    toast.success("Payment Successful", {
-      description: "Your enrollment is being processed."
-    });
-    onEnrollmentSuccess(response);
+    
+    setProcessing(true);
+    try {
+      const success = await enrollStudentInCourse(courseId, user.id);
+      if (success) {
+        toast.success("Successfully Enrolled", {
+          description: "You have been enrolled in the course"
+        });
+        onEnrollmentSuccess({ courseId });
+      }
+    } catch (error) {
+      console.error('Error during enrollment:', error);
+      onEnrollmentError(error);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const renderEnrollmentButton = () => {
@@ -101,35 +92,25 @@ export const CourseHeader = ({
       );
     }
 
-    if (checkingEnrollment || enrollmentProcessing) {
+    if (processing || enrollmentProcessing) {
       return (
         <Button
           disabled={true}
           className="bg-[#9b87f5] text-white opacity-90 cursor-not-allowed"
         >
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Verifying Payment...
+          Processing...
         </Button>
       );
     }
 
     return (
-      <PaymentButton
-        onSuccess={handlePaymentSuccess}
-        onError={onEnrollmentError}
+      <Button
+        onClick={handleEnrollment}
         className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
-        courseId={courseId}
-        amount={displayPrice}
       >
-        {enrollmentProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          `Enroll Now (₹${displayPrice})`
-        )}
-      </PaymentButton>
+        Enroll Now
+      </Button>
     );
   };
 
