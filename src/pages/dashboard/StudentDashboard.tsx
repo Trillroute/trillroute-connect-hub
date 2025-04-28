@@ -20,7 +20,7 @@ const StudentDashboard = () => {
   const upcomingLessons: UpcomingLesson[] = [];
   const recommendations: RecommendedCourse[] = [];
 
-  // Check for payment redirect
+  // Check for payment success via sessionStorage
   useEffect(() => {
     const paymentIntent = sessionStorage.getItem('paymentIntent');
     

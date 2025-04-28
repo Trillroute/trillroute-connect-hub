@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.188.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.20.0'
 import * as crypto from "https://deno.land/std@0.188.0/crypto/mod.ts";
@@ -380,10 +381,12 @@ serve(async (req) => {
 
     console.log('Payment verification and enrollment completed successfully');
 
+    // Include redirect URL in response
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Payment verification and enrollment completed successfully'
+        message: 'Payment verification and enrollment completed successfully',
+        redirectUrl: `/courses/${paymentData.course_id}?enrollment=success`
       }),
       { headers: responseHeaders, status: 200 }
     );

@@ -12,7 +12,6 @@ import { CourseNotFound } from '@/components/courses/CourseNotFound';
 import { CourseHeader } from '@/components/courses/CourseHeader';
 import { CourseContent } from '@/components/courses/CourseContent';
 import { CourseDetailTabs } from '@/components/courses/CourseDetailTabs';
-import { supabase } from '@/integrations/supabase/client';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -20,7 +19,7 @@ const CourseDetail = () => {
   const [searchParams] = useSearchParams();
   const { getCourseById } = useCourses();
   const { teachers } = useTeachers();
-  const { user, isAuthenticated, refreshSession } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -89,7 +88,7 @@ const CourseDetail = () => {
         const paymentIntent = JSON.parse(paymentIntentString);
         
         // Check if the payment intent is for this course and user
-        if (paymentIntent.courseId === courseId && paymentIntent.userId === user.id) {
+        if (paymentIntent.courseId === courseId && paymentIntent.userId === user.id && paymentIntent.completed) {
           console.log('Valid payment intent found, proceeding with enrollment');
           
           // Process the enrollment
@@ -121,16 +120,27 @@ const CourseDetail = () => {
               sessionStorage.removeItem('paymentIntent');
             });
         } else {
-          console.error('Payment intent mismatch:', {
+          console.error('Payment intent mismatch or not completed:', {
             storedCourseId: paymentIntent.courseId,
             currentCourseId: courseId,
             storedUserId: paymentIntent.userId,
-            currentUserId: user.id
+            currentUserId: user.id,
+            completed: paymentIntent.completed
           });
+          
+          if (!paymentIntent.completed) {
+            toast.error('Payment Not Completed', {
+              description: 'Your payment was not marked as completed. Please try again.'
+            });
+          }
+          
           setEnrollmentProcessing(false);
         }
       } else {
         console.log('No payment intent found in session storage');
+        toast.error('Payment Information Missing', {
+          description: 'Payment information was lost. Please try again or contact support.'
+        });
         setEnrollmentProcessing(false);
       }
     }
@@ -149,7 +159,7 @@ const CourseDetail = () => {
   };
 
   const getInstructorNames = () => {
-    if (!course.instructor_ids || !Array.isArray(course.instructor_ids)) {
+    if (!course?.instructor_ids || !Array.isArray(course.instructor_ids)) {
       return 'No instructors assigned';
     }
     return course.instructor_ids

@@ -32,7 +32,7 @@ export const PaymentButton = ({
 }: PaymentButtonProps) => {
   const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
-  const { user, isAuthenticated, refreshSession } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!window.Razorpay) {
@@ -109,7 +109,7 @@ export const PaymentButton = ({
         name: "Music Course Platform",
         description: "Course Payment",
         order_id: orderData.orderId,
-        handler: async function (response: any) {
+        handler: function (response: any) {
           try {
             console.log('Payment successful:', response);
             
@@ -124,38 +124,13 @@ export const PaymentButton = ({
             };
             sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
             
-            // Verify the payment on the server
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
-              body: { 
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                payment_id: orderData.paymentId
-              }
-            });
-            
-            if (verifyError) {
-              console.error('Payment verification error:', verifyError);
-              toast.error('Payment Verification Failed', {
-                description: 'There was an issue verifying your payment. Please contact support.'
-              });
-              return;
-            }
-            
-            toast.success('Payment Successful', {
-              description: 'You have been enrolled in the course'
-            });
-
-            if (onSuccess) onSuccess(response);
-            
-            // Force navigation to the course page with enrollment success parameter
+            // Force redirection to the course page with enrollment success parameter
             window.location.href = `/courses/${courseId}?enrollment=success`;
           } catch (error) {
             console.error('Error in payment handler:', error);
             toast.error("Payment Processing Failed", {
               description: "Please contact support if your payment was deducted"
             });
-            if (onError) onError(error);
           }
         },
         prefill: {
@@ -164,6 +139,15 @@ export const PaymentButton = ({
         },
         theme: {
           color: "#9b87f5"
+        },
+        // Add a modal close event handler to manage cases where user closes the payment window
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+            toast.info("Payment Cancelled", {
+              description: "You can try again when you're ready"
+            });
+          }
         }
       };
 

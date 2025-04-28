@@ -20,6 +20,7 @@ export function useEnrolledCourses() {
 
     try {
       setLoading(true);
+      console.log('Fetching enrolled courses for user:', user.id);
       
       // Get courses where the student is enrolled
       const { data, error } = await supabase
@@ -34,6 +35,8 @@ export function useEnrolledCourses() {
         return;
       }
 
+      console.log('Enrolled courses data:', data?.length || 0, 'courses found');
+      
       if (!data || data.length === 0) {
         setEnrolledCourses([]);
         setLoading(false);
@@ -64,6 +67,7 @@ export function useEnrolledCourses() {
         };
       });
 
+      console.log('Formatted enrolled courses:', formatted);
       setEnrolledCourses(formatted);
     } catch (error) {
       console.error('Unexpected error fetching enrolled courses:', error);
