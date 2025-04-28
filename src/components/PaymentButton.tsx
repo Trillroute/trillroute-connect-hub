@@ -27,10 +27,54 @@ export const PaymentButton = ({
   amount
 }: PaymentButtonProps) => {
   const [loading, setLoading] = useState(false);
+  const [qrPaymentPrompted, setQRPaymentPrompted] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const razorpay = useRazorpay();
   const { createPaymentData, updatePaymentData, getPaymentData } = usePaymentData(courseId, user?.id);
+
+  // Function to check payment status
+  const checkPaymentStatus = async (orderId: string) => {
+    if (!user) return;
+    
+    // Show loading toast
+    const loadingToast = toast.loading("Checking Payment Status...");
+    
+    try {
+      // Mark that we're checking QR payment
+      updatePaymentData({
+        qrCodePaymentCheck: true,
+        qrCheckTime: Date.now()
+      });
+      
+      // Attempt to verify enrollment with backend directly
+      await verifyPayment(
+        { 
+          razorpay_payment_id: `qr_payment_${Date.now()}`,
+          razorpay_order_id: orderId,
+          razorpay_signature: ''
+        }, 
+        courseId, 
+        user.id
+      );
+      
+      toast.dismiss(loadingToast);
+      toast.success("Verification Request Sent", {
+        description: "We're processing your payment. The page will update shortly."
+      });
+      
+      // Force reload after a short delay to ensure backend has time to process
+      setTimeout(() => {
+        window.location.href = `/courses/${courseId}?enrollment=success`;
+      }, 1500);
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error("Verification Error", {
+        description: "Please try refreshing the page or contact support."
+      });
+      console.error("QR payment verification error:", error);
+    }
+  };
 
   const handleClick = async () => {
     try {
@@ -101,6 +145,7 @@ export const PaymentButton = ({
         modal: {
           ondismiss: function() {
             setLoading(false);
+            setQRPaymentPrompted(true);
             
             // Check if this was potentially a QR code payment
             setTimeout(() => {
@@ -111,44 +156,16 @@ export const PaymentButton = ({
                   description: "If you completed payment via QR code, press 'Check Payment Status'",
                   action: {
                     label: "Check Payment Status",
-                    onClick: () => {
-                      // Mark that we're checking QR payment
-                      updatePaymentData({
-                        qrCodePaymentCheck: true,
-                        qrCheckTime: Date.now()
-                      });
-                      
-                      // Show checking status
-                      const checkingToast = toast.loading("Checking Payment Status...");
-                      
-                      // Attempt to verify enrollment with backend directly
-                      verifyPayment(
-                        { 
-                          razorpay_payment_id: `qr_payment_${Date.now()}`,
-                          razorpay_order_id: orderData.orderId,
-                          razorpay_signature: ''
-                        }, 
-                        courseId, 
-                        user.id
-                      ).then(() => {
-                        toast.dismiss(checkingToast);
-                        toast.success("Verification Request Sent", {
-                          description: "We're processing your payment. The page will update shortly."
-                        });
-                        
-                        // Force reload after a short delay to ensure backend has time to process
-                        setTimeout(() => {
-                          window.location.href = `/courses/${courseId}?enrollment=success`;
-                        }, 2000);
-                      }).catch(error => {
-                        toast.dismiss(checkingToast);
-                        toast.error("Verification Error", {
-                          description: "Please try refreshing the page in a moment."
-                        });
-                        console.error("QR payment verification error:", error);
-                      });
-                    }
-                  }
+                    onClick: () => checkPaymentStatus(orderData.orderId)
+                  },
+                  duration: 15000, // Show for 15 seconds
+                });
+                
+                // Show a separate persistent button on the page
+                updatePaymentData({
+                  qrCheckPrompted: true,
+                  qrCodePaymentCheck: false, // Will be set to true when checked
+                  orderId: orderData.orderId
                 });
               } else if (currentPaymentData) {
                 toast.info("Payment Cancelled", {
@@ -160,7 +177,7 @@ export const PaymentButton = ({
                   cancelTime: Date.now()
                 });
               }
-            }, 1000);
+            }, 500);
           }
         }
       };
@@ -179,14 +196,33 @@ export const PaymentButton = ({
     }
   };
 
+  // Check if there's a pending QR payment check
+  const paymentData = getPaymentData();
+  const isPendingQRCheck = paymentData && 
+                          paymentData.qrCheckPrompted && 
+                          !paymentData.completed &&
+                          !paymentData.qrCodePaymentCheck;
+
   return (
-    <Button
-      onClick={handleClick}
-      disabled={loading}
-      className={className}
-    >
-      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      {children}
-    </Button>
+    <div className="flex flex-col space-y-2">
+      <Button
+        onClick={handleClick}
+        disabled={loading}
+        className={className}
+      >
+        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {children}
+      </Button>
+      
+      {isPendingQRCheck && (
+        <Button 
+          variant="outline" 
+          onClick={() => checkPaymentStatus(paymentData.orderId || paymentData.razorpayOrderId)}
+          className="mt-2"
+        >
+          I Paid Using QR Code
+        </Button>
+      )}
+    </div>
   );
 };

@@ -22,8 +22,50 @@ export const checkPaymentProcessed = async (courseId: string, userId: string): P
       return false;
     }
     
-    const isProcessed = !!paymentData;
-    console.log(`Payment processed status: ${isProcessed}`);
+    if (paymentData) {
+      console.log('Payment found in database with status:', paymentData.status);
+      return true;
+    }
+    
+    // If no direct payment record found, check if user is already enrolled
+    // This implies payment was successful
+    const { data: courseData, error: courseError } = await supabase
+      .from('courses')
+      .select('student_ids')
+      .eq('id', courseId)
+      .single();
+    
+    if (courseError) {
+      console.error('Error checking course enrollment:', courseError);
+      return false;
+    }
+    
+    const studentIds = courseData?.student_ids || [];
+    const isAlreadyEnrolled = studentIds.includes(userId);
+    
+    console.log(`User enrollment check in course: ${isAlreadyEnrolled}`);
+    
+    // If already enrolled, payment is considered processed
+    if (isAlreadyEnrolled) {
+      return true;
+    }
+    
+    // Last resort: Check orders table for any successfully processed order
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .select('status')
+      .eq('course_id', courseId)
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .maybeSingle();
+    
+    if (orderError) {
+      console.error('Error checking order status:', orderError);
+      return false;
+    }
+    
+    const isProcessed = !!orderData;
+    console.log(`Payment processed status based on orders: ${isProcessed}`);
     return isProcessed;
   } catch (error) {
     console.error('Exception checking payment status:', error);
@@ -54,4 +96,3 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
     throw error;
   }
 };
-

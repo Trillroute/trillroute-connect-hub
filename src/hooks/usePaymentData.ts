@@ -16,6 +16,11 @@ interface PaymentData {
   completedTime?: number;
   qrCodePaymentCheck?: boolean;
   qrCheckTime?: number;
+  qrCheckPrompted?: boolean;
+  orderId?: string;
+  enrollmentCompleted?: boolean;
+  enrollmentTime?: number;
+  enrollmentVerified?: boolean;
 }
 
 export const usePaymentData = (courseId: string, userId?: string) => {
@@ -58,11 +63,16 @@ export const usePaymentData = (courseId: string, userId?: string) => {
   const updatePaymentData = (data: Partial<PaymentData>) => {
     const currentDataStr = sessionStorage.getItem(`payment_${courseId}`);
     if (currentDataStr) {
-      const currentData = JSON.parse(currentDataStr);
-      const updatedData = { ...currentData, ...data };
-      sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedData));
-      console.log('Payment data updated:', updatedData);
-      return updatedData;
+      try {
+        const currentData = JSON.parse(currentDataStr);
+        const updatedData = { ...currentData, ...data };
+        sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedData));
+        console.log('Payment data updated:', updatedData);
+        return updatedData;
+      } catch (e) {
+        console.error('Error updating payment data:', e);
+        return null;
+      }
     }
     return null;
   };

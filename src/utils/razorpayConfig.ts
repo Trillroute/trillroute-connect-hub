@@ -9,21 +9,29 @@ export interface RazorpayHandlerResponse {
 }
 
 export const createRazorpayOrder = async (amount: number, courseId: string, userId: string) => {
-  const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
-    body: { amount, courseId, userId }
-  });
+  try {
+    console.log(`Creating Razorpay order for user ${userId}, course ${courseId}, amount ${amount}`);
+    
+    const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
+      body: { amount, courseId, userId }
+    });
 
-  if (orderError) {
-    console.error('Error creating order:', orderError);
-    throw new Error('Failed to create payment order');
+    if (orderError) {
+      console.error('Error creating order:', orderError);
+      throw new Error('Failed to create payment order');
+    }
+
+    if (!orderData || !orderData.orderId || !orderData.key) {
+      console.error('Invalid order data received:', orderData);
+      throw new Error('Invalid payment configuration');
+    }
+
+    console.log('Order created successfully:', orderData.orderId);
+    return orderData;
+  } catch (error) {
+    console.error('Exception in createRazorpayOrder:', error);
+    throw error;
   }
-
-  if (!orderData || !orderData.orderId || !orderData.key) {
-    console.error('Invalid order data received:', orderData);
-    throw new Error('Invalid payment configuration');
-  }
-
-  return orderData;
 };
 
 export const verifyPayment = async (response: RazorpayHandlerResponse, courseId: string, userId: string) => {
@@ -31,14 +39,18 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
   
   try {
     // For QR code payments, we generate pseudo-IDs if they're not present
+    const isQrPayment = !response.razorpay_payment_id || response.razorpay_payment_id.startsWith('qr_payment_');
+    
     const verificationData = {
       razorpay_payment_id: response.razorpay_payment_id || `qr_payment_${Date.now()}`,
       razorpay_order_id: response.razorpay_order_id || `qr_order_${Date.now()}`,
       razorpay_signature: response.razorpay_signature || '',
       user_id: userId,
       course_id: courseId,
-      is_qr_payment: response.razorpay_payment_id?.startsWith('qr_payment_') || false
+      is_qr_payment: isQrPayment
     };
+
+    console.log('Sending verification data to backend:', verificationData);
 
     // Call verify-razorpay-payment edge function
     const { data, error } = await supabase.functions.invoke('verify-razorpay-payment', {
@@ -50,17 +62,29 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
       toast.error('Payment Verification Failed', {
         description: 'Please contact support if payment was deducted'
       });
-      return;
+      throw error;
     }
 
     console.log('Payment verification success:', data);
     
-    // Redirect to success page with verification status
-    const redirectUrl = `/courses/${courseId}?enrollment=success&payment=verified`;
-    window.location.href = redirectUrl;
+    if (isQrPayment) {
+      // For QR payments, we'll let the UI handle the redirect
+      // after polling for enrollment status
+      console.log('QR payment verification sent, UI will handle redirect');
+      return data;
+    } else {
+      // For regular payments, redirect immediately
+      const redirectUrl = `/courses/${courseId}?enrollment=success&payment=verified`;
+      window.location.href = redirectUrl;
+      return data;
+    }
   } catch (error) {
     console.error('Payment verification error:', error);
-    // Still redirect since payment might have succeeded
-    window.location.href = `/courses/${courseId}?enrollment=success`;
+    // For regular payments, still redirect since payment might have succeeded
+    // For QR payments, let the caller handle the error
+    if (!response.razorpay_payment_id?.startsWith('qr_payment_')) {
+      window.location.href = `/courses/${courseId}?enrollment=success`;
+    }
+    throw error;
   }
 };
