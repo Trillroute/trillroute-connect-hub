@@ -16,6 +16,7 @@ interface CourseHeaderProps {
   onEnrollmentSuccess: (response: any) => void;
   onEnrollmentError: (error: any) => void;
   courseId: string;
+  onNavigateBack?: () => void; // Added this prop
 }
 
 export const CourseHeader = ({
@@ -24,7 +25,8 @@ export const CourseHeader = ({
   enrollmentProcessing,
   onEnrollmentSuccess,
   onEnrollmentError,
-  courseId
+  courseId,
+  onNavigateBack
 }: CourseHeaderProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -61,6 +63,14 @@ export const CourseHeader = ({
   
   const canEnroll = () => {
     return user && user.role === 'student';
+  };
+
+  const handleNavigateBack = () => {
+    if (onNavigateBack) {
+      onNavigateBack();
+    } else {
+      navigate('/courses');
+    }
   };
 
   const renderEnrollmentButton = () => {
@@ -139,7 +149,7 @@ export const CourseHeader = ({
     <div className="flex justify-between items-center mb-6">
       <Button
         variant="ghost"
-        onClick={() => navigate('/courses')}
+        onClick={handleNavigateBack}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Courses
