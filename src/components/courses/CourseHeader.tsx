@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
-import { enrollStudentInCourse, isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
+import { isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
+import { PaymentButton } from '@/components/PaymentButton';
 
 interface CourseHeaderProps {
   course: Course;
@@ -27,7 +28,6 @@ export const CourseHeader = ({
   courseId
 }: CourseHeaderProps) => {
   const { user } = useAuth();
-  const [processing, setProcessing] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
   const [enrollmentVerified, setEnrollmentVerified] = useState(false);
   
@@ -61,41 +61,6 @@ export const CourseHeader = ({
   
   const canEnroll = () => {
     return user && user.role === 'student';
-  };
-  
-  const handleEnrollment = async () => {
-    if (!user || !canEnroll()) {
-      toast.error("Only students can enroll in courses");
-      return;
-    }
-    
-    setProcessing(true);
-    try {
-      const success = await enrollStudentInCourse(courseId, user.id);
-      if (success) {
-        // After successful enrollment, verify it immediately
-        const enrollmentConfirmed = await forceVerifyEnrollment(courseId, user.id);
-        
-        if (enrollmentConfirmed) {
-          setIsEnrolled(true);
-          toast.success("Successfully Enrolled", {
-            description: "You have been enrolled in the course"
-          });
-          onEnrollmentSuccess({ courseId });
-        } else {
-          // This should be rare but handles the case where enrollment process succeeded but DB verification failed
-          toast.error("Enrollment Status Inconsistent", {
-            description: "There was an issue confirming your enrollment. Please refresh the page."
-          });
-          onEnrollmentError({ message: "Inconsistent enrollment state" });
-        }
-      }
-    } catch (error) {
-      console.error('Error during enrollment:', error);
-      onEnrollmentError(error);
-    } finally {
-      setProcessing(false);
-    }
   };
 
   const renderEnrollmentButton = () => {
@@ -145,7 +110,7 @@ export const CourseHeader = ({
       );
     }
 
-    if (processing || enrollmentProcessing) {
+    if (enrollmentProcessing) {
       return (
         <Button
           disabled={true}
@@ -158,12 +123,15 @@ export const CourseHeader = ({
     }
 
     return (
-      <Button
-        onClick={handleEnrollment}
+      <PaymentButton
+        courseId={courseId}
+        amount={course.final_price}
+        onSuccess={onEnrollmentSuccess}
+        onError={onEnrollmentError}
         className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
       >
         Enroll Now
-      </Button>
+      </PaymentButton>
     );
   };
 

@@ -11,8 +11,8 @@ import { CourseDetailTabs } from '@/components/courses/CourseDetailTabs';
 import { CourseDetailLoading } from '@/components/courses/CourseDetailLoading';
 import { CourseDetailError } from '@/components/courses/CourseDetailError';
 import { usePaymentVerification } from '@/hooks/usePaymentVerification';
-import { toast } from 'sonner';
 import { isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
+import { toast } from 'sonner';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -25,32 +25,6 @@ const CourseDetail = () => {
   const [enrollmentProcessing, setEnrollmentProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enrollmentChecked, setEnrollmentChecked] = useState(false);
-
-  useEffect(() => {
-    if (!courseId || !user) return;
-    
-    const checkPaymentData = async () => {
-      const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
-      
-      if (paymentDataStr) {
-        try {
-          const paymentData = JSON.parse(paymentDataStr);
-          
-          console.log('Found payment data for course:', courseId, paymentData);
-          
-          if (paymentData.completed && !paymentData.processed) {
-            toast.info('Verifying Your Payment', {
-              description: 'Please wait while we process your enrollment...'
-            });
-          }
-        } catch (error) {
-          console.error('Error checking payment data:', error);
-        }
-      }
-    };
-    
-    checkPaymentData();
-  }, [courseId, user]);
 
   const checkEnrollmentStatus = useCallback(async () => {
     if (courseId && user?.id) {
