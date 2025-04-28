@@ -8,27 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Pencil, Trash2, Search } from 'lucide-react';
-
-export interface Column {
-  key: string;
-  label: string;
-  filterable?: boolean;
-  render?: (value: any, row: any) => React.ReactNode;
-}
-
-interface DataTableProps {
-  data: any[];
-  columns: Column[];
-  loading?: boolean;
-  onView?: (row: any) => void;
-  onEdit?: (row: any) => void;
-  onDelete?: (row: any) => void;
-  onBulkDelete?: (ids: string[]) => void;
-}
+import type { Column, DataTableProps } from './types';
+import DataTableFilters from './DataTableFilters';
+import DataTableActions from './DataTableActions';
+import DataTableLoading from './DataTableLoading';
 
 const DataTable: React.FC<DataTableProps> = ({
   data,
@@ -74,11 +58,7 @@ const DataTable: React.FC<DataTableProps> = ({
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <DataTableLoading />;
   }
 
   return (
@@ -113,11 +93,10 @@ const DataTable: React.FC<DataTableProps> = ({
                     <div className="flex items-center justify-between">
                       {column.label}
                     </div>
-                    <Input
-                      placeholder={`Filter ${column.label}`}
+                    <DataTableFilters
+                      column={column}
                       value={filters[column.key] || ''}
-                      onChange={(e) => handleFilter(column.key, e.target.value)}
-                      className="h-8"
+                      onChange={(value) => handleFilter(column.key, value)}
                     />
                   </div>
                 </TableHead>
@@ -145,35 +124,12 @@ const DataTable: React.FC<DataTableProps> = ({
                 ))}
                 {(onView || onEdit || onDelete) && (
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {onView && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onView(row)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {onEdit && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEdit(row)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {onDelete && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(row)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
+                    <DataTableActions
+                      row={row}
+                      onView={onView}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                    />
                   </TableCell>
                 )}
               </TableRow>
