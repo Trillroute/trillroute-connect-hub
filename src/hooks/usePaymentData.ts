@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 
-interface PaymentData {
+export interface PaymentData {
   courseId: string;
   userId: string;
   timestamp: number;
