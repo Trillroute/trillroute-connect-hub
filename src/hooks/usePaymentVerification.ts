@@ -191,43 +191,76 @@ export const usePaymentVerification = (
     // Check for QR code payments periodically for a short time after page load
     // This helps with redirect issues after QR payments
     let qrCheckAttempts = 0;
+    const maxQrCheckAttempts = 10; // Increase check attempts
     const qrCheckInterval = setInterval(async () => {
       qrCheckAttempts++;
       
-      // Only check a few times and only if needed
-      if (qrCheckAttempts > 5 || isEnrolled || isProcessing || !userId || !courseId) {
+      // Only check a limited number of times and only if needed
+      if (qrCheckAttempts > maxQrCheckAttempts || isEnrolled || isProcessing || !userId || !courseId) {
         clearInterval(qrCheckInterval);
         return;
       }
       
-      // Check if there's any pending QR code payment in session storage
-      const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
-      if (paymentDataStr) {
-        const paymentData = JSON.parse(paymentDataStr);
-        if (paymentData.qrCodePaymentCheck && !paymentData.processed) {
-          // Re-verify enrollment status
-          const enrollmentConfirmed = await forceVerifyEnrollment(courseId, userId);
-          if (enrollmentConfirmed && !isEnrolled) {
-            onEnrollmentSuccess();
-            toast.success('QR Code Payment Confirmed', {
-              description: 'Your enrollment has been processed successfully'
-            });
+      // Don't check too frequently if we're in later attempts
+      if (qrCheckAttempts > 5) {
+        console.log(`QR check attempt ${qrCheckAttempts}/${maxQrCheckAttempts}`);
+      }
+      
+      try {
+        // First check if already enrolled
+        const enrollmentConfirmed = await forceVerifyEnrollment(courseId, userId);
+        if (enrollmentConfirmed && !isEnrolled) {
+          console.log('Enrollment detected during QR check polling');
+          onEnrollmentSuccess();
+          toast.success('Payment Confirmed', {
+            description: 'Your enrollment has been processed successfully'
+          });
+          clearInterval(qrCheckInterval);
+          return;
+        }
+        
+        // Check if there's any pending QR code payment in session storage
+        const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
+        if (paymentDataStr) {
+          const paymentData = JSON.parse(paymentDataStr);
+          if (paymentData.qrCodePaymentCheck && !paymentData.processed) {
+            console.log('QR code payment check in progress, checking database status');
             
-            // Update session storage
-            const updatedPaymentData = {
-              ...paymentData,
-              processed: true,
-              enrollmentCompleted: true,
-              enrollmentTime: Date.now(),
-              enrollmentVerified: enrollmentConfirmed
-            };
-            sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedPaymentData));
+            // Check if payment is processed in database
+            const isPaymentProcessed = await checkPaymentProcessed(courseId, userId);
             
-            clearInterval(qrCheckInterval);
+            if (isPaymentProcessed) {
+              console.log('QR payment found in database, proceeding with enrollment');
+              const success = await enrollStudentInCourse(courseId, userId);
+              
+              if (success) {
+                const finalCheck = await forceVerifyEnrollment(courseId, userId);
+                if (finalCheck) {
+                  onEnrollmentSuccess();
+                  toast.success('QR Code Payment Confirmed', {
+                    description: 'Your enrollment has been processed successfully'
+                  });
+                  
+                  // Update session storage
+                  const updatedPaymentData = {
+                    ...paymentData,
+                    processed: true,
+                    enrollmentCompleted: true,
+                    enrollmentTime: Date.now(),
+                    enrollmentVerified: true
+                  };
+                  sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedPaymentData));
+                  
+                  clearInterval(qrCheckInterval);
+                }
+              }
+            }
           }
         }
+      } catch (error) {
+        console.error('Error during QR code payment check:', error);
       }
-    }, 3000);
+    }, 3000); // Check every 3 seconds
     
     return () => {
       clearInterval(qrCheckInterval);

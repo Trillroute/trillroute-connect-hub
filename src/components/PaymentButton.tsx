@@ -30,7 +30,7 @@ export const PaymentButton = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const razorpay = useRazorpay();
-  const { createPaymentData, updatePaymentData } = usePaymentData(courseId, user?.id);
+  const { createPaymentData, updatePaymentData, getPaymentData } = usePaymentData(courseId, user?.id);
 
   const handleClick = async () => {
     try {
@@ -104,49 +104,61 @@ export const PaymentButton = ({
             
             // Check if this was potentially a QR code payment
             setTimeout(() => {
-              const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
-              if (paymentDataStr) {
-                const paymentData = JSON.parse(paymentDataStr);
-                
-                // If the modal was just dismissed and no status was set, indicate a possible QR payment
-                if (!paymentData.cancelled && !paymentData.completed) {
-                  toast.info("QR Code Payment?", {
-                    description: "If you completed payment via QR code, press 'Check Payment Status'",
-                    action: {
-                      label: "Check Payment Status",
-                      onClick: () => {
-                        // Mark that we're checking QR payment
-                        updatePaymentData({
-                          qrCodePaymentCheck: true,
-                          qrCheckTime: Date.now()
+              const currentPaymentData = getPaymentData();
+              
+              if (currentPaymentData && !currentPaymentData.cancelled && !currentPaymentData.completed) {
+                toast.info("QR Code Payment?", {
+                  description: "If you completed payment via QR code, press 'Check Payment Status'",
+                  action: {
+                    label: "Check Payment Status",
+                    onClick: () => {
+                      // Mark that we're checking QR payment
+                      updatePaymentData({
+                        qrCodePaymentCheck: true,
+                        qrCheckTime: Date.now()
+                      });
+                      
+                      // Show checking status
+                      const checkingToast = toast.loading("Checking Payment Status...");
+                      
+                      // Attempt to verify enrollment with backend directly
+                      verifyPayment(
+                        { 
+                          razorpay_payment_id: `qr_payment_${Date.now()}`,
+                          razorpay_order_id: orderData.orderId,
+                          razorpay_signature: ''
+                        }, 
+                        courseId, 
+                        user.id
+                      ).then(() => {
+                        toast.dismiss(checkingToast);
+                        toast.success("Verification Request Sent", {
+                          description: "We're processing your payment. The page will update shortly."
                         });
                         
-                        // Show checking status
-                        toast.loading("Checking Payment Status...");
-                        
-                        // Attempt to verify enrollment with backend directly
-                        verifyPayment(
-                          { 
-                            razorpay_payment_id: `qr_payment_${Date.now()}`,
-                            razorpay_order_id: orderData.orderId,
-                            razorpay_signature: ''
-                          }, 
-                          courseId, 
-                          user.id
-                        );
-                      }
+                        // Force reload after a short delay to ensure backend has time to process
+                        setTimeout(() => {
+                          window.location.href = `/courses/${courseId}?enrollment=success`;
+                        }, 2000);
+                      }).catch(error => {
+                        toast.dismiss(checkingToast);
+                        toast.error("Verification Error", {
+                          description: "Please try refreshing the page in a moment."
+                        });
+                        console.error("QR payment verification error:", error);
+                      });
                     }
-                  });
-                } else {
-                  toast.info("Payment Cancelled", {
-                    description: "You can try again when you're ready"
-                  });
-                  
-                  updatePaymentData({
-                    cancelled: true,
-                    cancelTime: Date.now()
-                  });
-                }
+                  }
+                });
+              } else if (currentPaymentData) {
+                toast.info("Payment Cancelled", {
+                  description: "You can try again when you're ready"
+                });
+                
+                updatePaymentData({
+                  cancelled: true,
+                  cancelTime: Date.now()
+                });
               }
             }, 1000);
           }

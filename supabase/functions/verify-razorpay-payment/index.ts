@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.188.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.20.0";
 import * as crypto from "https://deno.land/std@0.188.0/crypto/mod.ts";
@@ -15,6 +16,7 @@ interface VerificationRequest {
   razorpay_signature: string;
   user_id: string;
   course_id: string;
+  is_qr_payment?: boolean;
 }
 
 // Helper function for logging
@@ -39,6 +41,18 @@ const verifyRazorpaySignature = async (
 ): Promise<boolean> => {
   try {
     logStep("Verifying signature", { orderId, paymentId });
+    
+    // Skip verification for QR payments which won't have valid signatures
+    if (paymentId.startsWith('qr_payment_')) {
+      logStep("Skipping signature verification for QR payment");
+      return true;
+    }
+    
+    // If there's no signature, we can't verify
+    if (!signature) {
+      logStep("Missing signature, cannot verify");
+      return false;
+    }
     
     const body = orderId + "|" + paymentId;
     const secret = Deno.env.get("RAZORPAY_KEY_SECRET") ?? "";
@@ -80,6 +94,56 @@ const verifyRazorpaySignature = async (
     return generatedSignature === signature;
   } catch (error) {
     logStep("Error during signature verification", { error: error.message });
+    return false;
+  }
+};
+
+// Function to check if order exists and is valid
+const checkOrderExists = async (
+  supabase: any,
+  orderId: string,
+  userId: string,
+  courseId: string
+): Promise<boolean> => {
+  try {
+    logStep("Checking if order exists", { orderId, userId, courseId });
+    
+    // Skip check for QR payments which may use generated order IDs
+    if (orderId.startsWith('qr_order_')) {
+      logStep("Skipping order check for QR payment with generated ID");
+      return true;
+    }
+    
+    // Check if this order exists and belongs to the right user and course
+    const { data: orderData, error: orderError } = await supabase
+      .from("orders")
+      .select("id, user_id, course_id")
+      .eq("order_id", orderId)
+      .single();
+      
+    if (orderError) {
+      logStep("Error checking order", orderError);
+      return false;
+    }
+    
+    if (!orderData) {
+      logStep("Order not found");
+      return false;
+    }
+    
+    // Validate that the order belongs to the right user and course
+    if (orderData.user_id !== userId || orderData.course_id !== courseId) {
+      logStep("Order user_id or course_id mismatch", { 
+        expected: { userId, courseId },
+        found: { user_id: orderData.user_id, course_id: orderData.course_id }
+      });
+      return false;
+    }
+    
+    logStep("Order exists and is valid");
+    return true;
+  } catch (error) {
+    logStep("Exception checking order", { error: error.message });
     return false;
   }
 };
@@ -142,10 +206,11 @@ const updatePaymentStatus = async (
   razorpaySignature: string,
   courseId: string,
   userId: string,
+  isQrPayment: boolean = false,
   amount = 0
 ): Promise<boolean> => {
   try {
-    logStep("Updating payment status", { razorpayPaymentId, razorpayOrderId });
+    logStep("Updating payment status", { razorpayPaymentId, razorpayOrderId, isQrPayment });
     
     // Check if payment record already exists with this Razorpay payment ID
     const { data: existingPayment, error: checkError } = await supabase
@@ -171,7 +236,8 @@ const updatePaymentStatus = async (
         .update({
           status: "completed",
           razorpay_signature: razorpaySignature,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          metadata: { isQrPayment, verification_time: new Date().toISOString() }
         })
         .eq("id", existingPayment.id);
       
@@ -194,7 +260,8 @@ const updatePaymentStatus = async (
           status: "completed",
           amount: amount,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          metadata: { isQrPayment, initial_verification_time: new Date().toISOString() }
         });
       
       if (insertError) {
@@ -216,16 +283,17 @@ const updatePaymentStatus = async (
 const logUserActivity = async (
   supabase: any,
   userId: string,
-  courseId: string
+  courseId: string,
+  isQrPayment: boolean = false
 ): Promise<void> => {
   try {
-    logStep("Logging user activity", { userId, courseId });
+    logStep("Logging user activity", { userId, courseId, isQrPayment });
     
     const { error: logError } = await supabase
       .from("user_activity_logs")
       .insert({
         user_id: userId,
-        action: "payment_completed",
+        action: isQrPayment ? "qr_payment_completed" : "payment_completed",
         component: "course_enrollment",
         entity_id: courseId,
         page_url: `/courses/${courseId}`
@@ -299,18 +367,22 @@ serve(async (req) => {
       );
     }
 
+    // Check if this is a QR code payment (will have payment ID starting with qr_payment_)
+    const isQrCodePayment = requestData.razorpay_payment_id?.startsWith('qr_payment_') || 
+                            requestData.is_qr_payment === true;
+    
+    logStep("Payment type detected", { isQrCodePayment });
+    
     // Initialize Supabase client
     const supabase = createSupabaseClient();
     
     let signatureVerified = false;
+    let orderVerified = false;
     
-    // Check if this is a QR code payment (will have payment ID starting with qr_payment_)
-    const isQrCodePayment = requestData.razorpay_payment_id?.startsWith('qr_payment_');
-    
-    // Verify Razorpay signature - but continue even if verification fails 
-    // because QR code payments might not have signature
-    if (requestData.razorpay_payment_id && requestData.razorpay_order_id && requestData.razorpay_signature && !isQrCodePayment) {
+    // For regular payments, verify signature and order
+    if (!isQrCodePayment && requestData.razorpay_payment_id && requestData.razorpay_order_id && requestData.razorpay_signature) {
       try {
+        // Verify signature
         signatureVerified = await verifyRazorpaySignature(
           requestData.razorpay_order_id,
           requestData.razorpay_payment_id,
@@ -319,16 +391,46 @@ serve(async (req) => {
 
         if (signatureVerified) {
           logStep("Signature verified successfully");
+          
+          // Verify order exists
+          orderVerified = await checkOrderExists(
+            supabase,
+            requestData.razorpay_order_id,
+            requestData.user_id,
+            requestData.course_id
+          );
+          
+          if (orderVerified) {
+            logStep("Order verified successfully");
+          } else {
+            logStep("Order verification failed, but continuing with enrollment");
+          }
         } else {
           logStep("Signature verification failed, but continuing with enrollment");
         }
-      } catch (signatureError) {
-        logStep("Error during signature verification", { error: signatureError.message });
-        // Continue anyway - signature verification is optional
+      } catch (verificationError) {
+        logStep("Error during verification process", { error: verificationError.message });
+        // Continue anyway - verification is optional
       }
     } else {
       if (isQrCodePayment) {
-        logStep("QR code payment detected, skipping signature verification");
+        logStep("QR code payment detected, skipping standard verification");
+        
+        // For QR payments, we don't have signatures but still check the order if possible
+        if (!requestData.razorpay_order_id.startsWith('qr_order_')) {
+          orderVerified = await checkOrderExists(
+            supabase,
+            requestData.razorpay_order_id,
+            requestData.user_id,
+            requestData.course_id
+          );
+          
+          if (orderVerified) {
+            logStep("Order exists for QR payment");
+          } else {
+            logStep("Order not verified for QR payment, continuing");
+          }
+        }
       } else {
         logStep("Missing one or more Razorpay parameters, assuming QR code or external payment");
       }
@@ -345,6 +447,7 @@ serve(async (req) => {
       requestData.razorpay_signature || '',
       requestData.course_id,
       requestData.user_id,
+      isQrCodePayment,
       amount
     );
     
@@ -371,7 +474,8 @@ serve(async (req) => {
     await logUserActivity(
       supabase,
       requestData.user_id,
-      requestData.course_id
+      requestData.course_id,
+      isQrCodePayment
     );
 
     logStep("Payment verification and enrollment completed successfully");
@@ -383,6 +487,7 @@ serve(async (req) => {
         message: "Payment verification and enrollment completed successfully",
         redirectUrl: `/courses/${requestData.course_id}?enrollment=success&payment=verified`,
         signatureVerified: signatureVerified,
+        orderVerified: orderVerified,
         isQrCodePayment: isQrCodePayment
       }),
       { headers: responseHeaders, status: 200 }

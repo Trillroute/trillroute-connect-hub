@@ -67,5 +67,18 @@ export const usePaymentData = (courseId: string, userId?: string) => {
     return null;
   };
 
-  return { createPaymentData, updatePaymentData };
+  const getPaymentData = (): PaymentData | null => {
+    const dataStr = sessionStorage.getItem(`payment_${courseId}`);
+    if (dataStr) {
+      try {
+        return JSON.parse(dataStr);
+      } catch (e) {
+        console.error('Error parsing payment data:', e);
+        return null;
+      }
+    }
+    return null;
+  };
+
+  return { createPaymentData, updatePaymentData, getPaymentData };
 };

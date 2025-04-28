@@ -27,7 +27,7 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
 };
 
 export const verifyPayment = async (response: RazorpayHandlerResponse, courseId: string, userId: string) => {
-  console.log('Payment successful response:', response);
+  console.log('Payment verification response:', response);
   
   try {
     // For QR code payments, we generate pseudo-IDs if they're not present
@@ -36,11 +36,12 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
       razorpay_order_id: response.razorpay_order_id || `qr_order_${Date.now()}`,
       razorpay_signature: response.razorpay_signature || '',
       user_id: userId,
-      course_id: courseId
+      course_id: courseId,
+      is_qr_payment: response.razorpay_payment_id?.startsWith('qr_payment_') || false
     };
 
     // Call verify-razorpay-payment edge function
-    const { error } = await supabase.functions.invoke('verify-razorpay-payment', {
+    const { data, error } = await supabase.functions.invoke('verify-razorpay-payment', {
       body: verificationData
     });
     
@@ -51,6 +52,8 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
       });
       return;
     }
+
+    console.log('Payment verification success:', data);
     
     // Redirect to success page with verification status
     const redirectUrl = `/courses/${courseId}?enrollment=success&payment=verified`;
