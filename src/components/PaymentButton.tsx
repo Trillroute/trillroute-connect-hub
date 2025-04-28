@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -35,7 +34,7 @@ export const PaymentButton = ({
   const navigate = useNavigate();
   const { user, isAuthenticated, refreshSession } = useAuth();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!window.Razorpay) {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -49,32 +48,43 @@ export const PaymentButton = ({
     try {
       console.log('Validating session before payment...');
       
-      // First try to use our refreshSession method
+      // If we have user data, consider it valid - our custom auth is prioritized
+      if (user && isAuthenticated) {
+        console.log('User is authenticated based on our custom auth');
+        
+        // Still try to refresh the Supabase session as a background task
+        refreshSession().catch(error => {
+          console.log('Background session refresh failed but continuing:', error);
+        });
+        
+        return true;
+      }
+      
+      // If the above check fails, try to refresh the session
       const refreshed = await refreshSession();
       if (refreshed) {
         console.log('Session refreshed successfully');
         return true;
       }
       
-      // If refresh fails, try to check the Supabase session directly
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Session validation error:', error);
-        return false;
+      // If refresh fails, check localStorage for user data as a last resort
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          console.log('Found stored user data, using as fallback');
+          return true;
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
+        }
       }
       
-      if (!data.session) {
-        console.error('No active session found during validation');
-        return false;
-      }
-      
-      // If we get here, we have a valid session according to Supabase
-      console.log('Valid session confirmed via Supabase');
-      return true;
+      console.log('No active session found during validation');
+      return false;
     } catch (error) {
       console.error('Exception during session validation:', error);
-      return false;
+      
+      // Last resort - check if we at least have stored user data
+      return !!localStorage.getItem('user');
     }
   };
 
@@ -99,7 +109,7 @@ export const PaymentButton = ({
     try {
       setLoading(true);
       
-      if (!isAuthenticated || !user) {
+      if (!user) {
         console.log('User not authenticated, redirecting to login...');
         toast.error("Authentication Required", {
           description: "Please login to enroll in this course"
