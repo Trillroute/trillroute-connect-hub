@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthenticationContext } from '@/contexts/AuthContext';
 import { useSession } from '@/hooks/useSession';
 import { useAuthActions } from '@/hooks/useAuthActions';
-import type { UserData } from '@/types/auth';
+import type { UserData, UserRole } from '@/types/auth';
 
 export const AuthenticationProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, setUser, loading, setLoading, refreshSession } = useSession();
@@ -93,12 +93,15 @@ const fetchUserData = async (email: string, setUser: (user: UserData | null) => 
   }
   
   const userData = users[0];
+  // Ensure role is a valid UserRole type
+  const userRole: UserRole = userData.role as UserRole;
+  
   const updatedUser: UserData = {
     id: userData.id,
     email: userData.email,
     firstName: userData.first_name,
     lastName: userData.last_name,
-    role: userData.role,
+    role: userRole,
     dateOfBirth: userData.date_of_birth,
     profilePhoto: userData.profile_photo,
     parentName: userData.parent_name,

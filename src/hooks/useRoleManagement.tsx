@@ -1,8 +1,8 @@
 
-import { useAuthentication } from './useAuthentication';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 export const useRoleManagement = () => {
-  const { user } = useAuthentication();
+  const { user } = useAuthContext();
 
   const isSuperAdminLevel = (name?: string): boolean => {
     if (!name) return false;
