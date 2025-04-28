@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -5,7 +6,6 @@ import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { getOrderStatus } from '@/utils/orderUtils';
 
 interface PaymentButtonProps {
   onSuccess?: (response: any) => void;
@@ -43,92 +43,15 @@ export const PaymentButton = ({
     }
   }, []);
 
-  // Enhanced session validation with multiple fallbacks
-  const validateSession = async (): Promise<boolean> => {
-    try {
-      console.log('Validating session before payment...');
-      
-      // If we have user data, consider it valid - our custom auth is prioritized
-      if (user && isAuthenticated) {
-        console.log('User is authenticated based on our custom auth');
-        
-        // Still try to refresh the Supabase session as a background task
-        refreshSession().catch(error => {
-          console.log('Background session refresh failed but continuing:', error);
-        });
-        
-        return true;
-      }
-      
-      // If the above check fails, try to refresh the session
-      const refreshed = await refreshSession();
-      if (refreshed) {
-        console.log('Session refreshed successfully');
-        return true;
-      }
-      
-      // If refresh fails, check localStorage for user data as a last resort
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          console.log('Found stored user data, using as fallback');
-          return true;
-        } catch (e) {
-          console.error('Error parsing stored user:', e);
-        }
-      }
-      
-      console.log('No active session found during validation');
-      return false;
-    } catch (error) {
-      console.error('Exception during session validation:', error);
-      
-      // Last resort - check if we at least have stored user data
-      return !!localStorage.getItem('user');
-    }
-  };
-
-  const checkExistingOrder = async (orderId: string) => {
-    try {
-      const orderData = await getOrderStatus(orderId);
-      if (orderData.status === 'completed') {
-        toast.success('Payment Already Completed', {
-          description: 'This order has already been processed successfully.'
-        });
-        if (onSuccess) onSuccess({ orderId });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error checking order status:', error);
-      return false;
-    }
-  };
-
   const handleClick = async () => {
     try {
       setLoading(true);
       
       if (!user) {
-        console.log('User not authenticated, redirecting to login...');
         toast.error("Authentication Required", {
           description: "Please login to enroll in this course"
         });
         
-        localStorage.setItem('enrollRedirectUrl', `/courses/${courseId}`);
-        navigate('/auth/login');
-        return;
-      }
-
-      // Enhanced session validation
-      const sessionValid = await validateSession();
-      if (!sessionValid) {
-        console.log('Session validation failed, redirecting to login...');
-        toast.error("Session Expired", {
-          description: "Your session has expired. Please login again."
-        });
-        
-        // Store the current URL for later redirect after login
         localStorage.setItem('enrollRedirectUrl', `/courses/${courseId}`);
         navigate('/auth/login');
         return;
@@ -141,9 +64,6 @@ export const PaymentButton = ({
         return;
       }
 
-      console.log('Creating Razorpay order for course:', courseId);
-      console.log('User ID:', user.id);
-
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
         body: { amount, courseId, userId: user.id }
       });
@@ -151,7 +71,7 @@ export const PaymentButton = ({
       if (orderError) {
         console.error('Error creating order:', orderError);
         toast.error("Payment Failed", {
-          description: "Failed to create payment order. Please try again."
+          description: "Failed to create payment. Please try again."
         });
         if (onError) onError(orderError);
         return;
@@ -165,24 +85,6 @@ export const PaymentButton = ({
         return;
       }
 
-      if (await checkExistingOrder(orderData.orderId)) {
-        setLoading(false);
-        return;
-      }
-
-      console.log('Order created successfully:', orderData);
-      
-      // Store payment intent in session storage for later verification
-      const paymentIntent = {
-        courseId,
-        userId: user.id,
-        payment_id: orderData.paymentId,
-        timestamp: new Date().getTime()
-      };
-      
-      sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
-      console.log('Payment intent stored in session storage:', paymentIntent);
-
       const options = {
         key: orderData.key,
         amount: amount * 100,
@@ -192,77 +94,13 @@ export const PaymentButton = ({
         order_id: orderData.orderId,
         handler: async function (response: any) {
           try {
-            console.log('Payment successful, verifying payment...');
-            console.log('Payment response:', response);
-            
-            // Double check the session before proceeding with verification
-            const sessionValid = await validateSession();
-            if (!sessionValid) {
-              console.warn('Session validation failed during payment verification, attempting to proceed anyway');
-            }
-            
-            const verificationData = {
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-              payment_id: orderData.paymentId
-            };
-            
-            console.log('Sending verification data:', verificationData);
-            
-            try {
-              const { data: verificationResult, error: verificationError } = await supabase.functions.invoke('verify-razorpay-payment', {
-                body: verificationData
-              });
+            console.log('Payment successful:', response);
+            toast.success('Payment Successful', {
+              description: 'You have been enrolled in the course'
+            });
 
-              if (verificationError) {
-                console.error('Payment verification failed:', verificationError);
-                
-                // Manual enrollment as a fallback
-                toast.error("Payment Verification Issue", {
-                  description: "Your payment was successful but we encountered an issue during verification. We'll process your enrollment manually."
-                });
-                
-                // Store verification data for manual processing
-                localStorage.setItem('manualVerification', JSON.stringify({
-                  ...verificationData,
-                  courseId,
-                  userId: user.id,
-                  timestamp: new Date().toISOString()
-                }));
-                
-                if (onError) onError(verificationError);
-                navigate(`/courses/${courseId}?payment=successful&verification=manual`);
-                return;
-              }
-
-              console.log('Payment verified successfully:', verificationResult);
-              toast.success('Payment Successful', {
-                description: 'You have been enrolled in the course'
-              });
-
-              if (onSuccess) onSuccess(response);
-
-              navigate(`/courses/${courseId}?enrollment=success`);
-            } catch (verifyError) {
-              console.error('Exception during payment verification:', verifyError);
-              
-              // Manual enrollment as a fallback
-              toast.error("Payment Verification Exception", {
-                description: "Your payment was successful but we encountered an exception during verification. We'll process your enrollment manually."
-              });
-              
-              // Store verification data for manual processing
-              localStorage.setItem('manualVerification', JSON.stringify({
-                ...verificationData,
-                courseId,
-                userId: user.id,
-                timestamp: new Date().toISOString()
-              }));
-              
-              if (onError) onError(verifyError);
-              navigate(`/courses/${courseId}?payment=successful&verification=failed`);
-            }
+            if (onSuccess) onSuccess(response);
+            navigate(`/courses/${courseId}?enrollment=success`);
           } catch (error) {
             console.error('Error in payment handler:', error);
             toast.error("Payment Processing Failed", {
@@ -277,16 +115,9 @@ export const PaymentButton = ({
         },
         theme: {
           color: "#9b87f5"
-        },
-        modal: {
-          ondismiss: function() {
-            setLoading(false);
-            console.log('Payment modal dismissed');
-          }
         }
       };
 
-      console.log('Opening Razorpay payment modal...');
       const razorpay = new window.Razorpay(options);
       razorpay.open();
 
