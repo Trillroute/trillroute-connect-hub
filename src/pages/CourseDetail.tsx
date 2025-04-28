@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCourses } from '@/hooks/useCourses';
@@ -85,8 +84,12 @@ const CourseDetail = () => {
     setEnrollmentProcessing(true);
     
     try {
-      // Ensure the session is valid before processing the enrollment
-      await refreshSession();
+      const sessionValid = await refreshSession();
+      console.log('Session refresh result before enrollment:', sessionValid);
+      
+      if (!sessionValid) {
+        console.log('Session refresh failed, but continuing with enrollment');
+      }
       
       const paymentIntent = sessionStorage.getItem('paymentIntent');
       console.log('Retrieved payment intent from session storage:', paymentIntent);
@@ -166,7 +169,6 @@ const CourseDetail = () => {
   const handleEnrollmentSuccess = async (response: any) => {
     if (user && courseId) {
       try {
-        // Ensure the session is valid before processing enrollment
         await refreshSession();
         
         console.log('Payment success callback triggered, enrolling student');

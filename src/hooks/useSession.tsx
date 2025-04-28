@@ -10,7 +10,9 @@ export const useSession = () => {
   const refreshSession = async () => {
     try {
       console.log('Attempting to refresh session...');
-      const { data, error } = await supabase.auth.getSession();
+      
+      // Try to refresh the session directly with Supabase
+      const { data, error } = await supabase.auth.refreshSession();
       
       if (error) {
         console.error('Error refreshing session:', error);
@@ -19,7 +21,16 @@ export const useSession = () => {
       
       if (!data.session) {
         console.log('No active session found during refresh');
-        return false;
+        
+        // As a fallback, check if we have a session anyway
+        const { data: sessionCheck } = await supabase.auth.getSession();
+        if (!sessionCheck.session) {
+          console.log('No session found in getSession either');
+          return false;
+        }
+        
+        console.log('Found session via getSession');
+        // Continue with the session we found
       }
       
       if (!user) {

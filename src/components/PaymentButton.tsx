@@ -33,7 +33,7 @@ export const PaymentButton = ({
 }: PaymentButtonProps) => {
   const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refreshSession } = useAuth();
 
   React.useEffect(() => {
     if (!window.Razorpay) {
@@ -44,24 +44,36 @@ export const PaymentButton = ({
     }
   }, []);
 
-  // Ensure we have a valid session before proceeding
-  const checkAndRefreshSession = async () => {
+  // Enhanced session validation with multiple fallbacks
+  const validateSession = async (): Promise<boolean> => {
     try {
+      console.log('Validating session before payment...');
+      
+      // First try to use our refreshSession method
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        console.log('Session refreshed successfully');
+        return true;
+      }
+      
+      // If refresh fails, try to check the Supabase session directly
       const { data, error } = await supabase.auth.getSession();
+      
       if (error) {
-        console.error('Session refresh error:', error);
+        console.error('Session validation error:', error);
         return false;
       }
       
       if (!data.session) {
-        console.error('No valid session found');
+        console.error('No active session found during validation');
         return false;
       }
       
-      console.log('Valid session confirmed');
+      // If we get here, we have a valid session according to Supabase
+      console.log('Valid session confirmed via Supabase');
       return true;
     } catch (error) {
-      console.error('Error checking session:', error);
+      console.error('Exception during session validation:', error);
       return false;
     }
   };
@@ -98,13 +110,17 @@ export const PaymentButton = ({
         return;
       }
 
-      // Ensure we have a valid session before proceeding with payment
-      const sessionValid = await checkAndRefreshSession();
+      // Enhanced session validation
+      const sessionValid = await validateSession();
       if (!sessionValid) {
+        console.log('Session validation failed, redirecting to login...');
         toast.error("Session Expired", {
           description: "Your session has expired. Please login again."
         });
-        navigate('/auth/login', { state: { redirectTo: `/courses/${courseId}` } });
+        
+        // Store the current URL for later redirect after login
+        localStorage.setItem('enrollRedirectUrl', `/courses/${courseId}`);
+        navigate('/auth/login');
         return;
       }
 
@@ -170,10 +186,9 @@ export const PaymentButton = ({
             console.log('Payment response:', response);
             
             // Double check the session before proceeding with verification
-            const sessionValid = await checkAndRefreshSession();
+            const sessionValid = await validateSession();
             if (!sessionValid) {
-              console.warn('Session validation failed during payment verification');
-              // Continue anyway, but log the issue
+              console.warn('Session validation failed during payment verification, attempting to proceed anyway');
             }
             
             const verificationData = {
