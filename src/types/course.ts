@@ -13,7 +13,7 @@ export interface Course {
   instructor_ids: string[];
   student_ids?: string[];
   class_types_data?: ClassTypeData[];
-  // Add missing properties from errors
+  // Pricing related fields
   final_price?: number | null;
   base_price?: number | null;
   discount_value?: number | null;
@@ -22,6 +22,9 @@ export interface Course {
   discount_validity?: string | null;
   gst_rate?: number | null;
   is_gst_applicable?: boolean | null;
+  // Additional fields from database that might be causing type issues
+  status?: string;
+  category?: string;
 }
 
 export interface Teacher {

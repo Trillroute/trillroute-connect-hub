@@ -35,6 +35,9 @@ export function useCourses() {
           instructor_ids: item.instructor_ids || [],
           student_ids: item.student_ids || [],
           class_types_data: formatClassTypesData(item.class_types_data),
+          // Ensure other required fields have default values if missing
+          skill: item.skill || item.category || '',
+          duration_type: item.duration_type || 'fixed',
         }));
 
         setCourses(formattedCourses);
