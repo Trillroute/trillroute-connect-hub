@@ -1,6 +1,6 @@
-
 import React, { ReactNode } from 'react';
-import { AuthenticationProvider, useAuthentication } from './useAuthentication';
+import { AuthenticationProvider } from '@/providers/AuthenticationProvider';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { useRegistration } from './useRegistration';
 import { useRoleManagement } from './useRoleManagement';
 import type { UserRole, StudentProfileData, AuthContextType } from '@/types/auth';
@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = (): AuthContextType => {
-  const { user, loading, login, logout, isAuthenticated, refreshSession } = useAuthentication();
+  const { user, loading, login, logout, isAuthenticated, refreshSession } = useAuthContext();
   const { register } = useRegistration();
   const { isAdmin, isSuperAdmin, role } = useRoleManagement();
 
