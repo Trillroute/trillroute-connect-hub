@@ -1,6 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { UserData, UserRole } from '@/types/auth';
+import { hashPassword, verifyPassword } from '@/integrations/supabase/client';
 
 export const useAuthActions = (
   setUser: (user: UserData | null) => void,
@@ -14,9 +16,10 @@ export const useAuthActions = (
       const normalizedEmail = email.trim().toLowerCase();
       console.log(`[AUTH] Login attempt for email: ${normalizedEmail}`);
       
+      // First check if user exists in our custom_users table
       const { data: usersCheck, error: checkError } = await supabase
         .from('custom_users')
-        .select('email, password_hash')
+        .select('id, email, password_hash, first_name, last_name, role, date_of_birth, profile_photo, parent_name, guardian_relation, primary_phone, secondary_phone, whatsapp_enabled, address, id_proof, created_at, admin_level_name')
         .eq('email', normalizedEmail)
         .limit(1);
       
@@ -36,65 +39,83 @@ export const useAuthActions = (
         throw new Error("Account not found");
       }
       
-      // Sign in using Supabase Auth for session management only
+      // Verify the password directly against our stored password_hash in custom_users
+      const user = usersCheck[0];
+      const isPasswordValid = await verifyPassword(password, user.password_hash);
+      
+      if (!isPasswordValid) {
+        console.error('[AUTH] Invalid password for user:', normalizedEmail);
+        toast({
+          title: "Login Failed",
+          description: "Invalid password. Please check your credentials and try again.",
+          variant: "destructive",
+          duration: 5000,
+        });
+        throw new Error("Invalid password");
+      }
+      
+      // If we get here, password is valid - try to sign in with Supabase Auth
+      // This is for session management only
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password: password,
       });
 
-      console.log('[AUTH] Auth response:', authError ? 'Error' : 'Success', authError);
-      
       if (authError) {
-        // Check if this is a valid user in our custom table but auth failed
-        // This can happen when the custom_users table has a user but auth doesn't
-        if (usersCheck && usersCheck.length > 0) {
-          console.log('[AUTH] User exists in custom_users but auth failed. Creating auth user...');
-          
-          // Try to sign up the user first
-          const { error: signUpError } = await supabase.auth.signUp({
+        console.log('[AUTH] User authenticated in custom_users but Supabase Auth failed. Creating auth user...');
+        
+        // Try to sign up the user first if they don't exist in auth yet
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password: password,
+        });
+        
+        if (!signUpError) {
+          // Try login again
+          const { data: retryAuth, error: retryError } = await supabase.auth.signInWithPassword({
             email: normalizedEmail,
             password: password,
           });
           
-          if (!signUpError) {
-            // Try login again
-            const { data: retryAuth, error: retryError } = await supabase.auth.signInWithPassword({
-              email: normalizedEmail,
-              password: password,
-            });
-            
-            if (!retryError) {
-              console.log('[AUTH] Successfully created and logged in auth user');
-              await fetchAndSetUserData(normalizedEmail, setUser);
-              
-              toast({
-                title: "Login Successful",
-                description: `Welcome back!`,
-                duration: 3000,
-              });
-              return;
-            } else {
-              console.error('[AUTH] Retry login failed:', retryError);
-            }
+          if (!retryError) {
+            console.log('[AUTH] Successfully created and logged in auth user');
           } else {
-            console.error('[AUTH] Failed to create auth user:', signUpError);
+            console.error('[AUTH] Retry login failed:', retryError);
+            // Even if this fails, we continue since user is authenticated against custom_users
           }
+        } else {
+          console.error('[AUTH] Failed to create auth user:', signUpError);
+          // Even if this fails, we continue since user is authenticated against custom_users
         }
-        
-        handleAuthError(authError);
-        throw new Error(authError.message || 'Login failed');
       }
       
-      if (!authData.user) {
-        console.error('[AUTH] Auth successful but no user returned');
-        throw new Error("Authentication error. Please try again.");
-      }
+      // Prepare user data from our custom_users table
+      const userData: UserData = {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role as UserRole,
+        dateOfBirth: user.date_of_birth,
+        profilePhoto: user.profile_photo,
+        parentName: user.parent_name,
+        guardianRelation: user.guardian_relation,
+        primaryPhone: user.primary_phone,
+        secondaryPhone: user.secondary_phone,
+        whatsappEnabled: user.whatsapp_enabled,
+        address: user.address,
+        idProof: user.id_proof,
+        createdAt: user.created_at,
+        adminRoleName: user.admin_level_name
+      };
       
-      await fetchAndSetUserData(normalizedEmail, setUser);
+      // Set user data and store in localStorage
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
       
       toast({
         title: "Login Successful",
-        description: `Welcome back!`,
+        description: `Welcome back, ${userData.firstName}!`,
         duration: 3000,
       });
     } catch (error: any) {
@@ -147,7 +168,9 @@ const handleAuthError = (error: any) => {
 
 const handleLoginError = (error: any) => {
   console.error('[AUTH] Login error:', error);
-  if (!error.message || (error.message !== "Account not found" && error.message !== "Login failed. Please check your credentials.")) {
+  if (!error.message || (error.message !== "Account not found" && 
+      error.message !== "Invalid password" && 
+      error.message !== "Login failed. Please check your credentials.")) {
     throw new Error(error?.message || "Something went wrong. Please try again.");
   }
   throw error;
