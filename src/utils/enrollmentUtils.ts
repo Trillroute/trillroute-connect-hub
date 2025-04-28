@@ -4,13 +4,33 @@ import { toast } from 'sonner';
 
 /**
  * Enrolls a student in a course by updating the course's student_ids array
- * and incrementing the students count
+ * and incrementing the students count. Only allows student role to enroll.
  */
 export const enrollStudentInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
   console.log(`Enrolling student ${studentId} in course ${courseId}`);
   
   try {
-    // First, check if student is already enrolled
+    // First, verify that the user has a student role
+    const { data: userData, error: userError } = await supabase
+      .from('custom_users')
+      .select('role')
+      .eq('id', studentId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user role:', userError);
+      return false;
+    }
+
+    if (userData.role !== 'student') {
+      console.error('User is not a student. Role:', userData.role);
+      toast.error('Enrollment Failed', {
+        description: 'Only students can enroll in courses.'
+      });
+      return false;
+    }
+    
+    // Check if student is already enrolled
     const isAlreadyEnrolled = await isStudentEnrolledInCourse(courseId, studentId);
     if (isAlreadyEnrolled) {
       console.log('Student is already enrolled in this course');

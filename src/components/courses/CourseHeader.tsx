@@ -5,6 +5,7 @@ import { PaymentButton } from '@/components/PaymentButton';
 import { Course } from '@/types/course';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CourseHeaderProps {
   course: Course;
@@ -25,8 +26,15 @@ export const CourseHeader = ({
   onEnrollmentError,
   courseId
 }: CourseHeaderProps) => {
+  const { user } = useAuth();
   const displayPrice = course.final_price || course.base_price || 0;
   const [checkingEnrollment, setCheckingEnrollment] = useState(false);
+  
+  // Function to check if user can enroll
+  const canEnroll = () => {
+    // User must be logged in and have the student role
+    return user && user.role === 'student';
+  };
   
   useEffect(() => {
     // Check if there's any pending enrollment data in the session
@@ -46,7 +54,9 @@ export const CourseHeader = ({
       }
     };
     
-    checkPendingEnrollment();
+    if (canEnroll()) {
+      checkPendingEnrollment();
+    }
   }, [courseId]);
   
   const handlePaymentSuccess = (response: any) => {
@@ -54,6 +64,73 @@ export const CourseHeader = ({
       description: "Your enrollment is being processed."
     });
     onEnrollmentSuccess(response);
+  };
+
+  const renderEnrollmentButton = () => {
+    if (!user) {
+      return (
+        <Button
+          className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+          onClick={() => toast.error("Please login to enroll in this course")}
+        >
+          Login to Enroll
+        </Button>
+      );
+    }
+
+    if (!canEnroll()) {
+      return (
+        <Button
+          disabled={true}
+          className="bg-gray-400 text-white cursor-not-allowed opacity-50"
+        >
+          Only Students Can Enroll
+        </Button>
+      );
+    }
+
+    if (isEnrolled) {
+      return (
+        <Button 
+          className="bg-green-500 hover:bg-green-600 text-white transition-colors"
+          disabled={true}
+        >
+          <Check className="mr-2 h-4 w-4" />
+          Enrolled
+        </Button>
+      );
+    }
+
+    if (checkingEnrollment || enrollmentProcessing) {
+      return (
+        <Button
+          disabled={true}
+          className="bg-[#9b87f5] text-white opacity-90 cursor-not-allowed"
+        >
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Verifying Payment...
+        </Button>
+      );
+    }
+
+    return (
+      <PaymentButton
+        onSuccess={handlePaymentSuccess}
+        onError={onEnrollmentError}
+        className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+        courseId={courseId}
+        amount={displayPrice}
+      >
+        {enrollmentProcessing ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          `Enroll Now (₹${displayPrice})`
+        )}
+      </PaymentButton>
+    );
   };
 
   return (
@@ -66,40 +143,7 @@ export const CourseHeader = ({
         Back to Courses
       </Button>
       
-      {isEnrolled ? (
-        <Button 
-          className="bg-green-500 hover:bg-green-600 text-white transition-colors"
-          disabled={true}
-        >
-          <Check className="mr-2 h-4 w-4" />
-          Enrolled
-        </Button>
-      ) : checkingEnrollment || enrollmentProcessing ? (
-        <Button
-          disabled={true}
-          className="bg-[#9b87f5] text-white opacity-90 cursor-not-allowed"
-        >
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Verifying Payment...
-        </Button>
-      ) : (
-        <PaymentButton
-          onSuccess={handlePaymentSuccess}
-          onError={onEnrollmentError}
-          className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
-          courseId={courseId}
-          amount={displayPrice}
-        >
-          {enrollmentProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            `Enroll Now (₹${displayPrice})`
-          )}
-        </PaymentButton>
-      )}
+      {renderEnrollmentButton()}
     </div>
   );
 };
