@@ -1,9 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
 import { UserManagementUser } from '@/types/student';
 import { Shield } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import DataTable, { Column } from '@/components/ui/data-table/DataTable';
 
 interface AdminTableProps {
