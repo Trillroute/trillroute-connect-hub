@@ -30,15 +30,21 @@ export function useCourses() {
 
       if (data) {
         // Ensure all courses have the correct shape and required fields
-        const formattedCourses = data.map(item => ({
-          ...item,
-          instructor_ids: item.instructor_ids || [],
-          student_ids: item.student_ids || [],
-          class_types_data: formatClassTypesData(item.class_types_data),
-          // Ensure other required fields have default values if missing
-          skill: item.skill || item.category || '',
-          duration_type: item.duration_type || 'fixed',
-        }));
+        const formattedCourses = data.map(item => {
+          // Create a safely typed version with all optional properties
+          const course: Course = {
+            ...item,
+            instructor_ids: item.instructor_ids || [],
+            student_ids: item.student_ids || [],
+            class_types_data: formatClassTypesData(item.class_types_data),
+            // Ensure other required fields have default values if missing
+            skill: item.skill || '',
+            // Safely handle potentially missing duration_type
+            duration_type: item.duration_type || 'fixed',
+          };
+          
+          return course;
+        });
 
         setCourses(formattedCourses);
       }
@@ -126,6 +132,9 @@ export function useCourses() {
               instructor_ids: data.instructor_ids || [],
               student_ids: data.student_ids || [],
               class_types_data: formatClassTypesData(data.class_types_data),
+              // Ensure other required fields have default values
+              skill: data.skill || '',
+              duration_type: data.duration_type || 'fixed',
             };
           }
           return null;
