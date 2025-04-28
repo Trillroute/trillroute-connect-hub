@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCourses } from '@/hooks/useCourses';
@@ -12,7 +11,7 @@ import { CourseDetailLoading } from '@/components/courses/CourseDetailLoading';
 import { CourseDetailError } from '@/components/courses/CourseDetailError';
 import { usePaymentVerification } from '@/hooks/usePaymentVerification';
 import { toast } from 'sonner';
-import { isStudentEnrolledInCourse } from '@/utils/enrollmentUtils';
+import { isStudentEnrolledInCourse } from '@/utils/enrollment';
 
 const CourseDetail = () => {
   const { courseId } = useParams();
@@ -26,12 +25,10 @@ const CourseDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [enrollmentChecked, setEnrollmentChecked] = useState(false);
 
-  // Check for payment data on initial load
   useEffect(() => {
     if (!courseId || !user) return;
     
     const checkPaymentData = async () => {
-      // Check for payment data in session storage
       const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
       
       if (paymentDataStr) {
@@ -40,28 +37,23 @@ const CourseDetail = () => {
           
           console.log('Found payment data for course:', courseId, paymentData);
           
-          // If payment was completed but not processed, show info toast
           if (paymentData.completed && !paymentData.processed) {
             toast.info('Verifying Your Payment', {
               description: 'Please wait while we process your enrollment...'
             });
           }
           
-          // Check enrollment status directly
           if (user.id) {
             const enrolled = await isStudentEnrolledInCourse(courseId, user.id);
             
-            // If user is enrolled but our state doesn't show it, update state and refetch course
             if (enrolled && !isEnrolled) {
               console.log('User is enrolled but state does not reflect it, updating...');
               setIsEnrolled(true);
               fetchCourse();
             }
             
-            // If payment is completed but user is not enrolled, something went wrong
             if (paymentData.completed && !enrolled && !enrollmentProcessing) {
               console.log('Payment completed but enrollment not processed');
-              // Add enrollment=success to URL to trigger usePaymentVerification
               if (!window.location.href.includes('enrollment=success')) {
                 window.history.replaceState(
                   {}, 
@@ -81,7 +73,6 @@ const CourseDetail = () => {
     checkPaymentData();
   }, [courseId, user, isEnrolled, enrollmentProcessing]);
 
-  // Fetch course data
   const fetchCourse = useCallback(async () => {
     if (courseId) {
       try {
@@ -99,7 +90,6 @@ const CourseDetail = () => {
         console.log('Course data received:', courseData);
         setCourse(courseData);
         
-        // Check if current user is enrolled in this course
         if (user && courseData.student_ids) {
           const userIsEnrolled = Array.isArray(courseData.student_ids) && 
                                 courseData.student_ids.includes(user.id);
@@ -119,20 +109,17 @@ const CourseDetail = () => {
     }
   }, [courseId, getCourseById, user]);
 
-  // Handle successful enrollment
   const handleEnrollmentSuccess = useCallback(() => {
     console.log('Enrollment success callback triggered');
     setIsEnrolled(true);
     fetchCourse();
   }, [fetchCourse]);
 
-  // Initial course fetch
   useEffect(() => {
     console.log('CourseDetail component mounted with courseId:', courseId);
     fetchCourse();
   }, [fetchCourse]);
   
-  // Refetch course data when user changes
   useEffect(() => {
     if (user) {
       console.log('User changed, refetching course data');
@@ -140,7 +127,6 @@ const CourseDetail = () => {
     }
   }, [user, fetchCourse]);
   
-  // Double-check enrollment status if payment verification is present in URL
   useEffect(() => {
     const checkEnrollmentStatus = async () => {
       if (courseId && user?.id && enrollmentChecked && 
@@ -162,7 +148,6 @@ const CourseDetail = () => {
     checkEnrollmentStatus();
   }, [courseId, user, enrollmentChecked, isEnrolled, fetchCourse]);
 
-  // Initialize payment verification hook
   usePaymentVerification(
     courseId || '',
     user?.id,

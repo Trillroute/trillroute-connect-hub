@@ -1,11 +1,10 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
-import { enrollStudentInCourse } from '@/utils/enrollmentUtils';
+import { enrollStudentInCourse } from '@/utils/enrollment';
 
 interface CourseHeaderProps {
   course: Course;
@@ -29,7 +28,6 @@ export const CourseHeader = ({
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   
-  // Function to check if user can enroll
   const canEnroll = () => {
     return user && user.role === 'student';
   };

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { enrollStudentInCourse } from '@/utils/enrollmentUtils';
+import { enrollStudentInCourse } from '@/utils/enrollment';
 import { checkPaymentProcessed } from '@/utils/orderUtils';
 
 /**
