@@ -30,20 +30,34 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
   console.log('Payment successful response:', response);
   
   try {
-    await supabase.functions.invoke('verify-razorpay-payment', {
-      body: {
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_signature: response.razorpay_signature,
-        user_id: userId,
-        course_id: courseId
-      }
+    // For QR code payments, we generate pseudo-IDs if they're not present
+    const verificationData = {
+      razorpay_payment_id: response.razorpay_payment_id || `qr_payment_${Date.now()}`,
+      razorpay_order_id: response.razorpay_order_id || `qr_order_${Date.now()}`,
+      razorpay_signature: response.razorpay_signature || '',
+      user_id: userId,
+      course_id: courseId
+    };
+
+    // Call verify-razorpay-payment edge function
+    const { error } = await supabase.functions.invoke('verify-razorpay-payment', {
+      body: verificationData
     });
     
-    window.location.href = `/courses/${courseId}?enrollment=success&payment=verified`;
+    if (error) {
+      console.error('Payment verification error:', error);
+      toast.error('Payment Verification Failed', {
+        description: 'Please contact support if payment was deducted'
+      });
+      return;
+    }
+    
+    // Redirect to success page with verification status
+    const redirectUrl = `/courses/${courseId}?enrollment=success&payment=verified`;
+    window.location.href = redirectUrl;
   } catch (error) {
     console.error('Payment verification error:', error);
-    // Still redirect to success since payment might have been successful
+    // Still redirect since payment might have succeeded
     window.location.href = `/courses/${courseId}?enrollment=success`;
   }
 };

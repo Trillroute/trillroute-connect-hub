@@ -87,6 +87,7 @@ export const PaymentButton = ({
             if (onSuccess) onSuccess(response);
           } catch (error) {
             console.error('Error in payment handler:', error);
+            // Still redirect since payment might have succeeded
             window.location.href = `/courses/${courseId}?enrollment=success`;
           }
         },
