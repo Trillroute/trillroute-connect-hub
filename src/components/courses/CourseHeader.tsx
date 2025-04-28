@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
 import { isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
@@ -12,7 +13,6 @@ interface CourseHeaderProps {
   course: Course;
   isEnrolled: boolean;
   enrollmentProcessing: boolean;
-  onNavigateBack: () => void;
   onEnrollmentSuccess: (response: any) => void;
   onEnrollmentError: (error: any) => void;
   courseId: string;
@@ -22,11 +22,11 @@ export const CourseHeader = ({
   course,
   isEnrolled: initialIsEnrolled,
   enrollmentProcessing,
-  onNavigateBack,
   onEnrollmentSuccess,
   onEnrollmentError,
   courseId
 }: CourseHeaderProps) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
   const [enrollmentVerified, setEnrollmentVerified] = useState(false);
@@ -139,7 +139,7 @@ export const CourseHeader = ({
     <div className="flex justify-between items-center mb-6">
       <Button
         variant="ghost"
-        onClick={onNavigateBack}
+        onClick={() => navigate('/courses')}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Courses
