@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCourses } from '@/hooks/useCourses';
@@ -74,116 +75,71 @@ const CourseDetail = () => {
     }
   }, [loading, checkEnrollmentStatus, user, error]);
 
-  const processEnrollment = useCallback(async () => {
-    if (isEnrolled || enrollmentProcessing || !user || !courseId) return;
-    
+  // Check for payment success from URL parameters
+  useEffect(() => {
     const enrollmentStatus = searchParams.get('enrollment');
-    if (enrollmentStatus !== 'success') return;
     
-    console.log('Payment success detected, processing enrollment');
-    setEnrollmentProcessing(true);
-    
-    try {
-      const sessionValid = await refreshSession();
-      console.log('Session refresh result before enrollment:', sessionValid);
+    if (enrollmentStatus === 'success' && !isEnrolled && !enrollmentProcessing && user && courseId) {
+      console.log('Payment success detected from URL, processing enrollment');
+      setEnrollmentProcessing(true);
       
-      if (!sessionValid) {
-        console.log('Session refresh failed, but continuing with enrollment');
-      }
-      
-      const paymentIntent = sessionStorage.getItem('paymentIntent');
-      console.log('Retrieved payment intent from session storage:', paymentIntent);
-      
-      if (paymentIntent) {
-        const intent = JSON.parse(paymentIntent);
+      // Check for payment intent in session storage
+      const paymentIntentString = sessionStorage.getItem('paymentIntent');
+      if (paymentIntentString) {
+        const paymentIntent = JSON.parse(paymentIntentString);
         
-        const isValid = 
-          intent.courseId === courseId && 
-          intent.userId === user.id &&
-          (new Date().getTime() - intent.timestamp) < 30 * 60 * 1000; // 30 minute window
+        // Check if the payment intent is for this course and user
+        if (paymentIntent.courseId === courseId && paymentIntent.userId === user.id) {
+          console.log('Valid payment intent found, proceeding with enrollment');
           
-        if (isValid) {
-          console.log('Valid payment intent confirmed, enrolling user');
-          
-          const { error: paymentError } = await supabase
-            .from('payments')
-            .update({ 
-              status: 'completed',
-              updated_at: new Date().toISOString()
+          // Process the enrollment
+          enrollStudentInCourse(courseId, user.id)
+            .then(success => {
+              if (success) {
+                setIsEnrolled(true);
+                toast.success('Enrollment Successful', {
+                  description: `You are now enrolled in ${course?.title}`
+                });
+                
+                // Clear the URL parameter
+                navigate(`/courses/${courseId}`, { replace: true });
+              } else {
+                toast.error('Enrollment Failed', {
+                  description: 'Please contact support for assistance'
+                });
+              }
             })
-            .eq('id', intent.payment_id);
-
-          if (paymentError) {
-            console.error('Error updating payment status:', paymentError);
-          }
-          
-          const success = await enrollStudentInCourse(courseId, user.id);
-          
-          if (success) {
-            setIsEnrolled(true);
-            toast.success('Course Enrollment', {
-              description: `You are now enrolled in ${course?.title}`
+            .catch(error => {
+              console.error('Error during enrollment:', error);
+              toast.error('Enrollment Error', {
+                description: 'Please try again or contact support'
+              });
+            })
+            .finally(() => {
+              setEnrollmentProcessing(false);
+              // Clear the payment intent
+              sessionStorage.removeItem('paymentIntent');
             });
-            
-            sessionStorage.removeItem('paymentIntent');
-            navigate(`/courses/${courseId}`, { replace: true });
-          } else {
-            toast.error('Enrollment Failed', {
-              description: 'Please contact support for assistance'
-            });
-          }
         } else {
-          console.error('Invalid or expired payment intent:', {
-            storedCourseId: intent.courseId,
+          console.error('Payment intent mismatch:', {
+            storedCourseId: paymentIntent.courseId,
             currentCourseId: courseId,
-            storedUserId: intent.userId,
-            currentUserId: user.id,
-            timestamp: intent.timestamp,
-            currentTime: new Date().getTime(),
-            timeDiff: new Date().getTime() - intent.timestamp
+            storedUserId: paymentIntent.userId,
+            currentUserId: user.id
           });
-          toast.error('Enrollment Failed', {
-            description: 'Invalid or expired payment session'
-          });
+          setEnrollmentProcessing(false);
         }
       } else {
         console.log('No payment intent found in session storage');
+        setEnrollmentProcessing(false);
       }
-    } catch (error) {
-      console.error('Error processing enrollment:', error);
-      toast.error('Enrollment Failed', {
-        description: 'Please try again or contact support'
-      });
-    } finally {
-      setEnrollmentProcessing(false);
     }
-  }, [loading, user, course, courseId, isEnrolled, enrollmentProcessing, navigate, searchParams, refreshSession]);
-
-  useEffect(() => {
-    if (!loading && user && course && !isEnrolled && !enrollmentProcessing) {
-      console.log('Checking for enrollment processing conditions');
-      processEnrollment();
-    }
-  }, [loading, user, course, isEnrolled, enrollmentProcessing, processEnrollment]);
+  }, [searchParams, isEnrolled, enrollmentProcessing, user, courseId, course, navigate]);
 
   const handleEnrollmentSuccess = async (response: any) => {
-    if (user && courseId) {
-      try {
-        await refreshSession();
-        
-        console.log('Payment success callback triggered, enrolling student');
-        const success = await enrollStudentInCourse(courseId, user.id);
-        if (success) {
-          setIsEnrolled(true);
-          toast.success('Course Enrollment', {
-            description: `You are now enrolled in ${course.title}`
-          });
-        }
-      } catch (error) {
-        console.error('Error enrolling in course:', error);
-        toast.error('Enrollment failed. Please try again.');
-      }
-    }
+    // This function will be called by the PaymentButton on successful payment
+    // Most of the enrollment logic is now handled by the URL parameter check above
+    console.log('Payment success callback triggered', response);
   };
 
   const handleEnrollmentError = (error: any) => {

@@ -64,6 +64,14 @@ export const PaymentButton = ({
         return;
       }
 
+      // Save payment intent to session storage to help with redirect handling
+      const paymentIntent = {
+        courseId,
+        userId: user.id,
+        timestamp: new Date().getTime(),
+      };
+      sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
+
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
         body: { amount, courseId, userId: user.id }
       });
@@ -85,6 +93,15 @@ export const PaymentButton = ({
         return;
       }
 
+      // Store payment ID in the paymentIntent for verification after redirection
+      if (orderData.paymentId) {
+        const updatedIntent = {
+          ...paymentIntent,
+          payment_id: orderData.paymentId,
+        };
+        sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
+      }
+
       const options = {
         key: orderData.key,
         amount: amount * 100,
@@ -95,12 +112,44 @@ export const PaymentButton = ({
         handler: async function (response: any) {
           try {
             console.log('Payment successful:', response);
+            
+            // Update the payment intent with the response data
+            const currentIntent = JSON.parse(sessionStorage.getItem('paymentIntent') || '{}');
+            const updatedIntent = {
+              ...currentIntent,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              completed: true
+            };
+            sessionStorage.setItem('paymentIntent', JSON.stringify(updatedIntent));
+            
+            // Verify the payment on the server
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+              body: { 
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                payment_id: orderData.paymentId
+              }
+            });
+            
+            if (verifyError) {
+              console.error('Payment verification error:', verifyError);
+              toast.error('Payment Verification Failed', {
+                description: 'There was an issue verifying your payment. Please contact support.'
+              });
+              return;
+            }
+            
             toast.success('Payment Successful', {
               description: 'You have been enrolled in the course'
             });
 
             if (onSuccess) onSuccess(response);
-            navigate(`/courses/${courseId}?enrollment=success`);
+            
+            // Force navigation to the course page with enrollment success parameter
+            window.location.href = `/courses/${courseId}?enrollment=success`;
           } catch (error) {
             console.error('Error in payment handler:', error);
             toast.error("Payment Processing Failed", {

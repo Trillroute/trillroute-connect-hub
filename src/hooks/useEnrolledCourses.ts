@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { EnrolledCourse } from '@/types/student-dashboard';
@@ -11,71 +11,75 @@ export function useEnrolledCourses() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchEnrolledCourses = async () => {
-      if (!user) {
+  const fetchEnrolledCourses = useCallback(async () => {
+    if (!user) {
+      setEnrolledCourses([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Get courses where the student is enrolled
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .contains('student_ids', [user.id]);
+
+      if (error) {
+        console.error('Error fetching enrolled courses:', error);
         setEnrolledCourses([]);
         setLoading(false);
         return;
       }
 
-      try {
-        setLoading(true);
-        
-        // Get courses where the student is enrolled
-        const { data, error } = await supabase
-          .from('courses')
-          .select('*')
-          .contains('student_ids', [user.id]);
-
-        if (error) {
-          console.error('Error fetching enrolled courses:', error);
-          setEnrolledCourses([]);
-          setLoading(false);
-          return;
-        }
-
-        if (!data || data.length === 0) {
-          setEnrolledCourses([]);
-          setLoading(false);
-          return;
-        }
-
-        // Format the courses as EnrolledCourse objects
-        const formatted: EnrolledCourse[] = data.map((courseData): EnrolledCourse => {
-          // Process course data safely
-          const course = {
-            ...courseData,
-            instructor_ids: courseData.instructor_ids || [],
-            student_ids: courseData.student_ids || [],
-            class_types_data: formatClassTypesData(courseData.class_types_data),
-          } as unknown as Course;
-          
-          return {
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            image: course.image || '/placeholder.svg',
-            imageUrl: course.image || '/placeholder.svg',
-            progress: Math.floor(Math.random() * 100), // This would be replaced with actual progress tracking
-            instructors: course.instructor_ids || [],
-            instructor: course.instructor_ids && course.instructor_ids.length > 0 ? course.instructor_ids[0] : 'Unknown',
-            nextLessonDate: new Date(Date.now() + Math.floor(Math.random() * 7) * 86400000).toISOString(),
-            nextLesson: new Date(Date.now() + Math.floor(Math.random() * 7) * 86400000).toLocaleDateString()
-          };
-        });
-
-        setEnrolledCourses(formatted);
-      } catch (error) {
-        console.error('Unexpected error fetching enrolled courses:', error);
+      if (!data || data.length === 0) {
         setEnrolledCourses([]);
-      } finally {
         setLoading(false);
+        return;
       }
-    };
 
-    fetchEnrolledCourses();
+      // Format the courses as EnrolledCourse objects
+      const formatted: EnrolledCourse[] = data.map((courseData): EnrolledCourse => {
+        // Process course data safely
+        const course = {
+          ...courseData,
+          instructor_ids: courseData.instructor_ids || [],
+          student_ids: courseData.student_ids || [],
+          class_types_data: formatClassTypesData(courseData.class_types_data),
+        } as unknown as Course;
+        
+        return {
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          image: course.image || '/placeholder.svg',
+          imageUrl: course.image || '/placeholder.svg',
+          progress: Math.floor(Math.random() * 100), // This would be replaced with actual progress tracking
+          instructors: course.instructor_ids || [],
+          instructor: course.instructor_ids && course.instructor_ids.length > 0 ? course.instructor_ids[0] : 'Unknown',
+          nextLessonDate: new Date(Date.now() + Math.floor(Math.random() * 7) * 86400000).toISOString(),
+          nextLesson: new Date(Date.now() + Math.floor(Math.random() * 7) * 86400000).toLocaleDateString()
+        };
+      });
+
+      setEnrolledCourses(formatted);
+    } catch (error) {
+      console.error('Unexpected error fetching enrolled courses:', error);
+      setEnrolledCourses([]);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
-  return { enrolledCourses, loading };
+  useEffect(() => {
+    fetchEnrolledCourses();
+  }, [fetchEnrolledCourses]);
+
+  return { 
+    enrolledCourses, 
+    loading,
+    refreshCourses: fetchEnrolledCourses  // Expose the fetch function to allow manual refreshes
+  };
 }

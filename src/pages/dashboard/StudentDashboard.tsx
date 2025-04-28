@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { UpcomingLesson, RecommendedCourse } from '@/types/student-dashboard';
 import { DashboardStats } from '@/components/dashboard/student/DashboardStats';
@@ -7,14 +7,44 @@ import { EnrolledCoursesSection } from '@/components/dashboard/student/EnrolledC
 import { UpcomingLessonsCard } from '@/components/dashboard/student/UpcomingLessonsCard';
 import { RecommendedCoursesCard } from '@/components/dashboard/student/RecommendedCoursesCard';
 import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
-  const { enrolledCourses, loading: coursesLoading } = useEnrolledCourses();
+  const { enrolledCourses, loading: coursesLoading, refreshCourses } = useEnrolledCourses();
+  const location = useLocation();
+  const navigate = useNavigate();
   
   // These would be replaced with actual API calls in a full implementation
   const upcomingLessons: UpcomingLesson[] = [];
   const recommendations: RecommendedCourse[] = [];
+
+  // Check for payment redirect
+  useEffect(() => {
+    const paymentIntent = sessionStorage.getItem('paymentIntent');
+    
+    if (paymentIntent) {
+      const intent = JSON.parse(paymentIntent);
+      
+      if (intent.completed) {
+        toast.success('Enrollment Successful', {
+          description: 'You have been successfully enrolled in the course'
+        });
+        
+        // Clear the payment intent
+        sessionStorage.removeItem('paymentIntent');
+        
+        // Refresh enrolled courses to show the new one
+        refreshCourses();
+        
+        // If we have a courseId, navigate to it
+        if (intent.courseId) {
+          navigate(`/courses/${intent.courseId}`);
+        }
+      }
+    }
+  }, [navigate, refreshCourses]);
 
   if (!user) {
     return (
