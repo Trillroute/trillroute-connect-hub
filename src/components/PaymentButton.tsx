@@ -58,10 +58,12 @@ export const PaymentButton = ({
       if (paymentDataStr) {
         try {
           const paymentData = JSON.parse(paymentDataStr);
-          // Check if data is stale (older than 1 hour)
-          if (Date.now() - paymentData.timestamp > 3600000) {
+          // Check if payment was completed but processing failed or if data is stale (older than 24 hours)
+          if ((paymentData.completed && !paymentData.processed && 
+               Date.now() - paymentData.timestamp > 86400000) || 
+              (Date.now() - paymentData.timestamp > 86400000)) {
+            console.log('Clearing stale payment data for course:', courseId);
             sessionStorage.removeItem(`payment_${courseId}`);
-            console.log('Cleared stale payment data for course:', courseId);
           }
         } catch (e) {
           console.error('Error parsing payment data:', e);
@@ -95,13 +97,18 @@ export const PaymentButton = ({
         });
         return;
       }
+      
+      // Clear any existing payment data for this course
+      sessionStorage.removeItem(`payment_${courseId}`);
 
       // Create payment data and store in session
       const paymentData = {
         courseId,
         userId: user.id,
         timestamp: Date.now(),
-        processed: false
+        completed: false,
+        processed: false,
+        startTime: Date.now()
       };
       sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(paymentData));
       console.log('Payment data created:', paymentData);
@@ -135,7 +142,8 @@ export const PaymentButton = ({
       // Update payment data with order ID
       const updatedData = {
         ...paymentData,
-        razorpayOrderId: orderData.orderId
+        razorpayOrderId: orderData.orderId,
+        paymentId: orderData.paymentId || null
       };
       sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedData));
       console.log('Payment data updated with order ID:', updatedData);
@@ -156,22 +164,33 @@ export const PaymentButton = ({
             const currentDataStr = sessionStorage.getItem(`payment_${courseId}`);
             if (!currentDataStr) {
               console.error('Payment data not found in session storage');
-              return;
+              // Create new payment data if none exists
+              const newPaymentData = {
+                courseId,
+                userId: user.id,
+                timestamp: Date.now(),
+                razorpayOrderId: orderData.orderId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                completed: true,
+                processed: false,
+                completedTime: Date.now()
+              };
+              sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(newPaymentData));
+              console.log('Created new payment data:', newPaymentData);
+            } else {
+              // Update existing payment data
+              const currentData = JSON.parse(currentDataStr);
+              const completedData = {
+                ...currentData,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                completed: true,
+                completedTime: Date.now()
+              };
+              sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(completedData));
+              console.log('Payment data updated on completion:', completedData);
             }
-            
-            const currentData = JSON.parse(currentDataStr);
-            
-            // Update payment data with response data
-            const completedData = {
-              ...currentData,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-              completed: true,
-              completedTime: Date.now()
-            };
-            
-            sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(completedData));
-            console.log('Payment data updated on completion:', completedData);
             
             // Show success toast
             toast.success('Payment Successful', {
@@ -192,7 +211,7 @@ export const PaymentButton = ({
               if (error) {
                 console.error('Payment verification error:', error);
                 toast.error('Payment Verification Failed', {
-                  description: 'Please contact support if payment was deducted'
+                  description: 'Please try refreshing the page or contact support'
                 });
                 return;
               }
@@ -207,7 +226,7 @@ export const PaymentButton = ({
           } catch (error) {
             console.error('Error in payment handler:', error);
             toast.error("Payment Processing Error", {
-              description: "Please contact support if your payment was deducted"
+              description: "Please refresh the page or contact support if payment was deducted"
             });
           }
         },
@@ -225,7 +244,7 @@ export const PaymentButton = ({
               description: "You can try again when you're ready"
             });
             
-            // Clean up payment data on cancellation
+            // Update payment data on cancellation
             const currentDataStr = sessionStorage.getItem(`payment_${courseId}`);
             if (currentDataStr) {
               const currentData = JSON.parse(currentDataStr);

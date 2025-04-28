@@ -54,9 +54,12 @@ export const getRazorpayOrderDetails = async (orderId: string) => {
 /**
  * Check if a payment has been processed for a specific course and user
  */
-export const checkPaymentProcessed = async (courseId: string, userId: string) => {
+export const checkPaymentProcessed = async (courseId: string, userId: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
+    console.log(`Checking if payment has been processed for course ${courseId} and user ${userId}`);
+    
+    // First check payments table
+    const { data: paymentData, error: paymentError } = await supabase
       .from('payments')
       .select('status')
       .eq('course_id', courseId)
@@ -64,12 +67,30 @@ export const checkPaymentProcessed = async (courseId: string, userId: string) =>
       .eq('status', 'completed')
       .maybeSingle();
       
-    if (error) {
-      console.error('Error checking payment status:', error);
+    if (paymentError) {
+      console.error('Error checking payment status:', paymentError);
+    } else if (paymentData) {
+      console.log('Found completed payment in payments table');
+      return true;
+    }
+    
+    // Then check orders table as fallback
+    const { data: orderData, error: orderError } = await supabase
+      .from('orders')
+      .select('status')
+      .eq('course_id', courseId)
+      .eq('user_id', userId)
+      .eq('status', 'completed')
+      .maybeSingle();
+    
+    if (orderError) {
+      console.error('Error checking order status:', orderError);
       return false;
     }
     
-    return !!data;
+    const isProcessed = !!orderData;
+    console.log(`Payment processed status: ${isProcessed}`);
+    return isProcessed;
   } catch (error) {
     console.error('Exception checking payment status:', error);
     return false;
