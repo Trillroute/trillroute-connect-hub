@@ -11,12 +11,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Pencil, Trash2, ArrowUpDown, Search } from 'lucide-react';
+import { Eye, Pencil, Trash2, Search } from 'lucide-react';
 
 export interface Column {
   key: string;
   label: string;
-  sortable?: boolean;
   filterable?: boolean;
   render?: (value: any, row: any) => React.ReactNode;
 }
@@ -40,21 +39,8 @@ const DataTable: React.FC<DataTableProps> = ({
   onDelete,
   onBulkDelete
 }) => {
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const handleSort = (key: string) => {
-    setSortConfig(current => {
-      if (!current || current.key !== key) {
-        return { key, direction: 'asc' };
-      }
-      if (current.direction === 'asc') {
-        return { key, direction: 'desc' };
-      }
-      return null;
-    });
-  };
 
   const handleFilter = (key: string, value: string) => {
     setFilters(current => ({
@@ -71,22 +57,11 @@ const DataTable: React.FC<DataTableProps> = ({
     });
   });
 
-  const sortedData = [...filteredData].sort((a, b) => {
-    if (!sortConfig) return 0;
-    
-    const aValue = a[sortConfig.key];
-    const bValue = b[sortConfig.key];
-    
-    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-    return 0;
-  });
-
   const toggleAllRows = () => {
-    if (selectedIds.length === sortedData.length) {
+    if (selectedIds.length === filteredData.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(sortedData.map(row => row.id));
+      setSelectedIds(filteredData.map(row => row.id));
     }
   };
 
@@ -127,7 +102,7 @@ const DataTable: React.FC<DataTableProps> = ({
               {onBulkDelete && (
                 <TableHead className="w-[50px]">
                   <Checkbox
-                    checked={selectedIds.length === sortedData.length && sortedData.length > 0}
+                    checked={selectedIds.length === filteredData.length && filteredData.length > 0}
                     onCheckedChange={toggleAllRows}
                   />
                 </TableHead>
@@ -137,25 +112,13 @@ const DataTable: React.FC<DataTableProps> = ({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       {column.label}
-                      {column.sortable && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="-mr-4"
-                          onClick={() => handleSort(column.key)}
-                        >
-                          <ArrowUpDown className="h-4 w-4" />
-                        </Button>
-                      )}
                     </div>
-                    {column.filterable && (
-                      <Input
-                        placeholder={`Filter ${column.label}`}
-                        value={filters[column.key] || ''}
-                        onChange={(e) => handleFilter(column.key, e.target.value)}
-                        className="h-8"
-                      />
-                    )}
+                    <Input
+                      placeholder={`Filter ${column.label}`}
+                      value={filters[column.key] || ''}
+                      onChange={(e) => handleFilter(column.key, e.target.value)}
+                      className="h-8"
+                    />
                   </div>
                 </TableHead>
               ))}
@@ -165,7 +128,7 @@ const DataTable: React.FC<DataTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map((row, index) => (
+            {filteredData.map((row, index) => (
               <TableRow key={row.id || index}>
                 {onBulkDelete && (
                   <TableCell>
