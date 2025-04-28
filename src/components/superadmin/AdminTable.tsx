@@ -24,7 +24,6 @@ const AdminTable: React.FC<AdminTableProps> = ({
     {
       key: 'name',
       label: 'Name',
-      sortable: true,
       filterable: true,
       render: (_, row) => (
         <div className="font-medium flex items-center">
@@ -36,13 +35,12 @@ const AdminTable: React.FC<AdminTableProps> = ({
     {
       key: 'email',
       label: 'Email',
-      sortable: true,
       filterable: true,
     },
     {
       key: 'createdAt',
       label: 'Created',
-      sortable: true,
+      filterable: true,
       render: (value) => format(new Date(value), 'MMM d, yyyy')
     }
   ];

@@ -26,7 +26,6 @@ const CourseTable: React.FC<CourseTableProps> = ({
     {
       key: 'title',
       label: 'Course',
-      sortable: true,
       filterable: true,
       render: (_, course) => (
         <div className="flex items-center gap-3">
@@ -49,19 +48,16 @@ const CourseTable: React.FC<CourseTableProps> = ({
     {
       key: 'level',
       label: 'Level',
-      sortable: true,
       filterable: true
     },
     {
       key: 'skill',
       label: 'Skill',
-      sortable: true,
       filterable: true
     },
     {
       key: 'duration',
-      label: 'Duration',
-      sortable: true
+      label: 'Duration'
     }
   ];
 

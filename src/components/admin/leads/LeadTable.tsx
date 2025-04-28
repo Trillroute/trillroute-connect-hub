@@ -33,25 +33,21 @@ const LeadTable: React.FC<LeadTableProps> = ({
     {
       key: 'name',
       label: 'Name',
-      sortable: true,
       filterable: true,
     },
     {
       key: 'email',
       label: 'Email',
-      sortable: true,
       filterable: true,
     },
     {
       key: 'phone',
       label: 'Phone',
-      sortable: true,
       filterable: true,
     },
     {
       key: 'stage',
       label: 'Stage',
-      sortable: true,
       filterable: true,
       render: (value) => (
         <Badge className={`${getStageColor(value)} text-white`}>
@@ -62,7 +58,6 @@ const LeadTable: React.FC<LeadTableProps> = ({
     {
       key: 'source',
       label: 'Source',
-      sortable: true,
       filterable: true,
     }
   ];
