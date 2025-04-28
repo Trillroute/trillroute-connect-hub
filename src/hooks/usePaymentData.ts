@@ -14,6 +14,8 @@ interface PaymentData {
   cancelled?: boolean;
   cancelTime?: number;
   completedTime?: number;
+  qrCodePaymentCheck?: boolean;
+  qrCheckTime?: number;
 }
 
 export const usePaymentData = (courseId: string, userId?: string) => {
