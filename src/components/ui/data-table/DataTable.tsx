@@ -1,319 +1,249 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, ArrowUp, ArrowDown, Filter } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from "@/components/ui/checkbox";
+import { DragHandleDots2Icon } from '@radix-ui/react-icons';
+import { Eye, Pencil, Trash2, Search } from 'lucide-react';
 
 export interface Column {
   key: string;
   label: string;
   sortable?: boolean;
   filterable?: boolean;
+  width?: string;
   render?: (value: any, row: any) => React.ReactNode;
 }
 
 interface DataTableProps {
   data: any[];
   columns: Column[];
-  caption?: string;
   loading?: boolean;
   onView?: (row: any) => void;
   onEdit?: (row: any) => void;
   onDelete?: (row: any) => void;
   onBulkDelete?: (ids: string[]) => void;
-  idField?: string;
-  noDataMessage?: string;
+  getRowId?: (row: any) => string;
 }
 
 const DataTable: React.FC<DataTableProps> = ({
   data,
   columns,
-  caption,
   loading = false,
   onView,
   onEdit,
   onDelete,
   onBulkDelete,
-  idField = 'id',
-  noDataMessage = "No data found."
+  getRowId = (row) => row.id,
 }) => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [rowToDelete, setRowToDelete] = useState<any>(null);
-
-  // Reset selected rows when data changes
-  useEffect(() => {
-    setSelectedRows([]);
-  }, [data]);
-
-  // Apply sorting and filtering
-  const processedData = useMemo(() => {
-    let result = [...data];
-
-    // Apply filters
-    Object.keys(filters).forEach(key => {
-      const filterValue = filters[key].toLowerCase();
-      if (filterValue) {
-        result = result.filter(item => {
-          const value = item[key];
-          if (value === null || value === undefined) return false;
-          return String(value).toLowerCase().includes(filterValue);
-        });
-      }
-    });
-
-    // Apply sorting
-    if (sortConfig !== null) {
-      result.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
-
-        if (aValue === null || aValue === undefined) return 1;
-        if (bValue === null || bValue === undefined) return -1;
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    return result;
-  }, [data, sortConfig, filters]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [columnOrder, setColumnOrder] = useState<string[]>(columns.map(col => col.key));
+  const [isReordering, setIsReordering] = useState(false);
 
   const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    
-    setSortConfig({ key, direction });
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
+    setSortConfig(current => ({
+      key,
+      direction: current?.key === key && current.direction === 'asc' ? 'desc' : 'asc',
     }));
   };
 
-  const toggleSelectAll = () => {
-    if (selectedRows.length === processedData.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(processedData.map(row => row[idField]));
-    }
+  const handleFilter = (key: string, value: string) => {
+    setFilters(current => ({
+      ...current,
+      [key]: value,
+    }));
   };
 
-  const toggleSelectRow = (id: string) => {
-    setSelectedRows(prev => 
-      prev.includes(id) 
-        ? prev.filter(rowId => rowId !== id) 
-        : [...prev, id]
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? filteredData.map(row => getRowId(row)) : []);
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(current =>
+      current.includes(id)
+        ? current.filter(currentId => currentId !== id)
+        : [...current, id]
     );
   };
 
-  const confirmDelete = (row: any) => {
-    setRowToDelete(row);
-    setDeleteConfirmOpen(true);
+  const handleColumnReorder = (draggedKey: string, targetKey: string) => {
+    const newOrder = [...columnOrder];
+    const draggedIndex = newOrder.indexOf(draggedKey);
+    const targetIndex = newOrder.indexOf(targetKey);
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedKey);
+    setColumnOrder(newOrder);
   };
 
-  const handleDelete = () => {
-    if (rowToDelete && onDelete) {
-      onDelete(rowToDelete);
-      setDeleteConfirmOpen(false);
-      setRowToDelete(null);
+  // Apply filters and sorting
+  let filteredData = [...data];
+  
+  // Apply filters
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) {
+      filteredData = filteredData.filter(row => {
+        const cellValue = row[key]?.toString().toLowerCase();
+        return cellValue?.includes(value.toLowerCase());
+      });
     }
-  };
+  });
 
-  const handleBulkDelete = () => {
-    if (onBulkDelete && selectedRows.length > 0) {
-      onBulkDelete(selectedRows);
-      setSelectedRows([]);
-    }
-  };
+  // Apply sorting
+  if (sortConfig) {
+    filteredData.sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+      
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-music-500"></div>
-      </div>
-    );
+    return <div className="py-8 text-center text-gray-500">Loading...</div>;
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2"
-        >
-          <Filter className="h-4 w-4" />
-          {showFilters ? 'Hide Filters' : 'Show Filters'}
-        </Button>
-
-        {selectedRows.length > 0 && onBulkDelete && (
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={handleBulkDelete}
-            className="flex items-center gap-2"
+    <div className="space-y-4">
+      {selectedIds.length > 0 && onBulkDelete && (
+        <div className="flex justify-end">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => onBulkDelete(selectedIds)}
           >
-            <Trash2 className="h-4 w-4" />
-            Delete Selected ({selectedRows.length})
+            Delete Selected ({selectedIds.length})
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="border rounded-md">
+      <ScrollArea className="rounded-md border">
         <Table>
-          {caption && <TableCaption>{caption}</TableCaption>}
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">
-                <Checkbox 
-                  checked={processedData.length > 0 && selectedRows.length === processedData.length} 
-                  onCheckedChange={toggleSelectAll}
-                />
-              </TableHead>
-              {columns.map((column) => (
-                <TableHead key={column.key} className="relative">
-                  <div className="flex items-center">
-                    <span>{column.label}</span>
-                    {column.sortable && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-1 p-0 h-auto"
-                        onClick={() => handleSort(column.key)}
-                      >
-                        {sortConfig?.key === column.key ? (
-                          sortConfig.direction === 'asc' ? (
-                            <ArrowUp className="h-3 w-3" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3" />
-                          )
-                        ) : (
-                          <div className="h-3 w-3" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                  {showFilters && column.filterable && (
-                    <Input
-                      className="mt-1 h-8 text-xs"
-                      placeholder={`Filter ${column.label}`}
-                      value={filters[column.key] || ''}
-                      onChange={(e) => handleFilterChange(column.key, e.target.value)}
-                    />
-                  )}
+              {onBulkDelete && (
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                    checked={
+                      filteredData.length > 0 &&
+                      filteredData.every(row => selectedIds.includes(getRowId(row)))
+                    }
+                    onCheckedChange={handleSelectAll}
+                  />
                 </TableHead>
-              ))}
-              <TableHead className="text-right">Actions</TableHead>
+              )}
+              {columnOrder.map(key => {
+                const column = columns.find(col => col.key === key)!;
+                return (
+                  <TableHead
+                    key={column.key}
+                    className="min-w-[150px]"
+                    style={{ width: column.width }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <DragHandleDots2Icon
+                        className="h-4 w-4 cursor-move"
+                        onMouseDown={() => setIsReordering(true)}
+                        onMouseUp={() => setIsReordering(false)}
+                      />
+                      <div className="flex-1">
+                        {column.label}
+                        {column.sortable && (
+                          <button
+                            onClick={() => handleSort(column.key)}
+                            className="ml-2"
+                          >
+                            ↕️
+                          </button>
+                        )}
+                      </div>
+                      {column.filterable && (
+                        <Input
+                          placeholder={`Filter ${column.label}`}
+                          value={filters[column.key] || ''}
+                          onChange={e => handleFilter(column.key, e.target.value)}
+                          className="h-8 w-[150px]"
+                        />
+                      )}
+                    </div>
+                  </TableHead>
+                );
+              })}
+              {(onView || onEdit || onDelete) && (
+                <TableHead className="w-[100px] text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {processedData.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length + 2} className="text-center py-4 text-muted-foreground">
-                  {noDataMessage}
-                </TableCell>
-              </TableRow>
-            ) : (
-              processedData.map((row, index) => (
-                <TableRow key={row[idField] || index} className="cursor-pointer hover:bg-muted/50">
+            {filteredData.map((row, index) => (
+              <TableRow key={getRowId(row)}>
+                {onBulkDelete && (
                   <TableCell>
-                    <Checkbox 
-                      checked={selectedRows.includes(row[idField])} 
-                      onCheckedChange={() => toggleSelectRow(row[idField])}
-                      onClick={(e) => e.stopPropagation()}
+                    <Checkbox
+                      checked={selectedIds.includes(getRowId(row))}
+                      onCheckedChange={() => handleSelectOne(getRowId(row))}
                     />
                   </TableCell>
-                  {columns.map((column) => (
-                    <TableCell key={column.key} onClick={() => onView && onView(row)}>
-                      {column.render 
-                        ? column.render(row[column.key], row) 
-                        : row[column.key] !== null && row[column.key] !== undefined 
-                          ? String(row[column.key]) 
-                          : ''}
+                )}
+                {columnOrder.map(key => {
+                  const column = columns.find(col => col.key === key)!;
+                  const value = row[column.key];
+                  return (
+                    <TableCell key={column.key}>
+                      {column.render ? column.render(value, row) : value}
                     </TableCell>
-                  ))}
+                  );
+                })}
+                {(onView || onEdit || onDelete) && (
                   <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-end gap-2">
                       {onView && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => onView(row)}
                         >
                           <Eye className="h-4 w-4" />
-                          <span className="sr-only">View</span>
                         </Button>
                       )}
                       {onEdit && (
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => onEdit(row)}
                         >
                           <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
                         </Button>
                       )}
                       {onDelete && (
                         <Button
                           variant="ghost"
-                          size="sm"
-                          onClick={() => confirmDelete(row)}
-                          className="hover:text-destructive"
+                          size="icon"
+                          onClick={() => onDelete(row)}
                         >
                           <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
                         </Button>
                       )}
                     </div>
                   </TableCell>
-                </TableRow>
-              ))
-            )}
+                )}
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
-      </div>
-
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p>Are you sure you want to delete this item? This action cannot be undone.</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </ScrollArea>
     </div>
   );
 };
