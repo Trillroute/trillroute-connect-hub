@@ -17,6 +17,14 @@ export const usePaymentVerification = (
 
   useEffect(() => {
     const verifyPayment = async () => {
+      console.log('Payment verification checking params:', {
+        enrollmentStatus: searchParams.get('enrollment'),
+        isEnrolled,
+        isProcessing,
+        userId,
+        courseId
+      });
+      
       const enrollmentStatus = searchParams.get('enrollment');
       
       if (enrollmentStatus === 'success' && !isEnrolled && !isProcessing && userId && courseId) {
@@ -24,9 +32,11 @@ export const usePaymentVerification = (
         setIsProcessing(true);
         setEnrollmentProcessing(true);
         
-        const paymentIntentString = sessionStorage.getItem('paymentIntent');
-        if (paymentIntentString) {
-          try {
+        try {
+          const paymentIntentString = sessionStorage.getItem('paymentIntent');
+          console.log('Payment intent from session:', paymentIntentString);
+          
+          if (paymentIntentString) {
             const paymentIntent = JSON.parse(paymentIntentString);
             
             if (paymentIntent.courseId === courseId && paymentIntent.userId === userId && paymentIntent.completed) {
@@ -34,6 +44,7 @@ export const usePaymentVerification = (
               
               const success = await enrollStudentInCourse(courseId, userId);
               if (success) {
+                console.log('Enrollment successful, triggering success callback');
                 onEnrollmentSuccess();
                 toast.success('Enrollment Successful', {
                   description: 'You are now enrolled in the course'
@@ -43,27 +54,33 @@ export const usePaymentVerification = (
                 sessionStorage.setItem('paymentIntent', JSON.stringify(paymentIntent));
                 navigate(`/courses/${courseId}`, { replace: true });
               } else {
+                console.error('Enrollment failed after payment');
                 toast.error('Enrollment Failed', {
                   description: 'Please contact support for assistance'
                 });
               }
             } else {
-              console.error('Payment intent mismatch or not completed');
+              console.error('Payment intent mismatch or not completed', {
+                paymentIntent,
+                courseId,
+                userId
+              });
             }
-          } catch (error) {
-            console.error('Error parsing payment intent:', error);
-            toast.error('Payment Data Error', {
-              description: 'There was an error processing your payment data'
+          } else {
+            console.log('No payment intent found in session storage');
+            toast.error('Payment Information Missing', {
+              description: 'Payment information was lost. Please try again or contact support.'
             });
           }
-        } else {
-          console.log('No payment intent found in session storage');
-          toast.error('Payment Information Missing', {
-            description: 'Payment information was lost. Please try again or contact support.'
+        } catch (error) {
+          console.error('Error processing payment verification:', error);
+          toast.error('Payment Data Error', {
+            description: 'There was an error processing your payment data'
           });
+        } finally {
+          setIsProcessing(false);
+          setEnrollmentProcessing(false);
         }
-        setIsProcessing(false);
-        setEnrollmentProcessing(false);
       }
     };
 

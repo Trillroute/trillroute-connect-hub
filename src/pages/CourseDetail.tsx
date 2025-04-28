@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCourses } from '@/hooks/useCourses';
 import { useTeachers } from '@/hooks/useTeachers';
@@ -26,15 +26,26 @@ const CourseDetail = () => {
   const fetchCourse = useCallback(async () => {
     if (courseId) {
       try {
+        console.log('Fetching course data for ID:', courseId);
         setError(null);
         const courseData = await getCourseById(courseId);
         
         if (!courseData) {
+          console.error('Course not found for ID:', courseId);
           setError("Course not found. It may have been removed or is temporarily unavailable.");
           return;
         }
         
+        console.log('Course data received:', courseData);
         setCourse(courseData);
+        
+        // Check if current user is enrolled in this course
+        if (user && courseData.student_ids) {
+          const userIsEnrolled = Array.isArray(courseData.student_ids) && 
+                                courseData.student_ids.includes(user.id);
+          console.log('User enrollment status:', userIsEnrolled);
+          setIsEnrolled(userIsEnrolled);
+        }
       } catch (error) {
         console.error('Error fetching course:', error);
         setError("Failed to load course information. Please check your connection and try again.");
@@ -42,12 +53,20 @@ const CourseDetail = () => {
         setLoading(false);
       }
     }
-  }, [courseId, getCourseById]);
+  }, [courseId, getCourseById, user]);
 
   const handleEnrollmentSuccess = useCallback(() => {
+    console.log('Enrollment success callback triggered');
     setIsEnrolled(true);
   }, []);
 
+  // Initial course fetch
+  useEffect(() => {
+    console.log('CourseDetail component mounted with courseId:', courseId);
+    fetchCourse();
+  }, [fetchCourse]);
+
+  // Payment verification effect
   usePaymentVerification(
     courseId || '',
     user?.id,
@@ -113,4 +132,3 @@ const CourseDetail = () => {
 };
 
 export default CourseDetail;
-
