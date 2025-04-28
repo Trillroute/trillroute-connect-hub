@@ -304,9 +304,12 @@ serve(async (req) => {
     
     let signatureVerified = false;
     
+    // Check if this is a QR code payment (will have payment ID starting with qr_payment_)
+    const isQrCodePayment = requestData.razorpay_payment_id?.startsWith('qr_payment_');
+    
     // Verify Razorpay signature - but continue even if verification fails 
     // because QR code payments might not have signature
-    if (requestData.razorpay_payment_id && requestData.razorpay_order_id && requestData.razorpay_signature) {
+    if (requestData.razorpay_payment_id && requestData.razorpay_order_id && requestData.razorpay_signature && !isQrCodePayment) {
       try {
         signatureVerified = await verifyRazorpaySignature(
           requestData.razorpay_order_id,
@@ -324,7 +327,11 @@ serve(async (req) => {
         // Continue anyway - signature verification is optional
       }
     } else {
-      logStep("Missing one or more Razorpay parameters, assuming QR code or external payment");
+      if (isQrCodePayment) {
+        logStep("QR code payment detected, skipping signature verification");
+      } else {
+        logStep("Missing one or more Razorpay parameters, assuming QR code or external payment");
+      }
     }
     
     // Get course price for payment record
@@ -375,7 +382,8 @@ serve(async (req) => {
         success: true,
         message: "Payment verification and enrollment completed successfully",
         redirectUrl: `/courses/${requestData.course_id}?enrollment=success&payment=verified`,
-        signatureVerified: signatureVerified
+        signatureVerified: signatureVerified,
+        isQrCodePayment: isQrCodePayment
       }),
       { headers: responseHeaders, status: 200 }
     );

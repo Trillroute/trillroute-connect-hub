@@ -101,14 +101,54 @@ export const PaymentButton = ({
         modal: {
           ondismiss: function() {
             setLoading(false);
-            toast.info("Payment Cancelled", {
-              description: "You can try again when you're ready"
-            });
             
-            updatePaymentData({
-              cancelled: true,
-              cancelTime: Date.now()
-            });
+            // Check if this was potentially a QR code payment
+            setTimeout(() => {
+              const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
+              if (paymentDataStr) {
+                const paymentData = JSON.parse(paymentDataStr);
+                
+                // If the modal was just dismissed and no status was set, indicate a possible QR payment
+                if (!paymentData.cancelled && !paymentData.completed) {
+                  toast.info("QR Code Payment?", {
+                    description: "If you completed payment via QR code, press 'Check Payment Status'",
+                    action: {
+                      label: "Check Payment Status",
+                      onClick: () => {
+                        // Mark that we're checking QR payment
+                        updatePaymentData({
+                          qrCodePaymentCheck: true,
+                          qrCheckTime: Date.now()
+                        });
+                        
+                        // Show checking status
+                        toast.loading("Checking Payment Status...");
+                        
+                        // Attempt to verify enrollment with backend directly
+                        verifyPayment(
+                          { 
+                            razorpay_payment_id: `qr_payment_${Date.now()}`,
+                            razorpay_order_id: orderData.orderId,
+                            razorpay_signature: ''
+                          }, 
+                          courseId, 
+                          user.id
+                        );
+                      }
+                    }
+                  });
+                } else {
+                  toast.info("Payment Cancelled", {
+                    description: "You can try again when you're ready"
+                  });
+                  
+                  updatePaymentData({
+                    cancelled: true,
+                    cancelTime: Date.now()
+                  });
+                }
+              }
+            }, 1000);
           }
         }
       };

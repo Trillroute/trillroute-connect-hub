@@ -77,7 +77,7 @@ export const usePaymentVerification = (
                 });
               } else {
                 toast.error('Enrollment Status Issue', {
-                  description: 'There was an issue with your enrollment. Please contact support.'
+                  description: 'There was an issue with your enrollment. Please refresh or contact support.'
                 });
               }
               
@@ -100,7 +100,7 @@ export const usePaymentVerification = (
               // Verify payment data matches current user and course
               const isValidPaymentData = paymentData.courseId === courseId && 
                                        paymentData.userId === userId &&
-                                       paymentData.completed === true;
+                                       (paymentData.completed === true || paymentData.qrCodePaymentCheck === true);
                                        
               console.log('Is valid payment data:', isValidPaymentData);
               
@@ -187,5 +187,50 @@ export const usePaymentVerification = (
 
     // Execute verification when component mounts or URL parameters change
     verifyPayment();
+    
+    // Check for QR code payments periodically for a short time after page load
+    // This helps with redirect issues after QR payments
+    let qrCheckAttempts = 0;
+    const qrCheckInterval = setInterval(async () => {
+      qrCheckAttempts++;
+      
+      // Only check a few times and only if needed
+      if (qrCheckAttempts > 5 || isEnrolled || isProcessing || !userId || !courseId) {
+        clearInterval(qrCheckInterval);
+        return;
+      }
+      
+      // Check if there's any pending QR code payment in session storage
+      const paymentDataStr = sessionStorage.getItem(`payment_${courseId}`);
+      if (paymentDataStr) {
+        const paymentData = JSON.parse(paymentDataStr);
+        if (paymentData.qrCodePaymentCheck && !paymentData.processed) {
+          // Re-verify enrollment status
+          const enrollmentConfirmed = await forceVerifyEnrollment(courseId, userId);
+          if (enrollmentConfirmed && !isEnrolled) {
+            onEnrollmentSuccess();
+            toast.success('QR Code Payment Confirmed', {
+              description: 'Your enrollment has been processed successfully'
+            });
+            
+            // Update session storage
+            const updatedPaymentData = {
+              ...paymentData,
+              processed: true,
+              enrollmentCompleted: true,
+              enrollmentTime: Date.now(),
+              enrollmentVerified: enrollmentConfirmed
+            };
+            sessionStorage.setItem(`payment_${courseId}`, JSON.stringify(updatedPaymentData));
+            
+            clearInterval(qrCheckInterval);
+          }
+        }
+      }
+    }, 3000);
+    
+    return () => {
+      clearInterval(qrCheckInterval);
+    };
   }, [searchParams, isEnrolled, isProcessing, userId, courseId, navigate, onEnrollmentSuccess, setEnrollmentProcessing]);
 };
