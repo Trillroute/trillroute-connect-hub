@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { enrollStudentInCourse } from '@/utils/enrollmentUtils';
@@ -13,13 +13,15 @@ export const usePaymentVerification = (
 ) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const verifyPayment = async () => {
       const enrollmentStatus = searchParams.get('enrollment');
       
-      if (enrollmentStatus === 'success' && !isEnrolled && !enrollmentProcessing && userId && courseId) {
+      if (enrollmentStatus === 'success' && !isEnrolled && !isProcessing && userId && courseId) {
         console.log('Payment success detected from URL, processing enrollment');
+        setIsProcessing(true);
         setEnrollmentProcessing(true);
         
         const paymentIntentString = sessionStorage.getItem('paymentIntent');
@@ -60,11 +62,11 @@ export const usePaymentVerification = (
             description: 'Payment information was lost. Please try again or contact support.'
           });
         }
+        setIsProcessing(false);
         setEnrollmentProcessing(false);
       }
     };
 
     verifyPayment();
-  }, [searchParams, isEnrolled, enrollmentProcessing, userId, courseId, setEnrollmentProcessing, navigate, onEnrollmentSuccess]);
+  }, [searchParams, isEnrolled, isProcessing, userId, courseId, setEnrollmentProcessing, navigate, onEnrollmentSuccess]);
 };
-
