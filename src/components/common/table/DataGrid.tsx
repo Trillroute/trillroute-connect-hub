@@ -122,7 +122,7 @@ const DataGrid: React.FC<DataGridProps> = ({
                   {column.headerCheckboxSelection ? (
                     <div className="flex items-center">
                       <Checkbox 
-                        checked={areAllRowsSelected} 
+                        checked={areAllRowsSelected}
                         indeterminate={areSomeRowsSelected}
                         onCheckedChange={handleSelectAll}
                       />
