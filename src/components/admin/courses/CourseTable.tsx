@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
@@ -5,16 +6,11 @@ import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { AgGridReact } from 'ag-grid-react';
 import { 
   ColDef, 
-  ICellRendererParams,
-  ModuleRegistry 
+  ICellRendererParams 
 } from 'ag-grid-community';
-import { ClientSideRowModelModule } from 'ag-grid-community/client-side-row-model';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { toast } from '@/hooks/use-toast';
-
-// Register required modules
-ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 interface CourseTableProps {
   courses: Course[];
@@ -211,7 +207,6 @@ const CourseTable: React.FC<CourseTableProps> = ({
           animateRows={true}
           enableCellTextSelection={true}
           ensureDomOrder={true}
-          debug={true}
         />
       </div>
     </div>
