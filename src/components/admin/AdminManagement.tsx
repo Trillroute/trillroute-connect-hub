@@ -79,10 +79,6 @@ const AdminManagement = ({
     loadAdmins();
   }, [loadAdmins]);
 
-  const allAdminIds = admins.map(admin => admin.id);
-  const allSelected = selectedIds.length > 0 && allAdminIds.length > 0 && allAdminIds.every(id => selectedIds.includes(id));
-  const someSelected = selectedIds.length > 0 && !allSelected;
-
   // Bulk delete logic
   const handleBulkDelete = async () => {
     for (const id of selectedIds) {
