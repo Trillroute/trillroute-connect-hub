@@ -1,20 +1,19 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import CourseTable from './courses/CourseTable';
 import CreateCourseDialog from './courses/CreateCourseDialog';
 import ViewCourseDialog from './courses/ViewCourseDialog';
 import EditCourseDialog from './courses/EditCourseDialog';
 import DeleteCourseDialog from './courses/DeleteCourseDialog';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
-import { Input } from '@/components/ui/input';
 import { canManageCourses } from '@/utils/permissions';
 import { supabase } from '@/integrations/supabase/client';
+import ViewControls from './courses/ViewControls';
+import CourseSearch from './courses/CourseSearch';
+import CourseContent from './courses/CourseContent';
 
 interface CourseManagementProps {
   canAddCourse?: boolean;
@@ -130,147 +129,31 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
             <CardTitle>Course Management</CardTitle>
             <CardDescription>Manage courses and lessons</CardDescription>
           </div>
-          <div className="flex space-x-2 items-center">
-            <Button 
-              size="sm" 
-              variant={viewMode === 'list' ? "secondary" : "outline"}
-              onClick={() => setViewMode('list')}
-              title="List view"
-            >
-              <LayoutList className="w-4 h-4" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant={viewMode === 'grid' ? "secondary" : "outline"}
-              onClick={() => setViewMode('grid')}
-              title="Grid view"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant={viewMode === 'tile' ? "secondary" : "outline"}
-              onClick={() => setViewMode('tile')}
-              title="Tile view"
-            >
-              <Grid2x2 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={fetchCourses}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
-            {effectiveCanAddCourse && (
-              <Button 
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="bg-primary text-white flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Course
-              </Button>
-            )}
-          </div>
+          <ViewControls 
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            onRefresh={fetchCourses}
+            canAddCourse={effectiveCanAddCourse}
+            onAddCourse={() => setIsCreateDialogOpen(true)}
+          />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full mb-4">
-          <Input
-            type="search"
-            placeholder="Search courses..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </div>
-        </div>
+        <CourseSearch 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
+        />
 
         <div className="relative">
-          {viewMode === 'list' && (
-            <CourseTable 
-              courses={filteredCourses} 
-              loading={loading} 
-              onView={openViewDialog}
-              onEdit={effectiveCanEditCourse ? openEditDialog : undefined}
-              onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
-              onBulkDelete={effectiveCanDeleteCourse ? handleBulkDelete : undefined}
-            />
-          )}
-          {viewMode === 'grid' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredCourses.map(course => (
-                <div key={course.id} className="bg-muted rounded-lg shadow p-4 flex flex-col">
-                  <div className="flex items-center gap-3">
-                    {course.image && (
-                      <img
-                        src={course.image}
-                        alt={course.title}
-                        className="h-10 w-10 rounded object-cover flex-shrink-0"
-                      />
-                    )}
-                    <div>
-                      <div className="font-semibold">{course.title}</div>
-                      <div className="text-xs text-gray-500">{course.level} • {course.skill}</div>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => openViewDialog(course)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {effectiveCanEditCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openEditDialog(course)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                      </Button>
-                    )}
-                    {effectiveCanDeleteCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(course)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {viewMode === 'tile' && (
-            <div className="flex flex-wrap gap-4">
-              {filteredCourses.map(course => (
-                <div key={course.id} className="w-56 bg-muted rounded-lg shadow p-4 flex flex-col items-center">
-                  {course.image && (
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="h-10 w-10 rounded object-cover flex-shrink-0 mb-2"
-                    />
-                  )}
-                  <div className="font-semibold">{course.title}</div>
-                  <div className="text-xs text-gray-500">{course.level} • {course.skill}</div>
-                  <div className="mt-2 flex gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => openViewDialog(course)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {effectiveCanEditCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openEditDialog(course)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                      </Button>
-                    )}
-                    {effectiveCanDeleteCourse && (
-                      <Button size="sm" variant="ghost" onClick={() => openDeleteDialog(course)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <CourseContent
+            courses={filteredCourses}
+            loading={loading}
+            viewMode={viewMode}
+            onView={openViewDialog}
+            onEdit={effectiveCanEditCourse ? openEditDialog : undefined}
+            onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
+            onBulkDelete={effectiveCanDeleteCourse ? handleBulkDelete : undefined}
+          />
         </div>
 
         {effectiveCanAddCourse && (
