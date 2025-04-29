@@ -38,7 +38,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
   
   if (viewMode === 'list') {
     return (
-      <div className="w-full overflow-hidden">
+      <div className="w-full overflow-x-auto">
         <CourseTable 
           courses={courses} 
           loading={loading} 
