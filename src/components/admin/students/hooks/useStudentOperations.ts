@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
+import { updateUser } from '@/components/admin/users/UserServiceExtended';
 
 export const useStudentOperations = (loadStudents: () => Promise<void>) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,14 +35,11 @@ export const useStudentOperations = (loadStudents: () => Promise<void>) => {
     }
   };
 
-  const handleUpdateStudent = async (id: string, userData: any): Promise<boolean> => {
+  const handleUpdateStudent = async (id: string, userData: Partial<UserManagementUser>): Promise<void> => {
     setIsLoading(true);
     try {
-      // Mock implementation - replace with actual API call
-      console.log('Updating student:', id, userData);
-      
-      // Simulate API call success
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Call the updateUser function from UserServiceExtended
+      await updateUser(id, userData);
       
       toast({
         title: "Success",
@@ -50,7 +47,6 @@ export const useStudentOperations = (loadStudents: () => Promise<void>) => {
       });
       
       await loadStudents();
-      return true;
     } catch (error) {
       console.error('Failed to update student:', error);
       toast({
@@ -58,7 +54,6 @@ export const useStudentOperations = (loadStudents: () => Promise<void>) => {
         description: "Failed to update student",
         variant: "destructive",
       });
-      return false;
     } finally {
       setIsLoading(false);
     }
