@@ -1,5 +1,5 @@
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -26,9 +26,33 @@ const AgGridWrapper: React.FC<AgGridWrapperProps> = ({
   height = '600px',
   className = '',
 }) => {
+  useEffect(() => {
+    console.log('AgGridWrapper rendering with rowData length:', rowData?.length);
+  }, [rowData]);
+
   if (loading && loadingComponent) {
     return <>{loadingComponent}</>;
   }
+
+  const handleGridReady = (params: any) => {
+    console.log('AG Grid is ready');
+    
+    if (params.api) {
+      // Ensure columns are sized properly
+      params.api.sizeColumnsToFit();
+      
+      // Force refresh the grid after a short delay to ensure it's displayed correctly
+      setTimeout(() => {
+        params.api.redrawRows();
+        console.log('AG Grid rows redrawn');
+      }, 100);
+    }
+    
+    // Call the original onGridReady if provided
+    if (onGridReady) {
+      onGridReady(params);
+    }
+  };
 
   return (
     <div 
@@ -42,7 +66,7 @@ const AgGridWrapper: React.FC<AgGridWrapperProps> = ({
         rowData={rowData}
         columnDefs={columnDefs}
         rowSelection="multiple"
-        onGridReady={onGridReady}
+        onGridReady={handleGridReady}
         onSelectionChanged={onSelectionChanged}
         suppressRowClickSelection={true}
         defaultColDef={defaultColDef}

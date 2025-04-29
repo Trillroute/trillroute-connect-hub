@@ -1,3 +1,4 @@
+
 import { useStudentData } from './useStudentData';
 import { useStudentDialogs } from './useStudentDialogs';
 import { useStudentOperations } from './useStudentOperations';
@@ -17,7 +18,6 @@ export const useStudentManagement = (
     isDeleteDialogOpen, setIsDeleteDialogOpen,
     isViewDialogOpen, setIsViewDialogOpen,
     studentToEdit, studentToDelete, studentToView,
-    setStudentToDelete,
     openViewDialog: baseOpenViewDialog,
     openEditDialog: baseOpenEditDialog,
     openDeleteDialog: baseOpenDeleteDialog,
@@ -83,7 +83,10 @@ export const useStudentManagement = (
     },
     handleUpdateStudent,
     handleDeleteStudent: wrappedHandleDeleteStudent,
-    bulkDeleteStudents,
+    bulkDeleteStudents: async (ids: string[]) => {
+      await bulkDeleteStudents(ids);
+      setSelectedStudents([]);
+    },
     openEditDialog,
     openViewDialog: baseOpenViewDialog,
     handleEditFromView,

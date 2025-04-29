@@ -31,7 +31,11 @@ const StudentManagement = ({
           canAddUser={canAddUser}
           onAdd={() => studentManagement.setIsAddDialogOpen(true)}
           selectedCount={studentManagement.selectedStudents.length}
-          onBulkDelete={() => studentManagement.bulkDeleteStudents(studentManagement.selectedStudents)}
+          onBulkDelete={() => {
+            if (studentManagement.selectedStudents.length > 0) {
+              studentManagement.bulkDeleteStudents(studentManagement.selectedStudents);
+            }
+          }}
           isLoading={studentManagement.isLoading}
         />
       </CardHeader>
@@ -45,6 +49,7 @@ const StudentManagement = ({
           canStudentBeDeleted={studentManagement.canStudentBeDeleted}
           selectedStudents={studentManagement.selectedStudents}
           setSelectedStudents={studentManagement.setSelectedStudents}
+          openEditDialog={canEditUser ? studentManagement.openEditDialog : undefined}
         />
         <StudentDialogs
           isAddDialogOpen={studentManagement.isAddDialogOpen}

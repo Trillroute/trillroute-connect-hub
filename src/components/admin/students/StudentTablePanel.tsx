@@ -40,7 +40,9 @@ const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
             onEditStudent={openEditDialog}
             onDeleteStudent={openDeleteDialog}
             canDeleteStudent={canStudentBeDeleted}
-            onBulkDelete={(ids) => setSelectedStudents([])}
+            onBulkDelete={(ids) => {
+              if (ids.length > 0) setSelectedStudents([]);
+            }}
           />
         </ResizablePanel>
       </ResizablePanelGroup>
