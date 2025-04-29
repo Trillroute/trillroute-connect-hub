@@ -4,7 +4,7 @@ import { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
@@ -45,8 +45,8 @@ const CourseTable: React.FC<CourseTableProps> = ({
       sortable: true,
       flex: 2,
       minWidth: 200,
-      cellRenderer: (params: any) => {
-        const course = params.data;
+      cellRenderer: (params: ICellRendererParams<Course>) => {
+        const course = params.data as Course;
         return (
           <div className="flex items-center gap-3">
             {course.image && (
@@ -86,25 +86,26 @@ const CourseTable: React.FC<CourseTableProps> = ({
     },
     {
       headerName: 'Actions',
-      field: 'actions',
+      // Remove the 'field' property as "actions" is not a field in the Course type
+      // field: 'actions', <- This was causing the TypeScript error
       sortable: false,
       filter: false,
       width: 150,
-      cellRenderer: (params: any) => {
+      cellRenderer: (params: ICellRendererParams<Course>) => {
         return (
           <div className="flex items-center gap-2">
             {onView && (
-              <Button variant="ghost" size="sm" onClick={() => onView(params.data)}>
+              <Button variant="ghost" size="sm" onClick={() => onView(params.data as Course)}>
                 <Eye className="h-4 w-4" />
               </Button>
             )}
             {onEdit && (
-              <Button variant="ghost" size="sm" onClick={() => onEdit(params.data)}>
+              <Button variant="ghost" size="sm" onClick={() => onEdit(params.data as Course)}>
                 <Pencil className="h-4 w-4" />
               </Button>
             )}
             {onDelete && (
-              <Button variant="ghost" size="sm" onClick={() => onDelete(params.data)}>
+              <Button variant="ghost" size="sm" onClick={() => onDelete(params.data as Course)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
