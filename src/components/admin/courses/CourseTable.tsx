@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
-import { ClientSideRowModelModule } from 'ag-grid-community/client-side-row-model';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
@@ -183,7 +182,6 @@ const CourseTable: React.FC<CourseTableProps> = ({
           paginationPageSize={10}
           suppressLoadingOverlay={true}
           domLayout="autoHeight"
-          modules={[ClientSideRowModelModule]}
         />
       </div>
     </div>
