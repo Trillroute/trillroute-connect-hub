@@ -17,7 +17,6 @@ interface AdminTableViewProps {
   setSelectedIds?: React.Dispatch<React.SetStateAction<string[]>>;
   canEdit?: (admin: UserManagementUser) => boolean; 
   canDelete?: (admin: UserManagementUser) => boolean;
-  useAgGrid?: boolean;
 }
 
 const AdminTableView: React.FC<AdminTableViewProps> = ({
@@ -28,35 +27,18 @@ const AdminTableView: React.FC<AdminTableViewProps> = ({
   onView,
   selectedIds,
   setSelectedIds,
-  useAgGrid = true
 }) => {
-  // Use AG Grid by default
-  if (useAgGrid) {
-    return (
-      <AdminGrid
-        admins={admins}
-        isLoading={isLoading}
-        onView={onView}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onBulkDelete={setSelectedIds ? (ids) => setSelectedIds([]) : undefined}
-      />
-    );
-  }
-  
-  // Fall back to original DataTable if needed
-  const columns = getAdminTableColumns();
-
+  // Always use our custom DataGrid via AdminGrid
   return (
-    <DataTable
-      data={admins}
-      columns={columns}
-      loading={isLoading}
+    <AdminGrid
+      admins={admins}
+      isLoading={isLoading}
       onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
-      selectedIds={selectedIds}
-      setSelectedIds={setSelectedIds}
+      onBulkDelete={setSelectedIds ? (ids) => setSelectedIds([]) : undefined}
+      selectedAdminIds={selectedIds}
+      setSelectedAdminIds={setSelectedIds}
     />
   );
 };
