@@ -3,10 +3,18 @@ import { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef, ICellRendererParams } from 'ag-grid-community';
+import { 
+  ColDef, 
+  ICellRendererParams,
+  ModuleRegistry 
+} from 'ag-grid-community';
+import { ClientSideRowModelModule } from 'ag-grid-community/client-side-row-model';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { toast } from '@/hooks/use-toast';
+
+// Register required modules
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 interface CourseTableProps {
   courses: Course[];
@@ -116,13 +124,15 @@ const CourseTable: React.FC<CourseTableProps> = ({
   // Grid ready event handler to set default column settings
   const onGridReady = useCallback((params: any) => {
     try {
-      params.api.sizeColumnsToFit();
-      console.log('AG Grid is ready and sized:', params.api);
-      // Force refresh the grid
-      setTimeout(() => {
-        params.api.redrawRows();
-        console.log('AG Grid rows redrawn');
-      }, 100);
+      console.log('AG Grid is ready:', params);
+      if (params.api) {
+        params.api.sizeColumnsToFit();
+        // Force refresh the grid
+        setTimeout(() => {
+          params.api.redrawRows();
+          console.log('AG Grid rows redrawn');
+        }, 100);
+      }
     } catch (err) {
       console.error('Error in onGridReady:', err);
       toast({
@@ -155,7 +165,9 @@ const CourseTable: React.FC<CourseTableProps> = ({
   }
 
   console.log('Rendering AG Grid with courses:', courses.length);
-  console.log('First course:', courses[0]);
+  if (courses.length > 0) {
+    console.log('First course:', courses[0]);
+  }
   
   return (
     <div className="space-y-4 w-full">
@@ -199,6 +211,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
           animateRows={true}
           enableCellTextSelection={true}
           ensureDomOrder={true}
+          debug={true}
         />
       </div>
     </div>
