@@ -1,7 +1,9 @@
+
 import React from "react";
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { UserManagementUser } from "@/types/student";
 import StudentGrid from "./StudentGrid";
+import { UserTable } from "@/components/admin/users/UserTable";
 
 interface StudentTablePanelProps {
   students: UserManagementUser[];

@@ -1,14 +1,9 @@
 
 import React, { ReactNode } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { ModuleRegistry } from 'ag-grid-community';
-import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { defaultColDef } from '@/components/admin/courses/table/defaultColDef';
-
-// Register required AG Grid modules
-ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 interface AgGridWrapperProps {
   rowData: any[];
