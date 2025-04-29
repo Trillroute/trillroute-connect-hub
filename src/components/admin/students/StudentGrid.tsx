@@ -1,14 +1,11 @@
 
 import React, { useMemo } from 'react';
 import { UserManagementUser } from '@/types/student';
-import { ColDef } from 'ag-grid-community';
 import { format } from 'date-fns';
-import AgGridWrapper from '@/components/common/grid/AgGridWrapper';
-import LoadingSpinner from '@/components/admin/courses/table/LoadingSpinner';
-import { useAgGridConfig } from '@/hooks/useAgGridConfig';
-import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2, User } from 'lucide-react';
+import DataGrid, { DataGridColumn } from '@/components/common/table/DataGrid';
+import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 
 interface StudentGridProps {
   students: UserManagementUser[];
@@ -18,6 +15,8 @@ interface StudentGridProps {
   onDeleteStudent?: (student: UserManagementUser) => void;
   onBulkDelete?: (ids: string[]) => void;
   canDeleteStudent?: (student: UserManagementUser) => boolean;
+  selectedStudentIds?: string[];
+  setSelectedStudentIds?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const StudentGrid: React.FC<StudentGridProps> = ({
@@ -28,32 +27,36 @@ const StudentGrid: React.FC<StudentGridProps> = ({
   onDeleteStudent,
   onBulkDelete,
   canDeleteStudent = () => true,
+  selectedStudentIds = [],
+  setSelectedStudentIds
 }) => {
-  const {
-    selectedRows,
-    onGridReady,
-    onSelectionChanged,
-    handleBulkDelete
-  } = useAgGridConfig<UserManagementUser>({ onBulkDelete });
-
   // Ensure we have data to display
   console.log('Students data:', students?.length, 'Loading:', isLoading);
 
-  const columnDefs = useMemo<ColDef[]>(() => [
+  const handleSelectionChanged = (selectedRows: UserManagementUser[]) => {
+    if (setSelectedStudentIds) {
+      const ids = selectedRows.map(row => row.id);
+      setSelectedStudentIds(ids);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (onBulkDelete && selectedStudentIds.length > 0) {
+      onBulkDelete(selectedStudentIds);
+    }
+  };
+
+  const columnDefs = useMemo<DataGridColumn[]>(() => [
     {
       headerName: '',
       field: 'id',
       width: 50,
       headerCheckboxSelection: true,
       checkboxSelection: true,
-      filter: false,
-      sortable: false,
     },
     {
       headerName: 'Name',
       field: 'name',
-      filter: true,
-      sortable: true,
       valueGetter: (params) => {
         const data = params.data;
         return data ? `${data.firstName || ''} ${data.lastName || ''}` : '';
@@ -71,14 +74,10 @@ const StudentGrid: React.FC<StudentGridProps> = ({
     {
       headerName: 'Email',
       field: 'email',
-      filter: true,
-      sortable: true
     },
     {
       headerName: 'Created',
       field: 'createdAt',
-      filter: true,
-      sortable: true,
       valueFormatter: (params) => {
         if (!params.value) return '';
         try {
@@ -91,8 +90,7 @@ const StudentGrid: React.FC<StudentGridProps> = ({
     },
     {
       headerName: 'Actions',
-      sortable: false,
-      filter: false,
+      field: 'actions',
       width: 150,
       cellRenderer: (params) => {
         if (!params.data) return null;
@@ -118,28 +116,21 @@ const StudentGrid: React.FC<StudentGridProps> = ({
     }
   ], [onViewStudent, onEditStudent, onDeleteStudent, canDeleteStudent]);
 
-  // Add additional logging to help debug
-  if (isLoading) {
-    console.log('Rendering loading state');
-  }
-
   return (
     <div className="space-y-4 w-full">
-      {selectedRows.length > 0 && onBulkDelete && (
+      {selectedStudentIds.length > 0 && onBulkDelete && (
         <BulkDeleteButton 
-          selectedCount={selectedRows.length}
+          selectedCount={selectedStudentIds.length}
           onBulkDelete={handleBulkDelete}
         />
       )}
       
-      <div className="w-full overflow-hidden border rounded-md" style={{ minHeight: '500px' }}>
-        <AgGridWrapper
+      <div className="w-full rounded-md border">
+        <DataGrid
           rowData={students || []}
           columnDefs={columnDefs}
-          onGridReady={onGridReady}
-          onSelectionChanged={onSelectionChanged}
+          onSelectionChanged={handleSelectionChanged}
           loading={isLoading}
-          loadingComponent={<LoadingSpinner />}
           height="500px"
           className="w-full"
         />

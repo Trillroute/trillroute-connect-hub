@@ -1,14 +1,11 @@
 
 import React, { useMemo } from 'react';
 import { UserManagementUser } from '@/types/student';
-import { ColDef } from 'ag-grid-community';
 import { format } from 'date-fns';
-import AgGridWrapper from '@/components/common/grid/AgGridWrapper';
-import LoadingSpinner from '@/components/admin/courses/table/LoadingSpinner';
-import { useAgGridConfig } from '@/hooks/useAgGridConfig';
-import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2, UserCog } from 'lucide-react';
+import DataGrid, { DataGridColumn } from '@/components/common/table/DataGrid';
+import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 
 interface TeacherGridProps {
   teachers: UserManagementUser[];
@@ -18,6 +15,8 @@ interface TeacherGridProps {
   onDeleteTeacher?: (teacher: UserManagementUser) => void;
   onBulkDelete?: (ids: string[]) => void;
   canDeleteTeacher?: (teacher: UserManagementUser) => boolean;
+  selectedTeacherIds?: string[];
+  setSelectedTeacherIds?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const TeacherGrid: React.FC<TeacherGridProps> = ({
@@ -28,29 +27,33 @@ const TeacherGrid: React.FC<TeacherGridProps> = ({
   onDeleteTeacher,
   onBulkDelete,
   canDeleteTeacher = () => true,
+  selectedTeacherIds = [],
+  setSelectedTeacherIds
 }) => {
-  const {
-    selectedRows,
-    onGridReady,
-    onSelectionChanged,
-    handleBulkDelete
-  } = useAgGridConfig<UserManagementUser>({ onBulkDelete });
+  const handleSelectionChanged = (selectedRows: UserManagementUser[]) => {
+    if (setSelectedTeacherIds) {
+      const ids = selectedRows.map(row => row.id);
+      setSelectedTeacherIds(ids);
+    }
+  };
 
-  const columnDefs = useMemo<ColDef[]>(() => [
+  const handleBulkDelete = () => {
+    if (onBulkDelete && selectedTeacherIds.length > 0) {
+      onBulkDelete(selectedTeacherIds);
+    }
+  };
+
+  const columnDefs = useMemo<DataGridColumn[]>(() => [
     {
       headerName: '',
       field: 'id',
       width: 50,
       headerCheckboxSelection: true,
       checkboxSelection: true,
-      filter: false,
-      sortable: false,
     },
     {
       headerName: 'Name',
       field: 'name',
-      filter: true,
-      sortable: true,
       valueGetter: (params) => `${params.data.firstName} ${params.data.lastName}`,
       cellRenderer: (params) => (
         <div className="font-medium flex items-center">
@@ -62,20 +65,23 @@ const TeacherGrid: React.FC<TeacherGridProps> = ({
     {
       headerName: 'Email',
       field: 'email',
-      filter: true,
-      sortable: true
     },
     {
       headerName: 'Created',
       field: 'createdAt',
-      filter: true,
-      sortable: true,
-      valueFormatter: (params) => format(new Date(params.value), 'MMM d, yyyy')
+      valueFormatter: (params) => {
+        if (!params.value) return '';
+        try {
+          return format(new Date(params.value), 'MMM d, yyyy');
+        } catch (error) {
+          console.error('Date formatting error:', error);
+          return params.value;
+        }
+      }
     },
     {
       headerName: 'Actions',
-      sortable: false,
-      filter: false,
+      field: 'actions',
       width: 150,
       cellRenderer: (params) => (
         <div className="flex items-center gap-2">
@@ -99,21 +105,23 @@ const TeacherGrid: React.FC<TeacherGridProps> = ({
 
   return (
     <div className="space-y-4 w-full">
-      {selectedRows.length > 0 && onBulkDelete && (
+      {selectedTeacherIds.length > 0 && onBulkDelete && (
         <BulkDeleteButton 
-          selectedCount={selectedRows.length}
+          selectedCount={selectedTeacherIds.length}
           onBulkDelete={handleBulkDelete}
         />
       )}
       
-      <AgGridWrapper
-        rowData={teachers}
-        columnDefs={columnDefs}
-        onGridReady={onGridReady}
-        onSelectionChanged={onSelectionChanged}
-        loading={isLoading}
-        loadingComponent={<LoadingSpinner />}
-      />
+      <div className="w-full rounded-md border">
+        <DataGrid
+          rowData={teachers}
+          columnDefs={columnDefs}
+          onSelectionChanged={handleSelectionChanged}
+          loading={isLoading}
+          height="500px"
+          className="w-full"
+        />
+      </div>
     </div>
   );
 };

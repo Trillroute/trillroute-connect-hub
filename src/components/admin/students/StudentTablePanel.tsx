@@ -45,6 +45,8 @@ const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
           onBulkDelete={(ids) => {
             if (ids.length > 0) setSelectedStudents([]);
           }}
+          selectedStudentIds={selectedStudents}
+          setSelectedStudentIds={setSelectedStudents}
         />
       </div>
     );

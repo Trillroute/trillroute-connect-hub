@@ -1,14 +1,11 @@
 
 import React, { useMemo } from 'react';
 import { Lead } from '@/types/lead';
-import { ColDef } from 'ag-grid-community';
-import AgGridWrapper from '@/components/common/grid/AgGridWrapper';
-import LoadingSpinner from '@/components/admin/courses/table/LoadingSpinner';
-import { useAgGridConfig } from '@/hooks/useAgGridConfig';
-import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import DataGrid, { DataGridColumn } from '@/components/common/table/DataGrid';
+import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 
 interface LeadGridProps {
   leads: Lead[];
@@ -17,6 +14,8 @@ interface LeadGridProps {
   onDelete: (lead: Lead) => void;
   onView?: (lead: Lead) => void;
   onBulkDelete?: (ids: string[]) => void;
+  selectedLeadIds?: string[];
+  setSelectedLeadIds?: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const LeadGrid: React.FC<LeadGridProps> = ({
@@ -26,13 +25,21 @@ const LeadGrid: React.FC<LeadGridProps> = ({
   onDelete,
   onView,
   onBulkDelete,
+  selectedLeadIds = [],
+  setSelectedLeadIds
 }) => {
-  const {
-    selectedRows,
-    onGridReady,
-    onSelectionChanged,
-    handleBulkDelete
-  } = useAgGridConfig<Lead>({ onBulkDelete });
+  const handleSelectionChanged = (selectedRows: Lead[]) => {
+    if (setSelectedLeadIds) {
+      const ids = selectedRows.map(row => row.id);
+      setSelectedLeadIds(ids);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (onBulkDelete && selectedLeadIds.length > 0) {
+      onBulkDelete(selectedLeadIds);
+    }
+  };
 
   const getStageColor = (stage: Lead['stage']) => {
     switch (stage) {
@@ -46,39 +53,29 @@ const LeadGrid: React.FC<LeadGridProps> = ({
     }
   };
 
-  const columnDefs = useMemo<ColDef[]>(() => [
+  const columnDefs = useMemo<DataGridColumn[]>(() => [
     {
       headerName: '',
       field: 'id',
       width: 50,
       headerCheckboxSelection: true,
       checkboxSelection: true,
-      filter: false,
-      sortable: false,
     },
     {
       headerName: 'Name',
       field: 'name',
-      filter: true,
-      sortable: true
     },
     {
       headerName: 'Email',
       field: 'email',
-      filter: true,
-      sortable: true
     },
     {
       headerName: 'Phone',
       field: 'phone',
-      filter: true,
-      sortable: true
     },
     {
       headerName: 'Stage',
       field: 'stage',
-      filter: true,
-      sortable: true,
       cellRenderer: (params) => (
         <Badge className={`${getStageColor(params.value)} text-white`}>
           {params.value || 'Unknown'}
@@ -88,13 +85,10 @@ const LeadGrid: React.FC<LeadGridProps> = ({
     {
       headerName: 'Source',
       field: 'source',
-      filter: true,
-      sortable: true
     },
     {
       headerName: 'Actions',
-      sortable: false,
-      filter: false,
+      field: 'actions',
       width: 150,
       cellRenderer: (params) => (
         <div className="flex items-center gap-2">
@@ -116,21 +110,23 @@ const LeadGrid: React.FC<LeadGridProps> = ({
 
   return (
     <div className="space-y-4 w-full">
-      {selectedRows.length > 0 && onBulkDelete && (
+      {selectedLeadIds.length > 0 && onBulkDelete && (
         <BulkDeleteButton 
-          selectedCount={selectedRows.length}
+          selectedCount={selectedLeadIds.length}
           onBulkDelete={handleBulkDelete}
         />
       )}
       
-      <AgGridWrapper
-        rowData={leads}
-        columnDefs={columnDefs}
-        onGridReady={onGridReady}
-        onSelectionChanged={onSelectionChanged}
-        loading={loading}
-        loadingComponent={<LoadingSpinner />}
-      />
+      <div className="w-full rounded-md border">
+        <DataGrid
+          rowData={leads}
+          columnDefs={columnDefs}
+          onSelectionChanged={handleSelectionChanged}
+          loading={loading}
+          height="500px"
+          className="w-full"
+        />
+      </div>
     </div>
   );
 };

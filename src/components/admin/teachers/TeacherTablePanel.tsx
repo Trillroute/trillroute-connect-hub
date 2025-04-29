@@ -1,3 +1,4 @@
+
 import React from "react";
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { UserManagementUser } from "@/types/student";
@@ -32,19 +33,19 @@ const TeacherTablePanel: React.FC<TeacherTablePanelProps> = ({
   // Only show grid in list view mode
   if (viewMode === 'list') {
     return (
-      <ResizablePanelGroup direction="horizontal" className="w-full">
-        <ResizablePanel>
-          <TeacherGrid
-            teachers={teachers}
-            isLoading={isLoading}
-            onViewTeacher={openViewDialog}
-            onEditTeacher={openEditDialog}
-            onDeleteTeacher={openDeleteDialog}
-            canDeleteTeacher={canTeacherBeDeleted}
-            onBulkDelete={onBulkDelete}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+      <div className="w-full h-full min-h-[500px]">
+        <TeacherGrid
+          teachers={teachers}
+          isLoading={isLoading}
+          onViewTeacher={openViewDialog}
+          onEditTeacher={openEditDialog}
+          onDeleteTeacher={openDeleteDialog}
+          canDeleteTeacher={canTeacherBeDeleted}
+          onBulkDelete={onBulkDelete}
+          selectedTeacherIds={selectedTeachers}
+          setSelectedTeacherIds={setSelectedTeachers}
+        />
+      </div>
     );
   }
 
