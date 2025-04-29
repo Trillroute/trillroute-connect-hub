@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/admin/courses/table/LoadingSpinner';
 import { useAgGridConfig } from '@/hooks/useAgGridConfig';
 import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, User } from 'lucide-react';
 
 interface StudentGridProps {
   students: UserManagementUser[];
@@ -60,7 +60,12 @@ const StudentGrid: React.FC<StudentGridProps> = ({
       },
       cellRenderer: (params) => {
         if (!params.value) return null;
-        return <div className="font-semibold">{params.value}</div>;
+        return (
+          <div className="font-semibold flex items-center">
+            <User className="h-4 w-4 text-blue-500 mr-1" />
+            {params.value}
+          </div>
+        );
       }
     },
     {
@@ -127,7 +132,7 @@ const StudentGrid: React.FC<StudentGridProps> = ({
         />
       )}
       
-      <div className="w-full" style={{ minHeight: '400px' }}>
+      <div className="w-full overflow-hidden border rounded-md" style={{ minHeight: '500px' }}>
         <AgGridWrapper
           rowData={students || []}
           columnDefs={columnDefs}

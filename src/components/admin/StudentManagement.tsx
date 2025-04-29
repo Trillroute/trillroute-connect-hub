@@ -39,7 +39,7 @@ const StudentManagement = ({
           isLoading={studentManagement.isLoading}
         />
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4">
         <StudentTablePanel
           students={studentManagement.students}
           isLoading={studentManagement.isLoading}

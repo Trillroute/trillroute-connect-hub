@@ -28,24 +28,25 @@ const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
   setSelectedStudents,
   openEditDialog
 }) => {
+  console.log('StudentTablePanel - viewMode:', viewMode);
+  console.log('StudentTablePanel - students:', students?.length);
+
   // Only show grid in list view mode
   if (viewMode === 'list') {
     return (
-      <ResizablePanelGroup direction="horizontal" className="w-full">
-        <ResizablePanel>
-          <StudentGrid
-            students={students}
-            isLoading={isLoading}
-            onViewStudent={openViewDialog}
-            onEditStudent={openEditDialog}
-            onDeleteStudent={openDeleteDialog}
-            canDeleteStudent={canStudentBeDeleted}
-            onBulkDelete={(ids) => {
-              if (ids.length > 0) setSelectedStudents([]);
-            }}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+      <div className="w-full h-full min-h-[500px]">
+        <StudentGrid
+          students={students}
+          isLoading={isLoading}
+          onViewStudent={openViewDialog}
+          onEditStudent={openEditDialog}
+          onDeleteStudent={openDeleteDialog}
+          canDeleteStudent={canStudentBeDeleted}
+          onBulkDelete={(ids) => {
+            if (ids.length > 0) setSelectedStudents([]);
+          }}
+        />
+      </div>
     );
   }
 

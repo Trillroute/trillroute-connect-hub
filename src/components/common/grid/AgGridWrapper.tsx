@@ -1,5 +1,5 @@
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -26,9 +26,15 @@ const AgGridWrapper: React.FC<AgGridWrapperProps> = ({
   height = '600px',
   className = '',
 }) => {
+  const [gridApi, setGridApi] = useState<any>(null);
+  const [gridColumnApi, setGridColumnApi] = useState<any>(null);
+
   useEffect(() => {
     console.log('AgGridWrapper rendering with rowData length:', rowData?.length);
-  }, [rowData]);
+    if (gridApi) {
+      gridApi.setRowData(rowData);
+    }
+  }, [rowData, gridApi]);
 
   if (loading && loadingComponent) {
     return <>{loadingComponent}</>;
@@ -36,6 +42,8 @@ const AgGridWrapper: React.FC<AgGridWrapperProps> = ({
 
   const handleGridReady = (params: any) => {
     console.log('AG Grid is ready');
+    setGridApi(params.api);
+    setGridColumnApi(params.columnApi);
     
     if (params.api) {
       // Ensure columns are sized properly
@@ -60,24 +68,32 @@ const AgGridWrapper: React.FC<AgGridWrapperProps> = ({
       style={{ 
         height, 
         width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <AgGridReact
-        rowData={rowData}
-        columnDefs={columnDefs}
-        rowSelection="multiple"
-        onGridReady={handleGridReady}
-        onSelectionChanged={onSelectionChanged}
-        suppressRowClickSelection={true}
-        defaultColDef={defaultColDef}
-        pagination={true}
-        paginationPageSize={10}
-        suppressLoadingOverlay={true}
-        domLayout="normal"
-        animateRows={true}
-        enableCellTextSelection={true}
-        ensureDomOrder={true}
-      />
+      <div className="flex-grow" style={{ minHeight: '400px', width: '100%' }}>
+        <AgGridReact
+          rowData={rowData}
+          columnDefs={columnDefs}
+          rowSelection="multiple"
+          onGridReady={handleGridReady}
+          onSelectionChanged={onSelectionChanged}
+          suppressRowClickSelection={true}
+          defaultColDef={defaultColDef}
+          pagination={true}
+          paginationPageSize={10}
+          suppressLoadingOverlay={true}
+          domLayout="normal"
+          animateRows={true}
+          enableCellTextSelection={true}
+          ensureDomOrder={true}
+          reactiveCustomComponents={true}
+          suppressColumnVirtualisation={false}
+          suppressRowVirtualisation={false}
+          suppressHorizontalScroll={false}
+        />
+      </div>
     </div>
   );
 };
