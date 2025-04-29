@@ -2,8 +2,9 @@
 import React from 'react';
 import { UserManagementUser } from '@/types/student';
 import DataTable from '@/components/ui/data-table';
-import { getAdminTableColumns } from './columns';
 import type { Column } from '@/components/ui/data-table/types';
+import { getAdminTableColumns } from './columns';
+import AdminGrid from '@/components/admin/admin/AdminGrid';
 
 interface AdminTableViewProps {
   admins: UserManagementUser[];
@@ -16,6 +17,7 @@ interface AdminTableViewProps {
   setSelectedIds?: React.Dispatch<React.SetStateAction<string[]>>;
   canEdit?: (admin: UserManagementUser) => boolean; 
   canDelete?: (admin: UserManagementUser) => boolean;
+  useAgGrid?: boolean;
 }
 
 const AdminTableView: React.FC<AdminTableViewProps> = ({
@@ -25,8 +27,24 @@ const AdminTableView: React.FC<AdminTableViewProps> = ({
   onDelete,
   onView,
   selectedIds,
-  setSelectedIds
+  setSelectedIds,
+  useAgGrid = true
 }) => {
+  // Use AG Grid by default
+  if (useAgGrid) {
+    return (
+      <AdminGrid
+        admins={admins}
+        isLoading={isLoading}
+        onView={onView}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onBulkDelete={setSelectedIds ? (ids) => setSelectedIds([]) : undefined}
+      />
+    );
+  }
+  
+  // Fall back to original DataTable if needed
   const columns = getAdminTableColumns();
 
   return (

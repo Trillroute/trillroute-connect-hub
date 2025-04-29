@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
-import UserTable from './users/UserTable';
 import AddUserDialog, { NewUserData } from './users/AddUserDialog';
 import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
@@ -19,6 +18,8 @@ import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
 import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import TeacherGrid from './teachers/TeacherGrid';
+import UserTable from './users/UserTable';
 
 interface TeacherManagementProps {
   canAddUser?: boolean;
@@ -291,25 +292,36 @@ const TeacherManagement = ({
       <CardContent>
         <ResizablePanelGroup direction="horizontal" className="w-full">
           <ResizablePanel>
-            <UserTable 
-              users={teachers} 
-              isLoading={isLoading}
-              onViewUser={openViewDialog}
-              onDeleteUser={openDeleteDialog}
-              canDeleteUser={canTeacherBeDeleted}
-              canEditUser={undefined}
-              roleFilter="teacher"
-              viewMode={viewMode}
-              selectedUserIds={selectedTeachers}
-              onSelectUserId={id =>
-                setSelectedTeachers(prev =>
-                  prev.includes(id)
-                    ? prev.filter(tid => tid !== id)
-                    : [...prev, id]
-                )
-              }
-              onSelectAll={ids => setSelectedTeachers(ids)}
-            />
+            {viewMode === 'list' ? (
+              <TeacherGrid
+                teachers={teachers}
+                isLoading={isLoading}
+                onViewTeacher={openViewDialog}
+                onDeleteTeacher={openDeleteDialog}
+                canDeleteTeacher={canTeacherBeDeleted}
+                onBulkDelete={bulkDeleteTeachers}
+              />
+            ) : (
+              <UserTable 
+                users={teachers} 
+                isLoading={isLoading}
+                onViewUser={openViewDialog}
+                onDeleteUser={openDeleteDialog}
+                canDeleteUser={canTeacherBeDeleted}
+                canEditUser={undefined}
+                roleFilter="teacher"
+                viewMode={viewMode}
+                selectedUserIds={selectedTeachers}
+                onSelectUserId={id =>
+                  setSelectedTeachers(prev =>
+                    prev.includes(id)
+                      ? prev.filter(tid => tid !== id)
+                      : [...prev, id]
+                  )
+                }
+                onSelectAll={ids => setSelectedTeachers(ids)}
+              />
+            )}
           </ResizablePanel>
         </ResizablePanelGroup>
         

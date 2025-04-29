@@ -5,6 +5,7 @@ import DataTable from '@/components/ui/data-table';
 import type { Column } from '@/components/ui/data-table/types';
 import { Shield } from 'lucide-react';
 import { format } from 'date-fns';
+import AdminGrid from '@/components/admin/admin/AdminGrid';
 
 interface AdminTableProps {
   admins: UserManagementUser[];
@@ -12,6 +13,8 @@ interface AdminTableProps {
   onEdit?: (admin: UserManagementUser) => void;
   onDelete?: (admin: UserManagementUser) => void;
   onView?: (admin: UserManagementUser) => void;
+  onBulkDelete?: (ids: string[]) => void;
+  useAgGrid?: boolean;
 }
 
 const AdminTable: React.FC<AdminTableProps> = ({
@@ -19,8 +22,25 @@ const AdminTable: React.FC<AdminTableProps> = ({
   isLoading,
   onEdit,
   onDelete,
-  onView
+  onView,
+  onBulkDelete,
+  useAgGrid = true
 }) => {
+  // Use AG Grid by default
+  if (useAgGrid) {
+    return (
+      <AdminGrid
+        admins={admins} 
+        isLoading={isLoading} 
+        onView={onView}
+        onEdit={onEdit} 
+        onDelete={onDelete} 
+        onBulkDelete={onBulkDelete}
+      />
+    );
+  }
+  
+  // Fall back to original DataTable if needed
   const columns: Column[] = [
     {
       key: 'name',

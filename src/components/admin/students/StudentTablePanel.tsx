@@ -1,8 +1,7 @@
-
 import React from "react";
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import UserTable from "../users/UserTable";
 import { UserManagementUser } from "@/types/student";
+import StudentGrid from "./StudentGrid";
 
 interface StudentTablePanelProps {
   students: UserManagementUser[];
@@ -24,30 +23,51 @@ const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
   canStudentBeDeleted,
   selectedStudents,
   setSelectedStudents
-}) => (
-  <ResizablePanelGroup direction="horizontal" className="w-full">
-    <ResizablePanel>
-      <UserTable
-        users={students}
-        isLoading={isLoading}
-        onViewUser={openViewDialog}
-        onDeleteUser={openDeleteDialog}
-        canDeleteUser={canStudentBeDeleted}
-        canEditUser={undefined}
-        roleFilter="student"
-        viewMode={viewMode}
-        selectedUserIds={selectedStudents}
-        onSelectUserId={id =>
-          setSelectedStudents(prev =>
-            prev.includes(id)
-              ? prev.filter(sid => sid !== id)
-              : [...prev, id]
-          )
-        }
-        onSelectAll={ids => setSelectedStudents(ids)}
-      />
-    </ResizablePanel>
-  </ResizablePanelGroup>
-);
+}) => {
+  // Only show grid in list view mode
+  if (viewMode === 'list') {
+    return (
+      <ResizablePanelGroup direction="horizontal" className="w-full">
+        <ResizablePanel>
+          <StudentGrid
+            students={students}
+            isLoading={isLoading}
+            onViewStudent={openViewDialog}
+            onDeleteStudent={openDeleteDialog}
+            canDeleteStudent={canStudentBeDeleted}
+            onBulkDelete={(ids) => setSelectedStudents([])}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    );
+  }
+
+  // For other view modes, keep using the existing UserTable component
+  return (
+    <ResizablePanelGroup direction="horizontal" className="w-full">
+      <ResizablePanel>
+        <UserTable
+          users={students}
+          isLoading={isLoading}
+          onViewUser={openViewDialog}
+          onDeleteUser={openDeleteDialog}
+          canDeleteUser={canStudentBeDeleted}
+          canEditUser={undefined}
+          roleFilter="student"
+          viewMode={viewMode}
+          selectedUserIds={selectedStudents}
+          onSelectUserId={id =>
+            setSelectedStudents(prev =>
+              prev.includes(id)
+                ? prev.filter(sid => sid !== id)
+                : [...prev, id]
+            )
+          }
+          onSelectAll={ids => setSelectedStudents(ids)}
+        />
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  );
+};
 
 export default StudentTablePanel;
