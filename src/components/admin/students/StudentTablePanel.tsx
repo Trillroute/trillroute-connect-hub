@@ -14,6 +14,7 @@ interface StudentTablePanelProps {
   canStudentBeDeleted: (user: UserManagementUser) => boolean;
   selectedStudents: string[];
   setSelectedStudents: React.Dispatch<React.SetStateAction<string[]>>;
+  openEditDialog?: (user: UserManagementUser) => void;
 }
 
 const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
@@ -24,7 +25,8 @@ const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
   openDeleteDialog,
   canStudentBeDeleted,
   selectedStudents,
-  setSelectedStudents
+  setSelectedStudents,
+  openEditDialog
 }) => {
   // Only show grid in list view mode
   if (viewMode === 'list') {
@@ -35,6 +37,7 @@ const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
             students={students}
             isLoading={isLoading}
             onViewStudent={openViewDialog}
+            onEditStudent={openEditDialog}
             onDeleteStudent={openDeleteDialog}
             canDeleteStudent={canStudentBeDeleted}
             onBulkDelete={(ids) => setSelectedStudents([])}
@@ -54,7 +57,8 @@ const StudentTablePanel: React.FC<StudentTablePanelProps> = ({
           onViewUser={openViewDialog}
           onDeleteUser={openDeleteDialog}
           canDeleteUser={canStudentBeDeleted}
-          canEditUser={undefined}
+          canEditUser={openEditDialog ? () => true : undefined}
+          onEditUser={openEditDialog}
           roleFilter="student"
           viewMode={viewMode}
           selectedUserIds={selectedStudents}
