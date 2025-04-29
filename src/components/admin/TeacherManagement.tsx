@@ -1,25 +1,15 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, LayoutGrid, Grid2x2, LayoutList, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { UserManagementUser } from '@/types/student';
-import AddUserDialog, { NewUserData } from './users/AddUserDialog';
-import DeleteUserDialog from './users/DeleteUserDialog';
-import ViewUserDialog from './users/ViewUserDialog';
-import EditUserDialog from './users/EditUserDialog';
-import { fetchAllUsers, addUser, deleteUser } from './users/UserService';
-import { updateUser } from './users/UserServiceExtended';
 import { useAuth } from '@/hooks/useAuth';
-import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import TeacherGrid from './teachers/TeacherGrid';
-import UserTable from './users/UserTable';
+import { useTeacherManagement } from './teachers/hooks/useTeacherManagement';
+import TeacherHeaderControls from './teachers/TeacherHeaderControls';
+import TeacherTablePanel from './teachers/TeacherTablePanel';
+import TeacherDialogs from './teachers/TeacherDialogs';
 
 interface TeacherManagementProps {
   canAddUser?: boolean;
@@ -32,333 +22,55 @@ const TeacherManagement = ({
   canEditUser = true,
   canDeleteUser = true 
 }: TeacherManagementProps) => {
-  const [teachers, setTeachers] = useState<UserManagementUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [teacherToEdit, setTeacherToEdit] = useState<UserManagementUser | null>(null);
-  const [teacherToDelete, setTeacherToDelete] = useState<UserManagementUser | null>(null);
-  const [teacherToView, setTeacherToView] = useState<UserManagementUser | null>(null);
-  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
-  const { toast } = useToast();
-  const { isAdmin, isSuperAdmin } = useAuth();
-
-  const loadTeachers = async () => {
-    try {
-      setIsLoading(true);
-      const usersData = await fetchAllUsers();
-      setTeachers(usersData.filter(user => user.role === 'teacher'));
-    } catch (error) {
-      console.error('Error fetching teachers:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch teachers. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTeachers();
-  }, []);
-
-  const handleAddTeacher = async (userData: NewUserData) => {
-    try {
-      if (!userData.firstName || !userData.lastName || !userData.email || !userData.password) {
-        toast({
-          title: 'Missing fields',
-          description: 'Please fill in all required fields.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      userData.role = 'teacher';
-      
-      setIsLoading(true);
-      await addUser(userData);
-
-      toast({
-        title: 'Success',
-        description: 'Teacher added successfully.',
-      });
-      
-      setIsAddDialogOpen(false);
-      loadTeachers();
-    } catch (error: any) {
-      console.error('Error adding teacher:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to add teacher. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUpdateTeacher = async (userId: string, userData: Partial<UserManagementUser>) => {
-    try {
-      setIsLoading(true);
-      await updateUser(userId, userData);
-
-      toast({
-        title: 'Success',
-        description: 'Teacher updated successfully.',
-      });
-      
-      setIsEditDialogOpen(false);
-      setTeacherToEdit(null);
-      loadTeachers();
-    } catch (error: any) {
-      console.error('Error updating teacher:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update teacher. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteTeacher = async () => {
-    if (!teacherToDelete) return;
-    
-    try {
-      setIsLoading(true);
-      await deleteUser(teacherToDelete.id);
-
-      toast({
-        title: 'Success',
-        description: 'Teacher removed successfully.',
-      });
-      
-      setIsDeleteDialogOpen(false);
-      setTeacherToDelete(null);
-      loadTeachers();
-    } catch (error: any) {
-      console.error('Error deleting teacher:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete teacher. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const bulkDeleteTeachers = async () => {
-    if (selectedTeachers.length === 0) return;
-    if (!window.confirm(`Are you sure you want to delete ${selectedTeachers.length} teachers? This cannot be undone.`)) return;
-
-    setIsLoading(true);
-    try {
-      for (const id of selectedTeachers) {
-        await deleteUser(id);
-      }
-      toast({
-        title: "Success",
-        description: `Deleted ${selectedTeachers.length} teachers successfully.`,
-      });
-      setSelectedTeachers([]);
-      loadTeachers();
-    } catch (error) {
-      console.error('Bulk delete error:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to bulk delete teachers.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const openEditDialog = (teacher: UserManagementUser) => {
-    if (!canEditUser) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to edit teachers.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setTeacherToEdit(teacher);
-    setIsEditDialogOpen(true);
-  };
-
-  const openViewDialog = (teacher: UserManagementUser) => {
-    setTeacherToView(teacher);
-    setIsViewDialogOpen(true);
-  };
-
-  const handleEditFromView = () => {
-    if (teacherToView) {
-      setIsViewDialogOpen(false);
-      setTimeout(() => {
-        openEditDialog(teacherToView);
-      }, 200);
-    }
-  };
-
-  const openDeleteDialog = (teacher: UserManagementUser) => {
-    if (!canDeleteUser) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to delete teachers.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setTeacherToDelete(teacher);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteFromView = () => {
-    if (teacherToView && canDeleteUser) {
-      setTeacherToDelete(teacherToView);
-      setIsViewDialogOpen(false);
-      setTimeout(() => {
-        setIsDeleteDialogOpen(true);
-      }, 100);
-    }
-  };
-
-  const canTeacherBeDeleted = (teacher: UserManagementUser) => {
-    if (!canDeleteUser) return false;
-    return true;
-  };
+  const { isSuperAdmin } = useAuth();
+  const teacherManagement = useTeacherManagement(canAddUser, canEditUser, canDeleteUser);
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Teacher Management</CardTitle>
-            <CardDescription>Manage teacher accounts</CardDescription>
-          </div>
-          <div className="flex space-x-2 items-center">
-            <Button size="sm"
-              variant={viewMode === 'list' ? "secondary" : "outline"}
-              onClick={() => setViewMode('list')}
-              title="List view"
-            >
-              <LayoutList className="w-4 h-4" />
-            </Button>
-            <Button size="sm"
-              variant={viewMode === 'grid' ? "secondary" : "outline"}
-              onClick={() => setViewMode('grid')}
-              title="Grid view"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </Button>
-            <Button size="sm"
-              variant={viewMode === 'tile' ? "secondary" : "outline"}
-              onClick={() => setViewMode('tile')}
-              title="Tile view"
-            >
-              <Grid2x2 className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" onClick={loadTeachers}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            {canAddUser && (
-              <Button onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Teacher
-              </Button>
-            )}
-            {selectedTeachers.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={bulkDeleteTeachers}
-                className="ml-2"
-                disabled={isLoading}
-              >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected ({selectedTeachers.length})
-              </Button>
-            )}
-          </div>
-        </div>
+        <TeacherHeaderControls
+          viewMode={teacherManagement.viewMode}
+          setViewMode={teacherManagement.setViewMode}
+          onRefresh={teacherManagement.loadTeachers}
+          canAddUser={canAddUser}
+          onAdd={() => teacherManagement.setIsAddDialogOpen(true)}
+          selectedCount={teacherManagement.selectedTeachers.length}
+          onBulkDelete={teacherManagement.bulkDeleteTeachers}
+          isLoading={teacherManagement.isLoading}
+        />
       </CardHeader>
       <CardContent>
-        <ResizablePanelGroup direction="horizontal" className="w-full">
-          <ResizablePanel>
-            {viewMode === 'list' ? (
-              <TeacherGrid
-                teachers={teachers}
-                isLoading={isLoading}
-                onViewTeacher={openViewDialog}
-                onDeleteTeacher={openDeleteDialog}
-                canDeleteTeacher={canTeacherBeDeleted}
-                onBulkDelete={bulkDeleteTeachers}
-              />
-            ) : (
-              <UserTable 
-                users={teachers} 
-                isLoading={isLoading}
-                onViewUser={openViewDialog}
-                onDeleteUser={openDeleteDialog}
-                canDeleteUser={canTeacherBeDeleted}
-                canEditUser={undefined}
-                roleFilter="teacher"
-                viewMode={viewMode}
-                selectedUserIds={selectedTeachers}
-                onSelectUserId={id =>
-                  setSelectedTeachers(prev =>
-                    prev.includes(id)
-                      ? prev.filter(tid => tid !== id)
-                      : [...prev, id]
-                  )
-                }
-                onSelectAll={ids => setSelectedTeachers(ids)}
-              />
-            )}
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        
-        <AddUserDialog
-          isOpen={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          onAddUser={handleAddTeacher}
-          isLoading={isLoading}
-          allowAdminCreation={false}
-          defaultRole="teacher"
-          title="Add Teacher"
+        <TeacherTablePanel
+          teachers={teacherManagement.teachers}
+          isLoading={teacherManagement.isLoading}
+          viewMode={teacherManagement.viewMode}
+          openViewDialog={teacherManagement.openViewDialog}
+          openDeleteDialog={teacherManagement.openDeleteDialog}
+          canTeacherBeDeleted={teacherManagement.canTeacherBeDeleted}
+          selectedTeachers={teacherManagement.selectedTeachers}
+          setSelectedTeachers={teacherManagement.setSelectedTeachers}
+          openEditDialog={canEditUser ? teacherManagement.openEditDialog : undefined}
+          onBulkDelete={teacherManagement.bulkDeleteTeachers}
         />
-
-        <EditUserDialog
-          user={teacherToEdit}
-          isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onUpdateUser={handleUpdateTeacher}
-          isLoading={isLoading}
-          userRole="Teacher"
-        />
-        
-        <DeleteUserDialog
-          user={teacherToDelete}
-          isOpen={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          onDelete={handleDeleteTeacher}
-          isLoading={isLoading}
-          userRole="Teacher"
-        />
-        
-        <ViewUserDialog
-          user={teacherToView}
-          isOpen={isViewDialogOpen}
-          onOpenChange={setIsViewDialogOpen}
-          onEditFromView={canEditUser ? handleEditFromView : undefined}
-          onDeleteUser={canDeleteUser ? handleDeleteFromView : undefined}
+        <TeacherDialogs
+          isAddDialogOpen={teacherManagement.isAddDialogOpen}
+          setIsAddDialogOpen={teacherManagement.setIsAddDialogOpen}
+          handleAddTeacher={teacherManagement.handleAddTeacher}
+          isEditDialogOpen={teacherManagement.isEditDialogOpen}
+          setIsEditDialogOpen={teacherManagement.setIsEditDialogOpen}
+          handleUpdateTeacher={teacherManagement.handleUpdateTeacher}
+          isDeleteDialogOpen={teacherManagement.isDeleteDialogOpen}
+          setIsDeleteDialogOpen={teacherManagement.setIsDeleteDialogOpen}
+          handleDeleteTeacher={teacherManagement.handleDeleteTeacher}
+          isViewDialogOpen={teacherManagement.isViewDialogOpen}
+          setIsViewDialogOpen={teacherManagement.setIsViewDialogOpen}
+          teacherToEdit={teacherManagement.teacherToEdit}
+          teacherToDelete={teacherManagement.teacherToDelete}
+          teacherToView={teacherManagement.teacherToView}
+          handleEditFromView={teacherManagement.handleEditFromView}
+          handleDeleteFromView={teacherManagement.handleDeleteFromView}
+          isLoading={teacherManagement.isLoading}
+          canEditUser={canEditUser}
           canDeleteUser={canDeleteUser}
         />
       </CardContent>
