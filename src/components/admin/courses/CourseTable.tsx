@@ -86,7 +86,6 @@ const CourseTable: React.FC<CourseTableProps> = ({
     },
     {
       headerName: 'Actions',
-      // Remove the 'field' property as "actions" is not a field in the Course type
       sortable: false,
       filter: false,
       width: 150,
