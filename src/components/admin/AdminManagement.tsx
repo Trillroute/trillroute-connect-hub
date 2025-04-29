@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -167,12 +168,14 @@ const AdminManagement = ({
         <AdminTable 
           admins={admins}
           isLoading={isLoading}
-          onEditAdmin={openEditDialog}
-          onDeleteAdmin={openDeleteDialog}
-          onEditUserDetails={openViewDialog}
+          onEdit={openEditDialog}
+          onDelete={openDeleteDialog}
+          onView={openViewDialog}
           viewMode={viewMode}
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
+          canEdit={isAdminEditable}
+          canDelete={canAdminBeDeleted}
         />
         <AdminDialogs
           isAddDialogOpen={isAddDialogOpen}
