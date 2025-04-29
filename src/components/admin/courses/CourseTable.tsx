@@ -116,10 +116,12 @@ const CourseTable: React.FC<CourseTableProps> = ({
   // Grid ready event handler to set default column settings
   const onGridReady = useCallback((params: any) => {
     params.api.sizeColumnsToFit();
+    console.log('AG Grid is ready:', params.api);
   }, []);
 
   // Row selection change handler
   const onSelectionChanged = useCallback((event: any) => {
+    console.log('Selection changed:', event);
     const selected = event.api.getSelectedRows().map((row: Course) => row.id);
     setSelectedRows(selected);
   }, []);
@@ -138,6 +140,8 @@ const CourseTable: React.FC<CourseTableProps> = ({
     </div>;
   }
 
+  console.log('Rendering AG Grid with courses:', courses.length);
+  
   return (
     <div className="space-y-4">
       {selectedRows.length > 0 && onBulkDelete && (
@@ -180,7 +184,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
           pagination={true}
           paginationPageSize={10}
           suppressLoadingOverlay={true}
-          domLayout="autoHeight"
+          domLayout="normal"
         />
       </div>
     </div>
