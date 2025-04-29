@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
@@ -200,7 +199,6 @@ const CourseTable: React.FC<CourseTableProps> = ({
           animateRows={true}
           enableCellTextSelection={true}
           ensureDomOrder={true}
-          reactUi={true}
         />
       </div>
     </div>
