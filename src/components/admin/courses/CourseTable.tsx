@@ -7,6 +7,7 @@ import { AgGridReact } from 'ag-grid-react';
 import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { toast } from '@/hooks/use-toast';
 
 interface CourseTableProps {
   courses: Course[];
@@ -115,8 +116,22 @@ const CourseTable: React.FC<CourseTableProps> = ({
 
   // Grid ready event handler to set default column settings
   const onGridReady = useCallback((params: any) => {
-    params.api.sizeColumnsToFit();
-    console.log('AG Grid is ready:', params.api);
+    try {
+      params.api.sizeColumnsToFit();
+      console.log('AG Grid is ready and sized:', params.api);
+      // Force refresh the grid
+      setTimeout(() => {
+        params.api.redrawRows();
+        console.log('AG Grid rows redrawn');
+      }, 100);
+    } catch (err) {
+      console.error('Error in onGridReady:', err);
+      toast({
+        title: "Grid initialization error",
+        description: "There was an issue loading the course table.",
+        variant: "destructive"
+      });
+    }
   }, []);
 
   // Row selection change handler
@@ -141,9 +156,10 @@ const CourseTable: React.FC<CourseTableProps> = ({
   }
 
   console.log('Rendering AG Grid with courses:', courses.length);
+  console.log('First course:', courses[0]);
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       {selectedRows.length > 0 && onBulkDelete && (
         <div className="flex justify-end">
           <Button
@@ -157,15 +173,11 @@ const CourseTable: React.FC<CourseTableProps> = ({
       )}
 
       <div 
-        className="ag-theme-alpine" 
+        className="ag-theme-alpine w-full" 
         style={{ 
-          height: '500px', 
+          height: '600px', 
           width: '100%',
-          '--ag-header-background-color': 'var(--header-bg-color, #f5f5f5)',
-          '--ag-header-foreground-color': 'var(--header-text-color, #333)',
-          '--ag-odd-row-background-color': 'var(--row-odd-bg-color, #ffffff)',
-          '--ag-even-row-background-color': 'var(--row-even-bg-color, #f9f9f9)'
-        } as React.CSSProperties}
+        }}
       >
         <AgGridReact
           rowData={courses}
@@ -185,6 +197,10 @@ const CourseTable: React.FC<CourseTableProps> = ({
           paginationPageSize={10}
           suppressLoadingOverlay={true}
           domLayout="normal"
+          animateRows={true}
+          enableCellTextSelection={true}
+          ensureDomOrder={true}
+          reactUi={true}
         />
       </div>
     </div>

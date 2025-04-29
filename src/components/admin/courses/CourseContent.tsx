@@ -24,6 +24,8 @@ const CourseContent: React.FC<CourseContentProps> = ({
   onDelete,
   onBulkDelete
 }) => {
+  console.log(`CourseContent rendering in ${viewMode} mode with ${courses.length} courses`);
+  
   // Add "No courses found" message when the courses array is empty
   if (courses.length === 0 && !loading) {
     return (
@@ -36,14 +38,16 @@ const CourseContent: React.FC<CourseContentProps> = ({
   
   if (viewMode === 'list') {
     return (
-      <CourseTable 
-        courses={courses} 
-        loading={loading} 
-        onView={onView}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onBulkDelete={onBulkDelete}
-      />
+      <div className="w-full overflow-hidden">
+        <CourseTable 
+          courses={courses} 
+          loading={loading} 
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onBulkDelete={onBulkDelete}
+        />
+      </div>
     );
   }
   
