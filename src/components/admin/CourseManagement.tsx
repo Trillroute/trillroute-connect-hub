@@ -13,7 +13,7 @@ import DeleteCourseDialog from './courses/DeleteCourseDialog';
 import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
 import { Input } from '@/components/ui/input';
-import { canManageCourses } from '@/utils/adminPermissions';
+import { canManageCourses } from '@/utils/permissions';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CourseManagementProps {
@@ -38,17 +38,21 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
 
-  const userCanEdit = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'edit'));
-  const userCanDelete = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'delete'));
-  const userCanAdd = isSuperAdmin() || (user?.role === 'admin' && canManageCourses(user, 'add'));
+  console.log('CourseManagement rendering with courses:', courses?.length);
+  console.log('Current user role:', user?.role);
+  
+  // Force superadmin to always have permissions
+  const userCanEdit = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'edit'));
+  const userCanDelete = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'delete'));
+  const userCanAdd = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'add'));
+  
+  console.log('User can edit courses:', userCanEdit);
+  console.log('User can delete courses:', userCanDelete);
+  console.log('User can add courses:', userCanAdd);
   
   const effectiveCanEditCourse = canEditCourse && userCanEdit;
   const effectiveCanDeleteCourse = canDeleteCourse && userCanDelete;
   const effectiveCanAddCourse = canAddCourse && userCanAdd;
-  
-  if (user?.role === 'admin') {
-    console.log('CourseManagement - can edit courses permission:', canManageCourses(user, 'edit'));
-  }
   
   const openViewDialog = (course: Course) => {
     setSelectedCourse(course);

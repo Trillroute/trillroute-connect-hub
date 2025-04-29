@@ -12,6 +12,8 @@ export const canManageStudents = (
   user: UserManagementUser | PermissionUser | null, 
   action: 'view' | 'add' | 'edit' | 'delete'
 ): boolean => {
+  if (!user) return false;
+  
   if (user?.role === 'superadmin') {
     return true;
   }
@@ -34,6 +36,8 @@ export const canManageTeachers = (
   user: UserManagementUser | PermissionUser | null, 
   action: 'view' | 'add' | 'edit' | 'delete'
 ): boolean => {
+  if (!user) return false;
+  
   if (user?.role === 'superadmin') {
     return true;
   }
@@ -56,6 +60,8 @@ export const canManageAdmins = (
   user: UserManagementUser | PermissionUser | null, 
   action: 'view' | 'add' | 'edit' | 'delete'
 ): boolean => {
+  if (!user) return false;
+  
   if (user?.role === 'superadmin') {
     return true;
   }
@@ -78,6 +84,8 @@ export const canManageLeads = (
   user: UserManagementUser | PermissionUser | null, 
   action: 'view' | 'add' | 'edit' | 'delete'
 ): boolean => {
+  if (!user) return false;
+  
   if (user?.role === 'superadmin') {
     return true;
   }
@@ -101,6 +109,8 @@ export const canManageCourses = (
   action: 'view' | 'add' | 'edit' | 'delete'
 ): boolean => {
   // Always grant permission to superadmin first
+  if (!user) return false;
+  
   if (user?.role === 'superadmin') {
     console.log('[adminPermissions] Superadmin can manage courses:', action);
     return true;
@@ -134,6 +144,8 @@ export const canManageLevels = (
   user: UserManagementUser | PermissionUser | null, 
   action: 'view' | 'add' | 'edit' | 'delete'
 ): boolean => {
+  if (!user) return false;
+  
   if (user?.role === 'superadmin') {
     return true;
   }
