@@ -4,14 +4,11 @@ import { useRegistration } from './useRegistration';
 import { useRoleManagement } from './useRoleManagement';
 import type { AuthContextType } from '@/types/auth';
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const { user, loading, login, logout, isAuthenticated, refreshSession } = useAuthContext();
   const { register } = useRegistration();
   const { isAdmin, isSuperAdmin, role } = useRoleManagement();
 
-  // Log info to help debug
-  console.log('useAuth hook - Current user:', user?.role, 'Admin role name:', user?.adminRoleName);
-  
   return {
     user,
     loading,
@@ -26,7 +23,7 @@ export const useAuth = () => {
   };
 };
 
-// Create a wrapper for exposing the auth context
+// We no longer need this wrapper as we're using AuthenticationProvider from providers/AuthenticationProvider.tsx
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  return children;
+  return children; // This is just a pass-through now
 };

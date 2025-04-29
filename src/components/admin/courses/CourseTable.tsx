@@ -4,6 +4,7 @@ import { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { AgGridReact } from 'ag-grid-react';
+import { ColDef } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
@@ -27,7 +28,7 @@ const CourseTable: React.FC<CourseTableProps> = ({
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   // Define column definitions for AG Grid
-  const columnDefs = useMemo(() => [
+  const columnDefs = useMemo<ColDef<Course>[]>(() => [
     {
       headerName: '',
       field: 'id',
