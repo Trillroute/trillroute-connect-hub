@@ -31,7 +31,7 @@ const StudentManagement = ({
           canAddUser={canAddUser}
           onAdd={() => studentManagement.setIsAddDialogOpen(true)}
           selectedCount={studentManagement.selectedStudents.length}
-          onBulkDelete={studentManagement.bulkDeleteStudents}
+          onBulkDelete={() => studentManagement.bulkDeleteStudents(studentManagement.selectedStudents)}
           isLoading={studentManagement.isLoading}
         />
       </CardHeader>

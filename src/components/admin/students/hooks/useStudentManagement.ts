@@ -18,6 +18,7 @@ export const useStudentManagement = (
     isDeleteDialogOpen, setIsDeleteDialogOpen,
     isViewDialogOpen, setIsViewDialogOpen,
     studentToEdit, studentToDelete, studentToView,
+    setStudentToDelete,
     openViewDialog: baseOpenViewDialog,
     openEditDialog: baseOpenEditDialog,
     openDeleteDialog: baseOpenDeleteDialog,
@@ -53,7 +54,6 @@ export const useStudentManagement = (
     if (!studentToDelete) return;
     await handleDeleteStudent(studentToDelete.id);
     setIsDeleteDialogOpen(false);
-    setStudentToDelete(null);
   };
 
   return {
