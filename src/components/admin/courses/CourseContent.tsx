@@ -24,6 +24,16 @@ const CourseContent: React.FC<CourseContentProps> = ({
   onDelete,
   onBulkDelete
 }) => {
+  // Add "No courses found" message when the courses array is empty
+  if (courses.length === 0 && !loading) {
+    return (
+      <div className="py-10 text-center">
+        <h3 className="text-lg font-medium text-gray-500">No courses found</h3>
+        <p className="text-sm text-gray-400 mt-2">Try changing your search criteria or add a new course.</p>
+      </div>
+    );
+  }
+  
   if (viewMode === 'list') {
     return (
       <CourseTable 

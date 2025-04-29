@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { LayoutGrid, Grid2x2, LayoutList, RefreshCw } from 'lucide-react';
+import { LayoutGrid, Grid2x2, LayoutList, RefreshCw, Plus } from 'lucide-react';
 
 interface ViewControlsProps {
   viewMode: 'list' | 'grid' | 'tile';
@@ -46,6 +46,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       </Button>
       <Button
         variant="outline"
+        size="sm"
         onClick={onRefresh}
         className="flex items-center gap-2"
       >
@@ -55,11 +56,10 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {canAddCourse && (
         <Button 
           onClick={onAddCourse}
+          size="sm"
           className="bg-primary text-white flex items-center gap-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14M5 12h14"/>
-          </svg>
+          <Plus className="h-4 w-4" />
           Add Course
         </Button>
       )}

@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Course } from '@/types/course';
-import DataTable from '@/components/ui/data-table';
-import type { Column } from '@/components/ui/data-table/types';
-import DeleteCourseDialog from './DeleteCourseDialog';
-import EditCourseDialog from './EditCourseDialog';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { Button } from '@/components/ui/button';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 
 interface CourseTableProps {
   courses: Course[];
@@ -23,55 +24,166 @@ const CourseTable: React.FC<CourseTableProps> = ({
   onView,
   onBulkDelete
 }) => {
-  const columns: Column[] = [
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
+  // Define column definitions for AG Grid
+  const columnDefs = useMemo(() => [
     {
-      key: 'title',
-      label: 'Course',
-      filterable: true,
-      render: (_, course) => (
-        <div className="flex items-center gap-3">
-          {course.image && (
-            <img
-              src={course.image}
-              alt={course.title}
-              className="h-10 w-10 rounded object-cover flex-shrink-0"
-            />
-          )}
-          <div className="overflow-hidden">
-            <div className="font-semibold truncate">{course.title}</div>
-            <div className="text-xs text-gray-500 truncate">
-              {course.level} • {course.skill}
+      headerName: '',
+      field: 'id',
+      width: 50,
+      headerCheckboxSelection: true,
+      checkboxSelection: true,
+      filter: false,
+      sortable: false,
+    },
+    {
+      headerName: 'Course',
+      field: 'title',
+      filter: true,
+      sortable: true,
+      flex: 2,
+      minWidth: 200,
+      cellRenderer: (params: any) => {
+        const course = params.data;
+        return (
+          <div className="flex items-center gap-3">
+            {course.image && (
+              <img
+                src={course.image}
+                alt={course.title}
+                className="h-10 w-10 rounded object-cover flex-shrink-0"
+              />
+            )}
+            <div className="overflow-hidden">
+              <div className="font-semibold truncate">{course.title}</div>
+              <div className="text-xs text-gray-500 truncate">
+                {course.level} • {course.skill}
+              </div>
             </div>
           </div>
-        </div>
-      )
+        );
+      }
     },
     {
-      key: 'level',
-      label: 'Level',
-      filterable: true
+      headerName: 'Level',
+      field: 'level',
+      filter: true,
+      sortable: true
     },
     {
-      key: 'skill',
-      label: 'Skill',
-      filterable: true
+      headerName: 'Skill',
+      field: 'skill',
+      filter: true,
+      sortable: true
     },
     {
-      key: 'duration',
-      label: 'Duration'
+      headerName: 'Duration',
+      field: 'duration',
+      filter: true,
+      sortable: true
+    },
+    {
+      headerName: 'Actions',
+      field: 'actions',
+      sortable: false,
+      filter: false,
+      width: 150,
+      cellRenderer: (params: any) => {
+        return (
+          <div className="flex items-center gap-2">
+            {onView && (
+              <Button variant="ghost" size="sm" onClick={() => onView(params.data)}>
+                <Eye className="h-4 w-4" />
+              </Button>
+            )}
+            {onEdit && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit(params.data)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="sm" onClick={() => onDelete(params.data)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        );
+      }
     }
-  ];
+  ], [onView, onEdit, onDelete]);
+
+  // Grid ready event handler to set default column settings
+  const onGridReady = useCallback((params: any) => {
+    params.api.sizeColumnsToFit();
+  }, []);
+
+  // Row selection change handler
+  const onSelectionChanged = useCallback((event: any) => {
+    const selected = event.api.getSelectedRows().map((row: Course) => row.id);
+    setSelectedRows(selected);
+  }, []);
+
+  // Handle bulk delete action
+  const handleBulkDelete = useCallback(() => {
+    if (onBulkDelete && selectedRows.length > 0) {
+      onBulkDelete(selectedRows);
+      setSelectedRows([]);
+    }
+  }, [onBulkDelete, selectedRows]);
+
+  if (loading) {
+    return <div className="flex justify-center py-8">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>;
+  }
 
   return (
-    <DataTable
-      data={courses}
-      columns={columns}
-      loading={loading}
-      onView={onView}
-      onEdit={onEdit}
-      onDelete={onDelete}
-      onBulkDelete={onBulkDelete}
-    />
+    <div className="space-y-4">
+      {selectedRows.length > 0 && onBulkDelete && (
+        <div className="flex justify-end">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+          >
+            Delete Selected ({selectedRows.length})
+          </Button>
+        </div>
+      )}
+
+      <div 
+        className="ag-theme-alpine" 
+        style={{ 
+          height: '500px', 
+          width: '100%',
+          '--ag-header-background-color': 'var(--header-bg-color, #f5f5f5)',
+          '--ag-header-foreground-color': 'var(--header-text-color, #333)',
+          '--ag-odd-row-background-color': 'var(--row-odd-bg-color, #ffffff)',
+          '--ag-even-row-background-color': 'var(--row-even-bg-color, #f9f9f9)'
+        } as React.CSSProperties}
+      >
+        <AgGridReact
+          rowData={courses}
+          columnDefs={columnDefs}
+          rowSelection="multiple"
+          onGridReady={onGridReady}
+          onSelectionChanged={onSelectionChanged}
+          suppressRowClickSelection={true}
+          defaultColDef={{
+            flex: 1,
+            minWidth: 100,
+            filter: true,
+            floatingFilter: true,
+            resizable: true,
+          }}
+          pagination={true}
+          paginationPageSize={10}
+          suppressLoadingOverlay={true}
+          domLayout="autoHeight"
+        />
+      </div>
+    </div>
   );
 };
 
