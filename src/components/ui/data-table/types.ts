@@ -14,4 +14,6 @@ export interface DataTableProps {
   onEdit?: (row: any) => void;
   onDelete?: (row: any) => void;
   onBulkDelete?: (ids: string[]) => void;
+  selectedIds?: string[];
+  setSelectedIds?: React.Dispatch<React.SetStateAction<string[]>>;
 }

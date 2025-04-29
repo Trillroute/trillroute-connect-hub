@@ -9,17 +9,17 @@ import { format } from 'date-fns';
 interface AdminTableProps {
   admins: UserManagementUser[];
   isLoading: boolean;
-  onEditAdmin: (admin: UserManagementUser) => void;
-  onDeleteAdmin: (admin: UserManagementUser) => void;
-  onEditUserDetails?: (admin: UserManagementUser) => void;
+  onEdit?: (admin: UserManagementUser) => void;
+  onDelete?: (admin: UserManagementUser) => void;
+  onView?: (admin: UserManagementUser) => void;
 }
 
 const AdminTable: React.FC<AdminTableProps> = ({
   admins,
   isLoading,
-  onEditAdmin,
-  onDeleteAdmin,
-  onEditUserDetails
+  onEdit,
+  onDelete,
+  onView
 }) => {
   const columns: Column[] = [
     {
@@ -51,9 +51,9 @@ const AdminTable: React.FC<AdminTableProps> = ({
       data={admins}
       columns={columns}
       loading={isLoading}
-      onView={onEditUserDetails}
-      onEdit={onEditAdmin}
-      onDelete={onDeleteAdmin}
+      onView={onView}
+      onEdit={onEdit}
+      onDelete={onDelete}
     />
   );
 };

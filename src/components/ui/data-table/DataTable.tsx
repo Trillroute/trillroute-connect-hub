@@ -22,10 +22,13 @@ const DataTable: React.FC<DataTableProps> = ({
   onView,
   onEdit,
   onDelete,
-  onBulkDelete
+  onBulkDelete,
+  selectedIds,
+  setSelectedIds
 }) => {
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const localSelectedIds = selectedIds || [];
+  const localSetSelectedIds = setSelectedIds || (() => {});
 
   const handleFilter = (key: string, value: string) => {
     setFilters(current => ({
@@ -43,15 +46,15 @@ const DataTable: React.FC<DataTableProps> = ({
   });
 
   const toggleAllRows = () => {
-    if (selectedIds.length === filteredData.length) {
-      setSelectedIds([]);
+    if (localSelectedIds.length === filteredData.length) {
+      localSetSelectedIds([]);
     } else {
-      setSelectedIds(filteredData.map(row => row.id));
+      localSetSelectedIds(filteredData.map(row => row.id));
     }
   };
 
   const toggleRow = (id: string) => {
-    setSelectedIds(current =>
+    localSetSelectedIds(current =>
       current.includes(id)
         ? current.filter(rowId => rowId !== id)
         : [...current, id]
@@ -64,14 +67,14 @@ const DataTable: React.FC<DataTableProps> = ({
 
   return (
     <div className="space-y-4">
-      {selectedIds.length > 0 && onBulkDelete && (
+      {localSelectedIds.length > 0 && onBulkDelete && (
         <div className="flex justify-end">
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => onBulkDelete(selectedIds)}
+            onClick={() => onBulkDelete(localSelectedIds)}
           >
-            Delete Selected ({selectedIds.length})
+            Delete Selected ({localSelectedIds.length})
           </Button>
         </div>
       )}
@@ -80,10 +83,10 @@ const DataTable: React.FC<DataTableProps> = ({
         <Table>
           <TableHeader>
             <TableRow>
-              {onBulkDelete && (
+              {onBulkDelete && setSelectedIds && (
                 <TableHead className="w-[50px]">
                   <Checkbox
-                    checked={selectedIds.length === filteredData.length && filteredData.length > 0}
+                    checked={localSelectedIds.length === filteredData.length && filteredData.length > 0}
                     onCheckedChange={toggleAllRows}
                   />
                 </TableHead>
@@ -110,10 +113,10 @@ const DataTable: React.FC<DataTableProps> = ({
           <TableBody>
             {filteredData.map((row, index) => (
               <TableRow key={row.id || index}>
-                {onBulkDelete && (
+                {onBulkDelete && setSelectedIds && (
                   <TableCell>
                     <Checkbox
-                      checked={selectedIds.includes(row.id)}
+                      checked={localSelectedIds.includes(row.id)}
                       onCheckedChange={() => toggleRow(row.id)}
                     />
                   </TableCell>

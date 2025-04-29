@@ -217,9 +217,9 @@ const AdminManagement = () => {
           <AdminTable 
             admins={admins} 
             isLoading={isLoading}
-            onEditAdmin={() => {}} // This is no longer used
-            onDeleteAdmin={openDeleteDialog}
-            onEditUserDetails={openEditUserDialog}
+            onEdit={() => {}}
+            onDelete={openDeleteDialog}
+            onView={openEditUserDialog}
           />
         )}
         {viewMode === 'grid' && (
