@@ -1,9 +1,6 @@
 
 import React from 'react';
 import { UserManagementUser } from '@/types/student';
-import DataTable from '@/components/ui/data-table';
-import type { Column } from '@/components/ui/data-table/types';
-import { getAdminTableColumns } from './columns';
 import AdminGrid from '@/components/admin/admin/AdminGrid';
 
 interface AdminTableViewProps {
@@ -28,7 +25,7 @@ const AdminTableView: React.FC<AdminTableViewProps> = ({
   selectedIds,
   setSelectedIds,
 }) => {
-  // Always use our custom DataGrid via AdminGrid
+  // Use our AdminGrid which now leverages the unified component
   return (
     <AdminGrid
       admins={admins}

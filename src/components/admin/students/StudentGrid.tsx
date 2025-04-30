@@ -2,10 +2,8 @@
 import React, { useMemo } from 'react';
 import { UserManagementUser } from '@/types/student';
 import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, User } from 'lucide-react';
-import DataGrid, { DataGridColumn } from '@/components/common/table/DataGrid';
-import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
+import { User } from 'lucide-react';
+import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
 
 interface StudentGridProps {
   students: UserManagementUser[];
@@ -30,112 +28,64 @@ const StudentGrid: React.FC<StudentGridProps> = ({
   selectedStudentIds = [],
   setSelectedStudentIds
 }) => {
-  // Ensure we have data to display
-  console.log('Students data:', students?.length, 'Loading:', isLoading);
-
-  const handleSelectionChanged = (selectedRows: UserManagementUser[]) => {
-    if (setSelectedStudentIds) {
-      const ids = selectedRows.map(row => row.id);
-      setSelectedStudentIds(ids);
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (onBulkDelete && selectedStudentIds.length > 0) {
-      onBulkDelete(selectedStudentIds);
-    }
-  };
-
-  const columnDefs = useMemo<DataGridColumn[]>(() => [
+  const columnConfigs = useMemo<ColumnConfig[]>(() => [
     {
-      headerName: '',
-      field: 'id',
-      width: 50,
-      headerCheckboxSelection: true,
-      checkboxSelection: true,
-    },
-    {
-      headerName: 'Name',
       field: 'name',
-      valueGetter: (params) => {
-        const data = params.data;
+      headerName: 'Name',
+      valueGetter: ({ data }) => {
         return data ? `${data.firstName || ''} ${data.lastName || ''}` : '';
       },
-      cellRenderer: (params) => {
-        if (!params.value) return null;
+      cellRenderer: ({ value }) => {
+        if (!value) return null;
         return (
           <div className="font-semibold flex items-center">
             <User className="h-4 w-4 text-blue-500 mr-1" />
-            {params.value}
+            {value}
           </div>
         );
       }
     },
     {
-      headerName: 'Email',
       field: 'email',
+      headerName: 'Email'
     },
     {
-      headerName: 'Created',
       field: 'createdAt',
-      valueFormatter: (params) => {
-        if (!params.value) return '';
+      headerName: 'Created',
+      valueFormatter: ({ value }) => {
+        if (!value) return '';
         try {
-          return format(new Date(params.value), 'MMM d, yyyy');
+          return format(new Date(value), 'MMM d, yyyy');
         } catch (error) {
           console.error('Date formatting error:', error);
-          return params.value;
+          return value;
         }
       }
-    },
-    {
-      headerName: 'Actions',
-      field: 'actions',
-      width: 150,
-      cellRenderer: (params) => {
-        if (!params.data) return null;
-        
-        return (
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => onViewStudent(params.data)}>
-              <Eye className="h-4 w-4" />
-            </Button>
-            {onEditStudent && (
-              <Button variant="ghost" size="sm" onClick={() => onEditStudent(params.data)}>
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-            {onDeleteStudent && canDeleteStudent(params.data) && (
-              <Button variant="ghost" size="sm" onClick={() => onDeleteStudent(params.data)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        );
-      }
     }
-  ], [onViewStudent, onEditStudent, onDeleteStudent, canDeleteStudent]);
+  ], []);
+
+  // Filter out students that can't be deleted for the action buttons
+  const handleDelete = onDeleteStudent 
+    ? (student: UserManagementUser) => {
+        if (canDeleteStudent(student)) {
+          onDeleteStudent(student);
+        }
+      }
+    : undefined;
 
   return (
-    <div className="space-y-4 w-full">
-      {selectedStudentIds.length > 0 && onBulkDelete && (
-        <BulkDeleteButton 
-          selectedCount={selectedStudentIds.length}
-          onBulkDelete={handleBulkDelete}
-        />
-      )}
-      
-      <div className="w-full rounded-md border">
-        <DataGrid
-          rowData={students || []}
-          columnDefs={columnDefs}
-          onSelectionChanged={handleSelectionChanged}
-          loading={isLoading}
-          height="500px"
-          className="w-full"
-        />
-      </div>
-    </div>
+    <UnifiedDataGrid
+      data={students || []}
+      columnConfigs={columnConfigs}
+      loading={isLoading}
+      onEdit={onEditStudent}
+      onDelete={handleDelete}
+      onView={onViewStudent}
+      onBulkDelete={onBulkDelete}
+      selectedIds={selectedStudentIds}
+      setSelectedIds={setSelectedStudentIds}
+      emptyMessage="No students found"
+    />
   );
 };
 

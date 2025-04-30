@@ -2,10 +2,8 @@
 import React, { useMemo } from 'react';
 import { UserManagementUser } from '@/types/student';
 import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Eye, Pencil, Trash2, Shield } from 'lucide-react';
-import DataGrid, { DataGridColumn } from '@/components/common/table/DataGrid';
-import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
+import { Shield } from 'lucide-react';
+import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
 
 interface AdminGridProps {
   admins: UserManagementUser[];
@@ -28,19 +26,6 @@ const AdminGrid: React.FC<AdminGridProps> = ({
   selectedAdminIds = [],
   setSelectedAdminIds
 }) => {
-  const handleSelectionChanged = (selectedRows: UserManagementUser[]) => {
-    if (setSelectedAdminIds) {
-      const ids = selectedRows.map(row => row.id);
-      setSelectedAdminIds(ids);
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (onBulkDelete && selectedAdminIds.length > 0) {
-      onBulkDelete(selectedAdminIds);
-    }
-  };
-
   const getAdminLevelName = (level?: number) => {
     if (level === undefined) return '';
     switch (level) {
@@ -56,93 +41,55 @@ const AdminGrid: React.FC<AdminGridProps> = ({
     }
   };
 
-  const columnDefs = useMemo<DataGridColumn[]>(() => [
+  const columnConfigs = useMemo<ColumnConfig[]>(() => [
     {
-      headerName: '',
-      field: 'id',
-      width: 50,
-      headerCheckboxSelection: true,
-      checkboxSelection: true,
-    },
-    {
-      headerName: 'Name',
       field: 'name',
-      valueGetter: (params) => `${params.data.firstName} ${params.data.lastName}`,
-      cellRenderer: (params) => (
+      headerName: 'Name',
+      valueGetter: ({ data }) => `${data.firstName} ${data.lastName}`,
+      cellRenderer: ({ value }) => (
         <div className="font-medium flex items-center">
           <Shield className="h-4 w-4 text-music-500 mr-2" />
-          {params.value}
+          {value}
         </div>
       )
     },
     {
-      headerName: 'Email',
       field: 'email',
+      headerName: 'Email'
     },
     {
-      headerName: 'Admin Level',
       field: 'adminLevel',
-      valueFormatter: (params) => getAdminLevelName(params.value)
+      headerName: 'Admin Level',
+      valueFormatter: ({ value }) => getAdminLevelName(value)
     },
     {
-      headerName: 'Created',
       field: 'createdAt',
-      valueFormatter: (params) => {
-        if (!params.value) return '';
+      headerName: 'Created',
+      valueFormatter: ({ value }) => {
+        if (!value) return '';
         try {
-          return format(new Date(params.value), 'MMM d, yyyy');
+          return format(new Date(value), 'MMM d, yyyy');
         } catch (error) {
           console.error('Date formatting error:', error);
-          return params.value;
+          return value;
         }
       }
-    },
-    {
-      headerName: 'Actions',
-      field: 'actions',
-      width: 150,
-      cellRenderer: (params) => (
-        <div className="flex items-center gap-2">
-          {onView && (
-            <Button variant="ghost" size="sm" onClick={() => onView(params.data)}>
-              <Eye className="h-4 w-4" />
-            </Button>
-          )}
-          {onEdit && (
-            <Button variant="ghost" size="sm" onClick={() => onEdit(params.data)}>
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button variant="ghost" size="sm" onClick={() => onDelete(params.data)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      )
     }
-  ], [onView, onEdit, onDelete]);
+  ], []);
 
   return (
-    <div className="space-y-4 w-full">
-      {selectedAdminIds.length > 0 && onBulkDelete && (
-        <BulkDeleteButton 
-          selectedCount={selectedAdminIds.length}
-          onBulkDelete={handleBulkDelete}
-        />
-      )}
-      
-      <div className="w-full rounded-md border">
-        <DataGrid
-          rowData={admins}
-          columnDefs={columnDefs}
-          onSelectionChanged={handleSelectionChanged}
-          loading={isLoading}
-          height="500px"
-          className="w-full"
-        />
-      </div>
-    </div>
+    <UnifiedDataGrid
+      data={admins}
+      columnConfigs={columnConfigs}
+      loading={isLoading}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onView={onView}
+      onBulkDelete={onBulkDelete}
+      selectedIds={selectedAdminIds}
+      setSelectedIds={setSelectedAdminIds}
+      emptyMessage="No administrators found"
+    />
   );
 };
 

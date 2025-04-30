@@ -24,7 +24,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   selectedLeadIds,
   setSelectedLeadIds
 }) => {
-  // Always use our custom DataGrid via LeadGrid
+  // Just pass through to our LeadGrid which now uses the unified component
   return (
     <LeadGrid
       leads={leads}
