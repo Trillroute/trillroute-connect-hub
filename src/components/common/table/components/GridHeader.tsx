@@ -1,11 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Toggle } from '@/components/ui/toggle';
-import { ChevronDown, ChevronUp, Filter, X, ArrowUpAZ, ArrowDownAZ } from "lucide-react";
+import { ChevronDown, ChevronUp, Filter, X, ArrowUpAZ, ArrowDownAZ, GripVertical } from "lucide-react";
 import { ColumnConfig, SortConfig } from '../types';
 
 interface GridHeaderProps {
@@ -22,6 +22,9 @@ interface GridHeaderProps {
   handleFilterChange: (field: string, value: string) => void;
   clearFilter: (field: string) => void;
   toggleFilterVisibility: (field: string) => void;
+  onDragStart?: (index: number) => void;
+  onDragOver?: (index: number) => void;
+  onDragEnd?: () => void;
 }
 
 const GridHeader: React.FC<GridHeaderProps> = ({
@@ -37,7 +40,10 @@ const GridHeader: React.FC<GridHeaderProps> = ({
   handleSort,
   handleFilterChange,
   clearFilter,
-  toggleFilterVisibility
+  toggleFilterVisibility,
+  onDragStart,
+  onDragOver,
+  onDragEnd
 }) => {
   return (
     <TableHeader>
@@ -56,10 +62,18 @@ const GridHeader: React.FC<GridHeaderProps> = ({
           <TableHead 
             key={index} 
             style={column.width ? { width: column.width } : {}}
+            draggable={column.field !== 'name' && onDragStart && !column.field.includes('action')}
+            onDragStart={column.field !== 'name' && onDragStart ? () => onDragStart(index) : undefined}
+            onDragOver={onDragOver ? () => onDragOver(index) : undefined}
+            onDragEnd={onDragEnd}
+            className={column.field !== 'name' && !column.field.includes('action') ? "cursor-move" : ""}
           >
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
+                  {column.field !== 'name' && !column.field.includes('action') && onDragStart && (
+                    <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
+                  )}
                   <div 
                     className="flex items-center gap-1 cursor-pointer"
                     onClick={() => column.sortable !== false && handleSort(column.field)}

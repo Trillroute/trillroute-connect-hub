@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ export type { ColumnConfig, UnifiedDataGridProps };
 
 const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   data,
-  columnConfigs,
+  columnConfigs: initialColumnConfigs,
   loading = false,
   onView,
   onEdit,
@@ -32,6 +32,10 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   emptyMessage = "No data available",
   className = "",
 }) => {
+  // Add state to track column configurations that can be reordered
+  const [columnConfigs, setColumnConfigs] = useState<ColumnConfig[]>(initialColumnConfigs);
+  const [draggedColIndex, setDraggedColIndex] = useState<number | null>(null);
+
   // Use our custom hooks to manage grid data and selection
   const {
     filteredData,
@@ -61,6 +65,44 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   const hasSelectionColumn = !!setSelectedIds;
   const hasActionColumn = !!(onView || onEdit || onDelete);
   
+  // Column drag handlers
+  const handleDragStart = (index: number) => {
+    // Don't allow dragging the name column or action column
+    const column = columnConfigs[index];
+    if (column.field === 'name' || column.field.includes('action')) {
+      return;
+    }
+    setDraggedColIndex(index);
+  };
+
+  const handleDragOver = (index: number) => {
+    if (draggedColIndex === null || draggedColIndex === index) return;
+    
+    // Don't allow dropping on the name column or action column
+    const targetColumn = columnConfigs[index];
+    if (targetColumn.field === 'name' || targetColumn.field.includes('action')) {
+      return;
+    }
+
+    // Create a new array with reordered columns
+    const newColumnConfigs = [...columnConfigs];
+    const draggedColumn = newColumnConfigs[draggedColIndex];
+    
+    // Remove the dragged column
+    newColumnConfigs.splice(draggedColIndex, 1);
+    // Insert it at the new position
+    newColumnConfigs.splice(index, 0, draggedColumn);
+    
+    // Update the dragged column index
+    setDraggedColIndex(index);
+    // Update the column configs
+    setColumnConfigs(newColumnConfigs);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedColIndex(null);
+  };
+
   // Loading state
   if (loading) {
     return <LoadingIndicator height={height} />;
@@ -93,6 +135,9 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
                 handleFilterChange={handleFilterChange}
                 clearFilter={clearFilter}
                 toggleFilterVisibility={toggleFilterVisibility}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
               />
               
               <GridBody 
