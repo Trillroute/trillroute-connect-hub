@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, LayoutList, LayoutGrid, Grid2x2, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, LayoutList, LayoutGrid, Grid2x2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 import LevelTable from './LevelTable';
@@ -43,7 +43,7 @@ const LevelManagement = ({
   const [isEditPermissionsDialogOpen, setIsEditPermissionsDialogOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<AdminLevelDetailed | null>(null);
 
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const { toast } = useToast();
@@ -130,12 +130,12 @@ const LevelManagement = ({
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = async (ids: string[]) => {
     setIsLoading(true);
     let deletedCount = 0;
-    for (const id of selectedIds) {
+    for (const id of ids) {
       try {
-        await deleteLevel(id);
+        await deleteLevel(Number(id));
         deletedCount++;
       } catch (error) {
         // continue on errors
@@ -171,15 +171,11 @@ const LevelManagement = ({
   const effectiveCanEdit = canEditLevel && isSuperAdmin();
   const effectiveCanDelete = canDeleteLevel && isSuperAdmin();
 
-  const allLevelIds = levels.map(l => l.id);
-  const allSelected = selectedIds.length > 0 && levels.length > 0 && levels.every(lvl => selectedIds.includes(lvl.id));
-  const toggleSelectAll = () => {
-    if (allSelected) setSelectedIds([]);
-    else setSelectedIds(levels.map(lvl => lvl.id));
-  };
-  const toggleSelectOne = (id: number) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
+  // Format level IDs as strings for the UnifiedDataGrid
+  const formattedLevels = levels.map(level => ({
+    ...level,
+    id: String(level.id)
+  }));
 
   return (
     <Card>
@@ -224,146 +220,20 @@ const LevelManagement = ({
                 Add Level
               </Button>
             )}
-            {selectedIds.length > 0 && effectiveCanDelete && (
-              <Button
-                variant="destructive"
-                onClick={handleBulkDelete}
-                className="ml-2"
-                disabled={isLoading}
-              >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected ({selectedIds.length})
-              </Button>
-            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div>
-          {viewMode === 'list' && (
-            <table className="w-full mb-3">
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={toggleSelectAll}
-                      aria-label="Select all"
-                    />
-                  </th>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {levels.map(level => (
-                  <tr key={level.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(level.id)}
-                        onChange={() => toggleSelectOne(level.id)}
-                        aria-label={`Select level ${level.name}`}
-                      />
-                    </td>
-                    <td>{level.name}</td>
-                    <td className="truncate max-w-xs">{level.description}</td>
-                    <td>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => effectiveCanEdit ? openEditPermissionsDialog(level) : openViewPermissionsDialog(level)}
-                      >
-                        Edit
-                      </Button>
-                      {effectiveCanDelete && (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="ml-2"
-                          onClick={() => openDeleteDialog(level)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-          {viewMode === 'grid' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-3">
-              {levels.map(level => (
-                <div key={level.id} className="relative border rounded p-4 shadow bg-gray-50">
-                  <input
-                    type="checkbox"
-                    className="absolute top-2 right-2"
-                    checked={selectedIds.includes(level.id)}
-                    onChange={() => toggleSelectOne(level.id)}
-                    aria-label={`Select level ${level.name}`}
-                  />
-                  <div className="font-bold text-lg">{level.name}</div>
-                  <div className="text-sm text-gray-600 mb-2">{level.description}</div>
-                  <div className="flex gap-2 mt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => effectiveCanEdit ? openEditPermissionsDialog(level) : openViewPermissionsDialog(level)}
-                    >
-                      Edit
-                    </Button>
-                    {effectiveCanDelete && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => openDeleteDialog(level)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {viewMode === 'tile' && (
-            <div className="flex flex-wrap gap-4 mb-3">
-              {levels.map(level => (
-                <div key={level.id} className="w-60 border rounded p-4 flex flex-col items-center shadow bg-gray-50 relative">
-                  <input
-                    type="checkbox"
-                    className="absolute top-2 right-2"
-                    checked={selectedIds.includes(level.id)}
-                    onChange={() => toggleSelectOne(level.id)}
-                    aria-label={`Select level ${level.name}`}
-                  />
-                  <div className="font-bold text-lg mb-2">{level.name}</div>
-                  <div className="text-xs text-gray-600 mb-4 text-center line-clamp-3">{level.description}</div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => effectiveCanEdit ? openEditPermissionsDialog(level) : openViewPermissionsDialog(level)}
-                    >
-                      Edit
-                    </Button>
-                    {effectiveCanDelete && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => openDeleteDialog(level)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <LevelTable
+          levels={formattedLevels}
+          isLoading={isLoading}
+          onEdit={openEditDialog}
+          onDelete={openDeleteDialog}
+          onViewPermissions={effectiveCanEdit ? openEditPermissionsDialog : openViewPermissionsDialog}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+          onBulkDelete={effectiveCanDelete ? handleBulkDelete : undefined}
+        />
 
         <CreateLevelDialog
           isOpen={isCreateDialogOpen}

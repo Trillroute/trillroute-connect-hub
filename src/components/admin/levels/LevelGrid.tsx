@@ -34,17 +34,29 @@ const LevelGrid: React.FC<LevelGridProps> = ({
   const columnConfigs = useMemo<ColumnConfig[]>(() => [
     {
       field: 'name',
-      headerName: 'Level Name'
+      headerName: 'Level Name',
+      sortable: true,
+      filterable: true
     },
     {
       field: 'description',
-      headerName: 'Description'
+      headerName: 'Description',
+      sortable: true,
+      filterable: true
     }
   ], []);
 
+  // Map levels to have string IDs for UnifiedDataGrid
+  const formattedLevels = useMemo(() => {
+    return levels.map(level => ({
+      ...level,
+      id: String(level.id)
+    }));
+  }, [levels]);
+
   return (
     <UnifiedDataGrid
-      data={levels}
+      data={formattedLevels}
       columnConfigs={columnConfigs}
       loading={loading}
       onEdit={onEdit}

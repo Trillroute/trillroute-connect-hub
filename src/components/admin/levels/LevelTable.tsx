@@ -8,6 +8,8 @@ interface Level {
   description: string;
 }
 
+export type { Level };
+
 interface LevelTableProps {
   levels: Level[];
   isLoading: boolean;

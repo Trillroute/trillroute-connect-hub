@@ -3,7 +3,8 @@ import React from 'react';
 import { ClassType } from '@/hooks/useClassTypes';
 import ClassTypeGrid from './ClassTypeGrid';
 
-export { ClassType };
+// Re-export using 'export type' for TypeScript isolated modules
+export type { ClassType };
 
 interface ClassTypeTableProps {
   classTypes: ClassType[];
