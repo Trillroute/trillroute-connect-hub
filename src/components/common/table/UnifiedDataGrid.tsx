@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, Filter, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { format } from 'date-fns';
 import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 
@@ -58,6 +59,10 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   emptyMessage = "No data available",
   className = "",
 }) => {
+  // Add state for filters
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [showFilters, setShowFilters] = useState(false);
+
   // Handle row selection
   const handleRowSelection = (id: string) => {
     if (!setSelectedIds) return;
@@ -75,10 +80,10 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   const handleSelectAll = () => {
     if (!setSelectedIds) return;
     
-    if (selectedIds.length === data.length) {
+    if (selectedIds.length === filteredData.length) {
       setSelectedIds([]);
     } else {
-      const allIds = data.map(item => item.id);
+      const allIds = filteredData.map(item => item.id);
       setSelectedIds(allIds);
     }
   };
@@ -105,6 +110,45 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
     }
     return value;
   };
+  
+  // Handle filter change
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({});
+  };
+  
+  // Toggle filters visibility
+  const toggleFilters = () => {
+    setShowFilters(prev => !prev);
+  };
+
+  // Apply filters to data
+  const filteredData = useMemo(() => {
+    return data.filter(row => {
+      return Object.entries(filters).every(([field, filterValue]) => {
+        if (!filterValue || filterValue.trim() === '') return true;
+        
+        const column = columnConfigs.find(col => col.field === field);
+        if (!column) return true;
+        
+        const cellValue = getCellValue(row, column);
+        const formattedValue = getFormattedValue(cellValue, column);
+        
+        // Convert to string for comparison
+        const valueStr = String(formattedValue || '').toLowerCase();
+        const filterStr = filterValue.toLowerCase();
+        
+        return valueStr.includes(filterStr);
+      });
+    });
+  }, [data, filters, columnConfigs]);
 
   // Loading state
   if (loading) {
@@ -115,13 +159,68 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
     );
   }
 
+  // Check if there are active filters
+  const activeFiltersCount = Object.values(filters).filter(value => value && value.trim() !== '').length;
+
   return (
     <div className="space-y-4 w-full">
-      {selectedIds.length > 0 && onBulkDelete && (
-        <BulkDeleteButton 
-          selectedCount={selectedIds.length}
-          onBulkDelete={handleBulkDelete}
-        />
+      <div className="flex justify-between items-center">
+        {selectedIds.length > 0 && onBulkDelete && (
+          <BulkDeleteButton 
+            selectedCount={selectedIds.length}
+            onBulkDelete={handleBulkDelete}
+          />
+        )}
+        
+        <div className="flex-1"></div>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={toggleFilters}
+          className="flex items-center gap-1 ml-auto relative"
+        >
+          <Filter className="h-4 w-4" />
+          <span>Filters</span>
+          {activeFiltersCount > 0 && (
+            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
+              {activeFiltersCount}
+            </Badge>
+          )}
+        </Button>
+      </div>
+
+      {showFilters && (
+        <div className="border p-3 rounded-md mb-2 bg-card shadow-sm space-y-4">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="font-medium">Filters</h4>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearFilters}
+              className="h-8 px-2 text-sm"
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
+              Clear all
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {columnConfigs.map((column, idx) => (
+              <div key={idx} className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">
+                  {column.headerName}
+                </label>
+                <Input
+                  value={filters[column.field] || ''}
+                  onChange={(e) => handleFilterChange(column.field, e.target.value)}
+                  placeholder={`Filter ${column.headerName.toLowerCase()}`}
+                  className="h-8 text-sm"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className={`w-full rounded-md border overflow-hidden ${className}`}>
@@ -133,8 +232,8 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
                   {setSelectedIds && (
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedIds.length === data.length && data.length > 0}
-                        indeterminate={selectedIds.length > 0 && selectedIds.length < data.length}
+                        checked={selectedIds.length === filteredData.length && filteredData.length > 0}
+                        indeterminate={selectedIds.length > 0 && selectedIds.length < filteredData.length}
                         onCheckedChange={handleSelectAll}
                       />
                     </TableHead>
@@ -155,7 +254,7 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.length === 0 ? (
+                {filteredData.length === 0 ? (
                   <TableRow>
                     <TableCell 
                       colSpan={(onView || onEdit || onDelete ? columnConfigs.length + 2 : columnConfigs.length + 1)}
@@ -165,7 +264,7 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data.map((row) => (
+                  filteredData.map((row) => (
                     <TableRow key={row.id}>
                       {setSelectedIds && (
                         <TableCell>
