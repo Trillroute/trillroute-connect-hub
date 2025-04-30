@@ -1,12 +1,7 @@
 
 import React, { useMemo } from 'react';
 import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
-
-interface Level {
-  id: string;
-  name: string;
-  description: string;
-}
+import { Level } from './LevelTable';
 
 interface LevelGridProps {
   levels: Level[];

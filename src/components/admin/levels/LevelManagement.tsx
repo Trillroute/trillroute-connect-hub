@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, RefreshCw, LayoutList, LayoutGrid, Grid2x2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLevelDetailed } from '@/types/adminLevel';
-import LevelTable from './LevelTable';
+import LevelTable, { Level } from './LevelTable';
 import CreateLevelDialog from './CreateLevelDialog';
 import EditLevelDialog from './EditLevelDialog';
 import DeleteLevelDialog from './DeleteLevelDialog';
@@ -150,20 +150,24 @@ const LevelManagement = ({
     setIsLoading(false);
   };
 
-  const openEditDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  // Convert AdminLevelDetailed to Level for the component props
+  const openEditDialog = (level: Level) => {
+    setSelectedLevel(level as unknown as AdminLevelDetailed);
     setIsEditDialogOpen(true);
   };
-  const openDeleteDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  
+  const openDeleteDialog = (level: Level) => {
+    setSelectedLevel(level as unknown as AdminLevelDetailed);
     setIsDeleteDialogOpen(true);
   };
-  const openViewPermissionsDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  
+  const openViewPermissionsDialog = (level: Level) => {
+    setSelectedLevel(level as unknown as AdminLevelDetailed);
     setIsViewPermissionsDialogOpen(true);
   };
-  const openEditPermissionsDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  
+  const openEditPermissionsDialog = (level: Level) => {
+    setSelectedLevel(level as unknown as AdminLevelDetailed);
     setIsEditPermissionsDialogOpen(true);
   };
 
@@ -171,8 +175,8 @@ const LevelManagement = ({
   const effectiveCanEdit = canEditLevel && isSuperAdmin();
   const effectiveCanDelete = canDeleteLevel && isSuperAdmin();
 
-  // Format level IDs as strings for the UnifiedDataGrid
-  const formattedLevels = levels.map(level => ({
+  // Format level IDs as strings for the UnifiedDataGrid and convert to Level type
+  const formattedLevels: Level[] = levels.map(level => ({
     ...level,
     id: String(level.id)
   }));

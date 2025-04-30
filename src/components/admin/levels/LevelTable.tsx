@@ -1,11 +1,19 @@
 
 import React from 'react';
 import LevelGrid from './LevelGrid';
+import { AdminLevelDetailed } from '@/types/adminLevel';
 
+// Define Level interface to match AdminLevelDetailed structure
 interface Level {
   id: string;
   name: string;
   description: string;
+  studentPermissions?: string[];
+  teacherPermissions?: string[];
+  adminPermissions?: string[];
+  leadPermissions?: string[];
+  coursePermissions?: string[];
+  levelPermissions?: string[];
 }
 
 export type { Level };
