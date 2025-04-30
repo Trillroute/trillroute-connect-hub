@@ -187,10 +187,15 @@ export function useLevelManagement(
     }
   };
 
+  // Find AdminLevelDetailed by Level
+  const findAdminLevelByLevel = (level: Level): AdminLevelDetailed | null => {
+    const adminLevel = levels.find(l => String(l.id) === level.id) || null;
+    return adminLevel;
+  };
+
   // Dialog control handlers
   const openEditDialog = (level: Level) => {
-    // Convert Level to AdminLevelDetailed if needed
-    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    const adminLevel = findAdminLevelByLevel(level);
     if (adminLevel) {
       setSelectedLevel(adminLevel);
       setIsEditDialogOpen(true);
@@ -198,8 +203,7 @@ export function useLevelManagement(
   };
 
   const openDeleteDialog = (level: Level) => {
-    // Convert Level to AdminLevelDetailed if needed
-    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    const adminLevel = findAdminLevelByLevel(level);
     if (adminLevel) {
       setSelectedLevel(adminLevel);
       setIsDeleteDialogOpen(true);
@@ -207,8 +211,7 @@ export function useLevelManagement(
   };
 
   const openViewPermissionsDialog = (level: Level) => {
-    // Convert Level to AdminLevelDetailed if needed
-    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    const adminLevel = findAdminLevelByLevel(level);
     if (adminLevel) {
       setSelectedLevel(adminLevel);
       setIsViewPermissionsDialogOpen(true);
@@ -216,8 +219,7 @@ export function useLevelManagement(
   };
 
   const openEditPermissionsDialog = (level: Level) => {
-    // Convert Level to AdminLevelDetailed if needed
-    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    const adminLevel = findAdminLevelByLevel(level);
     if (adminLevel) {
       setSelectedLevel(adminLevel);
       setIsEditPermissionsDialogOpen(true);

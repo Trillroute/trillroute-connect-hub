@@ -5,11 +5,12 @@ import {
   CardContent,
   CardHeader,
 } from '@/components/ui/card';
-import LevelTable from './LevelTable';
+import LevelTable, { Level } from './LevelTable';
 import { useLevelManagement } from './useLevelManagement';
 import LevelHeader from './LevelHeader';
 import ViewModeControls from './ViewModeControls';
 import LevelDialogs from './LevelDialogs';
+import { AdminLevelDetailed } from '@/types/adminLevel';
 
 interface LevelManagementProps {
   canAddLevel?: boolean;
@@ -17,13 +18,21 @@ interface LevelManagementProps {
   canDeleteLevel?: boolean;
 }
 
+// Helper function to convert AdminLevelDetailed[] to Level[]
+const convertToLevels = (adminLevels: AdminLevelDetailed[]): Level[] => {
+  return adminLevels.map(level => ({
+    ...level,
+    id: String(level.id) // Convert number id to string id
+  }));
+};
+
 const LevelManagement = ({
   canAddLevel = true,
   canEditLevel = true,
   canDeleteLevel = true,
 }: LevelManagementProps) => {
   const {
-    levels,
+    levels: adminLevels,
     isLoading,
     selectedIds,
     setSelectedIds,
@@ -56,6 +65,9 @@ const LevelManagement = ({
     toggleColumnVisibility,
     columnOptions
   } = useLevelManagement(canAddLevel, canEditLevel, canDeleteLevel);
+
+  // Convert AdminLevelDetailed[] to Level[] for LevelTable
+  const levels = convertToLevels(adminLevels);
 
   return (
     <Card>

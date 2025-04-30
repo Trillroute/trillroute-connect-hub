@@ -116,6 +116,6 @@ export const deleteAdminLevel = async (id: number): Promise<boolean> => {
 
 // Add the function aliases needed by LevelManagement.tsx
 export const fetchLevels = fetchAdminLevels;
-export const addLevel = createAdminLevel;
+export const createLevel = createAdminLevel;
 export const updateLevel = updateAdminLevel;
 export const deleteLevel = deleteAdminLevel;
