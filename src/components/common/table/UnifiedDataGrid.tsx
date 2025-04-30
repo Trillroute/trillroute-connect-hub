@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2, Filter, X } from "lucide-react";
+import { Eye, Pencil, Trash2, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -61,7 +61,7 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
 }) => {
   // Add state for filters
   const [filters, setFilters] = useState<Record<string, string>>({});
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{field: string, direction: 'asc' | 'desc'} | null>(null);
 
   // Handle row selection
   const handleRowSelection = (id: string) => {
@@ -119,19 +119,38 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
     }));
   };
   
+  // Clear filter for specific column
+  const clearFilter = (field: string) => {
+    setFilters(prev => {
+      const newFilters = { ...prev };
+      delete newFilters[field];
+      return newFilters;
+    });
+  };
+  
   // Clear all filters
-  const clearFilters = () => {
+  const clearAllFilters = () => {
     setFilters({});
   };
   
-  // Toggle filters visibility
-  const toggleFilters = () => {
-    setShowFilters(prev => !prev);
+  // Handle sorting
+  const handleSort = (field: string) => {
+    setSortConfig(current => {
+      if (current?.field === field) {
+        if (current.direction === 'asc') {
+          return { field, direction: 'desc' };
+        }
+        // If it's already descending, remove sorting
+        return null;
+      }
+      // Default to ascending
+      return { field, direction: 'asc' };
+    });
   };
 
   // Apply filters to data
   const filteredData = useMemo(() => {
-    return data.filter(row => {
+    let result = data.filter(row => {
       return Object.entries(filters).every(([field, filterValue]) => {
         if (!filterValue || filterValue.trim() === '') return true;
         
@@ -148,7 +167,32 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
         return valueStr.includes(filterStr);
       });
     });
-  }, [data, filters, columnConfigs]);
+    
+    // Apply sorting if configured
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        const column = columnConfigs.find(col => col.field === sortConfig.field);
+        if (!column) return 0;
+        
+        const aValue = getCellValue(a, column);
+        const bValue = getCellValue(b, column);
+        
+        const aFormatted = getFormattedValue(aValue, column);
+        const bFormatted = getFormattedValue(bValue, column);
+        
+        // String comparison by default
+        if (aFormatted === bFormatted) return 0;
+        
+        const comparison = aFormatted < bFormatted ? -1 : 1;
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
+      });
+    }
+    
+    return result;
+  }, [data, filters, columnConfigs, sortConfig]);
+  
+  // Check if there are active filters
+  const activeFiltersCount = Object.values(filters).filter(value => value && value.trim() !== '').length;
 
   // Loading state
   if (loading) {
@@ -158,9 +202,6 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
       </div>
     );
   }
-
-  // Check if there are active filters
-  const activeFiltersCount = Object.values(filters).filter(value => value && value.trim() !== '').length;
 
   return (
     <div className="space-y-4 w-full">
@@ -174,54 +215,18 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
         
         <div className="flex-1"></div>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={toggleFilters}
-          className="flex items-center gap-1 ml-auto relative"
-        >
-          <Filter className="h-4 w-4" />
-          <span>Filters</span>
-          {activeFiltersCount > 0 && (
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs rounded-full">
-              {activeFiltersCount}
-            </Badge>
-          )}
-        </Button>
+        {activeFiltersCount > 0 && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={clearAllFilters}
+            className="flex items-center gap-1 mr-2"
+          >
+            <X className="h-4 w-4" />
+            <span>Clear all filters ({activeFiltersCount})</span>
+          </Button>
+        )}
       </div>
-
-      {showFilters && (
-        <div className="border p-3 rounded-md mb-2 bg-card shadow-sm space-y-4">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium">Filters</h4>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearFilters}
-              className="h-8 px-2 text-sm"
-            >
-              <X className="h-3.5 w-3.5 mr-1" />
-              Clear all
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {columnConfigs.map((column, idx) => (
-              <div key={idx} className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">
-                  {column.headerName}
-                </label>
-                <Input
-                  value={filters[column.field] || ''}
-                  onChange={(e) => handleFilterChange(column.field, e.target.value)}
-                  placeholder={`Filter ${column.headerName.toLowerCase()}`}
-                  className="h-8 text-sm"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className={`w-full rounded-md border overflow-hidden ${className}`}>
         <div style={{ height }}>
@@ -244,7 +249,40 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
                       key={index} 
                       style={column.width ? { width: column.width } : {}}
                     >
-                      {column.headerName}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div 
+                            className="flex items-center gap-1 cursor-pointer"
+                            onClick={() => column.sortable !== false && handleSort(column.field)}
+                          >
+                            <span>{column.headerName}</span>
+                            {sortConfig?.field === column.field && (
+                              sortConfig?.direction === 'asc' ? 
+                                <ChevronUp className="h-3 w-3" /> : 
+                                <ChevronDown className="h-3 w-3" />
+                            )}
+                          </div>
+                          {filters[column.field] && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => clearFilter(column.field)}
+                              className="h-5 w-5 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {column.filterable !== false && (
+                          <Input
+                            value={filters[column.field] || ''}
+                            onChange={(e) => handleFilterChange(column.field, e.target.value)}
+                            placeholder={`Filter...`}
+                            className="h-7 text-xs"
+                          />
+                        )}
+                      </div>
                     </TableHead>
                   ))}
                   
