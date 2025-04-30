@@ -3,6 +3,8 @@ import React from 'react';
 import { ClassType } from '@/hooks/useClassTypes';
 import ClassTypeGrid from './ClassTypeGrid';
 
+export { ClassType };
+
 interface ClassTypeTableProps {
   classTypes: ClassType[];
   isLoading: boolean;

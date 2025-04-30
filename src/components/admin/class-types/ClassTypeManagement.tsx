@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { ClassType } from "./ClassTypeTable";
+import { ClassType } from "@/hooks/useClassTypes";
 import EditClassTypeDialog from "./EditClassTypeDialog";
 import ViewClassTypeDialog from "./ViewClassTypeDialog";
 
@@ -282,15 +282,13 @@ const ClassTypeManagement: React.FC = () => {
       <CardContent>
         <ClassTypeTable 
           classTypes={classTypes}
-          loading={loading}
-          onEditClassType={handleEditClassType}
-          onDeleteClassType={handleDeleteClassType}
-          onViewClassType={handleViewClassType}
-          viewMode={viewMode}
-          searchQuery={searchQuery}
-          selectedClassTypeIds={selectedClassTypeIds}
-          onSelectClassTypeId={handleSelectClassTypeId}
-          onSelectAll={handleSelectAll}
+          isLoading={loading}
+          onEdit={handleEditClassType}
+          onDelete={handleDeleteClassType}
+          onView={handleViewClassType}
+          selectedIds={selectedClassTypeIds}
+          setSelectedIds={setSelectedClassTypeIds}
+          onBulkDelete={selectedClassTypeIds.length > 0 ? () => setIsBulkDeleteDialogOpen(true) : undefined}
         />
       </CardContent>
 
