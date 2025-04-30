@@ -62,7 +62,7 @@ const GridHeader: React.FC<GridHeaderProps> = ({
           // Check if column is draggable - name column and action column are never draggable
           const isDraggable = column.field !== 'name' && 
                              !column.field.includes('action') && 
-                             onDragStart;
+                             onDragStart !== undefined;
           
           return (
             <TableHead 
@@ -73,11 +73,11 @@ const GridHeader: React.FC<GridHeaderProps> = ({
                 e.stopPropagation();
                 if (onDragStart) onDragStart(index);
               } : undefined}
-              onDragOver={onDragOver && isDraggable ? (e) => {
+              onDragOver={isDraggable ? (e) => {
                 e.preventDefault();
                 if (onDragOver) onDragOver(index);
               } : undefined}
-              onDragEnd={isDraggable && onDragEnd ? onDragEnd : undefined}
+              onDragEnd={isDraggable ? onDragEnd : undefined}
               className={isDraggable ? "cursor-move" : ""}
             >
               <div className="space-y-2">
