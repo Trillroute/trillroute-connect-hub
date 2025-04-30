@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Toggle } from '@/components/ui/toggle';
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Filter, X, ArrowUpAZ, ArrowDownAZ } from "lucide-react";
 import { ColumnConfig, SortConfig } from '../types';
 
 interface GridHeaderProps {
@@ -81,6 +81,26 @@ const GridHeader: React.FC<GridHeaderProps> = ({
                     >
                       <Filter className="h-3 w-3" />
                     </Toggle>
+                  )}
+                  
+                  {/* Add sort buttons */}
+                  {column.sortable !== false && (
+                    <div className="flex items-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => handleSort(column.field)}
+                      >
+                        {sortConfig?.field === column.field && sortConfig?.direction === 'asc' ? (
+                          <ArrowUpAZ className="h-3 w-3" />
+                        ) : sortConfig?.field === column.field && sortConfig?.direction === 'desc' ? (
+                          <ArrowDownAZ className="h-3 w-3" />
+                        ) : (
+                          <ArrowUpAZ className="h-3 w-3 text-gray-400" />
+                        )}
+                      </Button>
+                    </div>
                   )}
                 </div>
                 
