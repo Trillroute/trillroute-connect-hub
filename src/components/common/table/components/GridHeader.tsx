@@ -69,9 +69,15 @@ const GridHeader: React.FC<GridHeaderProps> = ({
               key={index} 
               style={column.width ? { width: column.width } : {}}
               draggable={isDraggable}
-              onDragStart={isDraggable ? () => onDragStart(index) : undefined}
-              onDragOver={onDragOver ? () => onDragOver(index) : undefined}
-              onDragEnd={onDragEnd}
+              onDragStart={isDraggable ? (e) => {
+                e.stopPropagation();
+                if (onDragStart) onDragStart(index);
+              } : undefined}
+              onDragOver={onDragOver && isDraggable ? (e) => {
+                e.preventDefault();
+                if (onDragOver) onDragOver(index);
+              } : undefined}
+              onDragEnd={isDraggable && onDragEnd ? onDragEnd : undefined}
               className={isDraggable ? "cursor-move" : ""}
             >
               <div className="space-y-2">
