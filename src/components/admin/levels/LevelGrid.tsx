@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
 import { Level } from './LevelTable';
@@ -74,6 +75,26 @@ const LevelGrid: React.FC<LevelGridProps> = ({
     {
       field: 'leadPermissions',
       headerName: 'Lead Permissions',
+      sortable: false,
+      filterable: true,
+      valueFormatter: ({ value }) => {
+        if (!value || !Array.isArray(value)) return '';
+        return `${value.length} permissions`;
+      }
+    },
+    {
+      field: 'coursePermissions',
+      headerName: 'Course Permissions',
+      sortable: false,
+      filterable: true,
+      valueFormatter: ({ value }) => {
+        if (!value || !Array.isArray(value)) return '';
+        return `${value.length} permissions`;
+      }
+    },
+    {
+      field: 'levelPermissions',
+      headerName: 'Level Permissions',
       sortable: false,
       filterable: true,
       valueFormatter: ({ value }) => {
