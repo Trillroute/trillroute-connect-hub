@@ -60,14 +60,17 @@ const GridHeader: React.FC<GridHeaderProps> = ({
         
         {columnConfigs.map((column, index) => {
           // Determine if column is draggable - name column and action column are never draggable
-          // Also check for both field === 'name' and for fields that represent names in different components
-          const isNameColumn = column.field === 'name' || 
-                              column.field === 'title' || 
-                              (index === 0 && (column.headerName === 'Name' || column.headerName.includes('Name')));
+          // Check for names in various formats across different tables
+          const isNameColumn = 
+            column.field === 'name' || 
+            column.field === 'title' || 
+            column.headerName === 'Name' || 
+            column.headerName.includes('Name') ||
+            index === 0;  // First column is usually a name/identifier
           
           const isDraggable = !isNameColumn && 
                              !column.field.includes('action') && 
-                             onDragStart !== undefined;
+                             typeof onDragStart === 'function';
           
           return (
             <TableHead 
@@ -75,14 +78,14 @@ const GridHeader: React.FC<GridHeaderProps> = ({
               style={column.width ? { width: column.width } : {}}
               draggable={isDraggable}
               onDragStart={isDraggable ? (e) => {
-                e.stopPropagation();
+                e.preventDefault();
                 if (onDragStart) onDragStart(index);
               } : undefined}
               onDragOver={isDraggable ? (e) => {
                 e.preventDefault();
                 if (onDragOver) onDragOver(index);
               } : undefined}
-              onDragEnd={isDraggable ? onDragEnd : undefined}
+              onDragEnd={isDraggable && onDragEnd ? onDragEnd : undefined}
               className={isDraggable ? "cursor-move" : ""}
             >
               <div className="space-y-2">

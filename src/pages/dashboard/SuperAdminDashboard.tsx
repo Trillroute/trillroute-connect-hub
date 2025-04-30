@@ -14,10 +14,11 @@ import { Lead } from "@/types/lead";
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('today'); // Set default tab to 'today'
+  const [activeTab, setActiveTab] = useState<ActiveTab>('today'); // Default tab set to 'today'
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
 
+  // Dashboard data for statistics and charts
   const {
     stats,
     userActivityData,
@@ -26,6 +27,7 @@ const SuperAdminDashboard = () => {
     handleYearChange
   } = useDashboardData();
 
+  // Leads data for leads management
   const fetchLeadsResult = useFetchLeads();
   const leads = fetchLeadsResult?.leads || [];
   const leadsLoading = fetchLeadsResult?.loading || false;
@@ -37,6 +39,7 @@ const SuperAdminDashboard = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // Handle tab changes and log the activity
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
     if (user) {
@@ -49,6 +52,7 @@ const SuperAdminDashboard = () => {
     }
   };
 
+  // Dialog handlers for lead management
   const openEditDialog = (lead: Lead) => {
     setSelectedLead(lead);
     setIsEditDialogOpen(true);
@@ -59,6 +63,7 @@ const SuperAdminDashboard = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  // Permission check
   if (!isSuperAdmin()) {
     return (
       <Card>

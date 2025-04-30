@@ -67,28 +67,35 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   
   // Column drag handlers
   const handleDragStart = (index: number) => {
-    // Don't allow dragging the name column or action column
+    // Check if the column should be draggable
     const column = columnConfigs[index];
-    // Check for name column or first column
-    const isNameColumn = column.field === 'name' || 
-                          column.field === 'title' || 
-                          (index === 0 && (column.headerName === 'Name' || column.headerName.includes('Name')));
+    
+    // Define non-draggable columns
+    const isNameColumn = 
+      column.field === 'name' || 
+      column.field === 'title' ||
+      column.headerName === 'Name' ||
+      column.headerName.includes('Name') ||
+      index === 0;  // First column is usually a name/identifier
     
     if (isNameColumn || column.field.includes('action')) {
       return;
     }
+    
     setDraggedColIndex(index);
   };
 
   const handleDragOver = (index: number) => {
     if (draggedColIndex === null || draggedColIndex === index) return;
     
-    // Don't allow dropping on the name column or action column
+    // Don't allow dropping on protected columns
     const targetColumn = columnConfigs[index];
-    // Check for name column or first column
-    const isNameColumn = targetColumn.field === 'name' || 
-                          targetColumn.field === 'title' || 
-                          (index === 0 && (targetColumn.headerName === 'Name' || targetColumn.headerName.includes('Name')));
+    const isNameColumn = 
+      targetColumn.field === 'name' || 
+      targetColumn.field === 'title' ||
+      targetColumn.headerName === 'Name' ||
+      targetColumn.headerName.includes('Name') ||
+      index === 0;  // First column is usually a name/identifier
     
     if (isNameColumn || targetColumn.field.includes('action')) {
       return;

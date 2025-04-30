@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { UserManagementUser } from '@/types/student';
 import { format } from 'date-fns';
-import { UserCog } from 'lucide-react';
+import { User } from 'lucide-react';
 import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
 
 interface TeacherGridProps {
@@ -31,14 +31,19 @@ const TeacherGrid: React.FC<TeacherGridProps> = ({
   const columnConfigs = useMemo<ColumnConfig[]>(() => [
     {
       field: 'name',
-      headerName: 'Name',
-      valueGetter: ({ data }) => `${data.firstName} ${data.lastName}`,
-      cellRenderer: ({ value }) => (
-        <div className="font-medium flex items-center">
-          <UserCog className="h-4 w-4 text-music-400 mr-1" />
-          {value}
-        </div>
-      )
+      headerName: 'Teacher Name',
+      valueGetter: ({ data }) => {
+        return data ? `${data.firstName || ''} ${data.lastName || ''}` : '';
+      },
+      cellRenderer: ({ value }) => {
+        if (!value) return null;
+        return (
+          <div className="font-semibold flex items-center">
+            <User className="h-4 w-4 text-music-500 mr-1" />
+            {value}
+          </div>
+        );
+      }
     },
     {
       field: 'email',
