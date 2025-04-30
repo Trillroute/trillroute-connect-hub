@@ -13,7 +13,10 @@ import GridHeader from './components/GridHeader';
 import GridBody from './components/GridBody';
 import GridToolbar from './components/GridToolbar';
 import LoadingIndicator from './components/LoadingIndicator';
-import { UnifiedDataGridProps } from './types';
+import { UnifiedDataGridProps, ColumnConfig } from './types';
+
+// Re-export the types so they can be imported from this file
+export type { ColumnConfig, UnifiedDataGridProps };
 
 const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   data,
