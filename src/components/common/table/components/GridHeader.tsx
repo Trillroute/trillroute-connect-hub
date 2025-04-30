@@ -58,89 +58,96 @@ const GridHeader: React.FC<GridHeaderProps> = ({
           </TableHead>
         )}
         
-        {columnConfigs.map((column, index) => (
-          <TableHead 
-            key={index} 
-            style={column.width ? { width: column.width } : {}}
-            draggable={column.field !== 'name' && onDragStart && !column.field.includes('action')}
-            onDragStart={column.field !== 'name' && onDragStart ? () => onDragStart(index) : undefined}
-            onDragOver={onDragOver ? () => onDragOver(index) : undefined}
-            onDragEnd={onDragEnd}
-            className={column.field !== 'name' && !column.field.includes('action') ? "cursor-move" : ""}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  {column.field !== 'name' && !column.field.includes('action') && onDragStart && (
-                    <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
-                  )}
-                  <div 
-                    className="flex items-center gap-1 cursor-pointer"
-                    onClick={() => column.sortable !== false && handleSort(column.field)}
-                  >
-                    <span>{column.headerName}</span>
-                    {sortConfig?.field === column.field && (
-                      sortConfig?.direction === 'asc' ? 
-                        <ChevronUp className="h-3 w-3" /> : 
-                        <ChevronDown className="h-3 w-3" />
+        {columnConfigs.map((column, index) => {
+          // Check if column is draggable - name column and action column are never draggable
+          const isDraggable = column.field !== 'name' && 
+                             !column.field.includes('action') && 
+                             onDragStart;
+          
+          return (
+            <TableHead 
+              key={index} 
+              style={column.width ? { width: column.width } : {}}
+              draggable={isDraggable}
+              onDragStart={isDraggable ? () => onDragStart(index) : undefined}
+              onDragOver={onDragOver ? () => onDragOver(index) : undefined}
+              onDragEnd={onDragEnd}
+              className={isDraggable ? "cursor-move" : ""}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    {isDraggable && (
+                      <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
+                    )}
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer"
+                      onClick={() => column.sortable !== false && handleSort(column.field)}
+                    >
+                      <span>{column.headerName}</span>
+                      {sortConfig?.field === column.field && (
+                        sortConfig?.direction === 'asc' ? 
+                          <ChevronUp className="h-3 w-3" /> : 
+                          <ChevronDown className="h-3 w-3" />
+                      )}
+                    </div>
+                    
+                    {column.filterable !== false && (
+                      <Toggle 
+                        variant="outline" 
+                        size="sm" 
+                        pressed={visibleFilters[column.field]} 
+                        onPressedChange={() => toggleFilterVisibility(column.field)}
+                      >
+                        <Filter className="h-3 w-3" />
+                      </Toggle>
+                    )}
+                    
+                    {/* Sort buttons */}
+                    {column.sortable !== false && (
+                      <div className="flex items-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => handleSort(column.field)}
+                        >
+                          {sortConfig?.field === column.field && sortConfig?.direction === 'asc' ? (
+                            <ArrowUpAZ className="h-3 w-3" />
+                          ) : sortConfig?.field === column.field && sortConfig?.direction === 'desc' ? (
+                            <ArrowDownAZ className="h-3 w-3" />
+                          ) : (
+                            <ArrowUpAZ className="h-3 w-3 text-gray-400" />
+                          )}
+                        </Button>
+                      </div>
                     )}
                   </div>
                   
-                  {column.filterable !== false && (
-                    <Toggle 
-                      variant="outline" 
+                  {filters[column.field] && (
+                    <Button 
+                      variant="ghost" 
                       size="sm" 
-                      pressed={visibleFilters[column.field]} 
-                      onPressedChange={() => toggleFilterVisibility(column.field)}
+                      onClick={() => clearFilter(column.field)}
+                      className="h-5 w-5 p-0"
                     >
-                      <Filter className="h-3 w-3" />
-                    </Toggle>
-                  )}
-                  
-                  {/* Add sort buttons */}
-                  {column.sortable !== false && (
-                    <div className="flex items-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={() => handleSort(column.field)}
-                      >
-                        {sortConfig?.field === column.field && sortConfig?.direction === 'asc' ? (
-                          <ArrowUpAZ className="h-3 w-3" />
-                        ) : sortConfig?.field === column.field && sortConfig?.direction === 'desc' ? (
-                          <ArrowDownAZ className="h-3 w-3" />
-                        ) : (
-                          <ArrowUpAZ className="h-3 w-3 text-gray-400" />
-                        )}
-                      </Button>
-                    </div>
+                      <X className="h-3 w-3" />
+                    </Button>
                   )}
                 </div>
                 
-                {filters[column.field] && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => clearFilter(column.field)}
-                    className="h-5 w-5 p-0"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+                {column.filterable !== false && visibleFilters[column.field] && (
+                  <Input
+                    value={filters[column.field] || ''}
+                    onChange={(e) => handleFilterChange(column.field, e.target.value)}
+                    placeholder={`Filter...`}
+                    className="h-7 text-xs"
+                  />
                 )}
               </div>
-              
-              {column.filterable !== false && visibleFilters[column.field] && (
-                <Input
-                  value={filters[column.field] || ''}
-                  onChange={(e) => handleFilterChange(column.field, e.target.value)}
-                  placeholder={`Filter...`}
-                  className="h-7 text-xs"
-                />
-              )}
-            </div>
-          </TableHead>
-        ))}
+            </TableHead>
+          );
+        })}
         
         {hasActionColumn && (
           <TableHead className="w-[120px]">Actions</TableHead>
