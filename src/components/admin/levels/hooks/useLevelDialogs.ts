@@ -11,23 +11,47 @@ export function useLevelDialogs() {
   const [isViewPermissionsDialogOpen, setIsViewPermissionsDialogOpen] = useState(false);
   const [isEditPermissionsDialogOpen, setIsEditPermissionsDialogOpen] = useState(false);
 
-  const openEditDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  const openEditDialog = (level: Level | AdminLevelDetailed) => {
+    // Convert string id to number if needed
+    const adminLevel: AdminLevelDetailed = {
+      ...level,
+      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
+    };
+    
+    setSelectedLevel(adminLevel);
     setIsEditDialogOpen(true);
   };
 
-  const openDeleteDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  const openDeleteDialog = (level: Level | AdminLevelDetailed) => {
+    // Convert string id to number if needed
+    const adminLevel: AdminLevelDetailed = {
+      ...level,
+      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
+    };
+    
+    setSelectedLevel(adminLevel);
     setIsDeleteDialogOpen(true);
   };
 
-  const openViewPermissionsDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  const openViewPermissionsDialog = (level: Level | AdminLevelDetailed) => {
+    // Convert string id to number if needed
+    const adminLevel: AdminLevelDetailed = {
+      ...level,
+      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
+    };
+    
+    setSelectedLevel(adminLevel);
     setIsViewPermissionsDialogOpen(true);
   };
 
-  const openEditPermissionsDialog = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
+  const openEditPermissionsDialog = (level: Level | AdminLevelDetailed) => {
+    // Convert string id to number if needed
+    const adminLevel: AdminLevelDetailed = {
+      ...level,
+      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
+    };
+    
+    setSelectedLevel(adminLevel);
     setIsEditPermissionsDialogOpen(true);
   };
 

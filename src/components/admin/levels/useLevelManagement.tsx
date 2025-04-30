@@ -5,6 +5,7 @@ import { useLevelDisplay } from './hooks/useLevelDisplay';
 import { useLevelDialogs } from './hooks/useLevelDialogs';
 import { useLevelPermissions } from './hooks/useLevelPermissions';
 import { Level } from './LevelTable';
+import { AdminLevelDetailed } from '@/types/adminLevel';
 
 export function useLevelManagement(
   canAddLevel: boolean = true,
