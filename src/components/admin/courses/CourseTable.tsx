@@ -122,10 +122,10 @@ const CourseTable: React.FC<CourseTableProps> = ({
                   <TableCell className="font-medium">{course.title}</TableCell>
                   <TableCell>{course.category}</TableCell>
                   <TableCell>
-                    {typeof course.price === 'number' ? `₹${course.price.toFixed(2)}` : ''}
+                    {typeof course.final_price === 'number' ? `₹${course.final_price.toFixed(2)}` : ''}
                   </TableCell>
                   <TableCell>
-                    {course.createdAt ? format(new Date(course.createdAt), 'MMM d, yyyy') : ''}
+                    {course.created_at ? format(new Date(course.created_at), 'MMM d, yyyy') : ''}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -157,3 +157,4 @@ const CourseTable: React.FC<CourseTableProps> = ({
 };
 
 export default CourseTable;
+
