@@ -51,7 +51,10 @@ const LevelManagement = ({
     loadLevels,
     effectiveCanAdd,
     effectiveCanEdit,
-    effectiveCanDelete
+    effectiveCanDelete,
+    visibleColumns,
+    toggleColumnVisibility,
+    columnOptions
   } = useLevelManagement(canAddLevel, canEditLevel, canDeleteLevel);
 
   return (
@@ -66,6 +69,9 @@ const LevelManagement = ({
           <ViewModeControls
             viewMode={viewMode}
             onViewModeChange={setViewMode}
+            visibleColumns={visibleColumns}
+            onColumnVisibilityChange={toggleColumnVisibility}
+            columnOptions={columnOptions}
           />
         </div>
       </CardHeader>
@@ -79,6 +85,7 @@ const LevelManagement = ({
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
           onBulkDelete={effectiveCanDelete ? handleBulkDelete : undefined}
+          visibleColumns={visibleColumns}
         />
 
         <LevelDialogs

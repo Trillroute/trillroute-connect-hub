@@ -1,67 +1,111 @@
 
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useCallback } from 'react';
 import { AdminLevelDetailed } from '@/types/adminLevel';
-import { fetchLevels, addLevel, updateLevel, deleteLevel } from './LevelService';
-import { updateCachedAdminRoles } from '@/utils/adminPermissions';
-import { Level } from './LevelTable';
+import { fetchLevels, deleteLevel as deleteLevelApi, createLevel, updateLevel } from './LevelService';
+import { useToast } from '@/hooks/use-toast';
 import { ViewMode } from './ViewModeControls';
-import { useAuth } from '@/hooks/useAuth';
+import { Level } from './LevelTable';
 
-export const useLevelManagement = (
-  canAddLevel = true,
-  canEditLevel = true,
-  canDeleteLevel = true
-) => {
+export function useLevelManagement(
+  canAddLevel: boolean = true,
+  canEditLevel: boolean = true,
+  canDeleteLevel: boolean = true
+) {
   const [levels, setLevels] = useState<AdminLevelDetailed[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedLevel, setSelectedLevel] = useState<AdminLevelDetailed | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewPermissionsDialogOpen, setIsViewPermissionsDialogOpen] = useState(false);
   const [isEditPermissionsDialogOpen, setIsEditPermissionsDialogOpen] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<AdminLevelDetailed | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-
   const { toast } = useToast();
-  const { isSuperAdmin } = useAuth();
+  
+  // Column visibility state
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    name: true,
+    description: true,
+    studentPermissions: true,
+    teacherPermissions: true,
+    adminPermissions: true,
+    leadPermissions: true,
+    coursePermissions: true,
+    levelPermissions: true
+  });
+  
+  // Column options for dropdown
+  const columnOptions = [
+    { field: 'name', label: 'Level Name' },
+    { field: 'description', label: 'Description' },
+    { field: 'studentPermissions', label: 'Student Permissions' },
+    { field: 'teacherPermissions', label: 'Teacher Permissions' },
+    { field: 'adminPermissions', label: 'Admin Permissions' },
+    { field: 'leadPermissions', label: 'Lead Permissions' },
+    { field: 'coursePermissions', label: 'Course Permissions' },
+    { field: 'levelPermissions', label: 'Level Permissions' }
+  ];
 
+  // Toggle column visibility
+  const toggleColumnVisibility = useCallback((field: string, isVisible: boolean) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [field]: isVisible
+    }));
+  }, []);
+
+  // Fetch levels
   const loadLevels = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const levelsData = await fetchLevels();
       setLevels(levelsData);
-      updateCachedAdminRoles(levelsData);
     } catch (error) {
       console.error('Error fetching levels:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to fetch admin levels. Please try again.',
         variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch levels. Please try again.',
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Load levels on mount
   useEffect(() => {
     loadLevels();
   }, []);
 
+  // Effect for setting effective permissions
+  const [effectiveCanAdd, setEffectiveCanAdd] = useState(canAddLevel);
+  const [effectiveCanEdit, setEffectiveCanEdit] = useState(canEditLevel);
+  const [effectiveCanDelete, setEffectiveCanDelete] = useState(canDeleteLevel);
+
+  useEffect(() => {
+    setEffectiveCanAdd(canAddLevel);
+    setEffectiveCanEdit(canEditLevel);
+    setEffectiveCanDelete(canDeleteLevel);
+  }, [canAddLevel, canEditLevel, canDeleteLevel]);
+
+  // Handlers for CRUD operations
   const handleCreateLevel = async (levelData: Omit<AdminLevelDetailed, 'id'>) => {
     setIsLoading(true);
     try {
-      await addLevel(levelData);
-      toast({ title: 'Success', description: 'Admin level created successfully.' });
+      await createLevel(levelData);
+      toast({
+        title: 'Success',
+        description: 'Level created successfully',
+      });
       setIsCreateDialogOpen(false);
       loadLevels();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating level:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create admin level. Please try again.',
         variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to create level. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -72,16 +116,19 @@ export const useLevelManagement = (
     setIsLoading(true);
     try {
       await updateLevel(id, levelData);
-      toast({ title: 'Success', description: 'Admin level updated successfully.' });
+      toast({
+        title: 'Success',
+        description: 'Level updated successfully',
+      });
       setIsEditDialogOpen(false);
       setIsEditPermissionsDialogOpen(false);
-      setSelectedLevel(null);
       loadLevels();
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error updating level:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to update admin level. Please try again.',
         variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update level. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -92,16 +139,20 @@ export const useLevelManagement = (
     if (!selectedLevel) return;
     setIsLoading(true);
     try {
-      await deleteLevel(selectedLevel.id);
-      toast({ title: 'Success', description: 'Admin level deleted successfully.' });
+      await deleteLevelApi(selectedLevel.id);
+      toast({
+        title: 'Success',
+        description: 'Level deleted successfully',
+      });
       setIsDeleteDialogOpen(false);
       setSelectedLevel(null);
       loadLevels();
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error deleting level:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete admin level. Please try again.',
         variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete level. Please try again.',
       });
     } finally {
       setIsLoading(false);
@@ -110,57 +161,71 @@ export const useLevelManagement = (
 
   const handleBulkDelete = async (ids: string[]) => {
     setIsLoading(true);
-    let deletedCount = 0;
-    for (const id of ids) {
-      try {
-        await deleteLevel(Number(id));
-        deletedCount++;
-      } catch (error) {
-        // continue on errors
-      }
+    try {
+      // Convert string IDs to numbers
+      const numericIds = ids.map(id => parseInt(id, 10));
+      
+      // Execute delete operations for all selected IDs
+      await Promise.all(numericIds.map(id => deleteLevelApi(id)));
+      
+      toast({
+        title: 'Success',
+        description: `${ids.length} levels deleted successfully`,
+      });
+      
+      setSelectedIds([]);
+      loadLevels();
+    } catch (error) {
+      console.error('Error during bulk delete:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete some or all levels. Please try again.',
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setSelectedIds([]);
-    await loadLevels();
-    toast({
-      title: 'Success',
-      description: `Deleted ${deletedCount} admin level${deletedCount !== 1 ? "s" : ""}.`,
-    });
-    setIsLoading(false);
   };
 
-  // Convert Level to AdminLevelDetailed for the component props
+  // Dialog control handlers
   const openEditDialog = (level: Level) => {
-    setSelectedLevel(level as unknown as AdminLevelDetailed);
-    setIsEditDialogOpen(true);
+    // Convert Level to AdminLevelDetailed if needed
+    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    if (adminLevel) {
+      setSelectedLevel(adminLevel);
+      setIsEditDialogOpen(true);
+    }
   };
-  
+
   const openDeleteDialog = (level: Level) => {
-    setSelectedLevel(level as unknown as AdminLevelDetailed);
-    setIsDeleteDialogOpen(true);
+    // Convert Level to AdminLevelDetailed if needed
+    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    if (adminLevel) {
+      setSelectedLevel(adminLevel);
+      setIsDeleteDialogOpen(true);
+    }
   };
-  
+
   const openViewPermissionsDialog = (level: Level) => {
-    setSelectedLevel(level as unknown as AdminLevelDetailed);
-    setIsViewPermissionsDialogOpen(true);
+    // Convert Level to AdminLevelDetailed if needed
+    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    if (adminLevel) {
+      setSelectedLevel(adminLevel);
+      setIsViewPermissionsDialogOpen(true);
+    }
   };
-  
+
   const openEditPermissionsDialog = (level: Level) => {
-    setSelectedLevel(level as unknown as AdminLevelDetailed);
-    setIsEditPermissionsDialogOpen(true);
+    // Convert Level to AdminLevelDetailed if needed
+    const adminLevel = levels.find(l => l.id === Number(level.id)) || null;
+    if (adminLevel) {
+      setSelectedLevel(adminLevel);
+      setIsEditPermissionsDialogOpen(true);
+    }
   };
-
-  const effectiveCanAdd = canAddLevel && isSuperAdmin();
-  const effectiveCanEdit = canEditLevel && isSuperAdmin();
-  const effectiveCanDelete = canDeleteLevel && isSuperAdmin();
-
-  // Format level IDs as strings for the UnifiedDataGrid and convert to Level type
-  const formattedLevels: Level[] = levels.map(level => ({
-    ...level,
-    id: String(level.id)
-  }));
 
   return {
-    levels: formattedLevels,
+    levels,
     isLoading,
     selectedIds,
     setSelectedIds,
@@ -188,6 +253,10 @@ export const useLevelManagement = (
     loadLevels,
     effectiveCanAdd,
     effectiveCanEdit,
-    effectiveCanDelete
+    effectiveCanDelete,
+    visibleColumns,
+    setVisibleColumns,
+    toggleColumnVisibility,
+    columnOptions
   };
-};
+}

@@ -27,6 +27,7 @@ interface LevelTableProps {
   selectedIds?: string[];
   setSelectedIds?: React.Dispatch<React.SetStateAction<string[]>>;
   onBulkDelete?: (ids: string[]) => void;
+  visibleColumns?: Record<string, boolean>;
 }
 
 const LevelTable: React.FC<LevelTableProps> = ({
@@ -37,7 +38,8 @@ const LevelTable: React.FC<LevelTableProps> = ({
   onViewPermissions,
   selectedIds,
   setSelectedIds,
-  onBulkDelete
+  onBulkDelete,
+  visibleColumns
 }) => {
   return (
     <LevelGrid
@@ -49,6 +51,7 @@ const LevelTable: React.FC<LevelTableProps> = ({
       onBulkDelete={onBulkDelete}
       selectedLevelIds={selectedIds}
       setSelectedLevelIds={setSelectedIds}
+      visibleColumns={visibleColumns}
     />
   );
 };

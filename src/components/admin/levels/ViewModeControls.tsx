@@ -1,18 +1,30 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { LayoutList, LayoutGrid, Grid2x2 } from 'lucide-react';
+import { LayoutList, LayoutGrid, Grid2x2, Columns } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export type ViewMode = 'list' | 'grid' | 'tile';
 
 interface ViewModeControlsProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  visibleColumns?: Record<string, boolean>;
+  onColumnVisibilityChange?: (column: string, isVisible: boolean) => void;
+  columnOptions?: { field: string, label: string }[];
 }
 
 const ViewModeControls: React.FC<ViewModeControlsProps> = ({
   viewMode,
   onViewModeChange,
+  visibleColumns = {},
+  onColumnVisibilityChange,
+  columnOptions = [],
 }) => {
   return (
     <div className="flex gap-2">
@@ -40,6 +52,35 @@ const ViewModeControls: React.FC<ViewModeControlsProps> = ({
       >
         <Grid2x2 className="w-4 h-4" />
       </Button>
+      
+      {onColumnVisibilityChange && columnOptions.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              title="Column visibility"
+            >
+              <Columns className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {columnOptions.map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.field}
+                checked={visibleColumns[column.field] !== false} // Default to true if not set
+                onCheckedChange={(checked) => {
+                  if (onColumnVisibilityChange) {
+                    onColumnVisibilityChange(column.field, checked);
+                  }
+                }}
+              >
+                {column.label}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 };

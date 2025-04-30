@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
 import { Level } from './LevelTable';
@@ -13,6 +12,7 @@ interface LevelGridProps {
   onBulkDelete?: (ids: string[]) => void;
   selectedLevelIds?: string[];
   setSelectedLevelIds?: React.Dispatch<React.SetStateAction<string[]>>;
+  visibleColumns?: Record<string, boolean>;
 }
 
 const LevelGrid: React.FC<LevelGridProps> = ({
@@ -24,9 +24,11 @@ const LevelGrid: React.FC<LevelGridProps> = ({
   onViewPermissions,
   onBulkDelete,
   selectedLevelIds = [],
-  setSelectedLevelIds
+  setSelectedLevelIds,
+  visibleColumns = {}
 }) => {
-  const columnConfigs = useMemo<ColumnConfig[]>(() => [
+  // Define all available columns
+  const allColumnConfigs = useMemo<ColumnConfig[]>(() => [
     {
       field: 'name',
       headerName: 'Level Name',
@@ -38,8 +40,57 @@ const LevelGrid: React.FC<LevelGridProps> = ({
       headerName: 'Description',
       sortable: true,
       filterable: true
+    },
+    {
+      field: 'studentPermissions',
+      headerName: 'Student Permissions',
+      sortable: false,
+      filterable: true,
+      valueFormatter: ({ value }) => {
+        if (!value || !Array.isArray(value)) return '';
+        return `${value.length} permissions`;
+      }
+    },
+    {
+      field: 'teacherPermissions',
+      headerName: 'Teacher Permissions',
+      sortable: false,
+      filterable: true,
+      valueFormatter: ({ value }) => {
+        if (!value || !Array.isArray(value)) return '';
+        return `${value.length} permissions`;
+      }
+    },
+    {
+      field: 'adminPermissions',
+      headerName: 'Admin Permissions',
+      sortable: false,
+      filterable: true,
+      valueFormatter: ({ value }) => {
+        if (!value || !Array.isArray(value)) return '';
+        return `${value.length} permissions`;
+      }
+    },
+    {
+      field: 'leadPermissions',
+      headerName: 'Lead Permissions',
+      sortable: false,
+      filterable: true,
+      valueFormatter: ({ value }) => {
+        if (!value || !Array.isArray(value)) return '';
+        return `${value.length} permissions`;
+      }
     }
   ], []);
+
+  // Filter columns based on visibility settings
+  const visibleColumnConfigs = useMemo(() => {
+    return allColumnConfigs.filter(column => 
+      // Keep the column if it's not explicitly set to false
+      // or if it's the name column (always show name)
+      visibleColumns[column.field] !== false || column.field === 'name'
+    );
+  }, [allColumnConfigs, visibleColumns]);
 
   // Map levels to have string IDs for UnifiedDataGrid
   const formattedLevels = useMemo(() => {
@@ -52,7 +103,7 @@ const LevelGrid: React.FC<LevelGridProps> = ({
   return (
     <UnifiedDataGrid
       data={formattedLevels}
-      columnConfigs={columnConfigs}
+      columnConfigs={visibleColumnConfigs}
       loading={loading}
       onEdit={onEdit}
       onDelete={onDelete}
