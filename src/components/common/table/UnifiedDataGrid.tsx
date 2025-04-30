@@ -69,7 +69,12 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   const handleDragStart = (index: number) => {
     // Don't allow dragging the name column or action column
     const column = columnConfigs[index];
-    if (column.field === 'name' || column.field.includes('action')) {
+    // Check for name column or first column
+    const isNameColumn = column.field === 'name' || 
+                          column.field === 'title' || 
+                          (index === 0 && (column.headerName === 'Name' || column.headerName.includes('Name')));
+    
+    if (isNameColumn || column.field.includes('action')) {
       return;
     }
     setDraggedColIndex(index);
@@ -80,7 +85,12 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
     
     // Don't allow dropping on the name column or action column
     const targetColumn = columnConfigs[index];
-    if (targetColumn.field === 'name' || targetColumn.field.includes('action')) {
+    // Check for name column or first column
+    const isNameColumn = targetColumn.field === 'name' || 
+                          targetColumn.field === 'title' || 
+                          (index === 0 && (targetColumn.headerName === 'Name' || targetColumn.headerName.includes('Name')));
+    
+    if (isNameColumn || targetColumn.field.includes('action')) {
       return;
     }
 

@@ -59,8 +59,13 @@ const GridHeader: React.FC<GridHeaderProps> = ({
         )}
         
         {columnConfigs.map((column, index) => {
-          // Check if column is draggable - name column and action column are never draggable
-          const isDraggable = column.field !== 'name' && 
+          // Determine if column is draggable - name column and action column are never draggable
+          // Also check for both field === 'name' and for fields that represent names in different components
+          const isNameColumn = column.field === 'name' || 
+                              column.field === 'title' || 
+                              (index === 0 && (column.headerName === 'Name' || column.headerName.includes('Name')));
+          
+          const isDraggable = !isNameColumn && 
                              !column.field.includes('action') && 
                              onDragStart !== undefined;
           
