@@ -1,12 +1,19 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Course } from '@/types/course';
-import BulkDeleteButton from './table/BulkDeleteButton';
-import LoadingSpinner from './table/LoadingSpinner';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import DataGrid, { DataGridColumn } from '@/components/common/table/DataGrid';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import BulkDeleteButton from './table/BulkDeleteButton';
 
 interface CourseTableProps {
   courses: Course[];
@@ -29,10 +36,28 @@ const CourseTable: React.FC<CourseTableProps> = ({
   selectedCourseIds = [],
   setSelectedCourseIds
 }) => {
-  const handleSelectionChanged = (selectedRows: Course[]) => {
-    if (setSelectedCourseIds) {
-      const ids = selectedRows.map(row => row.id);
-      setSelectedCourseIds(ids);
+  // Toggle selection for a single row
+  const toggleRowSelection = (course: Course) => {
+    if (!setSelectedCourseIds) return;
+    
+    setSelectedCourseIds(prev => {
+      if (prev.includes(course.id)) {
+        return prev.filter(id => id !== course.id);
+      } else {
+        return [...prev, course.id];
+      }
+    });
+  };
+
+  // Toggle selection for all rows
+  const toggleSelectAll = () => {
+    if (!setSelectedCourseIds) return;
+    
+    if (selectedCourseIds.length === courses.length) {
+      setSelectedCourseIds([]);
+    } else {
+      const allIds = courses.map(course => course.id);
+      setSelectedCourseIds(allIds);
     }
   };
 
@@ -42,75 +67,14 @@ const CourseTable: React.FC<CourseTableProps> = ({
     }
   };
 
-  const columnDefs = useMemo<DataGridColumn[]>(() => [
-    {
-      headerName: '',
-      field: 'id',
-      width: 50,
-      headerCheckboxSelection: true,
-      checkboxSelection: true,
-    },
-    {
-      headerName: 'Name',
-      field: 'title',
-    },
-    {
-      headerName: 'Category',
-      field: 'category',
-    },
-    {
-      headerName: 'Price',
-      field: 'price',
-      valueFormatter: (params) => {
-        if (typeof params.value !== 'number') return '';
-        return `₹${params.value.toFixed(2)}`;
-      }
-    },
-    {
-      headerName: 'Created',
-      field: 'createdAt',
-      valueFormatter: (params) => {
-        if (!params.value) return '';
-        try {
-          return format(new Date(params.value), 'MMM d, yyyy');
-        } catch (error) {
-          console.error('Date formatting error:', error);
-          return params.value;
-        }
-      }
-    },
-    {
-      headerName: 'Actions',
-      field: 'actions',
-      width: 150,
-      cellRenderer: (params) => (
-        <div className="flex items-center gap-2">
-          {onView && (
-            <Button variant="ghost" size="sm" onClick={() => onView(params.data)}>
-              <Eye className="h-4 w-4" />
-            </Button>
-          )}
-          {onEdit && (
-            <Button variant="ghost" size="sm" onClick={() => onEdit(params.data)}>
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
-          {onDelete && (
-            <Button variant="ghost" size="sm" onClick={() => onDelete(params.data)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      )
-    }
-  ], [onView, onEdit, onDelete]);
-
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-music-500"></div>
+      </div>
+    );
   }
 
-  console.log('Rendering DataGrid with courses:', courses?.length);
-  
   return (
     <div className="space-y-4 w-full">
       {selectedCourseIds.length > 0 && onBulkDelete && (
@@ -120,15 +84,73 @@ const CourseTable: React.FC<CourseTableProps> = ({
         />
       )}
 
-      <div className="w-full rounded-md border">
-        <DataGrid
-          rowData={courses || []}
-          columnDefs={columnDefs}
-          onSelectionChanged={handleSelectionChanged}
-          loading={loading}
-          height="600px"
-          className="w-full"
-        />
+      <div className="w-full rounded-md border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={selectedCourseIds.length === courses.length && courses.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                />
+              </TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="w-[120px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {courses.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  No courses found
+                </TableCell>
+              </TableRow>
+            ) : (
+              courses.map((course) => (
+                <TableRow key={course.id}>
+                  <TableCell>
+                    {setSelectedCourseIds && (
+                      <Checkbox 
+                        checked={selectedCourseIds.includes(course.id)}
+                        onCheckedChange={() => toggleRowSelection(course)}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell className="font-medium">{course.title}</TableCell>
+                  <TableCell>{course.category}</TableCell>
+                  <TableCell>
+                    {typeof course.price === 'number' ? `₹${course.price.toFixed(2)}` : ''}
+                  </TableCell>
+                  <TableCell>
+                    {course.createdAt ? format(new Date(course.createdAt), 'MMM d, yyyy') : ''}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {onView && (
+                        <Button variant="ghost" size="sm" onClick={() => onView(course)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {onEdit && (
+                        <Button variant="ghost" size="sm" onClick={() => onEdit(course)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {onDelete && (
+                        <Button variant="ghost" size="sm" onClick={() => onDelete(course)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
