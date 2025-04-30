@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { format } from 'date-fns';
 import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
+import { Toggle } from '@/components/ui/toggle';
 
 export interface ColumnConfig {
   field: string;
@@ -62,6 +63,16 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   // Add state for filters
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortConfig, setSortConfig] = useState<{field: string, direction: 'asc' | 'desc'} | null>(null);
+  // Add state to track which filter inputs are visible
+  const [visibleFilters, setVisibleFilters] = useState<Record<string, boolean>>({});
+
+  // Toggle filter visibility for a column
+  const toggleFilterVisibility = (field: string) => {
+    setVisibleFilters(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
 
   // Handle row selection
   const handleRowSelection = (id: string) => {
@@ -251,17 +262,31 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <div 
-                            className="flex items-center gap-1 cursor-pointer"
-                            onClick={() => column.sortable !== false && handleSort(column.field)}
-                          >
-                            <span>{column.headerName}</span>
-                            {sortConfig?.field === column.field && (
-                              sortConfig?.direction === 'asc' ? 
-                                <ChevronUp className="h-3 w-3" /> : 
-                                <ChevronDown className="h-3 w-3" />
+                          <div className="flex items-center gap-1">
+                            <div 
+                              className="flex items-center gap-1 cursor-pointer"
+                              onClick={() => column.sortable !== false && handleSort(column.field)}
+                            >
+                              <span>{column.headerName}</span>
+                              {sortConfig?.field === column.field && (
+                                sortConfig?.direction === 'asc' ? 
+                                  <ChevronUp className="h-3 w-3" /> : 
+                                  <ChevronDown className="h-3 w-3" />
+                              )}
+                            </div>
+                            
+                            {column.filterable !== false && (
+                              <Toggle 
+                                variant="outline" 
+                                size="sm" 
+                                pressed={visibleFilters[column.field]} 
+                                onPressedChange={() => toggleFilterVisibility(column.field)}
+                              >
+                                <Filter className="h-3 w-3" />
+                              </Toggle>
                             )}
                           </div>
+                          
                           {filters[column.field] && (
                             <Button 
                               variant="ghost" 
@@ -274,7 +299,7 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
                           )}
                         </div>
                         
-                        {column.filterable !== false && (
+                        {column.filterable !== false && visibleFilters[column.field] && (
                           <Input
                             value={filters[column.field] || ''}
                             onChange={(e) => handleFilterChange(column.field, e.target.value)}
