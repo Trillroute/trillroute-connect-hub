@@ -49,6 +49,10 @@ export function useLevelManagement(
     setIsDeleteDialogOpen,
     setIsViewPermissionsDialogOpen,
     setIsEditPermissionsDialogOpen,
+    openEditDialog,
+    openDeleteDialog,
+    openViewPermissionsDialog,
+    openEditPermissionsDialog,
     resetDialogStates
   } = useLevelDialogs();
   
@@ -57,39 +61,6 @@ export function useLevelManagement(
     effectiveCanEdit,
     effectiveCanDelete
   } = useLevelPermissions(canAddLevel, canEditLevel, canDeleteLevel);
-
-  // Handlers for passing Level objects to dialog functions
-  const openEditDialog = (level: Level) => {
-    const adminLevel = findLevelById(level.id);
-    if (adminLevel) {
-      setIsEditDialogOpen(true);
-      setSelectedLevel(adminLevel);
-    }
-  };
-
-  const openDeleteDialog = (level: Level) => {
-    const adminLevel = findLevelById(level.id);
-    if (adminLevel) {
-      setIsDeleteDialogOpen(true);
-      setSelectedLevel(adminLevel);
-    }
-  };
-
-  const openViewPermissionsDialog = (level: Level) => {
-    const adminLevel = findLevelById(level.id);
-    if (adminLevel) {
-      setIsViewPermissionsDialogOpen(true);
-      setSelectedLevel(adminLevel);
-    }
-  };
-
-  const openEditPermissionsDialog = (level: Level) => {
-    const adminLevel = findLevelById(level.id);
-    if (adminLevel) {
-      setIsEditPermissionsDialogOpen(true);
-      setSelectedLevel(adminLevel);
-    }
-  };
 
   return {
     levels,
