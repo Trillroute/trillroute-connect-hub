@@ -14,7 +14,7 @@ import { Lead } from "@/types/lead";
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('courses'); // Set default tab to 'courses'
+  const [activeTab, setActiveTab] = useState<ActiveTab>('today'); // Set default tab to 'today'
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
 
@@ -78,7 +78,10 @@ const SuperAdminDashboard = () => {
         <div className="p-4 md:p-6 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
+              <p className="text-gray-500">
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module
+              </p>
             </div>
           </div>
         </div>

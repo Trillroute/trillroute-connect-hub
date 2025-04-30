@@ -23,18 +23,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   // For admin pages, header is full width at top, sidebar + content share the below space horizontally
   if (isAdminPage) {
-    // Expect children to be [<Sidebar />, <MainContent />]
-    let sidebar = null;
-    let mainContent = null;
-
-    // If children is array, safely destructure
-    if (Array.isArray(children)) {
-      [sidebar, mainContent] = children;
-    } else {
-      // fallback: everything in main content if only 1 child
-      mainContent = children;
-    }
-
+    // No need to destructure children, the SuperAdminDashboard component
+    // already includes the SuperAdminSidebar component
     return (
       <div className="min-h-screen flex flex-col w-full bg-background">
         {/* Header: always on top, full width */}
@@ -42,16 +32,9 @@ const Layout = ({ children }: LayoutProps) => {
           <Navbar />
         </div>
         <SidebarProvider defaultOpen={true}>
-          {/* Flex row below header: sidebar left, main content right */}
-          <div className="flex flex-1 min-h-0 w-full">
-            {/* Sidebar left */}
-            <div className="h-full">
-              {sidebar}
-            </div>
-            {/* Main content right, flex-grow */}
-            <div className="flex-1 h-full overflow-auto">
-              {mainContent}
-            </div>
+          {/* Main content container */}
+          <div className="flex-1 flex flex-col">
+            {children}
           </div>
         </SidebarProvider>
       </div>

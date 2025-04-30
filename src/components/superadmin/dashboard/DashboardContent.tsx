@@ -41,6 +41,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onEditLead,
   onDeleteLead
 }) => {
+  // Create a common wrapper for content with title and description
+  const ContentWrapper = ({ title, description, children }: { title: string, description: string, children: React.ReactNode }) => (
+    <div className="w-full">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold">{title}</h2>
+        <p className="text-gray-500">{description}</p>
+      </div>
+      {children}
+    </div>
+  );
+
   if (activeTab === 'today') {
     return (
       <>
@@ -100,16 +111,33 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     );
   }
 
-  const contentMap = {
+  // Handle the rest of the tabs using a mapping approach
+  const contentMap: Record<string, React.ReactNode> = {
     'courses': <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />,
+    'courseManagement': <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />,
     'students': <StudentManagement canAddUser={true} canDeleteUser={true} />,
     'admins': <AdminManagement canAddAdmin={true} canDeleteAdmin={true} canEditAdminLevel={true} />,
     'leads': <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />,
     'levels': <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />,
-    'reports': <div className="my-8"><UserActivityReport /></div>
+    'reports': <div className="my-8"><UserActivityReport /></div>,
+    'scheduling': <ContentWrapper title="Scheduling" description="Manage class schedules and appointments"><Card className="p-6">Scheduling functionality coming soon</Card></ContentWrapper>,
+    'fees': <ContentWrapper title="Fees Management" description="Manage fees and payment options"><Card className="p-6">Fees management functionality coming soon</Card></ContentWrapper>,
+    'communication': <ContentWrapper title="Communication" description="Manage communication with students and teachers"><Card className="p-6">Communication functionality coming soon</Card></ContentWrapper>,
+    'intramural': <ContentWrapper title="Intramural Activities" description="Manage intramural activities and events"><Card className="p-6">Intramural activities functionality coming soon</Card></ContentWrapper>,
+    'access': <ContentWrapper title="Access Management" description="Manage access control and permissions"><Card className="p-6">Access control functionality coming soon</Card></ContentWrapper>,
   };
 
-  return contentMap[activeTab as keyof typeof contentMap] || null;
+  // Return the mapped content or a placeholder if tab is not found
+  return contentMap[activeTab] || (
+    <ContentWrapper 
+      title={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module`} 
+      description={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} management functionality`}
+    >
+      <Card className="p-6">
+        <p>This module is under development.</p>
+      </Card>
+    </ContentWrapper>
+  );
 };
 
 export default DashboardContent;
