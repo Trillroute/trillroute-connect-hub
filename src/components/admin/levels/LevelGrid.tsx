@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
 import { Level } from './LevelTable';
 
@@ -27,6 +27,12 @@ const LevelGrid: React.FC<LevelGridProps> = ({
   setSelectedLevelIds,
   visibleColumns = {}
 }) => {
+  // Use state to manage column configurations including order
+  const [columnOrder, setColumnOrder] = useState<string[]>([
+    'name', 'description', 'studentPermissions', 'teacherPermissions', 
+    'adminPermissions', 'leadPermissions', 'coursePermissions', 'levelPermissions'
+  ]);
+  
   // Define all available columns
   const allColumnConfigs = useMemo<ColumnConfig[]>(() => [
     {
@@ -103,14 +109,22 @@ const LevelGrid: React.FC<LevelGridProps> = ({
     }
   ], []);
 
-  // Filter columns based on visibility settings
+  // Filter and order columns based on visibility settings and current order
   const visibleColumnConfigs = useMemo(() => {
-    return allColumnConfigs.filter(column => 
+    // Filter columns based on visibility first
+    const visibleCols = allColumnConfigs.filter(column => 
       // Keep the column if it's not explicitly set to false
       // or if it's the name column (always show name)
       visibleColumns[column.field] !== false || column.field === 'name'
     );
-  }, [allColumnConfigs, visibleColumns]);
+    
+    // Sort columns based on the current column order
+    return [...visibleCols].sort((a, b) => {
+      const indexA = columnOrder.indexOf(a.field);
+      const indexB = columnOrder.indexOf(b.field);
+      return indexA - indexB;
+    });
+  }, [allColumnConfigs, visibleColumns, columnOrder]);
 
   // Map levels to have string IDs for UnifiedDataGrid
   const formattedLevels = useMemo(() => {
@@ -119,6 +133,24 @@ const LevelGrid: React.FC<LevelGridProps> = ({
       id: String(level.id)
     }));
   }, [levels]);
+
+  // Handle column reordering
+  const handleColumnReorder = (draggedField: string, targetField: string) => {
+    if (draggedField === targetField) return;
+    
+    setColumnOrder(prevOrder => {
+      const newOrder = [...prevOrder];
+      const draggedIndex = newOrder.indexOf(draggedField);
+      const targetIndex = newOrder.indexOf(targetField);
+      
+      // Remove the dragged item
+      newOrder.splice(draggedIndex, 1);
+      // Insert at the target position
+      newOrder.splice(targetIndex, 0, draggedField);
+      
+      return newOrder;
+    });
+  };
 
   return (
     <UnifiedDataGrid
@@ -132,6 +164,7 @@ const LevelGrid: React.FC<LevelGridProps> = ({
       selectedIds={selectedLevelIds}
       setSelectedIds={setSelectedLevelIds}
       emptyMessage="No levels found"
+      onColumnReorder={handleColumnReorder}
     />
   );
 };

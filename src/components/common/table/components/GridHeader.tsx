@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,8 +77,7 @@ const GridHeader: React.FC<GridHeaderProps> = ({
               key={index} 
               style={column.width ? { width: column.width } : {}}
               draggable={isDraggable}
-              onDragStart={isDraggable ? (e) => {
-                e.preventDefault();
+              onDragStart={isDraggable ? () => {
                 if (onDragStart) onDragStart(index);
               } : undefined}
               onDragOver={isDraggable ? (e) => {

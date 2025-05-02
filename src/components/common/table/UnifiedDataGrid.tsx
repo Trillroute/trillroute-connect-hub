@@ -31,6 +31,7 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   height = "500px",
   emptyMessage = "No data available",
   className = "",
+  onColumnReorder,
 }) => {
   // Add state to track column configurations that can be reordered
   const [columnConfigs, setColumnConfigs] = useState<ColumnConfig[]>(initialColumnConfigs);
@@ -114,6 +115,11 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
     setDraggedColIndex(index);
     // Update the column configs
     setColumnConfigs(newColumnConfigs);
+    
+    // If external reorder handler exists, call it
+    if (onColumnReorder) {
+      onColumnReorder(draggedColumn.field, targetColumn.field);
+    }
   };
 
   const handleDragEnd = () => {
