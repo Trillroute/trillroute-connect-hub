@@ -66,7 +66,11 @@ const ViewModeControls: React.FC<ViewModeControlsProps> = ({
               Columns
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-background">
+          <DropdownMenuContent 
+            align="end" 
+            className="w-56 bg-background z-50" 
+            sideOffset={5}
+          >
             {columnOptions.map((column) => (
               <DropdownMenuCheckboxItem
                 key={column.field}

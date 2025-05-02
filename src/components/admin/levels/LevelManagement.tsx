@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Card,
@@ -70,8 +71,8 @@ const LevelManagement = ({
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
+      <CardHeader className="pb-0">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
           <LevelHeader 
             onRefresh={loadLevels}
             onCreateLevel={() => setIsCreateDialogOpen(true)}
@@ -86,7 +87,7 @@ const LevelManagement = ({
           />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <LevelTable
           levels={levels}
           isLoading={isLoading}
