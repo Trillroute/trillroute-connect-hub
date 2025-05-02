@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import UnifiedDataGrid, { ColumnConfig } from '@/components/common/table/UnifiedDataGrid';
 import { Level } from './LevelTable';

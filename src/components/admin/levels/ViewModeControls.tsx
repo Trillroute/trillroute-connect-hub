@@ -60,11 +60,13 @@ const ViewModeControls: React.FC<ViewModeControlsProps> = ({
               size="sm" 
               variant="outline" 
               title="Column visibility"
+              className="ml-2"
             >
-              <Columns className="w-4 h-4" />
+              <Columns className="w-4 h-4 mr-2" />
+              Columns
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-56 bg-background">
             {columnOptions.map((column) => (
               <DropdownMenuCheckboxItem
                 key={column.field}
@@ -74,6 +76,7 @@ const ViewModeControls: React.FC<ViewModeControlsProps> = ({
                     onColumnVisibilityChange(column.field, checked);
                   }
                 }}
+                disabled={column.field === 'name'} // Name column always visible
               >
                 {column.label}
               </DropdownMenuCheckboxItem>
