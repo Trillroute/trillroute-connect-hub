@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -7,6 +7,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuCheckboxItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Columns } from "lucide-react";
 import { useGridData } from './hooks/useGridData';
 import { useGridSelection } from './hooks/useGridSelection';
 import GridHeader from './components/GridHeader';
@@ -32,10 +40,36 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   emptyMessage = "No data available",
   className = "",
   onColumnReorder,
+  showColumnVisibilityDropdown = true,
 }) => {
   // Add state to track column configurations that can be reordered
   const [columnConfigs, setColumnConfigs] = useState<ColumnConfig[]>(initialColumnConfigs);
   const [draggedColIndex, setDraggedColIndex] = useState<number | null>(null);
+  
+  // Add state to track column visibility
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(
+    initialColumnConfigs.reduce((acc, column) => {
+      acc[column.field] = true;
+      return acc;
+    }, {} as Record<string, boolean>)
+  );
+
+  // Filter columns based on visibility
+  const visibleColumnConfigs = useMemo(() => {
+    return columnConfigs.filter(column => {
+      // Always show the first column (usually name/identifier)
+      if (column.field === columnConfigs[0]?.field) return true;
+      return columnVisibility[column.field] !== false;
+    });
+  }, [columnConfigs, columnVisibility]);
+
+  // Update column visibility
+  const toggleColumnVisibility = (field: string, isVisible: boolean) => {
+    setColumnVisibility(prev => ({
+      ...prev,
+      [field]: isVisible
+    }));
+  };
 
   // Use our custom hooks to manage grid data and selection
   const {
@@ -51,7 +85,7 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
     handleSort,
     getCellValue,
     getFormattedValue
-  } = useGridData({ data, columnConfigs });
+  } = useGridData({ data, columnConfigs: visibleColumnConfigs });
   
   const {
     handleRowSelection,
@@ -133,19 +167,49 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
 
   return (
     <div className="space-y-4 w-full">
-      <GridToolbar 
-        selectedIds={selectedIds}
-        activeFiltersCount={activeFiltersCount}
-        onBulkDelete={onBulkDelete ? () => handleBulkDelete(onBulkDelete) : undefined}
-        clearAllFilters={clearAllFilters}
-      />
+      <div className="flex justify-between items-center">
+        <GridToolbar 
+          selectedIds={selectedIds}
+          activeFiltersCount={activeFiltersCount}
+          onBulkDelete={onBulkDelete ? () => handleBulkDelete(onBulkDelete) : undefined}
+          clearAllFilters={clearAllFilters}
+        />
+        
+        {/* Column visibility dropdown */}
+        {showColumnVisibilityDropdown && columnConfigs.length > 1 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-auto flex items-center gap-1"
+              >
+                <Columns className="h-4 w-4" />
+                <span>Columns</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-background">
+              {columnConfigs.map((column, index) => (
+                <DropdownMenuCheckboxItem
+                  key={column.field}
+                  checked={columnVisibility[column.field] !== false}
+                  onCheckedChange={(checked) => toggleColumnVisibility(column.field, checked)}
+                  disabled={index === 0} // Disable first column (usually name or ID)
+                >
+                  {column.headerName}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
 
       <div className={`w-full rounded-md border overflow-hidden ${className}`}>
         <div style={{ height }}>
           <ScrollArea className="h-full">
             <Table>
               <GridHeader 
-                columnConfigs={columnConfigs}
+                columnConfigs={visibleColumnConfigs}
                 hasSelectionColumn={hasSelectionColumn}
                 hasActionColumn={hasActionColumn}
                 sortConfig={sortConfig}
@@ -165,7 +229,7 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
               
               <GridBody 
                 data={filteredData}
-                columnConfigs={columnConfigs}
+                columnConfigs={visibleColumnConfigs}
                 emptyMessage={emptyMessage}
                 hasSelectionColumn={hasSelectionColumn}
                 hasActionColumn={hasActionColumn}

@@ -29,4 +29,5 @@ export interface UnifiedDataGridProps {
   emptyMessage?: string;
   className?: string;
   onColumnReorder?: (draggedField: string, targetField: string) => void;
+  showColumnVisibilityDropdown?: boolean;
 }
