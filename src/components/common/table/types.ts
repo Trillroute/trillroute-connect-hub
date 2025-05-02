@@ -12,6 +12,7 @@ export interface ColumnConfig {
   filterable?: boolean;
   valueFormatter?: ({ value, data }: { value: any, data?: any }) => string | number;
   cellRenderer?: ({ value, data }: { value: any, data: any }) => React.ReactNode;
+  valueGetter?: ({ data }: { data: any }) => any;
 }
 
 export interface UnifiedDataGridProps {
