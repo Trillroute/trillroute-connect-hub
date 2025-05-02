@@ -71,8 +71,8 @@ const LevelManagement = ({
 
   return (
     <Card>
-      <CardHeader className="pb-0">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+      <CardHeader className="pb-3">
+        <div className="flex flex-col gap-4">
           <LevelHeader 
             onRefresh={loadLevels}
             onCreateLevel={() => setIsCreateDialogOpen(true)}
@@ -87,7 +87,7 @@ const LevelManagement = ({
           />
         </div>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent className="pt-2">
         <LevelTable
           levels={levels}
           isLoading={isLoading}

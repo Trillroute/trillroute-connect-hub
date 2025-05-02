@@ -27,7 +27,7 @@ const ViewModeControls: React.FC<ViewModeControlsProps> = ({
   columnOptions = [],
 }) => {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 mb-4 items-center">
       <Button
         size="sm"
         variant={viewMode === 'list' ? "secondary" : "outline"}
