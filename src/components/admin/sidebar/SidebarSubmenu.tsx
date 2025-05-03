@@ -5,7 +5,6 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { IconType } from "lucide-react";
 
 interface SidebarSubmenuItemProps {
   label: string;
