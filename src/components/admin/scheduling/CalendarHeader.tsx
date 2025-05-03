@@ -8,15 +8,21 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Search, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Settings, List, Calendar as CalendarIcon } from 'lucide-react';
 import { useCalendar } from './CalendarContext';
 
 interface CalendarHeaderProps {
   title: string;
+  showEventListToggle?: boolean;
+  onToggleEventList?: () => void;
+  isEventListShown?: boolean;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   title,
+  showEventListToggle = false,
+  onToggleEventList = () => {},
+  isEventListShown = false
 }) => {
   const { viewMode, setViewMode, goToPrevious, goToNext, goToToday } = useCalendar();
   
@@ -67,6 +73,27 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             </SelectContent>
           </Select>
         </div>
+        
+        {showEventListToggle && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-2 h-8"
+            onClick={onToggleEventList}
+          >
+            {isEventListShown ? (
+              <>
+                <CalendarIcon className="h-4 w-4 mr-1" />
+                Calendar
+              </>
+            ) : (
+              <>
+                <List className="h-4 w-4 mr-1" />
+                List
+              </>
+            )}
+          </Button>
+        )}
         
         <div className="hidden md:flex items-center gap-1">
           <Button 

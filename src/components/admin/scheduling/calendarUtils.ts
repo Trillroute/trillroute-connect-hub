@@ -1,5 +1,5 @@
 
-import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
+import { format, startOfWeek, endOfWeek, addDays, startOfMonth, endOfMonth } from 'date-fns';
 
 // Format calendar title based on view mode
 export const formatCalendarTitle = (currentDate: Date, viewMode: string): string => {
@@ -13,7 +13,10 @@ export const formatCalendarTitle = (currentDate: Date, viewMode: string): string
     }
     // If different months
     return `${format(start, 'MMM')} – ${format(end, 'MMM')} ${format(end, 'yyyy')}`;
+  } else if (viewMode === 'day') {
+    return format(currentDate, 'MMMM d, yyyy');
   }
+  // Default (month)
   return format(currentDate, 'MMMM yyyy');
 };
 
@@ -26,4 +29,17 @@ export const getWeekDays = (currentDate: Date): Date[] => {
 // Generate hours for the time grid (7 AM to 8 PM)
 export const getHourCells = (): number[] => {
   return Array.from({ length: 14 }).map((_, i) => i + 7);
+};
+
+// Get month days for the month view
+export const getMonthDays = (currentDate: Date): Date[] => {
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const days = [];
+  
+  for (let day = monthStart; day <= monthEnd; day = addDays(day, 1)) {
+    days.push(day);
+  }
+  
+  return days;
 };
