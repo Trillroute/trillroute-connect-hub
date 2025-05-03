@@ -1,6 +1,5 @@
 
 import { format, startOfWeek, endOfWeek, addDays } from 'date-fns';
-import { CalendarEvent } from './types';
 
 // Format calendar title based on view mode
 export const formatCalendarTitle = (currentDate: Date, viewMode: string): string => {
@@ -27,32 +26,4 @@ export const getWeekDays = (currentDate: Date): Date[] => {
 // Generate hours for the time grid (7 AM to 8 PM)
 export const getHourCells = (): number[] => {
   return Array.from({ length: 14 }).map((_, i) => i + 7);
-};
-
-// Initialize sample events for the calendar
-export const initializeSampleEvents = (): CalendarEvent[] => {
-  const today = new Date();
-  return [
-    {
-      id: '1',
-      title: 'Piano Lesson',
-      start: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0),
-      end: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 0),
-      color: '#4285F4'
-    },
-    {
-      id: '2',
-      title: 'Guitar Class',
-      start: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 14, 0),
-      end: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 15, 30),
-      color: '#0F9D58'
-    },
-    {
-      id: '3',
-      title: 'Violin Recital',
-      start: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 16, 0),
-      end: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 18, 0),
-      color: '#F4B400'
-    },
-  ];
 };

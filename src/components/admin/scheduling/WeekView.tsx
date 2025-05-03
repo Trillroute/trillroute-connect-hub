@@ -1,15 +1,32 @@
 
-import React from 'react';
-import { format, isSameDay, isWithinInterval } from 'date-fns';
+import React, { useState } from 'react';
+import { format, isSameDay } from 'date-fns';
 import { useCalendar } from './CalendarContext';
 import { getWeekDays, getHourCells } from './calendarUtils';
+import { CalendarEvent } from './types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from 'lucide-react';
+import EventFormDialog from './EventFormDialog';
 
 interface WeekViewProps {
   onCreateEvent: () => void;
 }
 
 const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
-  const { currentDate, events } = useCalendar();
+  const { currentDate, events, handleUpdateEvent, handleDeleteEvent } = useCalendar();
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Generate days and hours for the week view
   const weekDays = getWeekDays(currentDate);
@@ -23,7 +40,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   };
   
   // Position calculation for events
-  const calculateEventPosition = (event: typeof events[0], day: Date) => {
+  const calculateEventPosition = (event: CalendarEvent) => {
     const startHour = event.start.getHours();
     const startMinute = event.start.getMinutes();
     const endHour = event.end.getHours();
@@ -38,6 +55,33 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
       height: `${height}px`,
       backgroundColor: event.color || '#4285F4',
     };
+  };
+
+  const openEventActions = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+  };
+
+  const handleEdit = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = (eventData: Omit<CalendarEvent, 'id'>) => {
+    if (selectedEvent) {
+      handleUpdateEvent(selectedEvent.id, eventData);
+    }
+    setIsEditDialogOpen(false);
+  };
+
+  const confirmDelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedEvent) {
+      handleDeleteEvent(selectedEvent.id);
+    }
+    setIsDeleteDialogOpen(false);
+    setSelectedEvent(null);
   };
 
   return (
@@ -109,19 +153,85 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
               {getEventsForDay(day).map((event, eventIndex) => (
                 <div
                   key={eventIndex}
-                  className="absolute left-1 right-1 rounded px-2 py-1 text-white overflow-hidden text-sm"
-                  style={calculateEventPosition(event, day)}
+                  className="absolute left-1 right-1 rounded px-2 py-1 text-white overflow-hidden text-sm group cursor-pointer"
+                  style={calculateEventPosition(event)}
+                  onClick={() => openEventActions(event)}
                 >
-                  <div className="font-semibold">{event.title}</div>
+                  <div className="font-semibold group-hover:underline">{event.title}</div>
                   <div className="text-xs opacity-90">
                     {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
                   </div>
+                  {selectedEvent?.id === event.id && (
+                    <div className="absolute top-1 right-1 flex gap-1">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-5 w-5 bg-white/20 hover:bg-white/40"
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          handleEdit();
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-5 w-5 bg-white/20 hover:bg-white/40"
+                        onClick={(e) => { 
+                          e.stopPropagation();
+                          confirmDelete();
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Event Dialog */}
+      {selectedEvent && (
+        <EventFormDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSave={handleSaveEdit}
+          initialEvent={{
+            title: selectedEvent.title,
+            description: selectedEvent.description,
+            location: selectedEvent.location,
+            start: selectedEvent.start,
+            end: selectedEvent.end,
+            color: selectedEvent.color || '#4285F4'
+          }}
+          mode="edit"
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedEvent?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

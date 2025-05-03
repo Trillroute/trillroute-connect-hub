@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronRight } from 'lucide-react';
+import { Plus, ChevronRight, RefreshCw } from 'lucide-react';
 import MiniCalendar from './MiniCalendar';
 import { useCalendar } from './CalendarContext';
 
 const CalendarSidebar: React.FC = () => {
-  const { currentDate, handleDateSelect, setIsCreateEventOpen } = useCalendar();
+  const { currentDate, handleDateSelect, setIsCreateEventOpen, refreshEvents, isLoading } = useCalendar();
   
   return (
     <div className="hidden md:flex flex-col w-52 p-3 border-r border-gray-200 bg-white overflow-y-auto">
@@ -30,8 +30,14 @@ const CalendarSidebar: React.FC = () => {
       <div className="mt-2">
         <h3 className="text-sm font-semibold mb-2 flex items-center justify-between">
           My calendars
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <ChevronRight className="h-4 w-4" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-6 w-6" 
+            onClick={refreshEvents}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </h3>
         <div className="space-y-2">
