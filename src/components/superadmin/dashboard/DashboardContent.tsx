@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
 import CourseManagement from '@/components/admin/CourseManagement';
@@ -17,6 +16,7 @@ import { Link } from 'react-router-dom';
 import AdminStats from './AdminStats';
 import UserGrowthChart from './UserGrowthChart';
 import { DashboardStats, UserActivityData } from '../hooks/useDashboardData';
+import SchedulingCalendar from '@/components/admin/scheduling/Calendar';
 
 interface DashboardContentProps {
   activeTab: ActiveTab;
@@ -111,6 +111,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     );
   }
 
+  if (activeTab === 'scheduling') {
+    return (
+      <div className="w-full h-full overflow-hidden">
+        <SchedulingCalendar />
+      </div>
+    );
+  }
+
   // Handle the rest of the tabs using a mapping approach
   const contentMap: Record<string, React.ReactNode> = {
     'courses': <CourseManagement canAddCourse={true} canEditCourse={true} canDeleteCourse={true} />,
@@ -120,7 +128,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     'leads': <LeadManagement canAddLead={true} canEditLead={true} canDeleteLead={true} />,
     'levels': <LevelManagement canAddLevel={true} canEditLevel={true} canDeleteLevel={true} />,
     'reports': <div className="my-8"><UserActivityReport /></div>,
-    'scheduling': <ContentWrapper title="Scheduling" description="Manage class schedules and appointments"><Card className="p-6">Scheduling functionality coming soon</Card></ContentWrapper>,
     'fees': <ContentWrapper title="Fees Management" description="Manage fees and payment options"><Card className="p-6">Fees management functionality coming soon</Card></ContentWrapper>,
     'communication': <ContentWrapper title="Communication" description="Manage communication with students and teachers"><Card className="p-6">Communication functionality coming soon</Card></ContentWrapper>,
     'intramural': <ContentWrapper title="Intramural Activities" description="Manage intramural activities and events"><Card className="p-6">Intramural activities functionality coming soon</Card></ContentWrapper>,
