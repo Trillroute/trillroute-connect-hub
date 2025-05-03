@@ -21,21 +21,21 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   const { viewMode, setViewMode, goToPrevious, goToNext, goToToday } = useCalendar();
   
   return (
-    <div className="flex flex-wrap items-center justify-between p-4 border-b border-gray-200 bg-white">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center justify-between p-3 border-b border-gray-200 bg-white">
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           onClick={goToToday}
-          className="text-sm"
+          className="text-sm h-8"
         >
           Today
         </Button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={goToPrevious}
-            className="h-8 w-8"
+            className="h-7 w-7"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -43,21 +43,21 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             variant="ghost" 
             size="icon" 
             onClick={goToNext}
-            className="h-8 w-8"
+            className="h-7 w-7"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <h2 className="text-xl font-semibold">{title}</h2>
+        <h2 className="text-base font-semibold">{title}</h2>
       </div>
       
-      <div className="flex items-center gap-2 mt-2 md:mt-0">
-        <div className="relative">
+      <div className="flex items-center gap-2 mt-0">
+        <div>
           <Select
             value={viewMode}
             onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}
           >
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[90px] h-8 text-xs">
               <SelectValue placeholder="View" />
             </SelectTrigger>
             <SelectContent>
@@ -68,20 +68,20 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           </Select>
         </div>
         
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-1">
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-9 w-9"
+            className="h-7 w-7"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4" />
           </Button>
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-9 w-9"
+            className="h-7 w-7"
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-4 w-4" />
           </Button>
         </div>
       </div>

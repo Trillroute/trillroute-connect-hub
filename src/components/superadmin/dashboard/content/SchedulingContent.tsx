@@ -9,8 +9,10 @@ const SchedulingContent: React.FC = () => {
       title="Scheduling"
       description="Manage your class and event scheduling"
     >
-      <div className="w-full h-full overflow-hidden border rounded-md">
-        <SchedulingCalendar />
+      <div className="w-full border rounded-md bg-white shadow-sm">
+        <div className="h-[calc(100vh-220px)]">
+          <SchedulingCalendar />
+        </div>
       </div>
     </ContentWrapper>
   );

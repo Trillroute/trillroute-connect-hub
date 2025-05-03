@@ -30,7 +30,7 @@ const CalendarContent: React.FC = () => {
   const calendarTitle = formatCalendarTitle(currentDate, viewMode);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-150px)] md:h-[calc(100vh-120px)]">
+    <div className="flex flex-col h-full">
       {/* Main calendar header */}
       <CalendarHeader title={calendarTitle} />
       
