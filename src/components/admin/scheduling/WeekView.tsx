@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { format, isSameDay } from 'date-fns';
+import { isSameDay } from 'date-fns';
 import { useCalendar } from './CalendarContext';
 import { getWeekDays, getHourCells } from './calendarUtils';
 import { CalendarEvent } from './types';
@@ -14,9 +14,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from 'lucide-react';
 import EventFormDialog from './EventFormDialog';
+import WeekViewEvent from './week-view/WeekViewEvent';
+import WeekTimeGrid from './week-view/WeekTimeGrid';
+import WeekDayHeader from './week-view/WeekDayHeader';
+import { calculateEventPosition } from './week-view/weekViewUtils';
 
 interface WeekViewProps {
   onCreateEvent: () => void;
@@ -37,24 +39,6 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
     return events.filter(event => 
       isSameDay(event.start, date)
     );
-  };
-  
-  // Position calculation for events
-  const calculateEventPosition = (event: CalendarEvent) => {
-    const startHour = event.start.getHours();
-    const startMinute = event.start.getMinutes();
-    const endHour = event.end.getHours();
-    const endMinute = event.end.getMinutes();
-    
-    const startPercentage = ((startHour - 7) + startMinute / 60) * 60; // 60px per hour
-    const duration = (endHour - startHour) + (endMinute - startMinute) / 60;
-    const height = duration * 60; // 60px per hour
-    
-    return {
-      top: `${startPercentage}px`,
-      height: `${height}px`,
-      backgroundColor: event.color || '#4285F4',
-    };
   };
 
   const openEventActions = (event: CalendarEvent) => {
@@ -97,21 +81,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
         
         {/* Day headers */}
         {weekDays.map((day, i) => (
-          <div
-            key={i}
-            className={`flex-1 border-b border-r border-gray-200 h-12 ${
-              isSameDay(day, new Date()) ? 'bg-blue-50' : 'bg-white'
-            }`}
-          >
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="text-xs uppercase text-gray-500">{format(day, 'EEE')}</div>
-              <div className={`text-base font-medium ${
-                isSameDay(day, new Date()) ? 'text-blue-600' : ''
-              }`}>
-                {format(day, 'd')}
-              </div>
-            </div>
-          </div>
+          <WeekDayHeader key={i} day={day} currentDate={new Date()} />
         ))}
       </div>
       
@@ -138,56 +108,25 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
             className="flex-1 relative"
           >
             {/* Hour cells */}
-            {hours.map(hour => (
-              <div
-                key={hour}
-                className={`h-[60px] border-b border-r border-gray-200 ${
-                  isSameDay(day, new Date()) ? 'bg-blue-50' : ''
-                }`}
-                onClick={() => onCreateEvent()}
-              ></div>
-            ))}
+            <WeekTimeGrid 
+              hours={hours} 
+              day={day} 
+              currentDate={new Date()} 
+              onCellClick={onCreateEvent} 
+            />
             
             {/* Events */}
             <div className="absolute top-0 left-0 right-0">
               {getEventsForDay(day).map((event, eventIndex) => (
-                <div
+                <WeekViewEvent
                   key={eventIndex}
-                  className="absolute left-1 right-1 rounded px-2 py-1 text-white overflow-hidden text-sm group cursor-pointer"
+                  event={event}
+                  isSelected={selectedEvent?.id === event.id}
+                  onSelect={openEventActions}
+                  onEdit={handleEdit}
+                  onDelete={confirmDelete}
                   style={calculateEventPosition(event)}
-                  onClick={() => openEventActions(event)}
-                >
-                  <div className="font-semibold group-hover:underline">{event.title}</div>
-                  <div className="text-xs opacity-90">
-                    {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                  </div>
-                  {selectedEvent?.id === event.id && (
-                    <div className="absolute top-1 right-1 flex gap-1">
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-5 w-5 bg-white/20 hover:bg-white/40"
-                        onClick={(e) => { 
-                          e.stopPropagation();
-                          handleEdit();
-                        }}
-                      >
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-5 w-5 bg-white/20 hover:bg-white/40"
-                        onClick={(e) => { 
-                          e.stopPropagation();
-                          confirmDelete();
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                />
               ))}
             </div>
           </div>
