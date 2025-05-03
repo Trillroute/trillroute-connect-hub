@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { format, addHours } from 'date-fns';
-import { CalendarEvent } from './Calendar';
+import { CalendarEvent } from './types';
 import {
   Dialog,
   DialogContent,
