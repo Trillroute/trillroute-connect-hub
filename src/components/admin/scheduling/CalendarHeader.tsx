@@ -9,30 +9,23 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, Search, Settings } from 'lucide-react';
+import { useCalendar } from './CalendarContext';
 
 interface CalendarHeaderProps {
   title: string;
-  viewMode: 'day' | 'week' | 'month';
-  onViewModeChange: (mode: 'day' | 'week' | 'month') => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  onToday: () => void;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   title,
-  viewMode,
-  onViewModeChange,
-  onPrevious,
-  onNext,
-  onToday
 }) => {
+  const { viewMode, setViewMode, goToPrevious, goToNext, goToToday } = useCalendar();
+  
   return (
     <div className="flex flex-wrap items-center justify-between p-4 border-b border-gray-200 bg-white">
       <div className="flex items-center gap-4">
         <Button
           variant="outline"
-          onClick={onToday}
+          onClick={goToToday}
           className="text-sm"
         >
           Today
@@ -41,7 +34,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={onPrevious}
+            onClick={goToPrevious}
             className="h-8 w-8"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -49,7 +42,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={onNext}
+            onClick={goToNext}
             className="h-8 w-8"
           >
             <ChevronRight className="h-4 w-4" />
@@ -62,7 +55,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         <div className="relative">
           <Select
             value={viewMode}
-            onValueChange={(value) => onViewModeChange(value as 'day' | 'week' | 'month')}
+            onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}
           >
             <SelectTrigger className="w-[100px]">
               <SelectValue placeholder="View" />

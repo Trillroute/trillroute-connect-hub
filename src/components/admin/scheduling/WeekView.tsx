@@ -1,21 +1,19 @@
 
 import React from 'react';
-import { format, startOfWeek, addDays, isSameDay, areIntervalsOverlapping, isWithinInterval } from 'date-fns';
-import { CalendarEvent } from './Calendar';
+import { format, isSameDay, isWithinInterval } from 'date-fns';
+import { useCalendar } from './CalendarContext';
+import { getWeekDays, getHourCells } from './calendarUtils';
 
 interface WeekViewProps {
-  currentDate: Date;
-  events: CalendarEvent[];
   onCreateEvent: () => void;
 }
 
-const WeekView: React.FC<WeekViewProps> = ({ currentDate, events, onCreateEvent }) => {
-  // Generate days for the week view
-  const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 0 });
-  const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(startOfCurrentWeek, i));
+const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
+  const { currentDate, events } = useCalendar();
   
-  // Generate hour cells (7 AM to 8 PM)
-  const hours = Array.from({ length: 14 }).map((_, i) => i + 7);
+  // Generate days and hours for the week view
+  const weekDays = getWeekDays(currentDate);
+  const hours = getHourCells();
   
   // Getting events for each day
   const getEventsForDay = (date: Date) => {
@@ -25,7 +23,7 @@ const WeekView: React.FC<WeekViewProps> = ({ currentDate, events, onCreateEvent 
   };
   
   // Position calculation for events
-  const calculateEventPosition = (event: CalendarEvent, day: Date) => {
+  const calculateEventPosition = (event: typeof events[0], day: Date) => {
     const startHour = event.start.getHours();
     const startMinute = event.start.getMinutes();
     const endHour = event.end.getHours();
