@@ -4,12 +4,11 @@ import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
 import { DashboardStats, UserActivityData } from '../hooks/useDashboardData';
 import { Lead } from "@/types/lead";
 
-// Import our new component files
+// Import our components
 import TodayContent from './content/TodayContent';
 import LeadsKanbanContent from './content/LeadsKanbanContent';
 import SchedulingContent from './content/SchedulingContent';
-import PlaceholderContent from './content/PlaceholderContent';
-import { getTabContent } from './content/TabContentMap';
+import TabContentMap from './content/TabContentMap';
 
 interface DashboardContentProps {
   activeTab: ActiveTab;
@@ -61,16 +60,20 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     return <SchedulingContent />;
   }
 
-  // Handle the rest of the tabs using a mapping approach
-  const content = getTabContent(activeTab);
-  
-  // If we have a component for this tab, return it
-  if (content) {
-    return <>{content}</>;
-  }
-
-  // If no specific component found, return a placeholder
-  return <PlaceholderContent tab={activeTab} />;
+  // For all other tabs, use the TabContentMap component
+  return (
+    <TabContentMap 
+      activeTab={activeTab} 
+      stats={stats}
+      userActivityData={userActivityData}
+      currentYear={currentYear}
+      handleYearChange={handleYearChange}
+      leads={leads}
+      leadsLoading={leadsLoading}
+      onEditLead={onEditLead}
+      onDeleteLead={onDeleteLead}
+    />
+  );
 };
 
 export default DashboardContent;
