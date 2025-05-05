@@ -19,24 +19,44 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
 
   // Format title based on view mode and current date
   let title;
-  const options = { month: 'long', year: 'numeric' };
+  const options = { month: 'long' as const, year: 'numeric' as const };
   
   switch (viewMode) {
     case 'day':
       title = currentDate.toLocaleDateString('en-US', {
         ...options,
-        day: 'numeric',
+        day: 'numeric' as const,
       });
       break;
     case 'week':
       title = `Week of ${currentDate.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
+        month: 'short' as const,
+        day: 'numeric' as const,
       })}`;
       break;
     default:
       title = currentDate.toLocaleDateString('en-US', options);
   }
+
+  // Handle event operations
+  const handleCreateEvent = () => {
+    setIsCreateEventOpen(true);
+  };
+
+  const handleEditEvent = (event) => {
+    console.log('Edit event:', event);
+    // Will be implemented in a future feature
+  };
+
+  const handleDeleteEvent = (event) => {
+    console.log('Delete event:', event);
+    // Will be implemented in a future feature
+  };
+
+  const handleDateClick = (date) => {
+    console.log('Date clicked:', date);
+    // Will be implemented in a future feature
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -53,16 +73,26 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         
         <div className="flex-1 overflow-auto">
           {showEventList ? (
-            <EventListView />
+            <EventListView 
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEvent}
+            />
           ) : (
-            <CalendarViewRenderer />
+            <CalendarViewRenderer 
+              viewMode={viewMode}
+              showEventList={showEventList}
+              onCreateEvent={handleCreateEvent}
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEvent}
+              onDateClick={handleDateClick}
+            />
           )}
         </div>
       </div>
       
       {isCreateEventOpen && (
         <CreateEventDialog
-          isOpen={isCreateEventOpen}
+          open={isCreateEventOpen}
           onClose={() => setIsCreateEventOpen(false)}
         />
       )}
