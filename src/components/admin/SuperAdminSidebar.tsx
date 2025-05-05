@@ -19,6 +19,7 @@ export type ActiveTab =
   | "leads"
   | "leads-cards"
   | "scheduling"
+  | "user-availability"
   | "teachers"
   | "intramural"
   | "reports"
@@ -38,6 +39,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
     courses: activeTab === 'classTypes' || activeTab === 'courseManagement' || activeTab === 'courses',
     access: activeTab === 'admins' || activeTab === 'levels' || activeTab === 'access',
     leads: activeTab === 'leads' || activeTab === 'leads-cards',
+    scheduling: activeTab === 'scheduling' || activeTab === 'user-availability',
   });
 
   const location = useLocation();

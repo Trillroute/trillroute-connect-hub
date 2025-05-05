@@ -14,7 +14,8 @@ import {
   FileText,
   Shield,
   Settings,
-  Kanban
+  Kanban,
+  Clock
 } from "lucide-react";
 import { ActiveTab } from "../SuperAdminSidebar";
 
@@ -88,6 +89,18 @@ export const sidebarMenuItems: MenuItemConfig[] = [
     id: "scheduling",
     label: "Scheduling",
     icon: Calendar,
+    submenuItems: [
+      {
+        id: "scheduling",
+        label: "Calendar",
+        icon: Calendar,
+      },
+      {
+        id: "user-availability",
+        label: "Availability",
+        icon: Clock,
+      },
+    ],
   },
   {
     id: "teachers",
