@@ -5,7 +5,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from "@/components/ui/badge";
 import UserAvailabilitySchedule from '@/components/admin/scheduling/user-availability/UserAvailabilitySchedule';
 import { useUserAvailability } from '@/hooks/useUserAvailability';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Select, 
+  SelectContent, 
+  SelectGroup, 
+  SelectItem, 
+  SelectLabel, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -17,9 +25,9 @@ interface StaffMember {
 
 const UserAvailabilityContent: React.FC = () => {
   const { role, user, isSuperAdmin } = useAuth();
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(user?.id || null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
-  const [isLoadingStaff, setIsLoadingStaff] = useState<boolean>(false);
+  const [isLoadingStaff, setIsLoadingStaff] = useState<boolean>(true);
   
   const { 
     loading,
@@ -30,6 +38,13 @@ const UserAvailabilityContent: React.FC = () => {
     deleteSlot,
     copyDaySlots
   } = useUserAvailability(selectedUserId || undefined);
+
+  // Set the initial selected user to the current user
+  useEffect(() => {
+    if (user && !selectedUserId) {
+      setSelectedUserId(user.id);
+    }
+  }, [user]);
 
   // Fetch staff members (teachers, admins) that can be managed
   useEffect(() => {
@@ -61,10 +76,11 @@ const UserAvailabilityContent: React.FC = () => {
           role: staff.role
         }));
 
-        // Add current user at the top
-        if (user) {
+        // Add current user at the top if they're an admin or superadmin
+        if (user && (role === 'admin' || role === 'superadmin')) {
+          // Check if the current user is already in the list
           const currentUserInList = staffList.find(staff => staff.id === user.id);
-          if (!currentUserInList && (role === 'admin' || role === 'superadmin')) {
+          if (!currentUserInList) {
             staffList.unshift({
               id: user.id,
               name: `${user.firstName} ${user.lastName} (You)`,
@@ -87,7 +103,7 @@ const UserAvailabilityContent: React.FC = () => {
   }, [role, user, isSuperAdmin]);
 
   const handleUserChange = (userId: string) => {
-    console.log('Selected user changed to:', userId);
+    console.log('User selection changed to:', userId);
     setSelectedUserId(userId);
   };
 
@@ -108,29 +124,30 @@ const UserAvailabilityContent: React.FC = () => {
         {/* Show user selector for admins and superadmins */}
         {(role === 'admin' || role === 'superadmin') && (
           <div className="w-full md:w-64">
-            <Select 
-              defaultValue={selectedUserId || undefined}
-              onValueChange={handleUserChange}
-              disabled={isLoadingStaff}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={isLoadingStaff ? "Loading users..." : "Select a user"} />
-              </SelectTrigger>
-              <SelectContent>
-                {isLoadingStaff ? (
-                  <div className="flex items-center justify-center p-2">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading...
-                  </div>
-                ) : (
-                  <>
+            {isLoadingStaff ? (
+              <div className="flex items-center justify-center p-2 border rounded-md">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading users...
+              </div>
+            ) : (
+              <Select
+                value={selectedUserId || undefined}
+                onValueChange={handleUserChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {user && (
                     <SelectGroup>
                       <SelectLabel>Your Availability</SelectLabel>
-                      <SelectItem value={user?.id || ''}>
-                        {user?.firstName} {user?.lastName} (You)
+                      <SelectItem value={user.id}>
+                        {user.firstName} {user.lastName} (You)
                       </SelectItem>
                     </SelectGroup>
+                  )}
 
-                    {/* Show teachers for both admin and superadmin */}
+                  {/* Show teachers for both admin and superadmin */}
+                  {staffMembers.filter(staff => staff.role === 'teacher' && staff.id !== user?.id).length > 0 && (
                     <SelectGroup>
                       <SelectLabel>Teachers</SelectLabel>
                       {staffMembers
@@ -141,24 +158,24 @@ const UserAvailabilityContent: React.FC = () => {
                           </SelectItem>
                         ))}
                     </SelectGroup>
+                  )}
 
-                    {/* Only show admins for superadmin */}
-                    {isSuperAdmin() && (
-                      <SelectGroup>
-                        <SelectLabel>Admins</SelectLabel>
-                        {staffMembers
-                          .filter(staff => staff.role === 'admin' && staff.id !== user?.id)
-                          .map(staff => (
-                            <SelectItem key={staff.id} value={staff.id}>
-                              {staff.name}
-                            </SelectItem>
-                          ))}
-                      </SelectGroup>
-                    )}
-                  </>
-                )}
-              </SelectContent>
-            </Select>
+                  {/* Only show admins for superadmin */}
+                  {isSuperAdmin() && staffMembers.filter(staff => staff.role === 'admin' && staff.id !== user?.id).length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>Admins</SelectLabel>
+                      {staffMembers
+                        .filter(staff => staff.role === 'admin' && staff.id !== user?.id)
+                        .map(staff => (
+                          <SelectItem key={staff.id} value={staff.id}>
+                            {staff.name}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  )}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         )}
       </div>
