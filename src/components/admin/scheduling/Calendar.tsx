@@ -33,6 +33,7 @@ const CalendarContent: React.FC = () => {
     setIsCreateEventOpen,
     handleCreateEvent,
     setCurrentDate,
+    setViewMode,
     handleUpdateEvent,
     handleDeleteEvent
   } = useCalendar();
@@ -74,7 +75,8 @@ const CalendarContent: React.FC = () => {
     setCurrentDate(date);
     if (viewMode === 'month') {
       // Switch to day view when clicking on a date in month view
-      // We don't have access to setViewMode here, so we'll handle it separately
+      setViewMode('day');
+      setShowEventList(true); // Use list view by default
     }
   };
 

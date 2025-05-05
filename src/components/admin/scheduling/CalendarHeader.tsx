@@ -2,13 +2,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Search, Settings, List, Calendar as CalendarIcon } from 'lucide-react';
+  ChevronLeft, 
+  ChevronRight, 
+  CalendarDays, 
+  Calendar as CalendarIcon, 
+  List 
+} from 'lucide-react';
 import { useCalendar } from './CalendarContext';
 
 interface CalendarHeaderProps {
@@ -18,97 +17,89 @@ interface CalendarHeaderProps {
   isEventListShown?: boolean;
 }
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({ 
   title,
   showEventListToggle = false,
-  onToggleEventList = () => {},
+  onToggleEventList,
   isEventListShown = false
 }) => {
-  const { viewMode, setViewMode, goToPrevious, goToNext, goToToday } = useCalendar();
+  const { 
+    viewMode, 
+    setViewMode, 
+    goToPrevious, 
+    goToNext, 
+    goToToday 
+  } = useCalendar();
   
   return (
-    <div className="flex flex-wrap items-center justify-between p-3 border-b border-gray-200 bg-white">
+    <div className="flex justify-between items-center p-4 border-b border-gray-200">
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          onClick={goToToday}
-          className="text-sm h-8"
-        >
-          Today
-        </Button>
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={goToPrevious}
-            className="h-7 w-7"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={goToNext}
-            className="h-7 w-7"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h3 className="text-xl font-semibold">{title}</h3>
       </div>
       
-      <div className="flex items-center gap-2 mt-0">
-        <div>
-          <Select
-            value={viewMode}
-            onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}
+      <div className="flex items-center gap-2">
+        {/* View toggle buttons */}
+        <div className="flex border rounded-md overflow-hidden shadow-sm mr-2">
+          <Button
+            variant={viewMode === 'day' ? "default" : "ghost"}
+            className="px-2 rounded-none"
+            onClick={() => setViewMode('day')}
           >
-            <SelectTrigger className="w-[90px] h-8 text-xs">
-              <SelectValue placeholder="View" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="day">Day</SelectItem>
-              <SelectItem value="week">Week</SelectItem>
-              <SelectItem value="month">Month</SelectItem>
-            </SelectContent>
-          </Select>
+            <CalendarIcon className="w-4 h-4 mr-1" />
+            <span>Day</span>
+          </Button>
+          
+          <Button
+            variant={viewMode === 'week' ? "default" : "ghost"}
+            className="px-2 rounded-none"
+            onClick={() => setViewMode('week')}
+          >
+            <CalendarDays className="w-4 h-4 mr-1" />
+            <span>Week</span>
+          </Button>
+          
+          <Button
+            variant={viewMode === 'month' ? "default" : "ghost"}
+            className="px-2 rounded-none"
+            onClick={() => setViewMode('month')}
+          >
+            <CalendarDays className="w-4 h-4 mr-1" />
+            <span>Month</span>
+          </Button>
         </div>
         
-        {showEventListToggle && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-2 h-8"
+        {/* List view toggle for day view */}
+        {showEventListToggle && onToggleEventList && (
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={onToggleEventList}
+            className="mr-2"
           >
             {isEventListShown ? (
               <>
-                <CalendarIcon className="h-4 w-4 mr-1" />
-                Calendar
+                <CalendarIcon className="w-4 h-4 mr-1" />
+                <span>Calendar</span>
               </>
             ) : (
               <>
-                <List className="h-4 w-4 mr-1" />
-                List
+                <List className="w-4 h-4 mr-1" />
+                <span>List</span>
               </>
             )}
           </Button>
         )}
         
-        <div className="hidden md:flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-7 w-7"
-          >
-            <Search className="h-4 w-4" />
+        {/* Navigation buttons */}
+        <div className="flex border rounded-md overflow-hidden shadow-sm">
+          <Button variant="ghost" className="px-2 rounded-none" onClick={goToToday}>
+            Today
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-7 w-7"
-          >
-            <Settings className="h-4 w-4" />
+          <Button variant="ghost" className="px-2 rounded-none" onClick={goToPrevious}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" className="px-2 rounded-none" onClick={goToNext}>
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
