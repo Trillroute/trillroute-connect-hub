@@ -8,6 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
 import { isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
 import { PaymentButton } from '@/components/PaymentButton';
+import BookTrialDialog from './scheduler/BookTrialDialog';
+import { hasTrialForCourse } from '@/services/teacherAvailabilityService';
 
 interface CourseHeaderProps {
   course: Course;
@@ -16,7 +18,7 @@ interface CourseHeaderProps {
   onEnrollmentSuccess: (response: any) => void;
   onEnrollmentError: (error: any) => void;
   courseId: string;
-  onNavigateBack?: () => void; // Added this prop
+  onNavigateBack?: () => void;
 }
 
 export const CourseHeader = ({
@@ -32,6 +34,9 @@ export const CourseHeader = ({
   const { user } = useAuth();
   const [isEnrolled, setIsEnrolled] = useState(initialIsEnrolled);
   const [enrollmentVerified, setEnrollmentVerified] = useState(false);
+  const [hasTakenTrial, setHasTakenTrial] = useState(false);
+  const [isBookTrialOpen, setIsBookTrialOpen] = useState(false);
+  const [checkingTrial, setCheckingTrial] = useState(false);
   
   // Verify enrollment status directly from the database on every mount
   useEffect(() => {
@@ -61,6 +66,25 @@ export const CourseHeader = ({
     verifyEnrollmentStatus();
   }, [courseId, user, isEnrolled]);
   
+  // Check if student has taken a trial class for this course
+  useEffect(() => {
+    const checkTrialStatus = async () => {
+      if (user && user.role === 'student' && courseId) {
+        setCheckingTrial(true);
+        try {
+          const hasTrial = await hasTrialForCourse(user.id, courseId);
+          setHasTakenTrial(hasTrial);
+        } catch (error) {
+          console.error('Error checking trial status:', error);
+        } finally {
+          setCheckingTrial(false);
+        }
+      }
+    };
+    
+    checkTrialStatus();
+  }, [user, courseId]);
+  
   const canEnroll = () => {
     return user && user.role === 'student';
   };
@@ -73,8 +97,12 @@ export const CourseHeader = ({
     }
   };
 
+  const handleBookTrial = () => {
+    setIsBookTrialOpen(true);
+  };
+
   const renderEnrollmentButton = () => {
-    if (!enrollmentVerified) {
+    if (!enrollmentVerified || checkingTrial) {
       return (
         <Button
           disabled={true}
@@ -131,7 +159,32 @@ export const CourseHeader = ({
         </Button>
       );
     }
+    
+    // Show "Book Trial" button if the student hasn't taken a trial yet
+    if (!hasTakenTrial) {
+      return (
+        <div className="flex gap-3">
+          <Button
+            onClick={handleBookTrial}
+            className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+          >
+            Book Trial
+          </Button>
+          
+          <PaymentButton
+            courseId={courseId}
+            amount={course.final_price}
+            onSuccess={onEnrollmentSuccess}
+            onError={onEnrollmentError}
+            className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
+          >
+            Enroll Now
+          </PaymentButton>
+        </div>
+      );
+    }
 
+    // If the student has already taken a trial, show only the enroll button
     return (
       <PaymentButton
         courseId={courseId}
@@ -155,7 +208,18 @@ export const CourseHeader = ({
         Back to Courses
       </Button>
       
-      {renderEnrollmentButton()}
+      <div>
+        {renderEnrollmentButton()}
+      </div>
+      
+      {isBookTrialOpen && (
+        <BookTrialDialog
+          open={isBookTrialOpen}
+          onOpenChange={setIsBookTrialOpen}
+          courseId={courseId}
+          courseTitle={course.title}
+        />
+      )}
     </div>
   );
 };

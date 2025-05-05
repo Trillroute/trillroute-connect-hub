@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/types/course';
+import BookTrialDialog from './scheduler/BookTrialDialog';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CourseCardProps {
   course: Course;
@@ -12,6 +14,15 @@ interface CourseCardProps {
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, getInstructorNames }) => {
+  const { user } = useAuth();
+  const [isBookTrialOpen, setIsBookTrialOpen] = useState(false);
+  
+  const handleBookTrial = () => {
+    setIsBookTrialOpen(true);
+  };
+  
+  const isStudent = user?.role === 'student';
+  
   return (
     <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg">
       <div className="relative h-48 overflow-hidden">
@@ -43,13 +54,31 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, getInstructorNames }) =
           <span>{course.students || 0} students</span>
         </div>
       </CardContent>
-      <CardFooter>
-        <Link to={`/courses/${course.id}`} className="w-full">
-          <Button className="w-full bg-music-500 hover:bg-music-600">
+      <CardFooter className="flex gap-2">
+        <Link to={`/courses/${course.id}`} className="flex-1">
+          <Button variant="outline" className="w-full">
             View Course
           </Button>
         </Link>
+        
+        {isStudent && (
+          <Button 
+            className="flex-1 bg-music-500 hover:bg-music-600"
+            onClick={handleBookTrial}
+          >
+            Book Trial
+          </Button>
+        )}
       </CardFooter>
+      
+      {isBookTrialOpen && (
+        <BookTrialDialog
+          open={isBookTrialOpen}
+          onOpenChange={setIsBookTrialOpen}
+          courseId={course.id}
+          courseTitle={course.title}
+        />
+      )}
     </Card>
   );
 };

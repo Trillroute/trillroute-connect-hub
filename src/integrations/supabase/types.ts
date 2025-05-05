@@ -222,6 +222,7 @@ export type Database = {
           profile_photo: string | null
           role: string
           secondary_phone: string | null
+          trial_classes: string[] | null
           whatsapp_enabled: boolean | null
         }
         Insert: {
@@ -250,6 +251,7 @@ export type Database = {
           profile_photo?: string | null
           role: string
           secondary_phone?: string | null
+          trial_classes?: string[] | null
           whatsapp_enabled?: boolean | null
         }
         Update: {
@@ -278,6 +280,7 @@ export type Database = {
           profile_photo?: string | null
           role?: string
           secondary_phone?: string | null
+          trial_classes?: string[] | null
           whatsapp_enabled?: boolean | null
         }
         Relationships: []
@@ -469,6 +472,64 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      teacher_availability: {
+        Row: {
+          course_id: string | null
+          created_at: string | null
+          end_time: string
+          id: string
+          is_booked: boolean | null
+          start_time: string
+          student_id: string | null
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string | null
+          end_time: string
+          id?: string
+          is_booked?: boolean | null
+          start_time: string
+          student_id?: string | null
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string | null
+          end_time?: string
+          id?: string
+          is_booked?: boolean | null
+          start_time?: string
+          student_id?: string | null
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_availability_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_availability_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_availability_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_bank_details: {
         Row: {
