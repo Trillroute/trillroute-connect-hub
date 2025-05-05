@@ -79,7 +79,7 @@ const UserActivityReport: React.FC = () => {
   return (
     <div className="space-y-8">
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle>User Activity Overview</CardTitle>
           <CardDescription>Recent actions and tab clicks by all users</CardDescription>
         </CardHeader>
@@ -92,76 +92,92 @@ const UserActivityReport: React.FC = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {/* Chart: Actions by Type */}
-                <div>
-                  <div className="mb-2 flex items-center gap-2 font-semibold">
+                <div className="bg-white p-4 rounded-lg border border-border">
+                  <div className="mb-3 flex items-center gap-2 font-medium text-sm">
                     <BarChart className="w-5 h-5 text-music-500" />
-                    Activity by Type
+                    <span>Activity by Type</span>
                   </div>
-                  <ReBarChart
-                    data={Object.entries(actionsSummary).map(([action, count]) => ({ action, count }))}
-                    index="action"
-                    categories={["count"]}
-                    colors={["music.500"]}
-                    className="h-52"
-                  />
+                  <div className="h-64">
+                    <ReBarChart
+                      data={Object.entries(actionsSummary).map(([action, count]) => ({ action, count }))}
+                      index="action"
+                      categories={["count"]}
+                      colors={["music.500"]}
+                      className="h-full"
+                      valueFormatter={(value: number) => `${value} actions`}
+                    />
+                  </div>
                 </div>
+                
                 {/* Chart: Actions by User */}
-                <div>
-                  <div className="mb-2 flex items-center gap-2 font-semibold">
+                <div className="bg-white p-4 rounded-lg border border-border">
+                  <div className="mb-3 flex items-center gap-2 font-medium text-sm">
                     <User className="w-5 h-5 text-music-500" />
-                    Activity by User
+                    <span>Activity by User</span>
                   </div>
-                  <ReBarChart
-                    data={userSummary.map(u => ({ user: u.user_name, count: u.count }))}
-                    index="user"
-                    categories={["count"]}
-                    colors={["music.300"]}
-                    className="h-52"
-                  />
+                  <div className="h-64 overflow-hidden">
+                    <ReBarChart
+                      data={userSummary.slice(0, 10).map(u => ({
+                        user: u.user_name.split(' ')[0], // Just use first name to avoid overflow
+                        count: u.count
+                      }))}
+                      index="user"
+                      categories={["count"]}
+                      colors={["music.300"]}
+                      className="h-full"
+                      valueFormatter={(value: number) => `${value} actions`}
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Table of recent activity */}
-              <div className="overflow-x-auto mt-4">
-                <div className="mb-2 flex items-center gap-2 font-semibold">
+              <div className="mt-6 bg-white p-4 rounded-lg border border-border">
+                <div className="mb-3 flex items-center gap-2 font-medium">
                   <Activity className="w-5 h-5 text-music-500" />
-                  Recent Activity (showing last {logs.length} actions)
+                  <span>Recent Activity (showing last {logs.length} actions)</span>
                 </div>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Component/Page</TableHead>
-                      <TableHead>Date/Time</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {logs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell>
-                          <span className="font-medium">
-                            {userMap[log.user_id] || log.user_id}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="">{log.action}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span>{log.component || log.page_url}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="whitespace-nowrap">
-                            {format(new Date(log.created_at), "yyyy-MM-dd, hh:mm:ss a")}
-                          </span>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[250px]">User</TableHead>
+                        <TableHead className="w-[150px]">Action</TableHead>
+                        <TableHead className="w-[250px]">Component/Page</TableHead>
+                        <TableHead className="w-[180px]">Date/Time</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                {logs.length === 0 && (
-                  <div className="text-gray-500 text-sm p-4 text-center">No activity logs yet.</div>
-                )}
+                    </TableHeader>
+                    <TableBody>
+                      {logs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell>
+                            <div className="font-medium truncate max-w-[250px]" title={userMap[log.user_id] || log.user_id}>
+                              {userMap[log.user_id] || log.user_id}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded-md text-xs">
+                              {log.action}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="truncate max-w-[250px]" title={log.component || log.page_url || ""}>
+                              {log.component || log.page_url}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="whitespace-nowrap text-sm">
+                              {format(new Date(log.created_at), "yyyy-MM-dd, hh:mm a")}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {logs.length === 0 && (
+                    <div className="text-gray-500 text-sm p-4 text-center">No activity logs yet.</div>
+                  )}
+                </div>
               </div>
             </>
           )}
