@@ -19,7 +19,7 @@ interface CalendarHeaderProps {
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ 
   title,
-  showEventListToggle = false,
+  showEventListToggle = true, // Changed default to true to show for all views
   onToggleEventList,
   isEventListShown = false
 }) => {
@@ -68,7 +68,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           </Button>
         </div>
         
-        {/* List view toggle for day view */}
+        {/* List view toggle for all views */}
         {showEventListToggle && onToggleEventList && (
           <Button 
             variant="outline" 

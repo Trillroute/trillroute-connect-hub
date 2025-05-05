@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarProvider, useCalendar } from './CalendarContext';
@@ -84,12 +83,47 @@ const CalendarContent: React.FC = () => {
     setShowEventList(!showEventList);
   };
 
+  // Function to render the appropriate view based on viewMode and showEventList
+  const renderCalendarView = () => {
+    // Always show the event list if showEventList is true, regardless of view mode
+    if (showEventList) {
+      return (
+        <EventListView 
+          onEditEvent={handleEditEvent}
+          onDeleteEvent={handleDeleteEventClick}
+        />
+      );
+    }
+    
+    // Otherwise, show the regular calendar view based on viewMode
+    switch (viewMode) {
+      case 'week':
+        return (
+          <WeekView onCreateEvent={() => setIsCreateEventOpen(true)} />
+        );
+      case 'day':
+        return (
+          <DayView 
+            onCreateEvent={() => setIsCreateEventOpen(true)}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={handleDeleteEventClick}
+          />
+        );
+      case 'month':
+        return (
+          <MonthView onDateClick={handleDateClick} />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full relative">
       {/* Main calendar header */}
       <CalendarHeader 
         title={calendarTitle} 
-        showEventListToggle={viewMode === 'day'}
+        showEventListToggle={true} // Always show the toggle button
         onToggleEventList={toggleEventList}
         isEventListShown={showEventList}
       />
@@ -107,29 +141,8 @@ const CalendarContent: React.FC = () => {
             </div>
           )}
           
-          {/* Render appropriate view based on viewMode */}
-          {viewMode === 'week' && (
-            <WeekView onCreateEvent={() => setIsCreateEventOpen(true)} />
-          )}
-          
-          {viewMode === 'day' && (
-            showEventList ? (
-              <EventListView 
-                onEditEvent={handleEditEvent}
-                onDeleteEvent={handleDeleteEventClick}
-              />
-            ) : (
-              <DayView 
-                onCreateEvent={() => setIsCreateEventOpen(true)}
-                onEditEvent={handleEditEvent}
-                onDeleteEvent={handleDeleteEventClick}
-              />
-            )
-          )}
-          
-          {viewMode === 'month' && (
-            <MonthView onDateClick={handleDateClick} />
-          )}
+          {/* Render the appropriate view */}
+          {renderCalendarView()}
         </div>
       </div>
 
