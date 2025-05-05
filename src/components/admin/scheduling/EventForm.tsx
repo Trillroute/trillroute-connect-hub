@@ -6,12 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { EventColorPicker } from './EventColorPicker';
+import EventColorPicker from './EventColorPicker';
 import { useAuth } from '@/hooks/useAuth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCourses } from '@/hooks/useCourses';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
 import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
+
+// Export this type for use in EventFormDialog
+export interface EventFormValues {
+  title: string;
+  description: string;
+  location: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  color: string;
+}
 
 interface EventFormProps {
   initialData?: CalendarEvent;
@@ -195,7 +206,7 @@ const EventForm: React.FC<EventFormProps> = ({
           <FormLabel>Color</FormLabel>
           <EventColorPicker
             selectedColor={selectedColor}
-            onColorChange={setSelectedColor}
+            onColorSelect={setSelectedColor}
           />
         </div>
         

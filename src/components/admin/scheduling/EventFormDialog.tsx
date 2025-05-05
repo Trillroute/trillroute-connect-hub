@@ -85,8 +85,8 @@ const EventFormDialog: React.FC<EventFormDialogProps> = ({
         </DialogHeader>
         
         <EventForm 
-          initialValues={initialValues} 
-          onSubmit={handleSubmit}
+          initialData={initialEvent} 
+          onSubmit={onSave}
           onCancel={handleCancel} 
         />
         
