@@ -89,15 +89,6 @@ const EventFormDialog: React.FC<EventFormDialogProps> = ({
           onSubmit={onSave}
           onCancel={handleCancel} 
         />
-        
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" form="event-form">
-            {mode === 'create' ? 'Create' : 'Save'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

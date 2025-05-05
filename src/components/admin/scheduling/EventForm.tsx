@@ -2,16 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { CalendarEvent } from './types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
+import { FormLabel } from '@/components/ui/form';
 import EventColorPicker from './EventColorPicker';
 import { useAuth } from '@/hooks/useAuth';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCourses } from '@/hooks/useCourses';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
 import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
+import EventBasicInfo from './form-components/EventBasicInfo';
+import EventTimeFields from './form-components/EventTimeFields';
+import CourseSelector from './form-components/CourseSelector';
+import EventFormActions from './form-components/EventFormActions';
 
 // Export this type for use in EventFormDialog
 export interface EventFormValues {
@@ -101,106 +102,15 @@ const EventForm: React.FC<EventFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input placeholder="Event title" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
+        <EventBasicInfo form={form} />
+        
+        <CourseSelector 
+          selectedCourseId={selectedCourseId}
+          setSelectedCourseId={setSelectedCourseId}
+          availableCourses={availableCourses}
         />
         
-        {availableCourses.length > 0 && (
-          <div className="space-y-2">
-            <FormLabel>Related Course</FormLabel>
-            <Select
-              value={selectedCourseId}
-              onValueChange={setSelectedCourseId}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a course (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None</SelectItem>
-                {availableCourses.map(course => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Event description"
-                  rows={3}
-                  {...field}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="Location" {...field} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="start"
-            render={({ field: { value, onChange } }) => (
-              <FormItem>
-                <FormLabel>Start</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="datetime-local"
-                    value={formatDateForInput(value)}
-                    onChange={(e) => onChange(new Date(e.target.value))}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="end"
-            render={({ field: { value, onChange } }) => (
-              <FormItem>
-                <FormLabel>End</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="datetime-local"
-                    value={formatDateForInput(value)}
-                    onChange={(e) => onChange(new Date(e.target.value))}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
+        <EventTimeFields form={form} />
         
         <div className="space-y-2">
           <FormLabel>Color</FormLabel>
@@ -210,27 +120,13 @@ const EventForm: React.FC<EventFormProps> = ({
           />
         </div>
         
-        <div className="flex justify-end space-x-2 pt-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit">{submitLabel}</Button>
-        </div>
+        <EventFormActions 
+          onCancel={onCancel} 
+          submitLabel={submitLabel}
+        />
       </form>
     </Form>
   );
 };
-
-function formatDateForInput(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
 
 export default EventForm;
