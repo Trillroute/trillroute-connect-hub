@@ -12,8 +12,9 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const [loading, setLoading] = useState(true);
   const [dailyAvailability, setDailyAvailability] = useState<DayAvailability[]>([]);
   
+  // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
-
+  
   const { 
     refreshAvailability: fetchAvailability,
     addSlot,
@@ -32,6 +33,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
       setLoading(false);
       return Promise.resolve();
     }
+    
     console.log('Refreshing availability for user ID:', targetUserId);
     return fetchAvailability();
   }, [targetUserId, fetchAvailability]);

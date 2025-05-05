@@ -22,7 +22,7 @@ const UserAvailabilityContent: React.FC = () => {
   });
   
   const { 
-    loading,
+    loading: isLoadingAvailability,
     dailyAvailability,
     refreshAvailability,
     addSlot,
@@ -33,11 +33,11 @@ const UserAvailabilityContent: React.FC = () => {
 
   // Set the initial selected user to the current user
   useEffect(() => {
-    if (user && !selectedUserId) {
+    if (user && !selectedUserId && !isLoadingStaff) {
       console.log('Setting initial selectedUserId to current user:', user.id);
       setSelectedUserId(user.id);
     }
-  }, [user, selectedUserId]);
+  }, [user, selectedUserId, isLoadingStaff]);
 
   const handleUserChange = (userId: string) => {
     console.log('User changed to:', userId);
@@ -47,6 +47,8 @@ const UserAvailabilityContent: React.FC = () => {
   // Find selected user details
   const selectedUser = staffMembers.find(member => member.id === selectedUserId);
   const isOwnAvailability = selectedUserId === user?.id;
+  
+  const isLoading = isLoadingStaff || isLoadingAvailability;
   
   return (
     <ContentWrapper
@@ -87,7 +89,7 @@ const UserAvailabilityContent: React.FC = () => {
             )}
             <UserAvailabilitySchedule 
               dailyAvailability={dailyAvailability}
-              loading={loading}
+              loading={isLoadingAvailability}
               onAddSlot={addSlot}
               onUpdateSlot={updateSlot}
               onDeleteSlot={deleteSlot}

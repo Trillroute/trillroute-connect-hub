@@ -1,36 +1,32 @@
 
-import { daysOfWeek } from './dayUtils';
-import { UserAvailability } from '@/services/userAvailabilityService';
+import { UserAvailability } from '@/services/availability/types';
 import { DayAvailability } from './types';
+import { daysOfWeek } from './dayUtils';
 
-export function transformAvailabilityData(availabilityData: UserAvailability[]): DayAvailability[] {
-  // Organize by day of week
-  const availabilityByDay: Record<number, UserAvailability[]> = {};
+export function transformAvailabilityData(availabilitySlots: UserAvailability[]): DayAvailability[] {
+  // Create a structure for every day of the week
+  const weeklyAvailability: DayAvailability[] = daysOfWeek.map((dayName, index) => ({
+    dayOfWeek: index,
+    dayName,
+    slots: []
+  }));
   
-  // Initialize all days
-  for (let i = 0; i < 7; i++) {
-    availabilityByDay[i] = [];
-  }
-  
-  // Group slots by day
-  availabilityData.forEach(slot => {
-    if (!availabilityByDay[slot.dayOfWeek]) {
-      availabilityByDay[slot.dayOfWeek] = [];
+  // Add slots to their corresponding days
+  availabilitySlots.forEach(slot => {
+    const dayIndex = slot.dayOfWeek;
+    if (dayIndex >= 0 && dayIndex < 7) {
+      weeklyAvailability[dayIndex].slots.push(slot);
+    } else {
+      console.error(`Invalid day of week in availability data: ${dayIndex}`);
     }
-    availabilityByDay[slot.dayOfWeek].push(slot);
   });
   
-  // Convert to array format
-  return Object.keys(availabilityByDay)
-    .map(day => {
-      const dayIndex = parseInt(day);
-      return {
-        dayOfWeek: dayIndex,
-        dayName: daysOfWeek[dayIndex],
-        slots: availabilityByDay[dayIndex].sort((a, b) => {
-          return a.startTime.localeCompare(b.startTime);
-        })
-      };
-    })
-    .sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+  // Sort slots by start time within each day
+  weeklyAvailability.forEach(day => {
+    day.slots.sort((a, b) => {
+      return a.startTime.localeCompare(b.startTime);
+    });
+  });
+  
+  return weeklyAvailability;
 }

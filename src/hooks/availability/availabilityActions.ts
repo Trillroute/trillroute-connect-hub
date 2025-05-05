@@ -20,7 +20,13 @@ export function useAvailabilityActions(
   
   const refreshAvailability = async () => {
     if (!userId) {
-      setDailyAvailability([]);
+      // Create empty availability data structure for each day of the week
+      const emptyAvailability = daysOfWeek.map((dayName, index) => ({
+        dayOfWeek: index,
+        dayName,
+        slots: []
+      }));
+      setDailyAvailability(emptyAvailability);
       setLoading(false);
       return;
     }
@@ -40,6 +46,13 @@ export function useAvailabilityActions(
         description: "There was an error loading your availability schedule",
         variant: "destructive"
       });
+      // Still provide an empty structure so the UI can render
+      const emptyAvailability = daysOfWeek.map((dayName, index) => ({
+        dayOfWeek: index,
+        dayName,
+        slots: []
+      }));
+      setDailyAvailability(emptyAvailability);
     } finally {
       setLoading(false);
     }
@@ -49,6 +62,7 @@ export function useAvailabilityActions(
     if (!userId) return false;
     
     try {
+      setLoading(true);
       const result = await createAvailabilitySlot(userId, dayOfWeek, startTime, endTime);
       if (result) {
         await refreshAvailability();
@@ -58,6 +72,7 @@ export function useAvailabilityActions(
         });
         return true;
       }
+      setLoading(false);
       return false;
     } catch (error) {
       console.error("Error adding availability slot:", error);
@@ -66,12 +81,14 @@ export function useAvailabilityActions(
         description: "There was an error adding your availability",
         variant: "destructive"
       });
+      setLoading(false);
       return false;
     }
   };
 
   const updateSlot = async (id: string, startTime: string, endTime: string) => {
     try {
+      setLoading(true);
       const success = await updateAvailabilitySlot(id, startTime, endTime);
       if (success) {
         await refreshAvailability();
@@ -79,6 +96,8 @@ export function useAvailabilityActions(
           title: "Availability updated",
           description: "Your availability has been updated successfully"
         });
+      } else {
+        setLoading(false);
       }
       return success;
     } catch (error) {
@@ -88,12 +107,14 @@ export function useAvailabilityActions(
         description: "There was an error updating your availability",
         variant: "destructive"
       });
+      setLoading(false);
       return false;
     }
   };
 
   const deleteSlot = async (id: string) => {
     try {
+      setLoading(true);
       const success = await deleteAvailabilitySlot(id);
       if (success) {
         await refreshAvailability();
@@ -101,6 +122,8 @@ export function useAvailabilityActions(
           title: "Availability removed",
           description: "The availability slot has been removed"
         });
+      } else {
+        setLoading(false);
       }
       return success;
     } catch (error) {
@@ -110,6 +133,7 @@ export function useAvailabilityActions(
         description: "There was an error deleting the availability slot",
         variant: "destructive"
       });
+      setLoading(false);
       return false;
     }
   };
@@ -118,6 +142,7 @@ export function useAvailabilityActions(
     if (!userId) return false;
     
     try {
+      setLoading(true);
       const success = await copyDayAvailability(userId, fromDay, toDay);
       if (success) {
         await refreshAvailability();
@@ -130,6 +155,7 @@ export function useAvailabilityActions(
           title: "Nothing to copy",
           description: `No availability slots found for ${daysOfWeek[fromDay]}`
         });
+        setLoading(false);
       }
       return success;
     } catch (error) {
@@ -139,6 +165,7 @@ export function useAvailabilityActions(
         description: "There was an error copying the availability",
         variant: "destructive"
       });
+      setLoading(false);
       return false;
     }
   };

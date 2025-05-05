@@ -28,6 +28,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
 }) => {
   const [activeDay, setActiveDay] = useState("0"); // Default to Sunday
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const handleTabChange = (value: string) => {
     setActiveDay(value);
@@ -35,6 +36,17 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
 
   const handleCopyDay = () => {
     setIsCopyDialogOpen(true);
+  };
+  
+  const handleRefresh = async () => {
+    if (loading || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -45,15 +57,16 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
           <Button 
             variant="outline" 
             onClick={handleCopyDay}
+            disabled={loading || isRefreshing}
           >
             Copy Day Schedule
           </Button>
           <Button 
             variant="outline" 
-            onClick={onRefresh} 
-            disabled={loading}
+            onClick={handleRefresh} 
+            disabled={loading || isRefreshing}
           >
-            {loading ? (
+            {loading || isRefreshing ? (
               <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading...</>
             ) : (
               <><RefreshCw className="h-4 w-4 mr-2" /> Refresh</>
@@ -65,6 +78,10 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
       {loading ? (
         <div className="flex justify-center items-center h-48">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : dailyAvailability.length === 0 ? (
+        <div className="flex justify-center items-center h-48 text-gray-500">
+          No availability data could be loaded
         </div>
       ) : (
         <Tabs defaultValue={activeDay} onValueChange={handleTabChange}>
