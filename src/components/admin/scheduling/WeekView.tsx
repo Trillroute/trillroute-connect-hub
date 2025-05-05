@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { isSameDay } from 'date-fns';
-import { useCalendar } from './CalendarContext';
+import { useCalendar } from './context/CalendarContext';
 import { getWeekDays, getHourCells } from './calendarUtils';
-import { CalendarEvent } from './types';
+import { CalendarEvent } from './context/calendarTypes';
 import {
   AlertDialog,
   AlertDialogAction,

@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { format, isSameDay, isSameMonth, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { useCalendar } from './CalendarContext';
-import { CalendarEvent } from './types';
+import { useCalendar } from './context/CalendarContext';
+import { CalendarEvent } from './context/calendarTypes';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
 

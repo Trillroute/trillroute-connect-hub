@@ -15,7 +15,8 @@ import {
   DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { EventLayer, SelectedUser, useCalendar } from './CalendarContext';
+import { EventLayer, SelectedUser } from './context/calendarTypes';
+import { useCalendar } from './context/CalendarContext';
 
 // Import hooks for getting users
 import { useTeachers } from '@/hooks/useTeachers';

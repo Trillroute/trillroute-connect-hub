@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarViewMode, CalendarEvent } from './types';
+import { CalendarEvent } from './context/calendarTypes';
 import WeekView from './WeekView';
 import DayView from './DayView';
 import MonthView from './MonthView';
@@ -7,7 +7,7 @@ import EventListView from './EventListView';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CalendarViewRendererProps {
-  viewMode: CalendarViewMode;
+  viewMode: 'day' | 'week' | 'month';
   showEventList: boolean;
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;

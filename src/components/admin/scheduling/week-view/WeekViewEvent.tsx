@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { format } from 'date-fns';
-import { CalendarEvent } from '../types';
+import { CalendarEvent } from '../context/calendarTypes';
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from 'lucide-react';
 

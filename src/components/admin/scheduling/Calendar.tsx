@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CalendarProvider } from './CalendarContext';
+import { CalendarProvider } from './context/CalendarContext';
 import CalendarContent from './CalendarContent';
 
 interface SchedulingCalendarProps {

@@ -8,7 +8,7 @@ import {
   Calendar as CalendarIcon, 
   List 
 } from 'lucide-react';
-import { useCalendar } from './CalendarContext';
+import { useCalendar } from './context/CalendarContext';
 import LayersDropdown from './LayersDropdown';
 
 interface CalendarHeaderProps {

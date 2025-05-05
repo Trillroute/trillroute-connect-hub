@@ -5,7 +5,7 @@ import CalendarSidebar from './CalendarSidebar';
 import EventListView from './EventListView';
 import CalendarViewRenderer from './CalendarViewRenderer';
 import CreateEventDialog from './CreateEventDialog';
-import { useCalendar } from './CalendarContext';
+import { useCalendar } from './context/CalendarContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CalendarContentProps {

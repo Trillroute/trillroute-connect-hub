@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { format, isSameDay } from 'date-fns';
-import { useCalendar } from './CalendarContext';
+import { useCalendar } from './context/CalendarContext';
 import { getHourCells } from './calendarUtils';
-import { CalendarEvent } from './types';
+import { CalendarEvent } from './context/calendarTypes';
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from 'lucide-react';
 

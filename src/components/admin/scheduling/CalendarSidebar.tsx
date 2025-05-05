@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import MiniCalendar from './MiniCalendar';
-import { useCalendar } from './CalendarContext';
+import { useCalendar } from './context/CalendarContext';
 
 const CalendarSidebar: React.FC = () => {
   const { currentDate, handleDateSelect, setIsCreateEventOpen, refreshEvents, isLoading } = useCalendar();
