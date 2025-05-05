@@ -19,8 +19,8 @@ export const mapFromDbAvailability = (dbEvent: any): AvailabilitySlot => ({
   startTime: new Date(dbEvent.start_time),
   endTime: new Date(dbEvent.end_time),
   isBooked: dbEvent.event_type === 'trial_booking',
-  courseId: dbEvent.metadata?.course_id,
-  studentId: dbEvent.metadata?.student_id,
+  courseId: dbEvent.metadata && typeof dbEvent.metadata === 'object' ? dbEvent.metadata.course_id : undefined,
+  studentId: dbEvent.metadata && typeof dbEvent.metadata === 'object' ? dbEvent.metadata.student_id : undefined,
 });
 
 // Get available slots for a course
@@ -109,7 +109,7 @@ export const bookTrialClass = async (
       .update({
         is_blocked: true,
         metadata: {
-          ...eventData.metadata,
+          ...(typeof eventData.metadata === 'object' ? eventData.metadata : {}),
           booked_by: studentId,
           booked_at: new Date().toISOString()
         }
@@ -151,7 +151,7 @@ export const bookTrialClass = async (
         .update({
           is_blocked: false,
           metadata: {
-            ...eventData.metadata,
+            ...(typeof eventData.metadata === 'object' ? eventData.metadata : {}),
             booked_by: null,
             booked_at: null
           }

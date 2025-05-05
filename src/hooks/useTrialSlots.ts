@@ -21,12 +21,12 @@ const mapDbEventToTrialSlot = (dbEvent: any): TrialSlot => ({
   id: dbEvent.id,
   startTime: new Date(dbEvent.start_time),
   endTime: new Date(dbEvent.end_time),
-  courseId: dbEvent.metadata?.course_id,
+  courseId: dbEvent.metadata && typeof dbEvent.metadata === 'object' ? dbEvent.metadata.course_id : undefined,
   courseTitle: dbEvent.courses?.title,
   teacherId: dbEvent.user_id,
   teacherName: dbEvent.teachers ? `${dbEvent.teachers.first_name} ${dbEvent.teachers.last_name}` : undefined,
   isBooked: dbEvent.event_type === 'trial_booking',
-  studentId: dbEvent.metadata?.student_id,
+  studentId: dbEvent.metadata && typeof dbEvent.metadata === 'object' ? dbEvent.metadata.student_id : undefined,
   createdAt: new Date(dbEvent.created_at),
 });
 
@@ -102,7 +102,9 @@ export function useTrialSlots() {
       
       // If this is a trial booking, we need to unblock the original availability event
       if (eventData.event_type === 'trial_booking') {
-        const originalEventId = eventData.metadata?.availability_event_id;
+        // Safely access metadata properties
+        const metadata = eventData.metadata as Record<string, any> | null;
+        const originalEventId = metadata && metadata.availability_event_id;
         
         if (originalEventId) {
           // Unblock the original availability event
@@ -111,7 +113,7 @@ export function useTrialSlots() {
             .update({
               is_blocked: false,
               metadata: {
-                ...eventData.metadata,
+                ...(typeof eventData.metadata === 'object' ? eventData.metadata : {}),
                 booked_by: null,
                 booked_at: null
               }
@@ -136,7 +138,7 @@ export function useTrialSlots() {
           .update({
             is_blocked: false,
             metadata: {
-              ...eventData.metadata,
+              ...(typeof eventData.metadata === 'object' ? eventData.metadata : {}),
               booked_by: null,
               booked_at: null
             }
@@ -150,8 +152,10 @@ export function useTrialSlots() {
       }
       
       // Remove course from student's trial_classes
-      const courseId = eventData.metadata?.course_id;
-      const studentId = eventData.metadata?.student_id;
+      // Safely access metadata properties
+      const metadata = eventData.metadata as Record<string, any> | null;
+      const courseId = metadata && metadata.course_id;
+      const studentId = metadata && metadata.student_id;
       
       if (courseId && studentId) {
         // We need to get the current array first
