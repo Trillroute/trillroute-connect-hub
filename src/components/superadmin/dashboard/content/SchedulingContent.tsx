@@ -4,7 +4,6 @@ import SchedulingCalendar from '@/components/admin/scheduling/Calendar';
 import ContentWrapper from './ContentWrapper';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SchedulingContent: React.FC = () => {
   const { role } = useAuth();

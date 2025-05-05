@@ -4,16 +4,22 @@ import { CalendarEvent, CalendarViewMode } from './types';
 import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useCalendarNavigation } from './hooks/useCalendarNavigation';
 
+// Define layer types for filtering
+export type EventLayer = 'teachers' | 'students' | 'admins' | 'superadmins';
+
 interface CalendarContextType {
   currentDate: Date;
   viewMode: CalendarViewMode;
   events: CalendarEvent[];
   isCreateEventOpen: boolean;
   isLoading: boolean;
+  activeLayers: EventLayer[];
   setCurrentDate: (date: Date) => void;
   setViewMode: (mode: CalendarViewMode) => void;
   setEvents: (events: CalendarEvent[]) => void;
   setIsCreateEventOpen: (open: boolean) => void;
+  setActiveLayers: (layers: EventLayer[]) => void;
+  toggleLayer: (layer: EventLayer) => void;
   goToToday: () => void;
   goToPrevious: () => void;
   goToNext: () => void;
@@ -50,6 +56,18 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   
+  // Initialize with all layers active
+  const [activeLayers, setActiveLayers] = useState<EventLayer[]>(['teachers', 'students', 'admins', 'superadmins']);
+  
+  // Toggle a specific layer on/off
+  const toggleLayer = (layer: EventLayer) => {
+    setActiveLayers(prev => 
+      prev.includes(layer)
+        ? prev.filter(l => l !== layer)
+        : [...prev, layer]
+    );
+  };
+  
   // Load events when component mounts
   useEffect(() => {
     refreshEvents();
@@ -64,10 +82,13 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         events,
         isCreateEventOpen,
         isLoading,
+        activeLayers,
         setCurrentDate,
         setViewMode,
         setEvents,
         setIsCreateEventOpen,
+        setActiveLayers,
+        toggleLayer,
         goToToday,
         goToPrevious,
         goToNext,

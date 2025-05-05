@@ -9,6 +9,7 @@ import {
   List 
 } from 'lucide-react';
 import { useCalendar } from './CalendarContext';
+import LayersDropdown from './LayersDropdown';
 
 interface CalendarHeaderProps {
   title: string;
@@ -19,7 +20,7 @@ interface CalendarHeaderProps {
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ 
   title,
-  showEventListToggle = true, // Changed default to true to show for all views
+  showEventListToggle = true,
   onToggleEventList,
   isEventListShown = false
 }) => {
@@ -34,7 +35,8 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   return (
     <div className="flex justify-between items-center p-4 border-b border-gray-200">
       <div className="flex items-center gap-2">
-        <h3 className="text-xl font-semibold">{title}</h3>
+        <LayersDropdown />
+        <h3 className="text-xl font-semibold ml-2">{title}</h3>
       </div>
       
       <div className="flex items-center gap-2">

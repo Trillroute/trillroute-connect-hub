@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import MiniCalendar from './MiniCalendar';
 import { useCalendar } from './CalendarContext';
 
@@ -25,35 +25,6 @@ const CalendarSidebar: React.FC = () => {
           onSelect={handleDateSelect}
           className="border-0"
         />
-      </div>
-      
-      <div className="mt-2">
-        <h3 className="text-sm font-semibold mb-3 flex items-center justify-between">
-          My calendars
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-6 w-6" 
-            onClick={refreshEvents}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center">
-            <input type="checkbox" id="mycal" className="rounded text-blue-500 mr-2" defaultChecked />
-            <label htmlFor="mycal" className="text-sm">My Schedule</label>
-          </div>
-          <div className="flex items-center">
-            <input type="checkbox" id="classes" className="rounded text-green-500 mr-2" defaultChecked />
-            <label htmlFor="classes" className="text-sm">Classes</label>
-          </div>
-          <div className="flex items-center">
-            <input type="checkbox" id="events" className="rounded text-yellow-500 mr-2" defaultChecked />
-            <label htmlFor="events" className="text-sm">Events</label>
-          </div>
-        </div>
       </div>
     </div>
   );
