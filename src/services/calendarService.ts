@@ -75,11 +75,6 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
       
     const { data, error } = await query;
     
-    if (error) {
-      console.error("Error fetching events:", error);
-      throw error;
-    }
-    
     return data ? data.map(mapFromDbEvent) : [];
   } catch (err) {
     console.error("Failed to fetch events:", err);
