@@ -64,11 +64,11 @@ const UserAvailabilityContent: React.FC = () => {
         // Add current user at the top
         if (user) {
           const currentUserInList = staffList.find(staff => staff.id === user.id);
-          if (!currentUserInList) {
+          if (!currentUserInList && (role === 'admin' || role === 'superadmin')) {
             staffList.unshift({
               id: user.id,
               name: `${user.firstName} ${user.lastName} (You)`,
-              role: user.role
+              role: role
             });
           }
         }
@@ -87,6 +87,7 @@ const UserAvailabilityContent: React.FC = () => {
   }, [role, user, isSuperAdmin]);
 
   const handleUserChange = (userId: string) => {
+    console.log('Selected user changed to:', userId);
     setSelectedUserId(userId);
   };
 
@@ -108,7 +109,7 @@ const UserAvailabilityContent: React.FC = () => {
         {(role === 'admin' || role === 'superadmin') && (
           <div className="w-full md:w-64">
             <Select 
-              value={selectedUserId || ''} 
+              defaultValue={selectedUserId || undefined}
               onValueChange={handleUserChange}
               disabled={isLoadingStaff}
             >
