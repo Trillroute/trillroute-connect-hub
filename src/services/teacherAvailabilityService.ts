@@ -31,7 +31,7 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
       .from("teacher_availability")
       .select(`
         *,
-        custom_users:teacher_id (first_name, last_name)
+        custom_users!teacher_id(first_name, last_name)
       `)
       .eq("is_booked", false)
       .eq("course_id", courseId)
@@ -82,10 +82,24 @@ export const bookTrialClass = async (
     }
 
     // Add course ID to student's trial_classes array
+    const { data: userData, error: userFetchError } = await supabase
+      .from("custom_users")
+      .select("trial_classes")
+      .eq("id", studentId)
+      .single();
+      
+    if (userFetchError) {
+      console.error("Error fetching user trial classes:", userFetchError);
+      return false;
+    }
+    
+    // Update with the new course ID
+    const updatedTrialClasses = [...(userData.trial_classes || []), courseId];
+    
     const { error: userError } = await supabase
       .from("custom_users")
       .update({
-        trial_classes: supabase.sql`array_append(trial_classes, ${courseId}::uuid)`,
+        trial_classes: updatedTrialClasses
       })
       .eq("id", studentId);
 

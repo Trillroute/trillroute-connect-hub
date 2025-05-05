@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -21,18 +20,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { TeacherProfileCompletion } from '@/components/teacher/dashboard/TeacherProfileCompletion';
-import { TeacherCoursesSection } from '@/components/teacher/dashboard/TeacherCoursesSection';
-import { TeacherClassesSection } from '@/components/teacher/dashboard/TeacherClassesSection';
+import TeacherProfileCompletion from '@/components/teacher/dashboard/TeacherProfileCompletion';
+import TeacherCoursesSection from '@/components/teacher/dashboard/TeacherCoursesSection';
+import TeacherClassesSection from '@/components/teacher/dashboard/TeacherClassesSection';
 import { useToast } from '@/hooks/use-toast';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
 import { useTrialSlots } from '@/hooks/useTrialSlots';
-import { format, addMinutes, addHours, isBefore, parseISO } from 'date-fns';
+import { format, addMinutes, isBefore } from 'date-fns';
 
 const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { teacherCourses } = useTeacherCourses();
+  const { myCourses } = useTeacherCourses();
   const { createAvailability } = useTrialSlots();
   
   const [isSlotDialogOpen, setIsSlotDialogOpen] = useState(false);
@@ -189,7 +188,7 @@ const TeacherDashboard: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Any Course</SelectItem>
-                  {teacherCourses.map((course) => (
+                  {myCourses.map((course) => (
                     <SelectItem key={course.id} value={course.id}>
                       {course.title}
                     </SelectItem>
