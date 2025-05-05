@@ -1,23 +1,52 @@
-import { AdminPermission } from "@/utils/permissions";
 
-export const sidebarMenuItems = [
+import { AdminPermission } from "@/utils/permissions";
+import { 
+  Activity, 
+  BarChart, 
+  Book, 
+  Calendar, 
+  DollarSign, 
+  Flag, 
+  Home, 
+  Lock, 
+  MessageSquare, 
+  UserPlus, 
+  Users 
+} from "lucide-react";
+import { ElementType } from "react";
+
+export interface SidebarMenuItem {
+  id: string;
+  label: string;
+  value?: string;
+  icon: ElementType;
+  requiredPermission?: AdminPermission;
+  submenu?: {
+    id: string;
+    label: string;
+    value: string;
+    requiredPermission?: AdminPermission;
+  }[];
+}
+
+export const sidebarMenuItems: SidebarMenuItem[] = [
   {
     id: "today",
     label: "Today",
     value: "today",
-    icon: "Home",
+    icon: Home,
   },
   {
     id: "students",
     label: "Students",
     value: "students",
-    icon: "Users",
+    icon: Users,
     requiredPermission: AdminPermission.VIEW_STUDENTS
   },
   {
     id: "courses",
     label: "Courses",
-    icon: "Book",
+    icon: Book,
     submenu: [
       {
         id: "courses",
@@ -40,18 +69,18 @@ export const sidebarMenuItems = [
     id: "fees",
     label: "Fees",
     value: "fees",
-    icon: "DollarSign",
+    icon: DollarSign,
   },
   {
     id: "communication",
     label: "Communication",
     value: "communication",
-    icon: "MessageSquare",
+    icon: MessageSquare,
   },
   {
     id: "leads",
     label: "Leads",
-    icon: "Activity",
+    icon: Activity,
     submenu: [
       {
         id: "leads",
@@ -68,7 +97,7 @@ export const sidebarMenuItems = [
   {
     id: "scheduling",
     label: "Scheduling",
-    icon: "Calendar",
+    icon: Calendar,
     submenu: [
       {
         id: "scheduling",
@@ -86,25 +115,25 @@ export const sidebarMenuItems = [
     id: "teachers",
     label: "Teachers",
     value: "teachers",
-    icon: "UserPlus",
+    icon: UserPlus,
     requiredPermission: AdminPermission.VIEW_TEACHERS
   },
   {
     id: "intramural",
     label: "Intramural",
     value: "intramural",
-    icon: "Flag",
+    icon: Flag,
   },
   {
     id: "reports",
     label: "Reports",
     value: "reports",
-    icon: "BarChart",
+    icon: BarChart,
   },
   {
     id: "access",
     label: "Access",
-    icon: "Lock",
+    icon: Lock,
     submenu: [
       {
         id: "admins",

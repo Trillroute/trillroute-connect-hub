@@ -5,20 +5,10 @@ import {
 } from "@/components/ui/sidebar";
 import SidebarMenuItem from "./SidebarMenuItem";
 import { ActiveTab } from "../SuperAdminSidebar";
-
-interface MenuItem {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  submenuItems?: Array<{
-    id: string;
-    label: string;
-    icon: React.ElementType;
-  }>;
-}
+import { SidebarMenuItem as SidebarMenuItemType } from "./sidebarConfig";
 
 interface SidebarSectionProps {
-  items: MenuItem[];
+  items: SidebarMenuItemType[];
   activeTab: ActiveTab;
   onTabChange: (tab: ActiveTab) => void;
   openSubmenus: Record<string, boolean>;
@@ -35,8 +25,8 @@ const SidebarSection: React.FC<SidebarSectionProps> = ({
   return (
     <SidebarMenu>
       {items.map((item) => {
-        const hasSubmenu = item.submenuItems && item.submenuItems.length > 0;
-        const isSubmenuActive = hasSubmenu && item.submenuItems?.some(
+        const hasSubmenu = item.submenu && item.submenu.length > 0;
+        const isSubmenuActive = hasSubmenu && item.submenu?.some(
           (subItem) => activeTab === subItem.id as ActiveTab
         );
 
@@ -49,8 +39,9 @@ const SidebarSection: React.FC<SidebarSectionProps> = ({
             isActive={activeTab === item.id}
             isSubmenuActive={isSubmenuActive}
             onClick={onTabChange}
-            submenuItems={item.submenuItems?.map((subItem) => ({
+            submenuItems={item.submenu?.map((subItem) => ({
               ...subItem,
+              icon: item.icon, // Use parent icon for submenu items
               isActive: activeTab === subItem.id as ActiveTab,
             }))}
             onSubmenuToggle={() => toggleSubmenu(item.id)}

@@ -1,25 +1,27 @@
 
-import React, { useState } from "react";
+import React from "react";
 import {
   SidebarMenuItem as SMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import SidebarSubmenu from "./SidebarSubmenu";
+import { ElementType } from "react";
 
 interface SubMenuItem {
   id: string;
   label: string;
-  icon: React.ElementType;
+  icon: ElementType;
+  isActive: boolean;
 }
 
 interface SidebarMenuItemProps {
   id: string;
   label: string;
-  icon: React.ElementType;
+  icon: ElementType;
   isActive: boolean;
   isSubmenuActive?: boolean;
   onClick: (id: string) => void;
-  submenuItems?: Array<SubMenuItem & { isActive: boolean }>;
+  submenuItems?: SubMenuItem[];
   onSubmenuToggle?: () => void;
   isOpen?: boolean;
 }

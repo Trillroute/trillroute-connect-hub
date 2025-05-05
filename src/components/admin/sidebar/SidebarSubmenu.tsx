@@ -5,11 +5,12 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
+import { ElementType } from "react";
 
 interface SidebarSubmenuItemProps {
   label: string;
   id: string;
-  icon?: React.ElementType;
+  icon: ElementType;
   isActive: boolean;
   onClick: (id: string) => void;
 }
