@@ -4,7 +4,8 @@ import { format, isSameDay, isSameMonth, isWithinInterval, startOfWeek, endOfWee
 import { useCalendar } from './CalendarContext';
 import { CalendarEvent } from './types';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Clock, MapPin, Pencil, Trash2, CalendarIcon } from 'lucide-react';
 
 interface EventListViewProps {
   onEditEvent: (event: CalendarEvent) => void;
@@ -12,7 +13,7 @@ interface EventListViewProps {
 }
 
 const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEvent }) => {
-  const { currentDate, events, viewMode } = useCalendar();
+  const { currentDate, events, viewMode, handleDateSelect } = useCalendar();
   
   // Filter events based on the selected view mode
   const filteredEvents = React.useMemo(() => {
@@ -66,15 +67,6 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
     }
   };
   
-  if (filteredEvents.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500 py-8">
-        <div className="text-lg mb-2">No events scheduled for this {viewMode}</div>
-        <div className="text-sm">Click on the calendar to add a new event</div>
-      </div>
-    );
-  }
-  
   // Group events by date for week and month views
   const groupedEvents = React.useMemo(() => {
     if (viewMode === 'day') {
@@ -103,74 +95,98 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
   }, [filteredEvents, viewMode, currentDate]);
   
   return (
-    <div className="h-full p-4 overflow-y-auto">
-      <h2 className="text-lg font-semibold mb-4">
+    <div className="h-full flex flex-col">
+      <h2 className="text-lg font-semibold mb-4 p-4 pb-0">
         {getViewTitle()}
       </h2>
       
-      {Object.entries(groupedEvents).map(([dateKey, dateEvents]) => (
-        <div key={dateKey} className="mb-6">
-          {/* Show date headers for week and month views */}
-          {viewMode !== 'day' && (
-            <h3 className="font-medium text-gray-700 mb-2 border-b pb-1">
-              {format(new Date(dateKey), 'EEEE, MMMM d, yyyy')}
-            </h3>
-          )}
-          
-          <div className="space-y-4">
-            {dateEvents.map((event, index) => (
-              <div 
-                key={index} 
-                className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-medium">{event.title}</h3>
-                    <div className="flex items-center text-gray-500 mt-2">
-                      <Clock className="w-4 h-4 mr-1" />
-                      <span className="text-sm">
-                        {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                      </span>
-                    </div>
-                    {event.location && (
-                      <div className="flex items-center text-gray-500 mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{event.location}</span>
-                      </div>
-                    )}
-                    {event.description && (
-                      <p className="mt-2 text-sm text-gray-600">{event.description}</p>
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8" 
-                      onClick={() => onEditEvent(event)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 text-red-500 hover:text-red-600" 
-                      onClick={() => onDeleteEvent(event)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+      <div className="flex-1 p-4 overflow-y-auto">
+        {filteredEvents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="text-gray-500 text-center mb-6">
+              <div className="text-lg mb-2">No events scheduled for this {viewMode}</div>
+              <div className="text-sm">Click on the calendar to add a new event</div>
+            </div>
+            
+            {/* Always show a calendar view even when there are no events */}
+            <div className="mt-4 border rounded-md p-4 bg-white shadow-sm w-full max-w-md mx-auto">
+              <Calendar
+                mode="single"
+                selected={currentDate}
+                onSelect={handleDateSelect}
+                className="mx-auto"
+                initialFocus
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {Object.entries(groupedEvents).map(([dateKey, dateEvents]) => (
+              <div key={dateKey} className="mb-6">
+                {/* Show date headers for week and month views */}
+                {viewMode !== 'day' && (
+                  <h3 className="font-medium text-gray-700 mb-2 border-b pb-1">
+                    {format(new Date(dateKey), 'EEEE, MMMM d, yyyy')}
+                  </h3>
+                )}
                 
-                <div
-                  className="w-full h-1 mt-4"
-                  style={{ backgroundColor: event.color || '#4285F4' }}
-                ></div>
+                <div className="space-y-4">
+                  {dateEvents.map((event, index) => (
+                    <div 
+                      key={index} 
+                      className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-lg font-medium">{event.title}</h3>
+                          <div className="flex items-center text-gray-500 mt-2">
+                            <Clock className="w-4 h-4 mr-1" />
+                            <span className="text-sm">
+                              {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
+                            </span>
+                          </div>
+                          {event.location && (
+                            <div className="flex items-center text-gray-500 mt-1">
+                              <MapPin className="w-4 h-4 mr-1" />
+                              <span className="text-sm">{event.location}</span>
+                            </div>
+                          )}
+                          {event.description && (
+                            <p className="mt-2 text-sm text-gray-600">{event.description}</p>
+                          )}
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8" 
+                            onClick={() => onEditEvent(event)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 text-red-500 hover:text-red-600" 
+                            onClick={() => onDeleteEvent(event)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div
+                        className="w-full h-1 mt-4"
+                        style={{ backgroundColor: event.color || '#4285F4' }}
+                      ></div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      ))}
+        )}
+      </div>
     </div>
   );
 };
