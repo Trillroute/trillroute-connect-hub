@@ -1,19 +1,32 @@
 
--- Enable Row Level Security on courses table
-ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
+-- ... keep existing code
 
--- Admin policy: Admins can do everything
-CREATE POLICY "Admins can do everything on courses"
-ON public.courses
-USING (auth.uid() IN (
-  SELECT id FROM public.custom_users WHERE role = 'admin'
-))
-WITH CHECK (auth.uid() IN (
-  SELECT id FROM public.custom_users WHERE role = 'admin'
-));
+-- Update the RLS policy for user_availability table to allow admins to manage teacher availability
+-- and superadmins to manage both teacher and admin availability
+CREATE POLICY "Admins can manage teacher availability" 
+ON public.user_availability 
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.custom_users 
+    WHERE id = auth.uid() AND role = 'admin'
+  ) AND EXISTS (
+    SELECT 1 FROM public.custom_users
+    WHERE id = user_id AND role = 'teacher'
+  )
+);
 
--- Select policy: Everyone can view courses
-CREATE POLICY "Everyone can view courses"
-ON public.courses
-FOR SELECT
-USING (true);
+CREATE POLICY "Superadmins can manage all staff availability" 
+ON public.user_availability 
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.custom_users 
+    WHERE id = auth.uid() AND role = 'superadmin'
+  ) AND EXISTS (
+    SELECT 1 FROM public.custom_users
+    WHERE id = user_id AND (role = 'teacher' OR role = 'admin' OR role = 'superadmin')
+  )
+);
+
+-- ... keep existing code

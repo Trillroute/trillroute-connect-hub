@@ -1,136 +1,127 @@
+import { AdminPermission } from "@/utils/permissions";
 
-import {
-  LayoutDashboard,
-  School,
-  BookOpen,
-  Puzzle,
-  DollarSign,
-  MessageSquare,
-  UserPlus,
-  Calendar,
-  GraduationCap,
-  Users,
-  User,
-  FileText,
-  Shield,
-  Settings,
-  Kanban,
-  Clock
-} from "lucide-react";
-import { ActiveTab } from "../SuperAdminSidebar";
-
-export interface MenuItemConfig {
-  id: ActiveTab | string;
-  label: string;
-  icon: React.ElementType;
-  submenuItems?: Array<{
-    id: ActiveTab;
-    label: string;
-    icon: React.ElementType;
-  }>;
-}
-
-export const sidebarMenuItems: MenuItemConfig[] = [
+export const sidebarMenuItems = [
   {
     id: "today",
     label: "Today",
-    icon: LayoutDashboard,
+    value: "today",
+    icon: "Home",
   },
   {
     id: "students",
     label: "Students",
-    icon: School,
+    value: "students",
+    icon: "Users",
+    requiredPermission: AdminPermission.VIEW_STUDENTS
   },
   {
     id: "courses",
     label: "Courses",
-    icon: BookOpen,
-    submenuItems: [
+    icon: "Book",
+    submenu: [
+      {
+        id: "courses",
+        label: "Courses",
+        value: "courses",
+      },
       {
         id: "classTypes",
-        label: "Class Type",
-        icon: Puzzle,
+        label: "Class Types",
+        value: "classTypes",
       },
       {
         id: "courseManagement",
         label: "Course Management",
-        icon: BookOpen,
+        value: "courseManagement",
       },
     ],
   },
   {
     id: "fees",
     label: "Fees",
-    icon: DollarSign,
+    value: "fees",
+    icon: "DollarSign",
   },
   {
     id: "communication",
     label: "Communication",
-    icon: MessageSquare,
+    value: "communication",
+    icon: "MessageSquare",
   },
   {
     id: "leads",
-    label: "Leads & Trials",
-    icon: UserPlus,
-    submenuItems: [
+    label: "Leads",
+    icon: "Activity",
+    submenu: [
       {
         id: "leads",
-        label: "Leads",
-        icon: UserPlus,
+        label: "Leads Table",
+        value: "leads",
       },
       {
         id: "leads-cards",
-        label: "Cards",
-        icon: Kanban,
+        label: "Leads Kanban",
+        value: "leads-cards",
       },
     ],
   },
   {
     id: "scheduling",
     label: "Scheduling",
-    icon: Calendar,
-    submenuItems: [
+    icon: "Calendar",
+    submenu: [
       {
         id: "scheduling",
         label: "Calendar",
-        icon: Calendar,
+        value: "scheduling"
       },
       {
         id: "user-availability",
-        label: "Availability",
-        icon: Clock,
-      },
-    ],
+        label: "User Availability",
+        value: "user-availability"
+      }
+    ]
   },
   {
     id: "teachers",
     label: "Teachers",
-    icon: GraduationCap,
+    value: "teachers",
+    icon: "UserPlus",
+    requiredPermission: AdminPermission.VIEW_TEACHERS
   },
   {
     id: "intramural",
     label: "Intramural",
-    icon: Users,
+    value: "intramural",
+    icon: "Flag",
   },
   {
     id: "reports",
     label: "Reports",
-    icon: FileText,
+    value: "reports",
+    icon: "BarChart",
   },
   {
     id: "access",
     label: "Access",
-    icon: Settings,
-    submenuItems: [
+    icon: "Lock",
+    submenu: [
       {
         id: "admins",
         label: "Admins",
-        icon: Shield,
+        value: "admins",
+        requiredPermission: AdminPermission.VIEW_ADMINS
       },
       {
         id: "levels",
         label: "Levels",
-        icon: User,
+        value: "levels",
+        requiredPermission: AdminPermission.VIEW_LEVELS
+      },
+      {
+        id: "access",
+        label: "Access Control",
+        value: "access",
       },
     ],
   },
