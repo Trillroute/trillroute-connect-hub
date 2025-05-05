@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarEvent } from "@/components/admin/scheduling/types";
 
@@ -23,13 +22,59 @@ export const mapFromDbEvent = (dbEvent: any): CalendarEvent => ({
   color: dbEvent.color,
 });
 
-export const fetchEvents = async (userId: string): Promise<CalendarEvent[]> => {
+export const fetchEvents = async (userId: string, role: string | null): Promise<CalendarEvent[]> => {
   try {
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .select("*")
-      .eq("user_id", userId);
+    let query = supabase.from("calendar_events").select("*");
+    
+    // Filter events based on user role
+    if (role === 'admin' || role === 'superadmin') {
+      // Admins see all events
+      console.log("Admin user, fetching all events");
+    } else if (role === 'teacher') {
+      // Teachers see events they created plus events for courses they teach
+      console.log("Teacher user, fetching relevant events");
       
+      // First get the teacher's courses
+      const { data: teacherCourses } = await supabase
+        .from("courses")
+        .select("id")
+        .contains("instructor_ids", [userId]);
+      
+      if (teacherCourses && teacherCourses.length > 0) {
+        const courseIds = teacherCourses.map(course => course.id);
+        
+        // Get events that are either created by this user or related to courses they teach
+        query = query.or(`user_id.eq.${userId},description.ilike.%course_id:${courseIds.join('%,description.ilike.%course_id:')}%`);
+      } else {
+        // If teacher has no courses, only show events they created
+        query = query.eq("user_id", userId);
+      }
+    } else if (role === 'student') {
+      // Students see events for courses they're enrolled in
+      console.log("Student user, fetching enrolled course events");
+      
+      // First get the student's enrolled courses
+      const { data: studentCourses } = await supabase
+        .from("courses")
+        .select("id")
+        .contains("student_ids", [userId]);
+      
+      if (studentCourses && studentCourses.length > 0) {
+        const courseIds = studentCourses.map(course => course.id);
+        
+        // Get events related to courses they're enrolled in
+        query = query.or(`user_id.eq.${userId},description.ilike.%course_id:${courseIds.join('%,description.ilike.%course_id:')}%`);
+      } else {
+        // If student has no enrolled courses, only show events they created
+        query = query.eq("user_id", userId);
+      }
+    } else {
+      // Default case - users only see their own events
+      query = query.eq("user_id", userId);
+    }
+      
+    const { data, error } = await query;
+    
     if (error) {
       console.error("Error fetching events:", error);
       throw error;

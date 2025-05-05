@@ -1,165 +1,225 @@
 
-import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { CalendarIcon, Clock } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import EventColorPicker from './EventColorPicker';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { CalendarEvent } from './types';
-
-export interface EventFormValues {
-  title: string;
-  description: string;
-  location: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  color: string;
-}
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { EventColorPicker } from './EventColorPicker';
+import { useAuth } from '@/hooks/useAuth';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCourses } from '@/hooks/useCourses';
+import { useTeacherCourses } from '@/hooks/useTeacherCourses';
+import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 
 interface EventFormProps {
-  initialValues: EventFormValues;
-  onSubmit: (values: EventFormValues) => void;
-  onCancel: () => void;
+  initialData?: CalendarEvent;
+  onSubmit: (data: Omit<CalendarEvent, 'id'>) => void;
+  onCancel?: () => void;
+  submitLabel?: string;
 }
 
 const EventForm: React.FC<EventFormProps> = ({
-  initialValues,
+  initialData,
   onSubmit,
   onCancel,
+  submitLabel = 'Save Event'
 }) => {
-  const [title, setTitle] = useState(initialValues.title);
-  const [description, setDescription] = useState(initialValues.description);
-  const [location, setLocation] = useState(initialValues.location);
-  const [date, setDate] = useState<Date>(initialValues.date);
-  const [startTime, setStartTime] = useState(initialValues.startTime);
-  const [endTime, setEndTime] = useState(initialValues.endTime);
-  const [color, setColor] = useState(initialValues.color);
+  const { role } = useAuth();
+  const [selectedColor, setSelectedColor] = useState(initialData?.color || '#4285F4');
+  const form = useForm<Omit<CalendarEvent, 'id'>>({
+    defaultValues: {
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      start: initialData?.start || new Date(),
+      end: initialData?.end || new Date(Date.now() + 60 * 60 * 1000),
+      location: initialData?.location || '',
+      color: initialData?.color || '#4285F4'
+    }
+  });
+  
+  // Fetch courses based on user role
+  const { courses } = useCourses();
+  const { myCourses } = useTeacherCourses();
+  const { enrolledCourses } = useEnrolledCourses();
+  
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const [availableCourses, setAvailableCourses] = useState<{id: string, title: string}[]>([]);
+  
+  // Determine which courses to show based on role
+  useEffect(() => {
+    if (role === 'admin' || role === 'superadmin') {
+      setAvailableCourses(courses.map(c => ({ id: c.id, title: c.title })));
+    } else if (role === 'teacher') {
+      setAvailableCourses(myCourses.map(c => ({ id: c.id, title: c.title })));
+    } else if (role === 'student') {
+      setAvailableCourses(enrolledCourses.map(c => ({ id: c.id, title: c.title })));
+    }
+  }, [role, courses, myCourses, enrolledCourses]);
+  
+  // Extract course ID from description if it exists
+  useEffect(() => {
+    if (initialData?.description) {
+      const match = initialData.description.match(/course_id:([a-zA-Z0-9-]+)/);
+      if (match && match[1]) {
+        setSelectedCourseId(match[1]);
+      }
+    }
+  }, [initialData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmit = (data: Omit<CalendarEvent, 'id'>) => {
+    // Update description to include course ID if selected
+    let finalDescription = data.description || '';
+    
+    if (selectedCourseId) {
+      // Remove any existing course_id tag
+      finalDescription = finalDescription.replace(/course_id:[a-zA-Z0-9-]+/, '').trim();
+      
+      // Add the course_id tag
+      finalDescription = `${finalDescription} course_id:${selectedCourseId}`.trim();
+    }
+    
     onSubmit({
-      title,
-      description,
-      location,
-      date,
-      startTime,
-      endTime,
-      color,
+      ...data,
+      description: finalDescription,
+      color: selectedColor
     });
   };
 
   return (
-    <form id="event-form" onSubmit={handleSubmit}>
-      <div className="grid gap-4 py-4">
-        <div className="grid w-full gap-1.5">
-          <Label htmlFor="title">Event Title</Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Add title"
-            required
-          />
-        </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Event title" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
         
-        <div className="grid w-full gap-1.5">
-          <Label>Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, 'PPP') : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 z-50" align="start">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={(date) => date && setDate(date)}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        {availableCourses.length > 0 && (
+          <div className="space-y-2">
+            <FormLabel>Related Course</FormLabel>
+            <Select
+              value={selectedCourseId}
+              onValueChange={setSelectedCourseId}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a course (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {availableCourses.map(course => (
+                  <SelectItem key={course.id} value={course.id}>
+                    {course.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Event description"
+                  rows={3}
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Location</FormLabel>
+              <FormControl>
+                <Input placeholder="Location" {...field} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
         
         <div className="grid grid-cols-2 gap-4">
-          <div className="grid gap-1.5">
-            <Label htmlFor="start-time">Start Time</Label>
-            <div className="flex items-center">
-              <Clock className="mr-2 h-4 w-4 text-gray-400" />
-              <Input
-                id="start-time"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full"
-                required
-              />
-            </div>
-          </div>
+          <FormField
+            control={form.control}
+            name="start"
+            render={({ field: { value, onChange } }) => (
+              <FormItem>
+                <FormLabel>Start</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="datetime-local"
+                    value={formatDateForInput(value)}
+                    onChange={(e) => onChange(new Date(e.target.value))}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
           
-          <div className="grid gap-1.5">
-            <Label htmlFor="end-time">End Time</Label>
-            <div className="flex items-center">
-              <Clock className="mr-2 h-4 w-4 text-gray-400" />
-              <Input
-                id="end-time"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full"
-                required
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid w-full gap-1.5">
-          <Label htmlFor="location">Location (Optional)</Label>
-          <Input
-            id="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Add location"
+          <FormField
+            control={form.control}
+            name="end"
+            render={({ field: { value, onChange } }) => (
+              <FormItem>
+                <FormLabel>End</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="datetime-local"
+                    value={formatDateForInput(value)}
+                    onChange={(e) => onChange(new Date(e.target.value))}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
           />
         </div>
         
-        <div className="grid w-full gap-1.5">
-          <Label htmlFor="description">Description (Optional)</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add description"
-            className="resize-none"
-            rows={3}
+        <div className="space-y-2">
+          <FormLabel>Color</FormLabel>
+          <EventColorPicker
+            selectedColor={selectedColor}
+            onColorChange={setSelectedColor}
           />
         </div>
         
-        <div className="grid w-full gap-1.5">
-          <Label>Color</Label>
-          <EventColorPicker selectedColor={color} onColorSelect={setColor} />
+        <div className="flex justify-end space-x-2 pt-4">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit">{submitLabel}</Button>
         </div>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
+
+function formatDateForInput(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
 export default EventForm;

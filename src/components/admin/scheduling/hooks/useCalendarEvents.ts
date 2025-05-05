@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { CalendarEvent } from '../types';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +13,7 @@ export const useCalendarEvents = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   // Fetch events from database
   const refreshEvents = useCallback(async () => {
@@ -22,7 +21,7 @@ export const useCalendarEvents = () => {
     
     setIsLoading(true);
     try {
-      const fetchedEvents = await fetchEvents(user.id);
+      const fetchedEvents = await fetchEvents(user.id, role);
       setEvents(fetchedEvents);
     } catch (error) {
       toast({
@@ -33,7 +32,7 @@ export const useCalendarEvents = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, role]);
 
   // Event handlers
   const handleCreateEvent = useCallback(async (eventData: Omit<CalendarEvent, 'id'>) => {
