@@ -1,5 +1,5 @@
 
-import { UserAvailability } from '@/services/userAvailabilityService';
+import { UserAvailability } from '@/services/availability/types';
 
 export interface DayAvailability {
   dayOfWeek: number;
@@ -22,4 +22,9 @@ export interface UseAvailabilityState {
 
 export interface UseAvailabilityResult extends UseAvailabilityActions, UseAvailabilityState {
   daysOfWeek: string[];
+}
+
+export interface DayOption {
+  dayOfWeek: number;
+  dayName: string;
 }
