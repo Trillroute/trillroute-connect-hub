@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { CalendarEvent } from '../types';
 import { useToast } from '@/hooks/use-toast';
@@ -42,7 +43,7 @@ export const useCalendarEvents = () => {
         description: "You must be logged in to create events",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     setIsLoading(true);

@@ -15,7 +15,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   hasAdminAccess = false 
 }) => {
   const [showEventList, setShowEventList] = useState(false);
-  const { currentDate, viewMode, isCreateEventOpen, setIsCreateEventOpen } = useCalendar();
+  const { currentDate, viewMode, isCreateEventOpen, setIsCreateEventOpen, handleCreateEvent } = useCalendar();
 
   // Format title based on view mode and current date
   let title;
@@ -39,7 +39,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   }
 
   // Handle event operations
-  const handleCreateEvent = () => {
+  const handleCreateEventClick = () => {
     setIsCreateEventOpen(true);
   };
 
@@ -56,6 +56,17 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   const handleDateClick = (date) => {
     console.log('Date clicked:', date);
     // Will be implemented in a future feature
+  };
+
+  // Handle dialog close
+  const handleCloseCreateDialog = () => {
+    setIsCreateEventOpen(false);
+  };
+
+  // Handle save event
+  const handleSaveEvent = (eventData) => {
+    handleCreateEvent(eventData);
+    setIsCreateEventOpen(false);
   };
 
   return (
@@ -81,7 +92,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
             <CalendarViewRenderer 
               viewMode={viewMode}
               showEventList={showEventList}
-              onCreateEvent={handleCreateEvent}
+              onCreateEvent={handleCreateEventClick}
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
               onDateClick={handleDateClick}
@@ -93,7 +104,9 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
       {isCreateEventOpen && (
         <CreateEventDialog
           open={isCreateEventOpen}
-          onClose={() => setIsCreateEventOpen(false)}
+          onOpenChange={handleCloseCreateDialog}
+          onSave={handleSaveEvent}
+          startDate={currentDate}
         />
       )}
     </div>

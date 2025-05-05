@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CalendarEvent } from "@/components/admin/scheduling/types";
 
@@ -74,6 +75,11 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
     }
       
     const { data, error } = await query;
+    
+    if (error) {
+      console.error("Error fetching events:", error);
+      return [];
+    }
     
     return data ? data.map(mapFromDbEvent) : [];
   } catch (err) {
