@@ -86,7 +86,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
       </div>
       
       {/* Time grid */}
-      <div className="flex overflow-y-auto" style={{ height: 'calc(100% - 48px)' }}>
+      <div className="flex h-[calc(100%-48px)]">
         {/* Time labels */}
         <div className="w-16 flex-shrink-0">
           {hours.map(hour => (

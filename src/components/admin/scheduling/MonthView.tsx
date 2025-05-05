@@ -54,7 +54,7 @@ const MonthView: React.FC<MonthViewProps> = ({ onDateClick }) => {
   }
   
   return (
-    <div className="h-full overflow-auto p-2">
+    <div className="h-full p-2">
       <div className="grid grid-cols-7 gap-1">
         {/* Day headers */}
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (

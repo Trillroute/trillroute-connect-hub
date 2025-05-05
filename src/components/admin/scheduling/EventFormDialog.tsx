@@ -85,7 +85,7 @@ const EventFormDialog: React.FC<EventFormDialogProps> = ({
         </DialogHeader>
         
         <EventForm 
-          initialData={initialEvent} 
+          initialData={initialEvent as CalendarEvent} 
           onSubmit={onSave}
           onCancel={handleCancel} 
         />

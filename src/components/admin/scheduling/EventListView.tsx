@@ -3,7 +3,6 @@ import React from 'react';
 import { format, isSameDay } from 'date-fns';
 import { useCalendar } from './CalendarContext';
 import { CalendarEvent } from './types';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
 
@@ -30,7 +29,7 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
   }
   
   return (
-    <div className="h-full overflow-auto p-4">
+    <div className="h-full p-4">
       <h2 className="text-lg font-semibold mb-4">
         Events for {format(currentDate, 'EEEE, MMMM d, yyyy')}
       </h2>

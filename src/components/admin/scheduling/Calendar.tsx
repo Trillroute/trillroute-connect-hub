@@ -93,12 +93,12 @@ const CalendarContent: React.FC = () => {
       />
       
       {/* Calendar body */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1">
         {/* Left sidebar */}
         <CalendarSidebar />
         
         {/* Calendar view */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1">
           {isLoading && (
             <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />

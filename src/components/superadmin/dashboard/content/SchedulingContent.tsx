@@ -4,6 +4,7 @@ import SchedulingCalendar from '@/components/admin/scheduling/Calendar';
 import ContentWrapper from './ContentWrapper';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SchedulingContent: React.FC = () => {
   const { role } = useAuth();
@@ -19,9 +20,9 @@ const SchedulingContent: React.FC = () => {
         </Badge>
       </div>
       <div className="w-full border rounded-md bg-white shadow-sm">
-        <div className="h-[calc(100vh-220px)]">
+        <ScrollArea className="h-[calc(100vh-220px)]">
           <SchedulingCalendar />
-        </div>
+        </ScrollArea>
       </div>
     </ContentWrapper>
   );
