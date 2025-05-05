@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -18,11 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from 'lucide-react';
-
-interface DayOption {
-  dayOfWeek: number;
-  dayName: string;
-}
+import { DayOption } from '@/hooks/availability/types';
 
 interface CopyDayDialogProps {
   open: boolean;
