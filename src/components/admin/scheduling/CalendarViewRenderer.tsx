@@ -5,6 +5,7 @@ import WeekView from './WeekView';
 import DayView from './DayView';
 import MonthView from './MonthView';
 import EventListView from './EventListView';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CalendarViewRendererProps {
   viewMode: CalendarViewMode;
@@ -23,6 +24,9 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   onDeleteEvent,
   onDateClick
 }) => {
+  const { role } = useAuth();
+  const isAdminOrHigher = role === 'admin' || role === 'superadmin';
+  
   // Always show the event list if showEventList is true, regardless of view mode
   if (showEventList) {
     return (
@@ -40,7 +44,10 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
     case 'week':
       return (
         <div className="h-full overflow-auto">
-          <WeekView onCreateEvent={onCreateEvent} />
+          <WeekView 
+            onCreateEvent={onCreateEvent} 
+            readOnly={!isAdminOrHigher}
+          />
         </div>
       );
     case 'day':
@@ -50,13 +57,17 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
             onCreateEvent={onCreateEvent}
             onEditEvent={onEditEvent}
             onDeleteEvent={onDeleteEvent}
+            readOnly={!isAdminOrHigher}
           />
         </div>
       );
     case 'month':
       return (
         <div className="h-full overflow-auto">
-          <MonthView onDateClick={onDateClick} />
+          <MonthView 
+            onDateClick={onDateClick} 
+            readOnly={!isAdminOrHigher}
+          />
         </div>
       );
     default:

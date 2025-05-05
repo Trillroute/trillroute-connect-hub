@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { CalendarEvent, CalendarViewMode } from './types';
 import { useCalendarEvents } from './hooks/useCalendarEvents';
 import { useCalendarNavigation } from './hooks/useCalendarNavigation';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define layer types for filtering
 export type EventLayer = 'teachers' | 'students' | 'admins' | 'superadmins';
@@ -38,6 +39,8 @@ interface CalendarContextType {
   handleDeleteEvent: (id: string) => Promise<boolean>;
   handleDateSelect: (date: Date | undefined) => void;
   refreshEvents: () => Promise<void>;
+  filterEventsByRole: (roles: string[]) => Promise<void>;
+  filterEventsByUser: (userId: string) => Promise<void>;
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
@@ -99,6 +102,76 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   };
   
+  // Filter events by role
+  const filterEventsByRole = async (roles: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_events')
+        .select(`
+          *,
+          custom_users!user_id (first_name, last_name, role)
+        `);
+        
+      if (error) {
+        console.error("Error fetching events by role:", error);
+        return;
+      }
+      
+      // Filter events by user role
+      const filteredEvents = data.filter(event => {
+        const userRole = event.custom_users?.role;
+        return userRole && roles.includes(userRole);
+      });
+      
+      // Map to calendar events format
+      const mappedEvents = filteredEvents.map(event => ({
+        id: event.id,
+        title: event.title,
+        start: new Date(event.start_time),
+        end: new Date(event.end_time),
+        description: event.description,
+        color: event.custom_users?.role === 'teacher' ? '#4f46e5' : 
+               event.custom_users?.role === 'admin' ? '#0891b2' : 
+               event.custom_users?.role === 'student' ? '#16a34a' : 
+               event.custom_users?.role === 'superadmin' ? '#9333ea' : '#6b7280',
+      }));
+      
+      setEvents(mappedEvents);
+      
+    } catch (err) {
+      console.error("Failed to filter events by role:", err);
+    }
+  };
+  
+  // Filter events by user ID
+  const filterEventsByUser = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_events')
+        .select('*')
+        .eq('user_id', userId);
+        
+      if (error) {
+        console.error("Error fetching events for user:", error);
+        return;
+      }
+      
+      // Map to calendar events format
+      const mappedEvents = data.map(event => ({
+        id: event.id,
+        title: event.title,
+        start: new Date(event.start_time),
+        end: new Date(event.end_time),
+        description: event.description,
+      }));
+      
+      setEvents(mappedEvents);
+      
+    } catch (err) {
+      console.error("Failed to filter events by user:", err);
+    }
+  };
+  
   // Load events when component mounts
   useEffect(() => {
     refreshEvents();
@@ -131,6 +204,8 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         handleDeleteEvent,
         handleDateSelect,
         refreshEvents,
+        filterEventsByRole,
+        filterEventsByUser,
       }}
     >
       {children}

@@ -5,14 +5,22 @@ import CalendarContent from './CalendarContent';
 
 interface SchedulingCalendarProps {
   hasAdminAccess?: boolean;
+  userId?: string;
+  roleFilter?: string[];
 }
 
 const SchedulingCalendar: React.FC<SchedulingCalendarProps> = ({ 
-  hasAdminAccess = false 
+  hasAdminAccess = false,
+  userId,
+  roleFilter 
 }) => {
   return (
     <CalendarProvider>
-      <CalendarContent hasAdminAccess={hasAdminAccess} />
+      <CalendarContent 
+        hasAdminAccess={hasAdminAccess} 
+        userId={userId}
+        roleFilter={roleFilter}
+      />
     </CalendarProvider>
   );
 };

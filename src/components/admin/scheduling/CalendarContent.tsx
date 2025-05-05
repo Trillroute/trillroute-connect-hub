@@ -1,21 +1,95 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CalendarHeader from './CalendarHeader';
 import CalendarSidebar from './CalendarSidebar';
 import EventListView from './EventListView';
 import CalendarViewRenderer from './CalendarViewRenderer';
 import CreateEventDialog from './CreateEventDialog';
 import { useCalendar } from './CalendarContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CalendarContentProps {
   hasAdminAccess?: boolean;
+  userId?: string;
+  roleFilter?: string[];
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({ 
-  hasAdminAccess = false 
+  hasAdminAccess = false,
+  userId,
+  roleFilter
 }) => {
   const [showEventList, setShowEventList] = useState(false);
-  const { currentDate, viewMode, isCreateEventOpen, setIsCreateEventOpen, handleCreateEvent } = useCalendar();
+  const { 
+    currentDate, 
+    viewMode, 
+    isCreateEventOpen, 
+    setIsCreateEventOpen, 
+    handleCreateEvent,
+    events,
+    setEvents,
+    refreshEvents
+  } = useCalendar();
+
+  // Apply filters based on userId and roleFilter
+  useEffect(() => {
+    if (userId || (roleFilter && roleFilter.length > 0)) {
+      const fetchFilteredEvents = async () => {
+        try {
+          // Start building the query
+          let query = supabase.from('user_events').select(`
+            *,
+            custom_users!user_id (first_name, last_name, role)
+          `);
+          
+          // Filter by specific user if provided
+          if (userId) {
+            query = query.eq('user_id', userId);
+          }
+          
+          // Fetch events
+          const { data, error } = await query;
+          
+          if (error) {
+            console.error("Error fetching filtered events:", error);
+            return;
+          }
+          
+          // Filter by role if needed
+          let filteredData = data;
+          if (roleFilter && roleFilter.length > 0) {
+            filteredData = data.filter(event => {
+              const userRole = event.custom_users?.role;
+              return userRole && roleFilter.includes(userRole);
+            });
+          }
+          
+          // Map to calendar events format
+          const mappedEvents = filteredData.map(event => ({
+            id: event.id,
+            title: event.title,
+            start: new Date(event.start_time),
+            end: new Date(event.end_time),
+            description: event.description,
+            color: event.custom_users?.role === 'teacher' ? '#4f46e5' : 
+                   event.custom_users?.role === 'admin' ? '#0891b2' : 
+                   event.custom_users?.role === 'student' ? '#16a34a' : 
+                   event.custom_users?.role === 'superadmin' ? '#9333ea' : '#6b7280',
+          }));
+          
+          // Update events in context
+          setEvents(mappedEvents);
+        } catch (err) {
+          console.error("Failed to fetch filtered events:", err);
+        }
+      };
+      
+      fetchFilteredEvents();
+    } else {
+      // If no filters are applied, use the regular refresh
+      refreshEvents();
+    }
+  }, [userId, roleFilter, setEvents, refreshEvents]);
 
   // Format title based on view mode and current date
   let title;
