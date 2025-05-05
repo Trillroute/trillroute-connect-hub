@@ -5,13 +5,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from "@/components/ui/badge";
 import UserAvailabilitySchedule from '@/components/admin/scheduling/user-availability/UserAvailabilitySchedule';
 import { useUserAvailability } from '@/hooks/useUserAvailability';
-import { useStaffMembers } from '@/hooks/useStaffMembers';
-import UserSelector from '@/components/admin/scheduling/user-availability/UserSelector';
+import { useStaffAvailability } from '@/hooks/useStaffAvailability';
+import StaffUserSelector from '@/components/admin/scheduling/user-availability/StaffUserSelector';
 
 const UserAvailabilityContent: React.FC = () => {
   const { role, user } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const { staffMembers, loading: isLoadingStaff } = useStaffMembers();
+  const { staffMembers, loading: isLoadingStaff } = useStaffAvailability();
   
   console.log('UserAvailabilityContent rendering', { 
     staffCount: staffMembers.length, 
@@ -60,7 +60,7 @@ const UserAvailabilityContent: React.FC = () => {
         {/* Show user selector for admins and superadmins */}
         {(role === 'admin' || role === 'superadmin') && (
           <div className="w-full md:w-64">
-            <UserSelector
+            <StaffUserSelector
               staffMembers={staffMembers}
               selectedUserId={selectedUserId}
               isLoading={isLoadingStaff}
