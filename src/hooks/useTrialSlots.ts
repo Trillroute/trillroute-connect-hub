@@ -233,65 +233,6 @@ export function useTrialSlots() {
     }
   };
 
-  // Create or update blocked hours
-  const setBlockedHours = async (
-    dayOfWeek: number,
-    startTime: string,
-    endTime: string,
-    reason?: string
-  ): Promise<boolean> => {
-    if (!user) return false;
-    
-    try {
-      const { error } = await supabase
-        .from('blocked_hours')
-        .upsert({
-          user_id: user.id,
-          day_of_week: dayOfWeek,
-          start_time: startTime,
-          end_time: endTime,
-          is_recurring: true,
-          reason: reason || 'Unavailable'
-        }, {
-          onConflict: 'user_id, day_of_week, start_time, end_time'
-        });
-        
-      if (error) {
-        console.error('Error setting blocked hours:', error);
-        throw error;
-      }
-      
-      return true;
-    } catch (err) {
-      console.error('Failed to set blocked hours:', err);
-      return false;
-    }
-  };
-
-  // Get blocked hours for current user
-  const getBlockedHours = useCallback(async () => {
-    if (!user) return [];
-    
-    try {
-      const { data, error } = await supabase
-        .from('blocked_hours')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('day_of_week')
-        .order('start_time');
-        
-      if (error) {
-        console.error('Error fetching blocked hours:', error);
-        return [];
-      }
-      
-      return data || [];
-    } catch (err) {
-      console.error('Failed to fetch blocked hours:', err);
-      return [];
-    }
-  }, [user]);
-
   useEffect(() => {
     if (user) {
       fetchMyTrialSlots();
@@ -303,8 +244,6 @@ export function useTrialSlots() {
     loading,
     refreshTrialSlots: fetchMyTrialSlots,
     cancelTrialSlot,
-    createAvailability,
-    setBlockedHours,
-    getBlockedHours
+    createAvailability
   };
 }
