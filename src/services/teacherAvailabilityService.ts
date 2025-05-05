@@ -13,28 +13,29 @@ export interface AvailabilitySlot {
 }
 
 // Map database availability to frontend format
-export const mapFromDbAvailability = (dbSlot: any): AvailabilitySlot => ({
-  id: dbSlot.id,
-  teacherId: dbSlot.teacher_id,
-  startTime: new Date(dbSlot.start_time),
-  endTime: new Date(dbSlot.end_time),
-  isBooked: dbSlot.is_booked,
-  courseId: dbSlot.course_id,
-  studentId: dbSlot.student_id,
+export const mapFromDbAvailability = (dbEvent: any): AvailabilitySlot => ({
+  id: dbEvent.id,
+  teacherId: dbEvent.user_id,
+  startTime: new Date(dbEvent.start_time),
+  endTime: new Date(dbEvent.end_time),
+  isBooked: dbEvent.event_type === 'trial_booking',
+  courseId: dbEvent.metadata?.course_id,
+  studentId: dbEvent.metadata?.student_id,
 });
 
 // Get available slots for a course
 export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<AvailabilitySlot[]> => {
   try {
-    // Get slots that are not booked and associated with teachers of this course
+    // Get slots that are 'availability' type events by teachers for this course
     const { data, error } = await supabase
-      .from("teacher_availability")
+      .from("user_events")
       .select(`
         *,
-        custom_users!teacher_id(first_name, last_name)
+        custom_users!user_id(first_name, last_name)
       `)
-      .eq("is_booked", false)
-      .eq("course_id", courseId)
+      .eq("event_type", "availability")
+      .not("is_blocked", "is", true)
+      .contains("metadata", { course_id: courseId })
       .gte("start_time", new Date().toISOString())
       .order("start_time", { ascending: true });
 
@@ -67,17 +68,56 @@ export const bookTrialClass = async (
   courseId: string
 ): Promise<boolean> => {
   try {
-    // Update the slot to be booked
-    const { error: slotError } = await supabase
-      .from("teacher_availability")
+    // Get the event data first
+    const { data: eventData, error: eventFetchError } = await supabase
+      .from("user_events")
+      .select("*")
+      .eq("id", slotId)
+      .single();
+      
+    if (eventFetchError || !eventData) {
+      console.error("Error fetching event:", eventFetchError);
+      return false;
+    }
+
+    // Create a new booking event based on the availability slot
+    const { error: bookingError } = await supabase
+      .from("user_events")
+      .insert({
+        user_id: eventData.user_id,  // Teacher ID
+        title: `Trial Class - ${courseId}`,
+        description: `Trial class booked by student ${studentId}`,
+        start_time: eventData.start_time,
+        end_time: eventData.end_time,
+        event_type: "trial_booking",
+        is_blocked: true,
+        metadata: {
+          course_id: courseId,
+          student_id: studentId,
+          availability_event_id: slotId
+        }
+      });
+
+    if (bookingError) {
+      console.error("Error creating booking event:", bookingError);
+      return false;
+    }
+
+    // Update original event to mark it as blocked
+    const { error: updateError } = await supabase
+      .from("user_events")
       .update({
-        is_booked: true,
-        student_id: studentId,
+        is_blocked: true,
+        metadata: {
+          ...eventData.metadata,
+          booked_by: studentId,
+          booked_at: new Date().toISOString()
+        }
       })
       .eq("id", slotId);
 
-    if (slotError) {
-      console.error("Error booking slot:", slotError);
+    if (updateError) {
+      console.error("Error updating original event:", updateError);
       return false;
     }
 
@@ -105,42 +145,37 @@ export const bookTrialClass = async (
 
     if (userError) {
       console.error("Error updating student trial classes:", userError);
-      // Attempt to revert the booking if we failed to update the user's trial_classes
+      // Attempt to revert the booking
       await supabase
-        .from("teacher_availability")
+        .from("user_events")
         .update({
-          is_booked: false,
-          student_id: null,
+          is_blocked: false,
+          metadata: {
+            ...eventData.metadata,
+            booked_by: null,
+            booked_at: null
+          }
         })
         .eq("id", slotId);
       return false;
     }
 
-    // Create a calendar event for the trial class
-    const { data: slot } = await supabase
-      .from("teacher_availability")
-      .select("*")
-      .eq("id", slotId)
-      .single();
+    // Create a calendar event for the student
+    const { error: studentCalendarError } = await supabase
+      .from("calendar_events")
+      .insert({
+        title: `Trial Class - ${courseId}`,
+        description: `Trial class for course ID: ${courseId}`,
+        start_time: eventData.start_time,
+        end_time: eventData.end_time,
+        user_id: studentId,
+        location: "Online",
+        color: "#9b87f5", // Trillroute purple
+      });
 
-    if (slot) {
-      // Create calendar event for both teacher and student
-      const { error: calendarError } = await supabase
-        .from("calendar_events")
-        .insert({
-          title: `Trial Class - ${courseId}`,
-          description: `Trial class for course ID: ${courseId}`,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          user_id: studentId, // Associate with student
-          location: "Online",
-          color: "#9b87f5", // Trillroute purple
-        });
-
-      if (calendarError) {
-        console.error("Error creating calendar event:", calendarError);
-        // The trial is still booked even if the calendar event fails
-      }
+    if (studentCalendarError) {
+      console.error("Error creating student calendar event:", studentCalendarError);
+      // The trial is still booked even if the calendar event fails
     }
 
     return true;
@@ -159,13 +194,16 @@ export const createAvailabilitySlot = async (
 ): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from("teacher_availability")
+      .from("user_events")
       .insert({
-        teacher_id: teacherId,
+        user_id: teacherId,
+        title: courseId ? "Course-specific Availability" : "General Availability",
+        description: "Teacher availability for trial classes",
         start_time: startTime.toISOString(),
         end_time: endTime.toISOString(),
-        is_booked: false,
-        course_id: courseId
+        event_type: "availability",
+        is_blocked: false,
+        metadata: courseId ? { course_id: courseId } : {}
       });
 
     if (error) {
@@ -198,5 +236,60 @@ export const hasTrialForCourse = async (userId: string, courseId: string): Promi
   } catch (err) {
     console.error("Failed to check trial classes:", err);
     return false;
+  }
+};
+
+// Create blocked hours for a user
+export const createBlockedHours = async (
+  userId: string,
+  dayOfWeek: number,
+  startTime: string, // format: "HH:MM"
+  endTime: string, // format: "HH:MM"
+  isRecurring: boolean = true,
+  reason?: string
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from("blocked_hours")
+      .insert({
+        user_id: userId,
+        day_of_week: dayOfWeek,
+        start_time: startTime,
+        end_time: endTime,
+        is_recurring: isRecurring,
+        reason
+      });
+
+    if (error) {
+      console.error("Error creating blocked hours:", error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Failed to create blocked hours:", err);
+    return false;
+  }
+};
+
+// Get blocked hours for a user
+export const getBlockedHours = async (userId: string): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("blocked_hours")
+      .select("*")
+      .eq("user_id", userId)
+      .order("day_of_week", { ascending: true })
+      .order("start_time", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching blocked hours:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Failed to fetch blocked hours:", err);
+    return [];
   }
 };

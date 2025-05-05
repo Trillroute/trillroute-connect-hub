@@ -17,17 +17,17 @@ interface TrialSlot {
   createdAt: Date;
 }
 
-const mapDbSlotToTrialSlot = (dbSlot: any): TrialSlot => ({
-  id: dbSlot.id,
-  startTime: new Date(dbSlot.start_time),
-  endTime: new Date(dbSlot.end_time),
-  courseId: dbSlot.course_id,
-  courseTitle: dbSlot.courses?.title,
-  teacherId: dbSlot.teacher_id,
-  teacherName: dbSlot.teachers ? `${dbSlot.teachers.first_name} ${dbSlot.teachers.last_name}` : undefined,
-  isBooked: dbSlot.is_booked,
-  studentId: dbSlot.student_id,
-  createdAt: new Date(dbSlot.created_at),
+const mapDbEventToTrialSlot = (dbEvent: any): TrialSlot => ({
+  id: dbEvent.id,
+  startTime: new Date(dbEvent.start_time),
+  endTime: new Date(dbEvent.end_time),
+  courseId: dbEvent.metadata?.course_id,
+  courseTitle: dbEvent.courses?.title,
+  teacherId: dbEvent.user_id,
+  teacherName: dbEvent.teachers ? `${dbEvent.teachers.first_name} ${dbEvent.teachers.last_name}` : undefined,
+  isBooked: dbEvent.event_type === 'trial_booking',
+  studentId: dbEvent.metadata?.student_id,
+  createdAt: new Date(dbEvent.created_at),
 });
 
 export function useTrialSlots() {
@@ -42,22 +42,23 @@ export function useTrialSlots() {
     
     setLoading(true);
     try {
-      let query = supabase.from('teacher_availability')
+      let query = supabase.from('user_events')
         .select(`
           *,
-          courses:course_id (title),
-          teachers:teacher_id (first_name, last_name),
-          students:student_id (first_name, last_name)
+          courses:metadata->course_id (title),
+          teachers:user_id (first_name, last_name),
+          students:metadata->student_id (first_name, last_name)
         `)
+        .or('event_type.eq.availability,event_type.eq.trial_booking')
         .order('start_time', { ascending: true });
 
       // If user is a student, get slots booked by them
       if (user.role === 'student') {
-        query = query.eq('student_id', user.id);
+        query = query.contains('metadata', { student_id: user.id });
       } 
       // If user is a teacher, get their available slots
       else if (user.role === 'teacher') {
-        query = query.eq('teacher_id', user.id);
+        query = query.eq('user_id', user.id);
       }
       // If user is an admin, they can see all slots
       
@@ -68,7 +69,7 @@ export function useTrialSlots() {
         return;
       }
       
-      const mappedSlots = data ? data.map(mapDbSlotToTrialSlot) : [];
+      const mappedSlots = data ? data.map(mapDbEventToTrialSlot) : [];
       setMySlots(mappedSlots);
     } catch (err) {
       console.error('Failed to fetch trial slots:', err);
@@ -88,39 +89,82 @@ export function useTrialSlots() {
     
     try {
       // Get slot information first
-      const { data: slotData } = await supabase
-        .from('teacher_availability')
+      const { data: eventData } = await supabase
+        .from('user_events')
         .select('*')
         .eq('id', slotId)
         .single();
       
-      // Update slot to be available again
-      const { error } = await supabase
-        .from('teacher_availability')
-        .update({
-          is_booked: false,
-          student_id: null
-        })
-        .eq('id', slotId);
+      if (!eventData) {
+        console.error('Event not found for cancellation');
+        return false;
+      }
+      
+      // If this is a trial booking, we need to unblock the original availability event
+      if (eventData.event_type === 'trial_booking') {
+        const originalEventId = eventData.metadata?.availability_event_id;
         
-      if (error) {
-        console.error('Error cancelling trial slot:', error);
-        throw error;
+        if (originalEventId) {
+          // Unblock the original availability event
+          await supabase
+            .from('user_events')
+            .update({
+              is_blocked: false,
+              metadata: {
+                ...eventData.metadata,
+                booked_by: null,
+                booked_at: null
+              }
+            })
+            .eq('id', originalEventId);
+        }
+        
+        // Delete the booking event
+        const { error } = await supabase
+          .from('user_events')
+          .delete()
+          .eq('id', slotId);
+          
+        if (error) {
+          console.error('Error cancelling trial slot:', error);
+          throw error;
+        }
+      } else {
+        // Just update the event if it's an availability event
+        const { error } = await supabase
+          .from('user_events')
+          .update({
+            is_blocked: false,
+            metadata: {
+              ...eventData.metadata,
+              booked_by: null,
+              booked_at: null
+            }
+          })
+          .eq('id', slotId);
+          
+        if (error) {
+          console.error('Error updating event availability:', error);
+          throw error;
+        }
       }
       
       // Remove course from student's trial_classes
-      if (slotData && slotData.course_id && slotData.student_id) {
+      const courseId = eventData.metadata?.course_id;
+      const studentId = eventData.metadata?.student_id;
+      
+      if (courseId && studentId) {
         // We need to get the current array first
         const { data: userData } = await supabase
           .from('custom_users')
           .select('trial_classes')
-          .eq('id', slotData.student_id)
+          .eq('id', studentId)
           .single();
           
         if (userData && userData.trial_classes) {
           // Filter out the course ID
           const updatedTrialClasses = userData.trial_classes.filter(
-            (id: string) => id !== slotData.course_id
+            (id: string) => id !== courseId
           );
           
           // Update the user record
@@ -129,11 +173,11 @@ export function useTrialSlots() {
             .update({
               trial_classes: updatedTrialClasses
             })
-            .eq('id', slotData.student_id);
+            .eq('id', studentId);
             
           if (userError) {
             console.error('Error updating user trial classes:', userError);
-            // Not throwing an error here since the slot has been unbooked
+            // Not throwing an error here since the event has been unblocked
           }
         }
       }
@@ -158,13 +202,16 @@ export function useTrialSlots() {
     
     try {
       const { error } = await supabase
-        .from('teacher_availability')
+        .from('user_events')
         .insert({
-          teacher_id: user.id,
+          user_id: user.id,
+          title: courseId ? "Course-specific Availability" : "General Availability",
+          description: "Teacher availability for trial classes",
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString(),
-          is_booked: false,
-          course_id: courseId
+          event_type: "availability",
+          is_blocked: false,
+          metadata: courseId ? { course_id: courseId } : {}
         });
         
       if (error) {
@@ -182,6 +229,65 @@ export function useTrialSlots() {
     }
   };
 
+  // Create or update blocked hours
+  const setBlockedHours = async (
+    dayOfWeek: number,
+    startTime: string,
+    endTime: string,
+    reason?: string
+  ): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('blocked_hours')
+        .upsert({
+          user_id: user.id,
+          day_of_week: dayOfWeek,
+          start_time: startTime,
+          end_time: endTime,
+          is_recurring: true,
+          reason: reason || 'Unavailable'
+        }, {
+          onConflict: 'user_id, day_of_week, start_time, end_time'
+        });
+        
+      if (error) {
+        console.error('Error setting blocked hours:', error);
+        throw error;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Failed to set blocked hours:', err);
+      return false;
+    }
+  };
+
+  // Get blocked hours for current user
+  const getBlockedHours = useCallback(async () => {
+    if (!user) return [];
+    
+    try {
+      const { data, error } = await supabase
+        .from('blocked_hours')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('day_of_week')
+        .order('start_time');
+        
+      if (error) {
+        console.error('Error fetching blocked hours:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (err) {
+      console.error('Failed to fetch blocked hours:', err);
+      return [];
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       fetchMyTrialSlots();
@@ -193,6 +299,8 @@ export function useTrialSlots() {
     loading,
     refreshTrialSlots: fetchMyTrialSlots,
     cancelTrialSlot,
-    createAvailability
+    createAvailability,
+    setBlockedHours,
+    getBlockedHours
   };
 }

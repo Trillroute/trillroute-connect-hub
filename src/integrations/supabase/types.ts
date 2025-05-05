@@ -45,6 +45,50 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_hours: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          is_recurring: boolean | null
+          reason: string | null
+          start_time: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_recurring?: boolean | null
+          reason?: string | null
+          start_time: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_recurring?: boolean | null
+          reason?: string | null
+          start_time?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_hours_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendar_events: {
         Row: {
           color: string | null
@@ -473,64 +517,6 @@ export type Database = {
         }
         Relationships: []
       }
-      teacher_availability: {
-        Row: {
-          course_id: string | null
-          created_at: string | null
-          end_time: string
-          id: string
-          is_booked: boolean | null
-          start_time: string
-          student_id: string | null
-          teacher_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          course_id?: string | null
-          created_at?: string | null
-          end_time: string
-          id?: string
-          is_booked?: boolean | null
-          start_time: string
-          student_id?: string | null
-          teacher_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          course_id?: string | null
-          created_at?: string | null
-          end_time?: string
-          id?: string
-          is_booked?: boolean | null
-          start_time?: string
-          student_id?: string | null
-          teacher_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teacher_availability_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_availability_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "custom_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "teacher_availability_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "custom_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       teacher_bank_details: {
         Row: {
           account_holder_name: string
@@ -730,6 +716,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_time: string
+          event_type: string
+          id: string
+          is_blocked: boolean | null
+          metadata: Json | null
+          start_time: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_time: string
+          event_type: string
+          id?: string
+          is_blocked?: boolean | null
+          metadata?: Json | null
+          start_time: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string
+          event_type?: string
+          id?: string
+          is_blocked?: boolean | null
+          metadata?: Json | null
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "custom_users"

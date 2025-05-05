@@ -30,7 +30,7 @@ export const TrialClassesCard: React.FC = () => {
 
   // Filter to get only upcoming trials
   const upcomingTrials = myTrialSlots.filter(slot => 
-    new Date(slot.startTime) > new Date()
+    slot.isBooked && new Date(slot.startTime) > new Date()
   );
 
   return (
