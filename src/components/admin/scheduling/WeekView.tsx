@@ -21,7 +21,7 @@ import WeekDayHeader from './week-view/WeekDayHeader';
 import { calculateEventPosition } from './week-view/weekViewUtils';
 
 interface WeekViewProps {
-  onCreateEvent: () => void;
+  onCreateEvent?: () => void;
 }
 
 const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
@@ -66,6 +66,12 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
     }
     setIsDeleteDialogOpen(false);
     setSelectedEvent(null);
+  };
+  
+  const handleCellClick = () => {
+    if (onCreateEvent) {
+      onCreateEvent();
+    }
   };
 
   return (
@@ -112,7 +118,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
               hours={hours} 
               day={day} 
               currentDate={new Date()} 
-              onCellClick={onCreateEvent} 
+              onCellClick={handleCellClick} 
             />
             
             {/* Events */}

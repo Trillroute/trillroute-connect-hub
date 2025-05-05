@@ -6,10 +6,16 @@ interface WeekTimeGridProps {
   hours: number[];
   day: Date;
   currentDate: Date;
-  onCellClick: () => void;
+  onCellClick?: () => void;
 }
 
 const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({ hours, day, currentDate, onCellClick }) => {
+  const handleClick = () => {
+    if (onCellClick) {
+      onCellClick();
+    }
+  };
+  
   return (
     <>
       {hours.map(hour => (
@@ -17,8 +23,8 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({ hours, day, currentDate, on
           key={hour}
           className={`h-[60px] border-b border-r border-gray-200 ${
             isSameDay(day, currentDate) ? 'bg-blue-50' : ''
-          }`}
-          onClick={onCellClick}
+          } ${onCellClick ? 'cursor-pointer' : ''}`}
+          onClick={handleClick}
         ></div>
       ))}
     </>

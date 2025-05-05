@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CalendarViewMode, CalendarEvent } from './types';
 import WeekView from './WeekView';
@@ -45,8 +44,7 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
       return (
         <div className="h-full overflow-auto">
           <WeekView 
-            onCreateEvent={onCreateEvent} 
-            readOnly={!isAdminOrHigher}
+            onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
           />
         </div>
       );
@@ -54,10 +52,9 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
       return (
         <div className="h-full overflow-auto">
           <DayView 
-            onCreateEvent={onCreateEvent}
-            onEditEvent={onEditEvent}
-            onDeleteEvent={onDeleteEvent}
-            readOnly={!isAdminOrHigher}
+            onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
+            onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
+            onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
           />
         </div>
       );
@@ -65,8 +62,7 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
       return (
         <div className="h-full overflow-auto">
           <MonthView 
-            onDateClick={onDateClick} 
-            readOnly={!isAdminOrHigher}
+            onDateClick={onDateClick}
           />
         </div>
       );
