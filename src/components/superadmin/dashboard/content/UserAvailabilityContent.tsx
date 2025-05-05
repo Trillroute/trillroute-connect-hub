@@ -44,7 +44,7 @@ const UserAvailabilityContent: React.FC = () => {
     if (user && !selectedUserId) {
       setSelectedUserId(user.id);
     }
-  }, [user]);
+  }, [user, selectedUserId]);
 
   // Fetch staff members (teachers, admins) that can be managed
   useEffect(() => {
@@ -90,9 +90,9 @@ const UserAvailabilityContent: React.FC = () => {
         }
 
         setStaffMembers(staffList);
+        setIsLoadingStaff(false);
       } catch (err) {
         console.error('Failed to fetch staff members:', err);
-      } finally {
         setIsLoadingStaff(false);
       }
     };
@@ -103,13 +103,80 @@ const UserAvailabilityContent: React.FC = () => {
   }, [role, user, isSuperAdmin]);
 
   const handleUserChange = (userId: string) => {
-    console.log('User selection changed to:', userId);
     setSelectedUserId(userId);
   };
 
   // Find selected user details
   const selectedUser = staffMembers.find(member => member.id === selectedUserId);
   const isOwnAvailability = selectedUserId === user?.id;
+  
+  const renderUserSelector = () => {
+    if (isLoadingStaff) {
+      return (
+        <div className="flex items-center justify-center p-2 border rounded-md bg-white">
+          <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading users...
+        </div>
+      );
+    }
+
+    if (staffMembers.length === 0) {
+      return (
+        <div className="flex items-center justify-center p-2 border rounded-md bg-white">
+          No staff members found
+        </div>
+      );
+    }
+
+    return (
+      <Select
+        defaultValue={selectedUserId || undefined}
+        onValueChange={handleUserChange}
+      >
+        <SelectTrigger className="w-full bg-white">
+          <SelectValue placeholder="Select a user" />
+        </SelectTrigger>
+        <SelectContent>
+          {/* Self section */}
+          {user && (
+            <SelectGroup>
+              <SelectLabel>Your Availability</SelectLabel>
+              <SelectItem value={user.id}>
+                {user.firstName} {user.lastName} (You)
+              </SelectItem>
+            </SelectGroup>
+          )}
+
+          {/* Teachers section */}
+          {staffMembers.filter(staff => staff.role === 'teacher' && staff.id !== user?.id).length > 0 && (
+            <SelectGroup>
+              <SelectLabel>Teachers</SelectLabel>
+              {staffMembers
+                .filter(staff => staff.role === 'teacher' && staff.id !== user?.id)
+                .map(staff => (
+                  <SelectItem key={staff.id} value={staff.id}>
+                    {staff.name}
+                  </SelectItem>
+                ))}
+            </SelectGroup>
+          )}
+
+          {/* Admins section - only for superadmins */}
+          {isSuperAdmin() && staffMembers.filter(staff => staff.role === 'admin' && staff.id !== user?.id).length > 0 && (
+            <SelectGroup>
+              <SelectLabel>Admins</SelectLabel>
+              {staffMembers
+                .filter(staff => staff.role === 'admin' && staff.id !== user?.id)
+                .map(staff => (
+                  <SelectItem key={staff.id} value={staff.id}>
+                    {staff.name}
+                  </SelectItem>
+                ))}
+            </SelectGroup>
+          )}
+        </SelectContent>
+      </Select>
+    );
+  };
   
   return (
     <ContentWrapper
@@ -124,58 +191,7 @@ const UserAvailabilityContent: React.FC = () => {
         {/* Show user selector for admins and superadmins */}
         {(role === 'admin' || role === 'superadmin') && (
           <div className="w-full md:w-64">
-            {isLoadingStaff ? (
-              <div className="flex items-center justify-center p-2 border rounded-md">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading users...
-              </div>
-            ) : (
-              <Select
-                value={selectedUserId || undefined}
-                onValueChange={handleUserChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a user" />
-                </SelectTrigger>
-                <SelectContent>
-                  {user && (
-                    <SelectGroup>
-                      <SelectLabel>Your Availability</SelectLabel>
-                      <SelectItem value={user.id}>
-                        {user.firstName} {user.lastName} (You)
-                      </SelectItem>
-                    </SelectGroup>
-                  )}
-
-                  {/* Show teachers for both admin and superadmin */}
-                  {staffMembers.filter(staff => staff.role === 'teacher' && staff.id !== user?.id).length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel>Teachers</SelectLabel>
-                      {staffMembers
-                        .filter(staff => staff.role === 'teacher' && staff.id !== user?.id)
-                        .map(staff => (
-                          <SelectItem key={staff.id} value={staff.id}>
-                            {staff.name}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-                  )}
-
-                  {/* Only show admins for superadmin */}
-                  {isSuperAdmin() && staffMembers.filter(staff => staff.role === 'admin' && staff.id !== user?.id).length > 0 && (
-                    <SelectGroup>
-                      <SelectLabel>Admins</SelectLabel>
-                      {staffMembers
-                        .filter(staff => staff.role === 'admin' && staff.id !== user?.id)
-                        .map(staff => (
-                          <SelectItem key={staff.id} value={staff.id}>
-                            {staff.name}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-                  )}
-                </SelectContent>
-              </Select>
-            )}
+            {renderUserSelector()}
           </div>
         )}
       </div>
