@@ -7,6 +7,7 @@ import UserAvailabilitySchedule from '@/components/admin/scheduling/user-availab
 import { useUserAvailability } from '@/hooks/useUserAvailability';
 import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 import StaffUserSelector from '@/components/admin/scheduling/user-availability/StaffUserSelector';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const UserAvailabilityContent: React.FC = () => {
   const { role, user } = useAuth();
@@ -71,7 +72,13 @@ const UserAvailabilityContent: React.FC = () => {
       </div>
 
       <div className="w-full border rounded-md bg-white shadow-sm h-[calc(100vh-280px)] overflow-auto">
-        {selectedUserId ? (
+        {isLoadingStaff ? (
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-8 w-1/3" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        ) : selectedUserId ? (
           <>
             {!isOwnAvailability && selectedUser && (
               <div className="p-4 bg-blue-50 border-b border-blue-100 text-blue-700 font-medium">

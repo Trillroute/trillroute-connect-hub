@@ -27,8 +27,11 @@ export function useAvailabilityActions(
 
     setLoading(true);
     try {
+      console.log('Fetching availability for user:', userId);
       const availability = await fetchUserAvailability(userId);
+      console.log('Retrieved availability data:', availability);
       const transformed = transformAvailabilityData(availability);
+      console.log('Transformed availability data:', transformed);
       setDailyAvailability(transformed);
     } catch (error) {
       console.error("Error refreshing availability:", error);

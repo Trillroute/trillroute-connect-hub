@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { UserData } from '@/types/auth';
 
 export interface StaffMember {
   id: string;

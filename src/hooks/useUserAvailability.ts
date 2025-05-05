@@ -27,12 +27,24 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   );
 
   const refreshAvailability = useCallback(() => {
+    if (!targetUserId) {
+      console.log('No target user ID provided, skipping availability fetch');
+      setLoading(false);
+      return Promise.resolve();
+    }
+    console.log('Refreshing availability for user ID:', targetUserId);
     return fetchAvailability();
-  }, [fetchAvailability]);
+  }, [targetUserId, fetchAvailability]);
 
   useEffect(() => {
     if (targetUserId) {
+      console.log('User ID changed, refreshing availability for:', targetUserId);
       refreshAvailability();
+    } else {
+      // If no user ID, set empty data and stop loading
+      console.log('No user ID available, setting empty availability data');
+      setDailyAvailability([]);
+      setLoading(false);
     }
   }, [targetUserId, refreshAvailability]);
 
