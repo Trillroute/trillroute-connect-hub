@@ -13,6 +13,13 @@ const UserAvailabilityContent: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { staffMembers, loading: isLoadingStaff } = useStaffMembers();
   
+  console.log('UserAvailabilityContent rendering', { 
+    staffCount: staffMembers.length, 
+    isLoadingStaff,
+    selectedUserId,
+    currentUser: user?.id
+  });
+  
   const { 
     loading,
     dailyAvailability,
@@ -26,11 +33,13 @@ const UserAvailabilityContent: React.FC = () => {
   // Set the initial selected user to the current user
   useEffect(() => {
     if (user && !selectedUserId) {
+      console.log('Setting initial selectedUserId to current user:', user.id);
       setSelectedUserId(user.id);
     }
   }, [user, selectedUserId]);
 
   const handleUserChange = (userId: string) => {
+    console.log('User changed to:', userId);
     setSelectedUserId(userId);
   };
 

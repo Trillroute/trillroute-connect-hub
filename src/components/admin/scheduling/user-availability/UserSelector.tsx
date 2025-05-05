@@ -27,6 +27,12 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   onUserChange
 }) => {
   const { user, isSuperAdmin } = useAuth();
+  
+  console.log('UserSelector props:', { 
+    staffCount: staffMembers.length, 
+    selectedUserId, 
+    isLoading 
+  });
 
   if (isLoading) {
     return (
@@ -36,7 +42,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
     );
   }
 
-  if (staffMembers.length === 0) {
+  if (!staffMembers || staffMembers.length === 0) {
     return (
       <div className="flex items-center justify-center p-2 border rounded-md bg-white">
         No staff members found
@@ -49,9 +55,11 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   const admins = staffMembers.filter(staff => staff.role === 'admin' && staff.id !== user?.id);
   const currentUser = staffMembers.find(staff => staff.id === user?.id);
 
+  console.log('Filtered staff:', { teachers, admins, currentUser });
+
   return (
     <Select
-      value={selectedUserId || undefined}
+      defaultValue={selectedUserId || undefined}
       onValueChange={onUserChange}
     >
       <SelectTrigger className="w-full bg-white">

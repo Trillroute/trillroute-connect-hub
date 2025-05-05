@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -16,16 +16,20 @@ export function useStaffMembers() {
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  const fetchStaffMembers = async () => {
+  const fetchStaffMembers = useCallback(async () => {
     if (!user) return;
-
+    
+    console.log('Fetching staff members...');
     setLoading(true);
+    
     try {
       // If superadmin, fetch both teachers and admins
       // If admin, fetch only teachers
       const roleFilter = isSuperAdmin() 
         ? ['teacher', 'admin'] 
         : ['teacher'];
+      
+      console.log('Role filter:', roleFilter);
       
       const { data, error } = await supabase
         .from('custom_users')
@@ -39,8 +43,11 @@ export function useStaffMembers() {
           description: 'Failed to load staff members.',
           variant: 'destructive',
         });
+        setStaffMembers([]);
         return;
       }
+
+      console.log('Staff data fetched:', data);
 
       // Transform to our staff member format
       const staffList: StaffMember[] = data.map(staff => ({
@@ -62,6 +69,7 @@ export function useStaffMembers() {
         }
       }
 
+      console.log('Processed staff list:', staffList);
       setStaffMembers(staffList);
     } catch (err) {
       console.error('Failed to fetch staff members:', err);
@@ -70,16 +78,19 @@ export function useStaffMembers() {
         description: 'An unexpected error occurred while fetching staff members.',
         variant: 'destructive',
       });
+      setStaffMembers([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [role, user, isSuperAdmin, toast]);
 
   useEffect(() => {
     if ((role === 'admin' || role === 'superadmin') && user) {
       fetchStaffMembers();
+    } else {
+      setLoading(false);
     }
-  }, [role, user, isSuperAdmin]);
+  }, [role, user, fetchStaffMembers]);
 
   return { staffMembers, loading, fetchStaffMembers };
 }
