@@ -33,7 +33,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
           </div>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">None</SelectItem>
+          <SelectItem value="none">None</SelectItem>
           {availableCourses.map(course => (
             <SelectItem key={course.id} value={course.id}>
               {course.title}
