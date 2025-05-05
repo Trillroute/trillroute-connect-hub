@@ -3,10 +3,16 @@ import React from 'react';
 import { CalendarProvider } from './CalendarContext';
 import CalendarContent from './CalendarContent';
 
-const SchedulingCalendar: React.FC = () => {
+interface SchedulingCalendarProps {
+  hasAdminAccess?: boolean;
+}
+
+const SchedulingCalendar: React.FC<SchedulingCalendarProps> = ({ 
+  hasAdminAccess = false 
+}) => {
   return (
     <CalendarProvider>
-      <CalendarContent />
+      <CalendarContent hasAdminAccess={hasAdminAccess} />
     </CalendarProvider>
   );
 };

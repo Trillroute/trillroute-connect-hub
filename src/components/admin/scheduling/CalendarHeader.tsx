@@ -16,13 +16,15 @@ interface CalendarHeaderProps {
   showEventListToggle?: boolean;
   onToggleEventList?: () => void;
   isEventListShown?: boolean;
+  hasAdminAccess?: boolean;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ 
   title,
   showEventListToggle = true,
   onToggleEventList,
-  isEventListShown = false
+  isEventListShown = false,
+  hasAdminAccess = false
 }) => {
   const { 
     viewMode, 
@@ -35,7 +37,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   return (
     <div className="flex justify-between items-center p-4 border-b border-gray-200">
       <div className="flex items-center gap-2">
-        <LayersDropdown />
+        {hasAdminAccess && <LayersDropdown />}
         <h3 className="text-xl font-semibold ml-2">{title}</h3>
       </div>
       

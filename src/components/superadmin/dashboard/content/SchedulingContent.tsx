@@ -6,7 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from "@/components/ui/badge";
 
 const SchedulingContent: React.FC = () => {
-  const { role } = useAuth();
+  const { role, isAdmin, isSuperAdmin } = useAuth();
+  const hasAdminAccess = isAdmin() || isSuperAdmin();
   
   return (
     <ContentWrapper
@@ -19,7 +20,7 @@ const SchedulingContent: React.FC = () => {
         </Badge>
       </div>
       <div className="w-full border rounded-md bg-white shadow-sm h-[calc(100vh-220px)]">
-        <SchedulingCalendar />
+        <SchedulingCalendar hasAdminAccess={hasAdminAccess} />
       </div>
     </ContentWrapper>
   );
