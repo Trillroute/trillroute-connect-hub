@@ -19,10 +19,8 @@ const SchedulingContent: React.FC = () => {
           Viewing as: {role?.toUpperCase()}
         </Badge>
       </div>
-      <div className="w-full border rounded-md bg-white shadow-sm">
-        <ScrollArea className="h-[calc(100vh-220px)]">
-          <SchedulingCalendar />
-        </ScrollArea>
+      <div className="w-full border rounded-md bg-white shadow-sm h-[calc(100vh-220px)]">
+        <SchedulingCalendar />
       </div>
     </ContentWrapper>
   );

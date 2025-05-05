@@ -29,7 +29,7 @@ const CalendarContent: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [showEventList, setShowEventList] = useState(true);
+  const [showEventList, setShowEventList] = useState(false);
   
   // Format the calendar title based on current view and date
   const calendarTitle = formatCalendarTitle(currentDate, viewMode);
@@ -64,7 +64,7 @@ const CalendarContent: React.FC = () => {
     if (viewMode === 'month') {
       // Switch to day view when clicking on a date in month view
       setViewMode('day');
-      setShowEventList(true); // Use list view by default
+      setShowEventList(false); // Show calendar view by default
     }
   };
 
@@ -83,12 +83,12 @@ const CalendarContent: React.FC = () => {
       />
       
       {/* Calendar body */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar */}
         <CalendarSidebar />
         
         {/* Calendar view */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-auto">
           {isLoading && (
             <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CalendarViewMode, CalendarEvent } from './types';
 import WeekView from './WeekView';
@@ -25,10 +26,12 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   // Always show the event list if showEventList is true, regardless of view mode
   if (showEventList) {
     return (
-      <EventListView 
-        onEditEvent={onEditEvent}
-        onDeleteEvent={onDeleteEvent}
-      />
+      <div className="h-full overflow-auto">
+        <EventListView 
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
+        />
+      </div>
     );
   }
   
@@ -36,19 +39,25 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   switch (viewMode) {
     case 'week':
       return (
-        <WeekView onCreateEvent={onCreateEvent} />
+        <div className="h-full overflow-auto">
+          <WeekView onCreateEvent={onCreateEvent} />
+        </div>
       );
     case 'day':
       return (
-        <DayView 
-          onCreateEvent={onCreateEvent}
-          onEditEvent={onEditEvent}
-          onDeleteEvent={onDeleteEvent}
-        />
+        <div className="h-full overflow-auto">
+          <DayView 
+            onCreateEvent={onCreateEvent}
+            onEditEvent={onEditEvent}
+            onDeleteEvent={onDeleteEvent}
+          />
+        </div>
       );
     case 'month':
       return (
-        <MonthView onDateClick={onDateClick} />
+        <div className="h-full overflow-auto">
+          <MonthView onDateClick={onDateClick} />
+        </div>
       );
     default:
       return null;

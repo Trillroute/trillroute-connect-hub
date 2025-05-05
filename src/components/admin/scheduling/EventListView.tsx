@@ -4,8 +4,7 @@ import { format, isSameDay, isSameMonth, isWithinInterval, startOfWeek, endOfWee
 import { useCalendar } from './CalendarContext';
 import { CalendarEvent } from './types';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Clock, MapPin, Pencil, Trash2, CalendarIcon } from 'lucide-react';
+import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
 
 interface EventListViewProps {
   onEditEvent: (event: CalendarEvent) => void;
@@ -96,13 +95,13 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
   
   return (
     <div className="h-full flex flex-col">
-      <h2 className="text-lg font-semibold mb-4 p-4 pb-0">
+      <h2 className="text-lg font-semibold px-6 py-4">
         {getViewTitle()}
       </h2>
       
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 px-6 pb-6 overflow-y-auto">
         {filteredEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
             <div className="text-gray-500 text-center mb-6">
               <div className="text-lg mb-2">No events scheduled for this {viewMode}</div>
               <div className="text-sm">Click on the calendar to add a new event</div>
@@ -114,7 +113,7 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
               <div key={dateKey} className="mb-6">
                 {/* Show date headers for week and month views */}
                 {viewMode !== 'day' && (
-                  <h3 className="font-medium text-gray-700 mb-2 border-b pb-1">
+                  <h3 className="font-medium text-gray-700 mb-3 border-b pb-2">
                     {format(new Date(dateKey), 'EEEE, MMMM d, yyyy')}
                   </h3>
                 )}
@@ -126,7 +125,7 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
                       className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
                     >
                       <div className="flex justify-between items-start">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="text-lg font-medium">{event.title}</h3>
                           <div className="flex items-center text-gray-500 mt-2">
                             <Clock className="w-4 h-4 mr-1" />
@@ -144,7 +143,7 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
                             <p className="mt-2 text-sm text-gray-600">{event.description}</p>
                           )}
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-1">
                           <Button 
                             variant="ghost" 
                             size="sm" 
