@@ -107,17 +107,6 @@ const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEven
               <div className="text-lg mb-2">No events scheduled for this {viewMode}</div>
               <div className="text-sm">Click on the calendar to add a new event</div>
             </div>
-            
-            {/* Always show a calendar view even when there are no events */}
-            <div className="mt-4 border rounded-md p-4 bg-white shadow-sm w-full max-w-md mx-auto">
-              <Calendar
-                mode="single"
-                selected={currentDate}
-                onSelect={handleDateSelect}
-                className="mx-auto"
-                initialFocus
-              />
-            </div>
           </div>
         ) : (
           <div className="space-y-6">

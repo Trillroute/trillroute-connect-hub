@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarProvider, useCalendar } from './CalendarContext';
@@ -34,13 +35,14 @@ const CalendarContent: React.FC = () => {
     setCurrentDate,
     setViewMode,
     handleUpdateEvent,
-    handleDeleteEvent
+    handleDeleteEvent,
+    events
   } = useCalendar();
   
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [showEventList, setShowEventList] = useState(false);
+  const [showEventList, setShowEventList] = useState(true); // Changed default to true to show event list by default
   
   // Format the calendar title based on current view and date
   const calendarTitle = formatCalendarTitle(currentDate, viewMode);
@@ -123,7 +125,7 @@ const CalendarContent: React.FC = () => {
       {/* Main calendar header */}
       <CalendarHeader 
         title={calendarTitle} 
-        showEventListToggle={true} // Always show the toggle button
+        showEventListToggle={true}
         onToggleEventList={toggleEventList}
         isEventListShown={showEventList}
       />
