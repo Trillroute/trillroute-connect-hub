@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCourseToastAdapter } from './useCourseToastAdapter';
 import { useAuth } from '@/hooks/useAuth';
 import { Course, ClassTypeData } from '@/types/course';
 import { supabase } from '@/integrations/supabase/client';
+import { deleteCourse } from '../courseService';
 
 export const useCourseManagement = () => {
   const { toast } = useToast();
@@ -113,12 +113,7 @@ export const useCourseManagement = () => {
       setLoading(true);
       
       for (const id of courseIds) {
-        const { error } = await supabase
-          .from('courses')
-          .delete()
-          .eq('id', id);
-          
-        if (error) throw error;
+        await deleteCourse(id);
       }
       
       showSuccessToast(`Successfully deleted ${courseIds.length} courses`);

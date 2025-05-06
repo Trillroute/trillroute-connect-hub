@@ -3,10 +3,16 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UserGrowthChart from './UserGrowthChart';
 import AdminStats from './AdminStats';
+import { DashboardStats, UserActivityData } from '../../superadmin/hooks/useDashboardData';
 
 interface DashboardOverviewProps {
-  stats: any;
-  userActivityData: any;
+  stats: {
+    studentsCount: number;
+    teachersCount: number;
+    adminsCount: number;
+    coursesCount: number;
+  };
+  userActivityData: UserActivityData[];
   currentYear: number;
   handleYearChange: (year: number) => void;
 }
@@ -19,7 +25,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 }) => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <AdminStats stats={stats} />
+      <AdminStats 
+        studentsCount={stats.studentsCount}
+        teachersCount={stats.teachersCount}
+        adminsCount={stats.adminsCount}
+        coursesCount={stats.coursesCount}
+      />
       
       <Card className="col-span-full">
         <CardHeader>
@@ -29,7 +40,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           <UserGrowthChart 
             data={userActivityData} 
             currentYear={currentYear} 
-            handleYearChange={handleYearChange} 
+            onYearChange={handleYearChange} 
           />
         </CardContent>
       </Card>

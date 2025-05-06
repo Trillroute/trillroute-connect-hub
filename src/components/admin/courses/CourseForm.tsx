@@ -34,18 +34,18 @@ export interface CourseFormValues {
 
 interface CourseFormProps {
   form: UseFormReturn<CourseFormValues>;
-  onSubmit: (values: CourseFormValues) => void;
   teachers: Teacher[];
   skills: { id: string; name: string }[];
+  onSubmit: (values: CourseFormValues) => void;
   submitButtonText?: string;
   cancelAction?: () => void;
 }
 
 const CourseForm: React.FC<CourseFormProps> = ({
   form,
+  teachers = [],
+  skills = [],
   onSubmit,
-  teachers,
-  skills,
   submitButtonText = "Submit",
   cancelAction
 }) => {

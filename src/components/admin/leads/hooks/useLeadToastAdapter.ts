@@ -1,25 +1,37 @@
 
 import { useToast } from '@/hooks/use-toast';
 
-// This adapter helps fix the incompatibility between different toast implementations
 export const useLeadToastAdapter = () => {
   const { toast } = useToast();
-  
-  const showToast = (title: string, description: string, variant?: 'default' | 'destructive') => {
+
+  // Update the function to accept title and message parameters
+  const showToast = (title: string, message: string) => {
     toast({
       title,
-      description,
-      variant
+      description: message,
+      variant: 'default',
     });
   };
-  
+
   const showSuccessToast = (message: string) => {
-    showToast("Success", message);
+    toast({
+      title: 'Success',
+      description: message,
+      variant: 'default',
+    });
   };
-  
+
   const showErrorToast = (message: string) => {
-    showToast("Error", message, "destructive");
+    toast({
+      title: 'Error',
+      description: message,
+      variant: 'destructive',
+    });
   };
-  
-  return { showToast, showSuccessToast, showErrorToast };
+
+  return {
+    showToast,
+    showSuccessToast,
+    showErrorToast
+  };
 };
