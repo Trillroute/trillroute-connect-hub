@@ -1,46 +1,74 @@
 
 import { AdminLevel } from "./types";
 
-// Fallback permissions mapping in case we can't fetch from database
-export const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
-  "Limited View": {
-    name: "Limited View",
-    description: "Limited view-only access",
-    studentPermissions: ["view"],
-    teacherPermissions: ["view"],
-    adminPermissions: [],
-    leadPermissions: [],
-    coursePermissions: ["view"],
-    levelPermissions: []
-  },
+/**
+ * Default roles to use when server roles are not available
+ */
+export const FALLBACK_ADMIN_ROLES: { [key: string]: AdminLevel } = {
   "SuperAdmin": {
     name: "SuperAdmin",
-    description: "Full access to all features",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view", "add", "edit", "delete"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"],
-    levelPermissions: ["view", "add", "edit", "delete"]
+    level: 100,
+    description: "Complete administrative access",
+    studentPermissions: ['view', 'add', 'edit', 'delete'],
+    teacherPermissions: ['view', 'add', 'edit', 'delete'],
+    adminPermissions: ['view', 'add', 'edit', 'delete'],
+    leadPermissions: ['view', 'add', 'edit', 'delete'],
+    coursePermissions: ['view', 'add', 'edit', 'delete'],
+    levelPermissions: ['view', 'add', 'edit', 'delete']
   },
-  "Super Admin": {
-    name: "Super Admin",
-    description: "Full access to all features",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view", "add", "edit", "delete"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"],
-    levelPermissions: ["view", "add", "edit", "delete"]
+  "Administrator": {
+    name: "Administrator",
+    level: 90,
+    description: "Full administrative access except admin management",
+    studentPermissions: ['view', 'add', 'edit', 'delete'],
+    teacherPermissions: ['view', 'add', 'edit', 'delete'],
+    adminPermissions: ['view'],
+    leadPermissions: ['view', 'add', 'edit', 'delete'],
+    coursePermissions: ['view', 'add', 'edit', 'delete'],
+    levelPermissions: ['view']
   },
-  "Upper Manager": {
-    name: "Upper Manager",
-    description: "Management access",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"],
-    levelPermissions: ["view"]
+  "Manager": {
+    name: "Manager",
+    level: 80,
+    description: "Can manage students, teachers and courses",
+    studentPermissions: ['view', 'add', 'edit', 'delete'],
+    teacherPermissions: ['view', 'add', 'edit', 'delete'],
+    adminPermissions: ['view'],
+    leadPermissions: ['view', 'add', 'edit'],
+    coursePermissions: ['view', 'add', 'edit'],
+    levelPermissions: []
+  },
+  "Content Manager": {
+    name: "Content Manager",
+    level: 70,
+    description: "Can manage courses and content",
+    studentPermissions: ['view'],
+    teacherPermissions: ['view'],
+    adminPermissions: [],
+    leadPermissions: ['view'],
+    coursePermissions: ['view', 'add', 'edit', 'delete'],
+    levelPermissions: []
+  },
+  "Lead Manager": {
+    name: "Lead Manager",
+    level: 60,
+    description: "Can manage leads and basic student data",
+    studentPermissions: ['view'],
+    teacherPermissions: [],
+    adminPermissions: [],
+    leadPermissions: ['view', 'add', 'edit', 'delete'],
+    coursePermissions: ['view'],
+    levelPermissions: []
+  },
+  "Limited View": {
+    name: "Limited View",
+    level: 10,
+    description: "Can view basic information",
+    studentPermissions: ['view'],
+    teacherPermissions: ['view'],
+    adminPermissions: [],
+    leadPermissions: [],
+    coursePermissions: ['view'],
+    levelPermissions: []
   }
 };

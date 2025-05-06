@@ -1,73 +1,101 @@
 
-import { AdminLevel } from "./types";
-
-// Add a cached permissions map to avoid re-calculating permissions
-let cachedPermissions = new Map<string, boolean>();
-let cachedAdminRoles = new Map<string, AdminLevel>();
+import { AdminLevel, PermissionsCache, RolesCache } from "./types";
 
 /**
- * Update cached admin roles from database
+ * In-memory cache for roles
  */
-export const updateCachedAdminRoles = (adminRoles: AdminLevel[]): void => {
-  console.log('[adminPermissions] Updating cached admin roles:', adminRoles);
-  cachedAdminRoles.clear();
-  
-  // Add all roles to the cache
-  adminRoles.forEach(role => {
-    if (role && role.name) {
-      cachedAdminRoles.set(role.name, role);
-    }
-  });
-  
-  // Clear permissions cache when roles are updated
-  cachedPermissions.clear();
-  
-  console.log('[adminPermissions] Updated admin roles cache. Current roles:', 
-    Array.from(cachedAdminRoles.keys()));
+let rolesCache: RolesCache = {};
+
+/**
+ * In-memory cache for permission results
+ */
+let permissionsCache: PermissionsCache = {};
+
+/**
+ * In-memory cache for user-specific data
+ */
+const userPermissionsCache: { [userId: string]: PermissionsCache } = {};
+
+/**
+ * Set a role in the cache
+ */
+export const setCachedRole = (role: AdminLevel): void => {
+  rolesCache[role.name] = role;
 };
 
 /**
- * Get cached admin role by name
+ * Get a role from the cache
  */
 export const getCachedRole = (roleName: string): AdminLevel | undefined => {
-  return cachedAdminRoles.get(roleName);
+  return rolesCache[roleName];
 };
 
 /**
- * Set permission in cache
+ * Check if a permission is cached
  */
-export const setCachedPermission = (cacheKey: string, hasPermission: boolean): void => {
-  cachedPermissions.set(cacheKey, hasPermission);
+export const hasCachedPermission = (key: string): boolean => {
+  return Object.prototype.hasOwnProperty.call(permissionsCache, key);
 };
 
 /**
- * Get permission from cache
+ * Get a cached permission value
  */
-export const getCachedPermission = (cacheKey: string): boolean | undefined => {
-  return cachedPermissions.get(cacheKey);
+export const getCachedPermission = (key: string): boolean | undefined => {
+  return permissionsCache[key];
 };
 
 /**
- * Check if permission exists in cache
+ * Set a permission value in the cache
  */
-export const hasCachedPermission = (cacheKey: string): boolean => {
-  return cachedPermissions.has(cacheKey);
+export const setCachedPermission = (key: string, value: boolean): void => {
+  permissionsCache[key] = value;
 };
 
 /**
- * Clear the permissions cache for a user
+ * Clear the permissions cache for a specific user
+ * This should be called when a user's permissions might have changed
  */
-export const clearPermissionsCache = (userId?: string): void => {
-  console.log('Clearing permissions cache for user:', userId);
-  if (userId) {
-    // Clear only for specific user
-    cachedPermissions.forEach((_, key) => {
-      if (key.startsWith(`${userId}:`)) {
-        cachedPermissions.delete(key);
-      }
-    });
-  } else {
-    // Clear all cache
-    cachedPermissions.clear();
+export const clearPermissionsCache = (userId: string | undefined): void => {
+  if (!userId) return;
+  
+  // Clear user-specific entries from the general cache
+  const userPrefix = `${userId}:`;
+  for (const key of Object.keys(permissionsCache)) {
+    if (key.startsWith(userPrefix)) {
+      delete permissionsCache[key];
+    }
   }
+  
+  // Clear user-specific cache if it exists
+  if (userPermissionsCache[userId]) {
+    delete userPermissionsCache[userId];
+  }
+  
+  console.log('[adminPermissions] Cleared permissions cache for user:', userId);
+};
+
+/**
+ * Update the cached admin roles from the server
+ */
+export const updateCachedAdminRoles = (roles: AdminLevel[]): void => {
+  // First clear the existing cache
+  rolesCache = {};
+  
+  // Then add each role to the cache
+  for (const role of roles) {
+    setCachedRole(role);
+  }
+  
+  console.log('[adminPermissions] Updated admin roles cache with', roles.length, 'roles');
+};
+
+/**
+ * Clear all caches (should be called on logout)
+ */
+export const clearAllCaches = (): void => {
+  rolesCache = {};
+  permissionsCache = {};
+  Object.keys(userPermissionsCache).forEach(key => {
+    delete userPermissionsCache[key];
+  });
 };

@@ -18,9 +18,9 @@ import {
   canManageLeads,
   canManageLevels,
   clearPermissionsCache,
-  AdminLevel,
   updateCachedAdminRoles
-} from '@/utils/adminPermissions';
+} from '@/utils/permissions';
+import { AdminLevel } from '@/utils/permissions/types';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from 'react-router-dom';

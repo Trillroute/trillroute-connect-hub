@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import DeleteLeadDialog from './leads/DeleteLeadDialog';
 import { useFetchLeads } from '@/hooks/useFetchLeads';
 import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
-import { canManageLeads } from '@/utils/adminPermissions';
+import { canManageLeads } from '@/utils/permissions/modulePermissions';
 import LeadKanbanBoard from './leads/LeadKanbanBoard';
 
 interface LeadManagementProps {

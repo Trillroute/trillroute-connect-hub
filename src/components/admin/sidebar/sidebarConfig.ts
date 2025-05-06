@@ -1,5 +1,5 @@
 
-import { AdminPermission } from "@/utils/permissions";
+import { AdminPermission } from "@/utils/permissions/types";
 import { 
   Activity, 
   BarChart, 
