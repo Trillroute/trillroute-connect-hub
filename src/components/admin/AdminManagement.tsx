@@ -13,7 +13,9 @@ import AdminDialogs from './admin/AdminDialogs';
 import { updateCachedAdminRoles } from '@/utils/adminPermissions';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import AdminHeader from './admin/AdminHeader';
-import { ViewMode } from './admin/ViewControls';
+import AdminGridView from '@/components/superadmin/admin/AdminGridView';
+import AdminTileView from '@/components/superadmin/admin/AdminTileView';
+import AccessDeniedCard from '@/components/superadmin/admin/AccessDeniedCard';
 
 interface AdminManagementProps {
   canAddAdmin?: boolean;
@@ -31,8 +33,6 @@ const AdminManagement = ({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isSuperAdmin } = useAuth();
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const {
     admins,
@@ -40,6 +40,10 @@ const AdminManagement = ({
     adminToEdit,
     adminToDelete,
     adminToView,
+    viewMode,
+    setViewMode,
+    selectedIds,
+    setSelectedIds,
     isEditDialogOpen,
     isDeleteDialogOpen,
     isViewDialogOpen,
@@ -51,6 +55,7 @@ const AdminManagement = ({
     handleUpdateAdmin,
     handleDeleteAdmin,
     handleUpdateAdminLevel,
+    handleBulkDelete,
     openEditDialog,
     openViewDialog,
     openDeleteDialog,
@@ -79,24 +84,9 @@ const AdminManagement = ({
     loadAdmins();
   }, [loadAdmins]);
 
-  // Bulk delete logic
-  const handleBulkDelete = async () => {
-    for (const id of selectedIds) {
-      const admin = admins.find(a => a.id === id);
-      // Only attempt delete if allowed
-      if (admin && canAdminBeDeleted(admin)) {
-        // Instead of passing admin object, first set it as the admin to delete, then call handleDeleteAdmin
-        openDeleteDialog(admin);
-        await handleDeleteAdmin(); // Call without arguments since it operates on adminToDelete state
-      }
-    }
-    setSelectedIds([]);
-    toast({
-      title: 'Success',
-      description: 'Selected administrators deleted.',
-    });
-    loadAdmins();
-  };
+  if (!isSuperAdmin() && !canEditAdmin && !canDeleteAdmin) {
+    return <AccessDeniedCard />;
+  }
 
   return (
     <Card>
@@ -114,18 +104,37 @@ const AdminManagement = ({
         />
       </CardHeader>
       <CardContent>
-        <AdminTable 
-          admins={admins}
-          isLoading={isLoading}
-          onEdit={openEditDialog}
-          onDelete={openDeleteDialog}
-          onView={openViewDialog}
-          viewMode={viewMode}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
-          canEdit={isAdminEditable}
-          canDelete={canAdminBeDeleted}
-        />
+        {viewMode === 'list' && (
+          <AdminTable 
+            admins={admins}
+            isLoading={isLoading}
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+            onView={openViewDialog}
+            viewMode={viewMode}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+            canEdit={isAdminEditable}
+            canDelete={canAdminBeDeleted}
+          />
+        )}
+
+        {viewMode === 'grid' && (
+          <AdminGridView 
+            admins={admins} 
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+          />
+        )}
+
+        {viewMode === 'tile' && (
+          <AdminTileView 
+            admins={admins} 
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+          />
+        )}
+        
         <AdminDialogs
           isAddDialogOpen={isAddDialogOpen}
           setIsAddDialogOpen={setIsAddDialogOpen}
@@ -144,7 +153,7 @@ const AdminManagement = ({
           handleUpdateAdminLevel={handleUpdateAdminLevel}
           isLoading={isLoading}
           canAddAdmin={canAddAdmin}
-          effectiveCanEditAdminLevel={effectiveCanEditAdminLevel || isSuperAdmin()} 
+          effectiveCanEditAdminLevel={effectiveCanEditAdminLevel} 
         />
       </CardContent>
     </Card>

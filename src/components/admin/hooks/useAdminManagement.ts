@@ -14,14 +14,17 @@ type UseAdminManagementProps = {
   toast: any;
 };
 
+export type ViewMode = 'list' | 'grid' | 'tile';
+
 export const useAdminManagement = ({ 
   canEditAdmin, 
   canDeleteAdmin,
   canEditAdminLevel,
   toast 
 }: UseAdminManagementProps) => {
-  // Combine all the hooks
   const { admins, isLoading: isLoadingAdmins, loadAdmins } = useAdminData();
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   const {
     isLoading: isOperationsLoading,
@@ -81,10 +84,34 @@ export const useAdminManagement = ({
     }
   };
 
+  // Bulk delete logic
+  const handleBulkDelete = async () => {
+    for (const id of selectedIds) {
+      const admin = admins.find(a => a.id === id);
+      // Only attempt delete if allowed
+      if (admin && canAdminBeDeleted(admin)) {
+        setAdminToDelete(admin);
+        await handleDeleteAdmin();
+      }
+    }
+    setSelectedIds([]);
+    toast({
+      title: 'Success',
+      description: 'Selected administrators deleted.',
+    });
+    loadAdmins();
+  };
+
   return {
     // Admin data
     admins,
     isLoading,
+    
+    // View state
+    viewMode,
+    setViewMode,
+    selectedIds,
+    setSelectedIds,
     
     // Dialog states
     adminToEdit,
@@ -105,6 +132,7 @@ export const useAdminManagement = ({
     handleUpdateAdmin,
     handleDeleteAdmin,
     handleUpdateAdminLevel,
+    handleBulkDelete,
     
     // Dialog openers
     openEditDialog,
