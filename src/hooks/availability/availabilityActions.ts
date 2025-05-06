@@ -1,3 +1,4 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { 
   createAvailabilitySlot,
@@ -37,7 +38,8 @@ export function useAvailabilityActions(
       const transformed = transformAvailabilityData(availability);
       console.log('Transformed availability data:', transformed);
       setDailyAvailability(transformed);
-      return transformed;
+      // Return void instead of the transformed data to match the type signature
+      return;
     } catch (error) {
       console.error("Error refreshing availability:", error);
       toast({
