@@ -8,8 +8,16 @@ interface PlaceholderContentProps {
 }
 
 const PlaceholderContent: React.FC<PlaceholderContentProps> = ({ tab }) => {
-  const title = `${tab.charAt(0).toUpperCase() + tab.slice(1)} Module`;
-  const description = `${tab.charAt(0).toUpperCase() + tab.slice(1)} management functionality`;
+  // Format the title and description properly
+  const formatTitle = (tabName: string) => {
+    // Handle camelCase by inserting spaces
+    const formatted = tabName.replace(/([A-Z])/g, ' $1').trim();
+    // Capitalize first letter
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  };
+
+  const title = `${formatTitle(tab)} Module`;
+  const description = `${formatTitle(tab)} management functionality`;
 
   return (
     <ContentWrapper 

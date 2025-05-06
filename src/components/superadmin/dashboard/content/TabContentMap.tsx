@@ -9,6 +9,12 @@ import SchedulingContent from './SchedulingContent';
 import UserAvailabilityContent from './UserAvailabilityContent';
 import { DashboardStats, UserActivityData } from '@/components/superadmin/hooks/useDashboardData';
 import { Lead } from '@/types/lead';
+import { AdminManagement } from '@/components/superadmin/AdminManagement';
+import CourseManagement from '@/components/admin/CourseManagement';
+import StudentManagement from '@/components/admin/StudentManagement';
+import LeadManagement from '@/components/admin/LeadManagement';
+import LevelManagement from '@/components/admin/levels/LevelManagement';
+import ClassTypeManagement from '@/components/admin/class-types/ClassTypeManagement';
 
 interface TabContentMapProps {
   activeTab: ActiveTab;
@@ -43,6 +49,14 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
           handleYearChange={handleYearChange}
         />
       ) : null;
+      
+    case 'leads':
+      return <LeadManagement 
+        canAddLead={true}
+        canEditLead={true}
+        canDeleteLead={true}
+      />;
+      
     case 'leads-cards':
       return leads && onEditLead && onDeleteLead ? (
         <LeadsKanbanContent
@@ -52,12 +66,53 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
           onDelete={onDeleteLead}
         />
       ) : null;
+      
     case 'teachers':
       return <TeacherContent />;
+      
     case 'scheduling':
       return <SchedulingContent />;
+      
     case 'user-availability':
       return <UserAvailabilityContent />;
+      
+    case 'students':
+      return <StudentManagement 
+        canAddUser={true}
+        canEditUser={true}
+        canDeleteUser={true}
+      />;
+      
+    case 'courses':
+      return <CourseManagement 
+        canAddCourse={true}
+        canEditCourse={true}
+        canDeleteCourse={true}
+      />;
+      
+    case 'classTypes':
+      return <ClassTypeManagement />;
+      
+    case 'courseManagement':
+      return <CourseManagement 
+        canAddCourse={true}
+        canEditCourse={true}
+        canDeleteCourse={true}
+      />;
+      
+    case 'admins':
+      return <AdminManagement />;
+      
+    case 'levels':
+      return <LevelManagement 
+        canAddLevel={true}
+        canEditLevel={true}
+        canDeleteLevel={true}
+      />;
+      
+    case 'access':
+      return <PlaceholderContent tab={activeTab} />;
+      
     default:
       return <PlaceholderContent tab={activeTab} />;
   }
