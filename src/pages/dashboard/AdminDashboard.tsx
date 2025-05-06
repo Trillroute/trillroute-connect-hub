@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -20,7 +19,7 @@ import {
   clearPermissionCache,
   AdminLevel,
   updateCachedAdminRoles
-} from '@/utils/adminPermissions';
+} from '@/utils/permissions';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from 'react-router-dom';
@@ -63,8 +62,8 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('[AdminDashboard] Clearing permissions cache for user', user.id);
-      clearPermissionCache(user.id);
+      console.log('[AdminDashboard] Clearing permissions cache for user');
+      clearPermissionCache();
       loadAdminRoles();
     }
   }, [user]);
