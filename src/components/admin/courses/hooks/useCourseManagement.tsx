@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useCourseToastAdapter } from './useCourseToastAdapter';
 import { useAuth } from '@/hooks/useAuth';
-import { Course } from '@/types/course';
+import { Course, ClassTypeData } from '@/types/course';
 import { deleteCourse } from '../courseService';
 import { supabase } from '@/integrations/supabase/client';
-import { formatClassTypesData } from '@/utils/courseHelpers';
 
 export const useCourseManagement = () => {
   const { toast } = useToast();
@@ -23,8 +22,24 @@ export const useCourseManagement = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Helper function to process class_types_data
+  const processClassTypesData = (data: any): ClassTypeData[] => {
+    if (!data) return [];
+    
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data) as ClassTypeData[];
+      } catch (e) {
+        console.error('Error parsing class_types_data:', e);
+        return [];
+      }
+    }
+    
+    return data as ClassTypeData[];
+  };
+  
   // Filter courses based on search query
-  const getFilteredCourses = (query: string, courseList: Course[]) => {
+  const getFilteredCourses = (query: string, courseList: Course[]): Course[] => {
     if (!query.trim()) return courseList;
     
     return courseList.filter(course => {
@@ -34,7 +49,7 @@ export const useCourseManagement = () => {
   };
   
   // Function to fetch courses
-  const fetchCourses = async () => {
+  const fetchCourses = async (): Promise<void> => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -45,17 +60,11 @@ export const useCourseManagement = () => {
       if (error) throw error;
       
       // Parse class_types_data if necessary
-      const parsedData = (data || []).map((course) => {
-        // Creating a properly typed course object with class_types_data properly handled
-        const courseWithProcessedData = {
+      const parsedData = (data || []).map((course): Course => {
+        return {
           ...course,
-          class_types_data: course.class_types_data ? 
-            (typeof course.class_types_data === 'string' 
-              ? JSON.parse(course.class_types_data) 
-              : course.class_types_data)
+          class_types_data: processClassTypesData(course.class_types_data)
         };
-        
-        return courseWithProcessedData as Course;
       });
       
       setCourses(parsedData);
@@ -68,17 +77,17 @@ export const useCourseManagement = () => {
   };
   
   // Dialog handlers
-  const openViewDialog = (course: Course) => {
+  const openViewDialog = (course: Course): void => {
     setSelectedCourse(course);
     setIsViewDialogOpen(true);
   };
   
-  const openEditDialog = (course: Course) => {
+  const openEditDialog = (course: Course): void => {
     setSelectedCourse(course);
     setIsEditDialogOpen(true);
   };
   
-  const openDeleteDialog = (course: Course) => {
+  const openDeleteDialog = (course: Course): void => {
     setSelectedCourse(course);
     setIsDeleteDialogOpen(true);
   };
@@ -95,7 +104,7 @@ export const useCourseManagement = () => {
   };
   
   // Bulk delete handler
-  const handleBulkDelete = async (courseIds: string[], hasPermission: boolean) => {
+  const handleBulkDelete = async (courseIds: string[], hasPermission: boolean): Promise<void> => {
     if (!hasPermission) {
       showErrorToast("You don't have permission to delete courses");
       return;
