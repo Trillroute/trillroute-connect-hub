@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Course, ClassTypeData } from '@/types/course';
+import { Json } from '@/integrations/supabase/types';
 
 // Helper to handle type conversion between Json and ClassTypeData[]
 const convertJsonClassTypeData = (course: any): Course => {
