@@ -95,15 +95,9 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     case 'user-availability':
       return <UserAvailabilityContent />;
       
-    case 'students':
-      // This is a fallback - the early return above should handle this case
-      console.log("Fallback: Rendering StudentManagement component");
-      return <StudentManagement 
-        canAddUser={true}
-        canEditUser={true}
-        canDeleteUser={true}
-      />;
-      
+    // Students case is already handled by the early return above, 
+    // but including it here for completeness
+    
     case 'courses':
       return <CourseManagement 
         canAddCourse={true}

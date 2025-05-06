@@ -11,7 +11,7 @@ import { sidebarMenuItems } from "./sidebar/sidebarConfig";
 
 export type ActiveTab =
   | "today"
-  | "students" // Ensuring this is explicitly defined in the type
+  | "students"
   | "courses"
   | "classTypes"
   | "fees"
