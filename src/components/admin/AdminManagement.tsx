@@ -165,7 +165,7 @@ const AdminManagement = ({
   };
 
   // Fix the function type mismatch
-  const canDeleteUserFn = (user: UserManagementUser) => {
+  const canDeleteUserFn = (user: UserManagementUser): boolean => {
     return canAdminBeDeleted(user);
   };
 

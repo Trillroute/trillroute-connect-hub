@@ -292,3 +292,19 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
 };
 
 export default LeadManagement;
+
+import { useToast } from '@/hooks/use-toast';
+
+export const useLeadManagementToast = () => {
+  const { toast } = useToast();
+  
+  const showToast = (title: string, description: string, variant?: 'default' | 'destructive') => {
+    toast({
+      title,
+      description,
+      variant
+    });
+  };
+  
+  return { showToast };
+};

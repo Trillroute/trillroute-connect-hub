@@ -16,6 +16,7 @@ export const fetchAllUsers = async () => {
       throw new Error('Failed to fetch users');
     }
 
+    // Use proper type conversion with mapper function
     return data.map(mapDatabaseUserToUserModel) as UserManagementUser[];
   } catch (error) {
     console.error('Error in fetchAllUsers:', error);
@@ -36,6 +37,7 @@ export const fetchAllAdmins = async () => {
       throw new Error('Failed to fetch administrators');
     }
 
+    // Use proper type conversion with mapper function
     return data.map(mapDatabaseUserToUserModel) as UserManagementUser[];
   } catch (error) {
     console.error('Error in fetchAllAdmins:', error);
@@ -67,7 +69,7 @@ export const addUser = async (userData: NewUserData) => {
       throw new Error('Failed to create user account');
     }
 
-    // Create the user in custom_users table
+    // Create the user in custom_users table with required password_hash field
     const { error: dbError } = await supabase.from('custom_users').insert({
       id: authData.user.id,
       email: userData.email,
@@ -75,7 +77,7 @@ export const addUser = async (userData: NewUserData) => {
       last_name: userData.lastName,
       role: userData.role,
       admin_level_name: userData.role === 'admin' ? (userData.adminLevelName || 'Limited View') : null,
-      password_hash: 'placeholder_hash' // Add this required field with a placeholder
+      password_hash: 'placeholder_hash' // Required field
     });
 
     if (dbError) {

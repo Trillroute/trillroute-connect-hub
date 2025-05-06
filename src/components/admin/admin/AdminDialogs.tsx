@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { UserManagementUser } from '@/types/student';
 import AddUserDialog, { NewUserData } from '../users/AddUserDialog';
@@ -50,13 +49,17 @@ const AdminDialogs = ({
 }: AdminDialogsProps) => {
   const { isSuperAdmin } = useAuth();
 
-  // Wrapper functions to convert Promise<boolean> to Promise<void>
+  // Convert Promise<boolean> to Promise<void>
   const handleUpdateAdminWrapper = async (userId: string, userData: Partial<UserManagementUser>): Promise<void> => {
     await handleUpdateAdmin(userId, userData);
   };
 
   const handleUpdateAdminLevelWrapper = async (userId: string, newLevelName: string): Promise<void> => {
     await handleUpdateAdminLevel(userId, newLevelName);
+  };
+
+  const handleAddAdminWrapper = async (userData: NewUserData): Promise<void> => {
+    await handleAddAdmin(userData);
   };
 
   useEffect(() => {
@@ -74,7 +77,7 @@ const AdminDialogs = ({
         <AddUserDialog
           isOpen={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
-          onAddUser={handleAddAdmin}
+          onAddUser={handleAddAdminWrapper}
           isLoading={isLoading}
           allowAdminCreation={true}
           defaultRole="admin"
