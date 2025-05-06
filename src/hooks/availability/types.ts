@@ -1,6 +1,11 @@
 
 import { UserAvailability } from '@/services/availability/types';
 
+export interface DayOption {
+  dayOfWeek: number;
+  dayName: string;
+}
+
 export interface DayAvailability {
   dayOfWeek: number;
   dayName: string;
