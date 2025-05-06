@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useCourseToastAdapter } from './useCourseToastAdapter';
 import { useAuth } from '@/hooks/useAuth';
 import { Course, ClassTypeData } from '@/types/course';
-import { deleteCourse } from '../courseService';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useCourseManagement = () => {
@@ -112,7 +111,16 @@ export const useCourseManagement = () => {
     
     try {
       setLoading(true);
-      await Promise.all(courseIds.map(id => deleteCourse(id)));
+      
+      for (const id of courseIds) {
+        const { error } = await supabase
+          .from('courses')
+          .delete()
+          .eq('id', id);
+          
+        if (error) throw error;
+      }
+      
       showSuccessToast(`Successfully deleted ${courseIds.length} courses`);
       await fetchCourses();
     } catch (error) {
