@@ -6,7 +6,7 @@ import { hasPermission } from './permissionCheck';
 
 // Higher-order component to control access based on permissions
 export const withPermission = (
-  Component: React.ComponentType,
+  Component: React.ComponentType<any>,
   requiredPermission: AdminPermission
 ) => {
   return function PermissionGatedComponent(props: any) {
