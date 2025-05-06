@@ -44,15 +44,13 @@ export const useCourseManagement = () => {
       if (error) throw error;
       
       // Parse class_types_data if necessary
-      const parsedData = (data || []).map(course => {
-        return {
-          ...course,
-          class_types_data: course.class_types_data ? 
-            (typeof course.class_types_data === 'string' 
-              ? JSON.parse(course.class_types_data) 
-              : course.class_types_data)
-        } as Course;
-      });
+      const parsedData = (data || []).map(course => ({
+        ...course,
+        class_types_data: course.class_types_data ? 
+          (typeof course.class_types_data === 'string' 
+            ? JSON.parse(course.class_types_data) 
+            : course.class_types_data)
+      }) as Course);
       
       setCourses(parsedData);
     } catch (error) {
