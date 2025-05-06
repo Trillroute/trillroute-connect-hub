@@ -32,20 +32,19 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [localLoading, setLocalLoading] = useState(loading);
+  const [operationInProgress, setOperationInProgress] = useState(false);
   
   // Use this effect to sync the loading prop but prevent too frequent updates
   useEffect(() => {
-    // Only update local loading state if the main loading state has been true for a while
-    // This helps prevent flickering on quick operations
-    if (loading) {
+    if (loading && !operationInProgress) {
       const timer = setTimeout(() => {
         setLocalLoading(true);
       }, 300); // Small delay before showing loading state
       return () => clearTimeout(timer);
-    } else {
+    } else if (!loading && !operationInProgress) {
       setLocalLoading(false);
     }
-  }, [loading]);
+  }, [loading, operationInProgress]);
   
   const handleTabChange = useCallback((value: string) => {
     setActiveDay(value);
@@ -74,36 +73,56 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     setActiveDay("0"); // Reset to Sunday when user changes
   }, [userId]);
 
+  // Wrap slot operations to manage local loading state
+  const handleAddSlot = async (dayOfWeek: number, startTime: string, endTime: string) => {
+    setOperationInProgress(true);
+    try {
+      return await onAddSlot(dayOfWeek, startTime, endTime);
+    } finally {
+      setTimeout(() => setOperationInProgress(false), 300);
+    }
+  };
+  
+  const handleUpdateSlot = async (id: string, startTime: string, endTime: string) => {
+    setOperationInProgress(true);
+    try {
+      return await onUpdateSlot(id, startTime, endTime);
+    } finally {
+      setTimeout(() => setOperationInProgress(false), 300);
+    }
+  };
+  
+  const handleDeleteSlot = async (id: string) => {
+    setOperationInProgress(true);
+    try {
+      return await onDeleteSlot(id);
+    } finally {
+      setTimeout(() => setOperationInProgress(false), 300);
+    }
+  };
+  
+  const handleCopyDayOperation = async (fromDay: number, toDay: number) => {
+    setOperationInProgress(true);
+    try {
+      return await onCopyDay(fromDay, toDay);
+    } finally {
+      setTimeout(() => setOperationInProgress(false), 300);
+    }
+  };
+
   console.log("UserAvailabilitySchedule rendering", {
     loading: localLoading,
     isRefreshing,
+    operationInProgress,
     availabilityCount: dailyAvailability.length,
     userId
   });
 
   // Define what "content loading" means 
-  const isContentLoading = localLoading && (dailyAvailability.length === 0 || !dailyAvailability[0]?.slots);
+  const isContentLoading = (localLoading && (dailyAvailability.length === 0 || !dailyAvailability[0]?.slots)) || operationInProgress;
   
   // Check if we have valid data to display
   const hasData = dailyAvailability.length > 0;
-
-  // Add a wrapper function for addSlot to prevent flickering
-  const handleAddSlot = async (dayOfWeek: number, startTime: string, endTime: string) => {
-    // Don't set local loading here to prevent flickering
-    return await onAddSlot(dayOfWeek, startTime, endTime);
-  };
-  
-  // Add a wrapper function for updateSlot to prevent flickering
-  const handleUpdateSlot = async (id: string, startTime: string, endTime: string) => {
-    // Don't set local loading here to prevent flickering
-    return await onUpdateSlot(id, startTime, endTime);
-  };
-  
-  // Add a wrapper function for deleteSlot to prevent flickering
-  const handleDeleteSlot = async (id: string) => {
-    // Don't set local loading here to prevent flickering
-    return await onDeleteSlot(id);
-  };
 
   return (
     <div className="p-4">
@@ -113,14 +132,14 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
           <Button 
             variant="outline" 
             onClick={handleCopyDay}
-            disabled={isContentLoading || isRefreshing || !hasData}
+            disabled={isContentLoading || isRefreshing || !hasData || operationInProgress}
           >
             Copy Day Schedule
           </Button>
           <Button 
             variant="outline" 
             onClick={handleRefresh} 
-            disabled={isContentLoading || isRefreshing}
+            disabled={isContentLoading || isRefreshing || operationInProgress}
           >
             {isRefreshing ? (
               <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Refreshing...</>
@@ -170,7 +189,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
             dayOfWeek: day.dayOfWeek, 
             dayName: day.dayName 
           }))}
-          onCopyDay={onCopyDay}
+          onCopyDay={handleCopyDayOperation}
         />
       )}
     </div>

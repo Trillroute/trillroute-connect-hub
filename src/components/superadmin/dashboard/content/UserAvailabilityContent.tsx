@@ -15,6 +15,7 @@ const UserAvailabilityContent: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { staffMembers, loading: isLoadingStaff } = useStaffAvailability();
   const { toast } = useToast();
+  const [isUserChanging, setIsUserChanging] = useState(false);
   
   console.log('UserAvailabilityContent rendering', { 
     staffCount: staffMembers.length, 
@@ -44,17 +45,23 @@ const UserAvailabilityContent: React.FC = () => {
   const handleUserChange = useCallback((userId: string) => {
     console.log('User changed to:', userId);
     // When user changes, we reset everything
+    setIsUserChanging(true);
     setSelectedUserId(userId);
+    
+    // Reset user changing state after a short delay
+    setTimeout(() => {
+      setIsUserChanging(false);
+    }, 500);
   }, []);
 
   const handleRefresh = useCallback(async () => {
-    if (isLoadingAvailability) {
-      console.log('Already refreshing, skipping request');
+    if (isLoadingAvailability || isUserChanging) {
+      console.log('Already refreshing or changing user, skipping request');
       return;
     }
     
     try {
-      await refreshAvailability();
+      await refreshAvailability(true);
       toast({
         title: "Availability refreshed",
         description: "Your availability schedule has been updated.",
@@ -67,13 +74,13 @@ const UserAvailabilityContent: React.FC = () => {
         variant: "destructive"
       });
     }
-  }, [refreshAvailability, isLoadingAvailability, toast]);
+  }, [refreshAvailability, isLoadingAvailability, isUserChanging, toast]);
 
   // Find selected user details
   const selectedUser = staffMembers.find(member => member.id === selectedUserId);
   const isOwnAvailability = selectedUserId === user?.id;
   
-  const showLoading = (isLoadingStaff && !selectedUserId) || (!selectedUserId);
+  const showLoading = isLoadingStaff || !selectedUserId || isUserChanging;
   
   return (
     <ContentWrapper

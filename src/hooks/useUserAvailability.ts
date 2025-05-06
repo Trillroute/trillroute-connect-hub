@@ -13,6 +13,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const [dailyAvailability, setDailyAvailability] = useState<DayAvailability[]>([]);
   const [previousUserId, setPreviousUserId] = useState<string | undefined>(userId);
   const isInitialLoad = useRef(true);
+  const refreshingRef = useRef(false);
   
   // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
@@ -29,7 +30,12 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     setDailyAvailability
   );
 
-  const refreshAvailability = useCallback(async () => {
+  const refreshAvailability = useCallback(async (showLoadingState = true) => {
+    if (refreshingRef.current) {
+      console.log('Already refreshing, skipping duplicate request');
+      return;
+    }
+    
     if (!targetUserId) {
       console.log('No target user ID provided, skipping availability fetch');
       // Initialize with empty data structure
@@ -45,10 +51,13 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     
     console.log('Refreshing availability for user ID:', targetUserId);
     try {
-      await fetchAvailability();
+      refreshingRef.current = true;
+      await fetchAvailability(showLoadingState);
     } catch (error) {
       console.error('Error in refreshAvailability:', error);
       // Loading state is already set to false in the actions
+    } finally {
+      refreshingRef.current = false;
     }
   }, [targetUserId, fetchAvailability]);
 
@@ -74,13 +83,17 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     let isMounted = true;
     
     const loadAvailability = async () => {
+      if (refreshingRef.current) {
+        console.log('Already refreshing in another effect, skipping');
+        return;
+      }
+      
       try {
         if (isMounted) {
           // Only show loading state on initial load or user change
-          if (isInitialLoad.current) {
-            setLoading(true);
-          }
-          await refreshAvailability();
+          const showLoading = isInitialLoad.current || previousUserId !== targetUserId;
+          refreshingRef.current = true;
+          await refreshAvailability(showLoading);
           if (isMounted) {
             isInitialLoad.current = false;
           }
@@ -88,6 +101,8 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
       } catch (err) {
         console.error('Error in initial load of availability:', err);
         // Error handling is already in refreshAvailability
+      } finally {
+        refreshingRef.current = false;
       }
     };
     
@@ -96,16 +111,33 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     return () => {
       isMounted = false;
     };
-  }, [targetUserId, refreshAvailability]);
+  }, [targetUserId, refreshAvailability, previousUserId]);
+
+  // Enhanced versions of the action functions that prevent loading state flickering
+  const enhancedAddSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
+    return await addSlot(dayOfWeek, startTime, endTime);
+  }, [addSlot]);
+  
+  const enhancedUpdateSlot = useCallback(async (id: string, startTime: string, endTime: string) => {
+    return await updateSlot(id, startTime, endTime);
+  }, [updateSlot]);
+  
+  const enhancedDeleteSlot = useCallback(async (id: string) => {
+    return await deleteSlot(id);
+  }, [deleteSlot]);
+  
+  const enhancedCopyDaySlots = useCallback(async (fromDay: number, toDay: number) => {
+    return await copyDaySlots(fromDay, toDay);
+  }, [copyDaySlots]);
 
   return {
     loading,
     dailyAvailability,
     refreshAvailability,
-    addSlot,
-    updateSlot,
-    deleteSlot,
-    copyDaySlots,
+    addSlot: enhancedAddSlot,
+    updateSlot: enhancedUpdateSlot,
+    deleteSlot: enhancedDeleteSlot,
+    copyDaySlots: enhancedCopyDaySlots,
     daysOfWeek
   };
 }
