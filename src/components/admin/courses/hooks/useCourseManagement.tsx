@@ -47,7 +47,7 @@ export const useCourseManagement = () => {
       // Parse class_types_data if necessary
       const parsedData = (data || []).map((course) => {
         // Creating a properly typed course object with class_types_data properly handled
-        const courseWithProcessedData: Course = {
+        const courseWithProcessedData = {
           ...course,
           class_types_data: course.class_types_data ? 
             (typeof course.class_types_data === 'string' 
@@ -55,7 +55,7 @@ export const useCourseManagement = () => {
               : course.class_types_data)
         };
         
-        return courseWithProcessedData;
+        return courseWithProcessedData as Course;
       });
       
       setCourses(parsedData);
