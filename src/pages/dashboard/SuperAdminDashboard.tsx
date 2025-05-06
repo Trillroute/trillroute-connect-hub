@@ -14,12 +14,12 @@ import { Lead } from "@/types/lead";
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('today'); // Default tab set to 'today'
+  const [activeTab, setActiveTab] = useState<ActiveTab>('students'); // Set default tab to 'students' for testing
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log("Current activeTab:", activeTab);
+    console.log("Current activeTab in SuperAdminDashboard:", activeTab);
   }, [activeTab]);
 
   // Dashboard data for statistics and charts
@@ -45,8 +45,8 @@ const SuperAdminDashboard = () => {
 
   // Handle tab changes and log the activity
   const handleTabChange = (tab: ActiveTab) => {
+    console.log("Tab changing from", activeTab, "to", tab);
     setActiveTab(tab);
-    console.log("Tab changed to:", tab);
     if (user) {
       logActivity({
         userId: user.id,

@@ -40,6 +40,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
     access: activeTab === 'admins' || activeTab === 'levels' || activeTab === 'access',
     leads: activeTab === 'leads' || activeTab === 'leads-cards',
     scheduling: activeTab === 'scheduling' || activeTab === 'user-availability',
+    students: activeTab === 'students', // Make sure students tab is included
   });
 
   const location = useLocation();
