@@ -29,6 +29,7 @@ interface EditAdminLevelDialogProps {
 export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
   {
     name: "Limited View",
+    level: 10,
     description: "View-only administrator",
     studentPermissions: ["view"],
     teacherPermissions: ["view"],
@@ -39,6 +40,7 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
   },
   {
     name: "Standard Admin",
+    level: 50,
     description: "Regular administrator permissions",
     studentPermissions: ["view", "add", "edit"],
     teacherPermissions: ["view", "add"],
@@ -49,6 +51,7 @@ export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
   },
   {
     name: "Full Access",
+    level: 90,
     description: "Complete administrative access",
     studentPermissions: ["view", "add", "edit", "delete"],
     teacherPermissions: ["view", "add", "edit", "delete"],

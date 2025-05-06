@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { AdminLevel } from '@/utils/adminPermissions';
+import { AdminLevel } from '@/utils/permissions/types';
 
 /**
  * Fetches all admin roles/levels from the database
@@ -26,6 +26,7 @@ export const fetchAdminRoles = async (): Promise<AdminLevel[]> => {
 
   return data.map(level => ({
     name: level.name,
+    level: Number(level.id) || 10, // Convert id to level, defaulting to 10 if not available
     description: level.description || '',
     studentPermissions: Array.isArray(level.student_permissions) 
       ? level.student_permissions 

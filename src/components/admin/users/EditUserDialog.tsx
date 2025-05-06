@@ -32,33 +32,36 @@ interface EditUserDialogProps {
 const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
   {
     name: "Limited View",
+    level: 10,
     description: "View-only administrator",
     studentPermissions: ["view"],
     teacherPermissions: ["view"],
     adminPermissions: [],
     leadPermissions: [],
     coursePermissions: ["view"],
-    levelPermissions: [] // Add levelPermissions
+    levelPermissions: []
   },
   {
     name: "Standard Admin",
+    level: 50,
     description: "Regular administrator permissions",
     studentPermissions: ["view", "add", "edit"],
     teacherPermissions: ["view", "add"],
     adminPermissions: [],
     leadPermissions: ["view", "add", "edit"],
     coursePermissions: ["view", "edit"],
-    levelPermissions: ["view"] // Add levelPermissions
+    levelPermissions: ["view"]
   },
   {
     name: "Full Access",
+    level: 90,
     description: "Complete administrative access",
     studentPermissions: ["view", "add", "edit", "delete"],
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view"],
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"],
-    levelPermissions: ["view", "add", "edit", "delete"] // Add levelPermissions
+    levelPermissions: ["view", "add", "edit", "delete"]
   }
 ];
 

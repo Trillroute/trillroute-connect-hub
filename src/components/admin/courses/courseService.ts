@@ -75,7 +75,16 @@ export const createCourse = async (courseData: {
     }
 
     console.log('Course created successfully:', data);
-    return data as Course;
+    
+    // Cast the data to Course type after converting class_types_data
+    const courseResult = {
+      ...data,
+      class_types_data: Array.isArray(data.class_types_data) 
+        ? data.class_types_data 
+        : []
+    } as unknown as Course;
+    
+    return courseResult;
   } catch (error: any) {
     console.error('Unexpected error creating course:', error);
     throw error;
@@ -87,9 +96,15 @@ export const createCourse = async (courseData: {
  */
 export const updateCourse = async (courseId: string, courseData: Partial<Course>): Promise<Course> => {
   try {
+    // Convert class_types_data to JSON before sending to Supabase
+    const courseUpdateData = {
+      ...courseData,
+      class_types_data: courseData.class_types_data ? courseData.class_types_data as unknown as Json : undefined
+    };
+
     const { data, error } = await supabase
       .from('courses')
-      .update(courseData)
+      .update(courseUpdateData)
       .eq('id', courseId)
       .select('*')
       .single();
@@ -99,7 +114,15 @@ export const updateCourse = async (courseId: string, courseData: Partial<Course>
       throw new Error(error.message);
     }
 
-    return data as Course;
+    // Cast the data back to Course type after converting class_types_data
+    const courseResult = {
+      ...data,
+      class_types_data: Array.isArray(data.class_types_data) 
+        ? data.class_types_data 
+        : []
+    } as unknown as Course;
+    
+    return courseResult;
   } catch (error: any) {
     console.error('Unexpected error updating course:', error);
     throw error;
