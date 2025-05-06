@@ -28,17 +28,19 @@ export function useAvailabilityActions(
         slots: []
       }));
       setDailyAvailability(emptyAvailability);
+      setLoading(false);
       return;
     }
 
     try {
+      setLoading(true);
       console.log(`Fetching availability for user: ${userId}`);
       const availability = await fetchUserAvailability(userId);
       console.log(`Retrieved availability data for ${userId}:`, availability);
       const transformed = transformAvailabilityData(availability);
       console.log('Transformed availability data:', transformed);
       setDailyAvailability(transformed);
-      // Return void instead of the transformed data to match the type signature
+      setLoading(false);
       return;
     } catch (error) {
       console.error("Error refreshing availability:", error);
@@ -54,6 +56,7 @@ export function useAvailabilityActions(
         slots: []
       }));
       setDailyAvailability(emptyAvailability);
+      setLoading(false);
       throw error;
     }
   };

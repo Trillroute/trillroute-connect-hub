@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DayAvailabilityPanel from './DayAvailabilityPanel';
@@ -29,6 +29,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [activeDay, setActiveDay] = useState("0"); // Default to Sunday
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadTimeout, setLoadTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const handleTabChange = useCallback((value: string) => {
     setActiveDay(value);
@@ -45,18 +46,36 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     try {
       await onRefresh();
     } finally {
-      // Slightly delay the loading state change to prevent UI flicker
-      setTimeout(() => {
+      // Set a timeout to ensure we don't flicker the loading state
+      const timeout = setTimeout(() => {
         setIsRefreshing(false);
       }, 500);
+      setLoadTimeout(timeout);
     }
   }, [loading, isRefreshing, onRefresh]);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (loadTimeout) clearTimeout(loadTimeout);
+    };
+  }, [loadTimeout]);
 
   console.log("UserAvailabilitySchedule rendering", {
     loading,
     isRefreshing,
     availabilityCount: dailyAvailability.length
   });
+
+  // If we have availability data but still showing loading, force update
+  useEffect(() => {
+    if (loading && dailyAvailability.length > 0 && dailyAvailability[0].slots.length > 0) {
+      console.log("Force ending loading state as we have data");
+      setIsRefreshing(false);
+    }
+  }, [loading, dailyAvailability]);
+
+  const isContentLoading = loading && dailyAvailability.length === 0;
 
   return (
     <div className="p-4">
@@ -66,17 +85,17 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
           <Button 
             variant="outline" 
             onClick={handleCopyDay}
-            disabled={loading || isRefreshing}
+            disabled={isContentLoading || isRefreshing}
           >
             Copy Day Schedule
           </Button>
           <Button 
             variant="outline" 
             onClick={handleRefresh} 
-            disabled={loading || isRefreshing}
+            disabled={isContentLoading || isRefreshing}
           >
-            {loading || isRefreshing ? (
-              <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading...</>
+            {isRefreshing ? (
+              <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Refreshing...</>
             ) : (
               <><RefreshCw className="h-4 w-4 mr-2" /> Refresh</>
             )}
@@ -84,7 +103,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         </div>
       </div>
       
-      {loading && !isRefreshing ? (
+      {isContentLoading ? (
         <div className="flex justify-center items-center h-48">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>

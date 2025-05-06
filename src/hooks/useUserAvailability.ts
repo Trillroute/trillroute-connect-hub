@@ -27,7 +27,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     setDailyAvailability
   );
 
-  const refreshAvailability = useCallback(() => {
+  const refreshAvailability = useCallback(async () => {
     if (!targetUserId) {
       console.log('No target user ID provided, skipping availability fetch');
       // Initialize with empty data structure
@@ -38,43 +38,27 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
       }));
       setDailyAvailability(emptyAvailability);
       setLoading(false);
-      return Promise.resolve();
+      return;
     }
     
     console.log('Refreshing availability for user ID:', targetUserId);
-    return fetchAvailability();
+    try {
+      await fetchAvailability();
+    } catch (error) {
+      console.error('Error in refreshAvailability:', error);
+      // Loading state is already set to false in the actions
+    }
   }, [targetUserId, fetchAvailability]);
 
   useEffect(() => {
     let isMounted = true;
     
     const loadAvailability = async () => {
-      // Set loading to true on userId change
-      setLoading(true);
-      
-      if (targetUserId) {
-        console.log('User ID changed, refreshing availability for:', targetUserId);
-        try {
-          await refreshAvailability();
-        } catch (err) {
-          console.error('Error refreshing availability:', err);
-        } finally {
-          if (isMounted) {
-            setLoading(false);
-          }
-        }
-      } else {
-        // If no user ID, set empty data and stop loading
-        console.log('No user ID available, setting empty availability data');
-        const emptyAvailability = daysOfWeek.map((dayName, index) => ({
-          dayOfWeek: index,
-          dayName,
-          slots: []
-        }));
-        if (isMounted) {
-          setDailyAvailability(emptyAvailability);
-          setLoading(false);
-        }
+      try {
+        await refreshAvailability();
+      } catch (err) {
+        console.error('Error in initial load of availability:', err);
+        // Error handling is already in refreshAvailability
       }
     };
     

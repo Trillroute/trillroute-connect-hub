@@ -23,6 +23,14 @@ const UserAvailabilityContent: React.FC = () => {
     currentUser: user?.id
   });
   
+  // Set the initial selected user to the current user - only once when user info is available
+  useEffect(() => {
+    if (user && !selectedUserId && user.id) {
+      console.log('Setting initial selectedUserId to current user:', user.id);
+      setSelectedUserId(user.id);
+    }
+  }, [user, selectedUserId]);
+  
   const { 
     loading: isLoadingAvailability,
     dailyAvailability,
@@ -32,14 +40,6 @@ const UserAvailabilityContent: React.FC = () => {
     deleteSlot,
     copyDaySlots
   } = useUserAvailability(selectedUserId || undefined);
-
-  // Set the initial selected user to the current user - only once when staffMembers load
-  useEffect(() => {
-    if (user && !selectedUserId && !isLoadingStaff && staffMembers.length > 0) {
-      console.log('Setting initial selectedUserId to current user:', user.id);
-      setSelectedUserId(user.id);
-    }
-  }, [user, selectedUserId, isLoadingStaff, staffMembers.length]);
 
   const handleUserChange = useCallback((userId: string) => {
     console.log('User changed to:', userId);
@@ -96,7 +96,7 @@ const UserAvailabilityContent: React.FC = () => {
       </div>
 
       <div className="w-full border rounded-md bg-white shadow-sm h-[calc(100vh-280px)] overflow-auto">
-        {isLoadingStaff ? (
+        {isLoadingStaff && !selectedUserId ? (
           <div className="p-6 space-y-4">
             <Skeleton className="h-8 w-1/3" />
             <Skeleton className="h-24 w-full" />
