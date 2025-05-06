@@ -47,13 +47,13 @@ export const useCourseManagement = () => {
       // Parse class_types_data if necessary
       const parsedData = (data || []).map((course) => {
         // Creating a properly typed course object with class_types_data properly handled
-        const courseWithProcessedData = {
+        const courseWithProcessedData: Course = {
           ...course,
           class_types_data: course.class_types_data ? 
             (typeof course.class_types_data === 'string' 
               ? JSON.parse(course.class_types_data) 
               : course.class_types_data)
-        } as Course;
+        };
         
         return courseWithProcessedData;
       });
