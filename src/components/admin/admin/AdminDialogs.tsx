@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { UserManagementUser } from '@/types/student';
 import AddUserDialog, { NewUserData } from '../users/AddUserDialog';
@@ -81,6 +82,7 @@ const AdminDialogs = ({
           isLoading={isLoading}
           allowAdminCreation={true}
           defaultRole="admin"
+          title="Add Administrator"
         />
       )}
       

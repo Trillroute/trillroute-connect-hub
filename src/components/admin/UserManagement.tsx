@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -168,7 +167,6 @@ const UserManagement = ({
     }
   };
 
-  // Here's the missing function that was causing the error
   const openEditAdminLevelDialog = (admin: UserManagementUser) => {
     setAdminToEdit(admin);
     setIsEditAdminLevelDialogOpen(true);
@@ -228,6 +226,7 @@ const UserManagement = ({
           onAddUser={handleAddUser}
           isLoading={isLoading}
           allowAdminCreation={allowAdminCreation || isSuperAdmin()}
+          defaultRole="student"
         />
         
         <DeleteUserDialog

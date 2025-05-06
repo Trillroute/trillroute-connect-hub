@@ -93,7 +93,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
       console.log('LeadManagement - Admin has edit permission:', hasPermission);
       
       if (!hasPermission) {
-        showToast("Permission Denied", "You don't have permission to edit leads.", "destructive");
+        showToast("Permission Denied", "You don't have permission to edit leads.");
         return;
       }
     }
@@ -115,7 +115,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
       console.log('LeadManagement - Admin has delete permission:', hasPermission);
       
       if (!hasPermission) {
-        showToast("Permission Denied", "You don't have permission to delete leads.", "destructive");
+        showToast("Permission Denied", "You don't have permission to delete leads.");
         return;
       }
     }

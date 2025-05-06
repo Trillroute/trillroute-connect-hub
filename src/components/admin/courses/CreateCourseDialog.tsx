@@ -75,11 +75,11 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
 
   useEffect(() => {
     if (open && !hasAddPermission) {
-      showToast("Permission Denied", "You don't have permission to add courses.", "destructive");
+      showToast("Permission Denied", "You don't have permission to add courses.");
       onOpenChange(false);
     }
   }, [open, hasAddPermission, onOpenChange]);
-
+  
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
@@ -105,7 +105,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
 
   const handleCreateCourse = async (data: CourseFormValues) => {
     if (!hasAddPermission) {
-      showToast("Permission Denied", "You don't have permission to add courses.", "destructive");
+      showToast("Permission Denied", "You don't have permission to add courses.");
       onOpenChange(false);
       return;
     }

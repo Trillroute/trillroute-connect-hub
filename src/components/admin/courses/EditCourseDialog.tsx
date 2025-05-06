@@ -71,10 +71,10 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   useEffect(() => {
     if (open && !hasEditPermission) {
       console.log('EditCourseDialog - Permission denied, closing dialog');
-      showToast("Permission Denied", "You don't have permission to edit courses.", "destructive");
+      showToast("Permission Denied", "You don't have permission to edit courses.");
       onOpenChange(false);
     }
-  }, [open, hasEditPermission, onOpenChange, toast]);
+  }, [open, hasEditPermission, onOpenChange]);
 
   const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
   const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
@@ -150,7 +150,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     if (!hasEditPermission) {
-      showToast("Permission Denied", "You don't have permission to edit courses.", "destructive");
+      showToast("Permission Denied", "You don't have permission to edit courses.");
       onOpenChange(false);
       return;
     }

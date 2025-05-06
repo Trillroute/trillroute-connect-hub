@@ -38,6 +38,7 @@ interface AddUserDialogProps {
   isLoading: boolean;
   allowAdminCreation: boolean;
   defaultRole: UserRole;
+  title?: string; // Make title optional
 }
 
 const AddUserDialog: React.FC<AddUserDialogProps> = ({
@@ -46,7 +47,8 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
   onAddUser,
   isLoading,
   allowAdminCreation,
-  defaultRole
+  defaultRole,
+  title = "Add User" // Default title
 }) => {
   const { toast } = useToast();
   const { showToast } = useToastAdapter();
@@ -93,7 +95,7 @@ const AddUserDialog: React.FC<AddUserDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add User</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
