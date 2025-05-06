@@ -1,5 +1,5 @@
 
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminPermission } from './types';
 import { hasPermission } from './permissionCheck';
