@@ -64,7 +64,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (user) {
       console.log('[AdminDashboard] Clearing permissions cache for user', user.id);
-      clearPermissionsCache(user.id);
+      clearPermissionCache(user.id);
       loadAdminRoles();
     }
   }, [user]);
