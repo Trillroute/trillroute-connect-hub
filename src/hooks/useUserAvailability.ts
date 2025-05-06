@@ -11,6 +11,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dailyAvailability, setDailyAvailability] = useState<DayAvailability[]>([]);
+  const [previousUserId, setPreviousUserId] = useState<string | undefined>(userId);
   
   // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
@@ -50,6 +51,16 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     }
   }, [targetUserId, fetchAvailability]);
 
+  // When user ID changes, set loading state to true and update previous user ID
+  useEffect(() => {
+    if (previousUserId !== targetUserId) {
+      console.log(`User changed from ${previousUserId} to ${targetUserId}, resetting loading state`);
+      setLoading(true);
+      setPreviousUserId(targetUserId);
+    }
+  }, [targetUserId, previousUserId]);
+
+  // Load availability data whenever targetUserId changes
   useEffect(() => {
     let isMounted = true;
     

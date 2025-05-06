@@ -43,6 +43,7 @@ const UserAvailabilityContent: React.FC = () => {
 
   const handleUserChange = useCallback((userId: string) => {
     console.log('User changed to:', userId);
+    // When user changes, we reset everything
     setSelectedUserId(userId);
   }, []);
 
@@ -71,6 +72,8 @@ const UserAvailabilityContent: React.FC = () => {
   // Find selected user details
   const selectedUser = staffMembers.find(member => member.id === selectedUserId);
   const isOwnAvailability = selectedUserId === user?.id;
+  
+  const showLoading = isLoadingAvailability || !selectedUserId || isLoadingStaff;
   
   return (
     <ContentWrapper
@@ -111,12 +114,13 @@ const UserAvailabilityContent: React.FC = () => {
             )}
             <UserAvailabilitySchedule 
               dailyAvailability={dailyAvailability}
-              loading={isLoadingAvailability}
+              loading={showLoading}
               onAddSlot={addSlot}
               onUpdateSlot={updateSlot}
               onDeleteSlot={deleteSlot}
               onCopyDay={copyDaySlots}
               onRefresh={handleRefresh}
+              userId={selectedUserId}
             />
           </>
         ) : (

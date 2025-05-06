@@ -15,6 +15,7 @@ interface UserAvailabilityScheduleProps {
   onDeleteSlot: (id: string) => Promise<boolean>;
   onCopyDay: (fromDay: number, toDay: number) => Promise<boolean>;
   onRefresh: () => Promise<void>;
+  userId?: string;
 }
 
 const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
@@ -24,7 +25,8 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   onUpdateSlot,
   onDeleteSlot,
   onCopyDay,
-  onRefresh
+  onRefresh,
+  userId
 }) => {
   const [activeDay, setActiveDay] = useState("0"); // Default to Sunday
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
@@ -61,21 +63,23 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     };
   }, [loadTimeout]);
 
+  // Reset active day when user changes
+  useEffect(() => {
+    setActiveDay("0"); // Reset to Sunday when user changes
+  }, [userId]);
+
   console.log("UserAvailabilitySchedule rendering", {
     loading,
     isRefreshing,
-    availabilityCount: dailyAvailability.length
+    availabilityCount: dailyAvailability.length,
+    userId
   });
 
-  // If we have availability data but still showing loading, force update
-  useEffect(() => {
-    if (loading && dailyAvailability.length > 0 && dailyAvailability[0].slots.length > 0) {
-      console.log("Force ending loading state as we have data");
-      setIsRefreshing(false);
-    }
-  }, [loading, dailyAvailability]);
-
-  const isContentLoading = loading && dailyAvailability.length === 0;
+  // Define what "content loading" means 
+  const isContentLoading = loading && (dailyAvailability.length === 0 || !dailyAvailability[0]?.slots?.length);
+  
+  // Check if we have valid data to display
+  const hasData = dailyAvailability.length > 0;
 
   return (
     <div className="p-4">
@@ -85,7 +89,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
           <Button 
             variant="outline" 
             onClick={handleCopyDay}
-            disabled={isContentLoading || isRefreshing}
+            disabled={isContentLoading || isRefreshing || !hasData}
           >
             Copy Day Schedule
           </Button>
@@ -107,7 +111,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         <div className="flex justify-center items-center h-48">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : dailyAvailability.length === 0 ? (
+      ) : !hasData ? (
         <div className="flex justify-center items-center h-48 text-gray-500">
           No availability data could be loaded
         </div>
@@ -134,15 +138,17 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         </Tabs>
       )}
       
-      <CopyDayDialog 
-        open={isCopyDialogOpen} 
-        onOpenChange={setIsCopyDialogOpen}
-        daysOfWeek={dailyAvailability.map(day => ({ 
-          dayOfWeek: day.dayOfWeek, 
-          dayName: day.dayName 
-        }))}
-        onCopyDay={onCopyDay}
-      />
+      {hasData && (
+        <CopyDayDialog 
+          open={isCopyDialogOpen} 
+          onOpenChange={setIsCopyDialogOpen}
+          daysOfWeek={dailyAvailability.map(day => ({ 
+            dayOfWeek: day.dayOfWeek, 
+            dayName: day.dayName 
+          }))}
+          onCopyDay={onCopyDay}
+        />
+      )}
     </div>
   );
 };
