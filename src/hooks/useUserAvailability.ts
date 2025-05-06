@@ -90,8 +90,6 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
       
       try {
         if (isMounted) {
-          // Only show loading state on initial load or user change
-          const showLoading = isInitialLoad.current || previousUserId !== targetUserId;
           refreshingRef.current = true;
           await refreshAvailability();
           if (isMounted) {

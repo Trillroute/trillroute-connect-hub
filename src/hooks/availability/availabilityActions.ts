@@ -69,7 +69,7 @@ export function useAvailabilityActions(
       // Don't set loading to true here to prevent flickering
       const result = await createAvailabilitySlot(userId, dayOfWeek, startTime, endTime);
       if (result) {
-        // Pass false to avoid triggering loading state during refresh
+        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability added",
@@ -94,7 +94,7 @@ export function useAvailabilityActions(
       // Don't set loading to true here to prevent flickering
       const success = await updateAvailabilitySlot(id, startTime, endTime);
       if (success) {
-        // Pass false to avoid triggering loading state during refresh
+        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability updated",
@@ -118,7 +118,7 @@ export function useAvailabilityActions(
       // Don't set loading to true here to prevent flickering
       const success = await deleteAvailabilitySlot(id);
       if (success) {
-        // Pass false to avoid triggering loading state during refresh
+        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability removed",
@@ -144,7 +144,7 @@ export function useAvailabilityActions(
       // Don't set loading to true here to prevent flickering
       const success = await copyDayAvailability(userId, fromDay, toDay);
       if (success) {
-        // Pass false to avoid triggering loading state during refresh
+        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability copied",
