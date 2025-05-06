@@ -43,10 +43,20 @@ const ViewPermissionsDialog = ({
     delete: 'bg-red-100 text-red-800 border-red-200'
   };
 
-  const renderPermissionBadges = (permissions: string[]) => {
-    return permissions.length > 0 ? (
+  // Helper function to ensure we have a string array
+  const ensureStringArray = (permissions: string | number | string[]): string[] => {
+    if (Array.isArray(permissions)) {
+      return permissions;
+    }
+    return [];
+  };
+
+  const renderPermissionBadges = (permissions: string | number | string[]) => {
+    const permissionArray = ensureStringArray(permissions);
+    
+    return permissionArray.length > 0 ? (
       <div className="flex flex-wrap gap-2 mt-2">
-        {permissions.map((permission) => (
+        {permissionArray.map((permission) => (
           <Badge 
             key={permission}
             className={`${permissionColors[permission] || 'bg-gray-100 text-gray-800'}`}
@@ -87,6 +97,7 @@ const ViewPermissionsDialog = ({
             {Object.keys(moduleLabels).map((moduleKey) => {
               const module = moduleKey as PermissionModuleType;
               const permissionKey = `${module}Permissions` as keyof AdminLevelDetailed;
+              const permissionArray = ensureStringArray(level[permissionKey]);
               
               return (
                 <TabsContent key={module} value={module} className="space-y-4">
@@ -95,24 +106,24 @@ const ViewPermissionsDialog = ({
                       {moduleLabels[module]} Permissions
                     </h3>
                     
-                    {renderPermissionBadges(level[permissionKey] as string[])}
+                    {renderPermissionBadges(level[permissionKey])}
                     
                     <div className="mt-4 text-sm">
                       <h4 className="font-medium mb-2">What this means:</h4>
                       <ul className="list-disc pl-5 space-y-1">
-                        {level[permissionKey].includes('view') && (
+                        {permissionArray.includes('view') && (
                           <li>Can view {module.toLowerCase()}s in the system</li>
                         )}
-                        {level[permissionKey].includes('add') && (
+                        {permissionArray.includes('add') && (
                           <li>Can create new {module.toLowerCase()}s</li>
                         )}
-                        {level[permissionKey].includes('edit') && (
+                        {permissionArray.includes('edit') && (
                           <li>Can edit existing {module.toLowerCase()}s</li>
                         )}
-                        {level[permissionKey].includes('delete') && (
+                        {permissionArray.includes('delete') && (
                           <li>Can delete {module.toLowerCase()}s from the system</li>
                         )}
-                        {level[permissionKey].length === 0 && (
+                        {permissionArray.length === 0 && (
                           <li>No access to {module.toLowerCase()} functionality</li>
                         )}
                       </ul>

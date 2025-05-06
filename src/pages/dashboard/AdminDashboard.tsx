@@ -17,7 +17,7 @@ import {
   canManageAdmins,
   canManageLeads,
   canManageLevels,
-  clearPermissionsCache,
+  clearPermissionCache,
   AdminLevel,
   updateCachedAdminRoles
 } from '@/utils/adminPermissions';
