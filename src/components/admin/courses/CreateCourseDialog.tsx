@@ -26,10 +26,12 @@ const courseSchema = z.object({
   discount_value: z.number().optional(),
   discount_validity: z.string().optional(),
   discount_code: z.string().optional(),
-  // Add other necessary fields
+  // Add missing properties required by CourseFormValues
+  image: z.string().optional().default("https://via.placeholder.com/300x200?text=Course"),
+  instructors: z.array(z.string()).optional().default([]),
 });
 
-type CourseFormValues = z.infer<typeof courseSchema>;
+type FormValues = z.infer<typeof courseSchema>;
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -44,7 +46,7 @@ const CreateCourseDialog = ({
 }: CreateCourseDialogProps) => {
   const { showSuccessToast, showErrorToast } = useCourseToastAdapter();
   
-  const form = useForm<CourseFormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: '',
@@ -55,13 +57,33 @@ const CreateCourseDialog = ({
       base_price: 0,
       is_gst_applicable: false,
       discount_metric: "percentage",
-      // Set other default values...
+      image: "https://via.placeholder.com/300x200?text=Course",
+      instructors: [],
     },
   });
 
-  const onSubmit = async (data: CourseFormValues) => {
+  const onSubmit = async (data: FormValues) => {
     try {
-      await createCourse(data);
+      // Transform form data to course data
+      const courseData = {
+        title: data.title,
+        description: data.description || '',
+        level: data.level || '',
+        skill: data.skill || '',
+        duration_type: data.durationType || 'fixed',
+        duration: data.durationValue || '0',
+        base_price: data.base_price,
+        is_gst_applicable: data.is_gst_applicable,
+        gst_rate: data.gst_rate,
+        discount_metric: data.discount_metric,
+        discount_value: data.discount_value,
+        discount_validity: data.discount_validity,
+        discount_code: data.discount_code,
+        image: data.image || "https://via.placeholder.com/300x200?text=Course",
+        instructor_ids: data.instructors || [],
+      };
+
+      await createCourse(courseData);
       showSuccessToast('Course created successfully');
       form.reset();
       onOpenChange(false);

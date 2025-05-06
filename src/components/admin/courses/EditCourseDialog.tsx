@@ -27,10 +27,12 @@ const courseSchema = z.object({
   discount_value: z.number().optional(),
   discount_validity: z.string().optional(),
   discount_code: z.string().optional(),
-  // Add other necessary fields
+  // Add missing properties required by CourseFormValues
+  image: z.string().optional().default("https://via.placeholder.com/300x200?text=Course"),
+  instructors: z.array(z.string()).optional().default([]),
 });
 
-type CourseFormValues = z.infer<typeof courseSchema>;
+type FormValues = z.infer<typeof courseSchema>;
 
 interface EditCourseDialogProps {
   open: boolean;
@@ -47,7 +49,7 @@ const EditCourseDialog = ({
 }: EditCourseDialogProps) => {
   const { showSuccessToast, showErrorToast } = useCourseToastAdapter();
   
-  const form = useForm<CourseFormValues>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: course?.title || '',
@@ -55,6 +57,7 @@ const EditCourseDialog = ({
       level: course?.level || '',
       skill: course?.skill || '',
       durationType: (course?.duration_type as "fixed" | "recurring") || "fixed",
+      durationValue: course?.duration || '',
       base_price: course?.base_price || 0,
       is_gst_applicable: course?.is_gst_applicable || false,
       gst_rate: course?.gst_rate || 0,
@@ -62,6 +65,8 @@ const EditCourseDialog = ({
       discount_value: course?.discount_value || 0,
       discount_validity: course?.discount_validity || '',
       discount_code: course?.discount_code || '',
+      image: course?.image || "https://via.placeholder.com/300x200?text=Course",
+      instructors: course?.instructor_ids || [],
     },
   });
 
@@ -74,6 +79,7 @@ const EditCourseDialog = ({
         level: course.level || '',
         skill: course.skill || '',
         durationType: (course.duration_type as "fixed" | "recurring") || "fixed",
+        durationValue: course.duration || '',
         base_price: course.base_price || 0,
         is_gst_applicable: course.is_gst_applicable || false,
         gst_rate: course.gst_rate || 0,
@@ -81,13 +87,34 @@ const EditCourseDialog = ({
         discount_value: course.discount_value || 0,
         discount_validity: course.discount_validity || '',
         discount_code: course.discount_code || '',
+        image: course.image || "https://via.placeholder.com/300x200?text=Course",
+        instructors: course.instructor_ids || [],
       });
     }
   }, [course, form]);
 
-  const onSubmit = async (data: CourseFormValues) => {
+  const onSubmit = async (data: FormValues) => {
     try {
-      await updateCourse(course.id, data);
+      // Transform form data to course data
+      const courseData = {
+        title: data.title,
+        description: data.description || '',
+        level: data.level || '',
+        skill: data.skill || '',
+        duration_type: data.durationType || 'fixed',
+        duration: data.durationValue || '0',
+        base_price: data.base_price,
+        is_gst_applicable: data.is_gst_applicable,
+        gst_rate: data.gst_rate,
+        discount_metric: data.discount_metric,
+        discount_value: data.discount_value,
+        discount_validity: data.discount_validity,
+        discount_code: data.discount_code,
+        image: data.image,
+        instructor_ids: data.instructors,
+      };
+      
+      await updateCourse(course.id, courseData);
       showSuccessToast('Course updated successfully');
       onOpenChange(false);
       onSuccess();

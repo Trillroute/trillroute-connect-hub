@@ -4,19 +4,21 @@ import { useToast } from '@/hooks/use-toast';
 import { useCourseToastAdapter } from './useCourseToastAdapter';
 import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
-import { useCourses } from '@/hooks/useCourses';
+import { deleteCourse } from '../courseService';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useCourseManagement = () => {
   const { toast } = useToast();
   const { showSuccessToast, showErrorToast } = useCourseToastAdapter();
   const { isSuperAdmin, isAdmin } = useAuth();
-  const { courses, loading, fetchCourses, getCourseById } = useCourses();
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -28,6 +30,37 @@ export const useCourseManagement = () => {
       const searchableText = `${course.title || ''} ${course.description || ''} ${course.level || ''} ${course.skill || ''}`.toLowerCase();
       return searchableText.includes(query.toLowerCase());
     });
+  };
+  
+  // Function to fetch courses
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Parse class_types_data if necessary
+      const parsedData = (data || []).map(course => {
+        return {
+          ...course,
+          class_types_data: course.class_types_data ? 
+            (typeof course.class_types_data === 'string' 
+              ? JSON.parse(course.class_types_data) 
+              : course.class_types_data)
+        } as Course;
+      });
+      
+      setCourses(parsedData);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      showErrorToast("Failed to fetch courses");
+    } finally {
+      setLoading(false);
+    }
   };
   
   // Dialog handlers
@@ -77,21 +110,11 @@ export const useCourseManagement = () => {
     }
   };
 
-  // Helper function for course deletion
-  const deleteCourse = async (id: string) => {
-    try {
-      const { error } = await window.supabase
-        .from('courses')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting course:', error);
-      throw error;
-    }
-  };
-  
+  // Load courses on component mount
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
   return {
     isCreateDialogOpen, setIsCreateDialogOpen,
     isViewDialogOpen, setIsViewDialogOpen,

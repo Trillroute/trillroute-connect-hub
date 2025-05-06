@@ -1,6 +1,18 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Course } from '@/types/course';
+import { Course, ClassTypeData } from '@/types/course';
+
+// Helper to handle type conversion between Json and ClassTypeData[]
+const convertJsonClassTypeData = (course: any): Course => {
+  return {
+    ...course,
+    // Ensure class_types_data is properly parsed if it's a string or properly cast if it's already an object
+    class_types_data: course.class_types_data ? 
+      (typeof course.class_types_data === 'string' 
+        ? JSON.parse(course.class_types_data) 
+        : course.class_types_data) as ClassTypeData[]
+  } as Course;
+};
 
 // Create a new course
 export async function createCourse(courseData: Partial<Course>): Promise<Course> {
@@ -18,7 +30,7 @@ export async function createCourse(courseData: Partial<Course>): Promise<Course>
       .single();
       
     if (error) throw error;
-    return course;
+    return convertJsonClassTypeData(course);
   } catch (error) {
     console.error('Error creating course:', error);
     throw error;
@@ -34,7 +46,9 @@ export async function fetchCourses(): Promise<Course[]> {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return data || [];
+    
+    // Convert Json to ClassTypeData[]
+    return (data || []).map(convertJsonClassTypeData);
   } catch (error) {
     console.error('Error fetching courses:', error);
     throw error;
@@ -51,7 +65,7 @@ export async function getCourseById(id: string): Promise<Course | null> {
       .single();
       
     if (error) throw error;
-    return data;
+    return data ? convertJsonClassTypeData(data) : null;
   } catch (error) {
     console.error('Error fetching course by ID:', error);
     throw error;
@@ -61,15 +75,20 @@ export async function getCourseById(id: string): Promise<Course | null> {
 // Update a course
 export async function updateCourse(id: string, updates: Partial<Course>): Promise<Course> {
   try {
+    // Convert class_types_data to string if it's an array
+    const processedUpdates = {
+      ...updates
+    };
+    
     const { data, error } = await supabase
       .from('courses')
-      .update(updates)
+      .update(processedUpdates)
       .eq('id', id)
       .select()
       .single();
       
     if (error) throw error;
-    return data;
+    return convertJsonClassTypeData(data);
   } catch (error) {
     console.error('Error updating course:', error);
     throw error;

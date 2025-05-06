@@ -5,20 +5,21 @@ import { useToast } from '@/hooks/use-toast';
 export const useCourseToastAdapter = () => {
   const { toast } = useToast();
   
-  const showSuccessToast = (message: string) => {
+  const showToast = (title: string, description: string, variant?: 'default' | 'destructive') => {
     toast({
-      title: "Success",
-      description: message,
+      title,
+      description,
+      variant
     });
+  };
+  
+  const showSuccessToast = (message: string) => {
+    showToast("Success", message);
   };
   
   const showErrorToast = (message: string) => {
-    toast({
-      title: "Error",
-      description: message,
-      variant: "destructive"
-    });
+    showToast("Error", message, "destructive");
   };
   
-  return { showSuccessToast, showErrorToast };
+  return { showToast, showSuccessToast, showErrorToast };
 };
