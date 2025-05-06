@@ -16,11 +16,20 @@ import SidebarHeader from './SidebarHeader';
 import SidebarMenuSection, { SidebarItem } from './SidebarMenuSection';
 import SidebarFooter from './SidebarFooter';
 
+export type ActiveTab =
+  | "courses"
+  | "classTypes"
+  | "students"
+  | "teachers"
+  | "admins"
+  | "leads"
+  | "levels";
+
 interface AdminSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab: ActiveTab;
+  onTabChange: (tab: ActiveTab) => void;
   permissionMap: {
     courses?: { view: boolean };
     classTypes?: { view: boolean };

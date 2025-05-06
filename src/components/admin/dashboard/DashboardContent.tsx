@@ -9,7 +9,7 @@ import AdminManagement from '@/components/admin/AdminManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
 import LevelManagement from '@/components/admin/levels/LevelManagement';
 import LimitedAccessCard from './LimitedAccessCard';
-import { type ActiveTab } from '../AdminSidebar';
+import { type ActiveTab } from '@/components/admin/AdminSidebar';
 
 interface DashboardContentProps {
   activeTab: ActiveTab;
