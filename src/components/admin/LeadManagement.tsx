@@ -14,6 +14,7 @@ import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
 import { canManageLeads } from '@/utils/adminPermissions';
 import LeadKanbanBoard from './leads/LeadKanbanBoard';
+import { useLeadToast } from './leads/hooks/useLeadToast';
 
 interface LeadManagementProps {
   canAddLead?: boolean;
@@ -27,6 +28,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   canDeleteLead = true
 }) => {
   const { toast } = useToast();
+  const { showToast } = useLeadToast();
   const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -91,11 +93,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
       console.log('LeadManagement - Admin has edit permission:', hasPermission);
       
       if (!hasPermission) {
-        toast({
-          title: "Permission Denied",
-          description: "You don't have permission to edit leads.",
-          variant: "destructive",
-        });
+        showToast("Permission Denied", "You don't have permission to edit leads.", "destructive");
         return;
       }
     }
@@ -117,11 +115,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
       console.log('LeadManagement - Admin has delete permission:', hasPermission);
       
       if (!hasPermission) {
-        toast({
-          title: "Permission Denied",
-          description: "You don't have permission to delete leads.",
-          variant: "destructive",
-        });
+        showToast("Permission Denied", "You don't have permission to delete leads.", "destructive");
         return;
       }
     }
@@ -292,19 +286,3 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
 };
 
 export default LeadManagement;
-
-import { useToast } from '@/hooks/use-toast';
-
-export const useLeadManagementToast = () => {
-  const { toast } = useToast();
-  
-  const showToast = (title: string, description: string, variant?: 'default' | 'destructive') => {
-    toast({
-      title,
-      description,
-      variant
-    });
-  };
-  
-  return { showToast };
-};

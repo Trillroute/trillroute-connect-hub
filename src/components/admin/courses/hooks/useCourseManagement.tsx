@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,9 +5,11 @@ import { useCourses } from '@/hooks/useCourses';
 import { Course } from '@/types/course';
 import { canManageCourses } from '@/utils/permissions';
 import { supabase } from '@/integrations/supabase/client';
+import { useCourseToastAdapter } from './useCourseToastAdapter';
 
 export function useCourseManagement() {
   const { toast } = useToast();
+  const { showToast } = useCourseToastAdapter();
   const { user, isSuperAdmin } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -49,11 +50,7 @@ export function useCourseManagement() {
 
   const handleBulkDelete = async (courseIds: string[], canDelete: boolean) => {
     if (!canDelete) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to delete courses.",
-        variant: "destructive",
-      });
+      showToast("Permission Denied", "You don't have permission to delete courses.", "destructive");
       return;
     }
 
@@ -73,11 +70,7 @@ export function useCourseManagement() {
         return;
       }
       
-      toast({
-        title: "Courses Deleted",
-        description: `Successfully deleted ${courseIds.length} course(s)`,
-        duration: 3000,
-      });
+      showToast("Courses Deleted", `Successfully deleted ${courseIds.length} course(s)`);
       
       // Refresh courses
       fetchCourses();

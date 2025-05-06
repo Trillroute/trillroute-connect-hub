@@ -13,6 +13,7 @@ import CourseForm, { CourseFormValues } from './CourseForm';
 import { useAuth } from '@/hooks/useAuth';
 import { canManageCourses } from '@/utils/adminPermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useCourseToastAdapter } from './hooks/useCourseToastAdapter';
 
 interface EditCourseDialogProps {
   open: boolean;
@@ -52,6 +53,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   onSuccess 
 }) => {
   const { toast } = useToast();
+  const { showToast } = useCourseToastAdapter();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
   const [isLoading, setIsLoading] = useState(false);
@@ -69,11 +71,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
   useEffect(() => {
     if (open && !hasEditPermission) {
       console.log('EditCourseDialog - Permission denied, closing dialog');
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to edit courses.",
-        variant: "destructive",
-      });
+      showToast("Permission Denied", "You don't have permission to edit courses.", "destructive");
       onOpenChange(false);
     }
   }, [open, hasEditPermission, onOpenChange, toast]);
@@ -152,11 +150,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
 
   const handleUpdateCourse = async (data: CourseFormValues) => {
     if (!hasEditPermission) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to edit courses.",
-        variant: "destructive",
-      });
+      showToast("Permission Denied", "You don't have permission to edit courses.", "destructive");
       onOpenChange(false);
       return;
     }

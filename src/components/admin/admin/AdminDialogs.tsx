@@ -81,7 +81,6 @@ const AdminDialogs = ({
           isLoading={isLoading}
           allowAdminCreation={true}
           defaultRole="admin"
-          title="Add Administrator"
         />
       )}
       

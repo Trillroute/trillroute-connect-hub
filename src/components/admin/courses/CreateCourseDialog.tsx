@@ -15,6 +15,7 @@ import { canManageCourses } from '@/utils/adminPermissions';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCourseToastAdapter } from './hooks/useCourseToastAdapter';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -63,6 +64,7 @@ const courseSchema = z.object({
 
 const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
+  const { showToast } = useCourseToastAdapter();
   const { teachers = [] } = useTeachers();
   const { skills = [] } = useSkills();
   const [isLoading, setIsLoading] = useState(false);
@@ -73,14 +75,10 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
 
   useEffect(() => {
     if (open && !hasAddPermission) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to add courses.",
-        variant: "destructive",
-      });
+      showToast("Permission Denied", "You don't have permission to add courses.", "destructive");
       onOpenChange(false);
     }
-  }, [open, hasAddPermission, onOpenChange, toast]);
+  }, [open, hasAddPermission, onOpenChange]);
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
@@ -107,11 +105,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
 
   const handleCreateCourse = async (data: CourseFormValues) => {
     if (!hasAddPermission) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to add courses.",
-        variant: "destructive",
-      });
+      showToast("Permission Denied", "You don't have permission to add courses.", "destructive");
       onOpenChange(false);
       return;
     }
