@@ -6,10 +6,18 @@ import { formatClassTypesData } from '@/utils/courseHelpers';
 
 // Create a new course
 export const createCourse = async (courseData: Partial<Course>): Promise<Course> => {
+  // Make sure required fields are present for the insert
+  if (!courseData.title || !courseData.description) {
+    throw new Error('Course title and description are required');
+  }
+  
   // Convert class_types_data to JSON string if it exists
   const dataToInsert = {
     ...courseData,
-    class_types_data: courseData.class_types_data ? JSON.stringify(courseData.class_types_data) : null
+    class_types_data: courseData.class_types_data ? JSON.stringify(courseData.class_types_data) : null,
+    // Explicitly include required fields
+    title: courseData.title,
+    description: courseData.description
   };
   
   const { data, error } = await supabase
