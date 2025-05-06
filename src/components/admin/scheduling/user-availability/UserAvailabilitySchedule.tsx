@@ -31,7 +31,21 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [activeDay, setActiveDay] = useState("0"); // Default to Sunday
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [loadTimeout, setLoadTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [localLoading, setLocalLoading] = useState(loading);
+  
+  // Use this effect to sync the loading prop but prevent too frequent updates
+  useEffect(() => {
+    // Only update local loading state if the main loading state has been true for a while
+    // This helps prevent flickering on quick operations
+    if (loading) {
+      const timer = setTimeout(() => {
+        setLocalLoading(true);
+      }, 300); // Small delay before showing loading state
+      return () => clearTimeout(timer);
+    } else {
+      setLocalLoading(false);
+    }
+  }, [loading]);
   
   const handleTabChange = useCallback((value: string) => {
     setActiveDay(value);
@@ -42,26 +56,18 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   }, []);
   
   const handleRefresh = useCallback(async () => {
-    if (loading || isRefreshing) return;
+    if (localLoading || isRefreshing) return;
     
     setIsRefreshing(true);
     try {
       await onRefresh();
     } finally {
-      // Set a timeout to ensure we don't flicker the loading state
-      const timeout = setTimeout(() => {
+      // Set a delay before removing refreshing state to prevent flickering
+      setTimeout(() => {
         setIsRefreshing(false);
-      }, 500);
-      setLoadTimeout(timeout);
+      }, 300);
     }
-  }, [loading, isRefreshing, onRefresh]);
-
-  // Clear timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (loadTimeout) clearTimeout(loadTimeout);
-    };
-  }, [loadTimeout]);
+  }, [localLoading, isRefreshing, onRefresh]);
 
   // Reset active day when user changes
   useEffect(() => {
@@ -69,17 +75,35 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   }, [userId]);
 
   console.log("UserAvailabilitySchedule rendering", {
-    loading,
+    loading: localLoading,
     isRefreshing,
     availabilityCount: dailyAvailability.length,
     userId
   });
 
   // Define what "content loading" means 
-  const isContentLoading = loading && (dailyAvailability.length === 0 || !dailyAvailability[0]?.slots?.length);
+  const isContentLoading = localLoading && (dailyAvailability.length === 0 || !dailyAvailability[0]?.slots);
   
   // Check if we have valid data to display
   const hasData = dailyAvailability.length > 0;
+
+  // Add a wrapper function for addSlot to prevent flickering
+  const handleAddSlot = async (dayOfWeek: number, startTime: string, endTime: string) => {
+    // Don't set local loading here to prevent flickering
+    return await onAddSlot(dayOfWeek, startTime, endTime);
+  };
+  
+  // Add a wrapper function for updateSlot to prevent flickering
+  const handleUpdateSlot = async (id: string, startTime: string, endTime: string) => {
+    // Don't set local loading here to prevent flickering
+    return await onUpdateSlot(id, startTime, endTime);
+  };
+  
+  // Add a wrapper function for deleteSlot to prevent flickering
+  const handleDeleteSlot = async (id: string) => {
+    // Don't set local loading here to prevent flickering
+    return await onDeleteSlot(id);
+  };
 
   return (
     <div className="p-4">
@@ -129,9 +153,9 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
             <TabsContent key={day.dayOfWeek} value={day.dayOfWeek.toString()}>
               <DayAvailabilityPanel 
                 day={day}
-                onAddSlot={(startTime, endTime) => onAddSlot(day.dayOfWeek, startTime, endTime)}
-                onUpdateSlot={onUpdateSlot}
-                onDeleteSlot={onDeleteSlot}
+                onAddSlot={(startTime, endTime) => handleAddSlot(day.dayOfWeek, startTime, endTime)}
+                onUpdateSlot={handleUpdateSlot}
+                onDeleteSlot={handleDeleteSlot}
               />
             </TabsContent>
           ))}

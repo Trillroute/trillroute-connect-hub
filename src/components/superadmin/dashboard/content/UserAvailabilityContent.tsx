@@ -73,7 +73,7 @@ const UserAvailabilityContent: React.FC = () => {
   const selectedUser = staffMembers.find(member => member.id === selectedUserId);
   const isOwnAvailability = selectedUserId === user?.id;
   
-  const showLoading = isLoadingAvailability || !selectedUserId || isLoadingStaff;
+  const showLoading = (isLoadingStaff && !selectedUserId) || (!selectedUserId);
   
   return (
     <ContentWrapper
@@ -99,7 +99,7 @@ const UserAvailabilityContent: React.FC = () => {
       </div>
 
       <div className="w-full border rounded-md bg-white shadow-sm h-[calc(100vh-280px)] overflow-auto">
-        {isLoadingStaff && !selectedUserId ? (
+        {showLoading ? (
           <div className="p-6 space-y-4">
             <Skeleton className="h-8 w-1/3" />
             <Skeleton className="h-24 w-full" />
@@ -114,7 +114,7 @@ const UserAvailabilityContent: React.FC = () => {
             )}
             <UserAvailabilitySchedule 
               dailyAvailability={dailyAvailability}
-              loading={showLoading}
+              loading={isLoadingAvailability}
               onAddSlot={addSlot}
               onUpdateSlot={updateSlot}
               onDeleteSlot={deleteSlot}

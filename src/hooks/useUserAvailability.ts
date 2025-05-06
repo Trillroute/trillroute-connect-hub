@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { daysOfWeek } from './availability/dayUtils';
 import { useAvailabilityActions } from './availability/availabilityActions';
@@ -12,6 +12,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const [loading, setLoading] = useState(true);
   const [dailyAvailability, setDailyAvailability] = useState<DayAvailability[]>([]);
   const [previousUserId, setPreviousUserId] = useState<string | undefined>(userId);
+  const isInitialLoad = useRef(true);
   
   // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
@@ -57,6 +58,14 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
       console.log(`User changed from ${previousUserId} to ${targetUserId}, resetting loading state`);
       setLoading(true);
       setPreviousUserId(targetUserId);
+      
+      // Reset availability data when user changes to prevent showing previous user's data
+      const emptyAvailability = daysOfWeek.map((dayName, index) => ({
+        dayOfWeek: index,
+        dayName,
+        slots: []
+      }));
+      setDailyAvailability(emptyAvailability);
     }
   }, [targetUserId, previousUserId]);
 
@@ -66,7 +75,16 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     
     const loadAvailability = async () => {
       try {
-        await refreshAvailability();
+        if (isMounted) {
+          // Only show loading state on initial load or user change
+          if (isInitialLoad.current) {
+            setLoading(true);
+          }
+          await refreshAvailability();
+          if (isMounted) {
+            isInitialLoad.current = false;
+          }
+        }
       } catch (err) {
         console.error('Error in initial load of availability:', err);
         // Error handling is already in refreshAvailability
