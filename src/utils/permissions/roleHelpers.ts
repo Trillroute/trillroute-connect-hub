@@ -1,41 +1,34 @@
 
-import { AdminLevel } from './types';
+/**
+ * Helper function to check if an admin level name is a SuperAdmin equivalent
+ */
+export function isSuperAdminLevel(levelName: string | undefined): boolean {
+  if (!levelName) return false;
+  // Normalize the level name for comparison
+  const normalizedName = levelName.toLowerCase().replace(/\s+/g, '');
+  return normalizedName === 'superadmin' || normalizedName === 'super admin';
+}
 
-// Helper functions for working with admin roles
+/**
+ * Helper function to map module and operation to permission key
+ */
+export function getPermissionKey(module: string, operation: string): string | null {
+  const key = `${operation.toUpperCase()}_${module.toUpperCase()}S`;
+  return key || null;
+}
 
-// Check if a role has a specific permission for a specific module
-export const roleHasPermission = (
-  role: AdminLevel | null,
-  module: 'student' | 'teacher' | 'admin' | 'lead' | 'course' | 'level',
-  permission: 'view' | 'add' | 'edit' | 'delete'
-): boolean => {
-  if (!role) return false;
+/**
+ * Helper function to check if a specific module permission exists
+ */
+export function checkModulePermission(
+  roleInfo: { [key: string]: any }, 
+  module: string, 
+  operation: string
+): boolean {
+  const permissionsKey = `${module}Permissions`;
+  const permissions = roleInfo[permissionsKey] as string[];
   
-  const permissionKey = `${module}Permissions` as keyof AdminLevel;
-  const permissions = role[permissionKey];
-  
-  if (!permissions) return false;
-  
-  return (permissions as string[]).includes(permission);
-};
-
-// Get all permissions for a role and module
-export const getRoleModulePermissions = (
-  role: AdminLevel | null,
-  module: 'student' | 'teacher' | 'admin' | 'lead' | 'course' | 'level'
-): string[] => {
-  if (!role) return [];
-  
-  const permissionKey = `${module}Permissions` as keyof AdminLevel;
-  const permissions = role[permissionKey];
-  
-  if (!permissions) return [];
-  
-  return permissions as string[];
-};
-
-// Get a display name for a role level
-export const getRoleLevelDisplay = (roleName?: string): string => {
-  if (!roleName) return 'Limited Access';
-  return roleName;
-};
+  const result = Array.isArray(permissions) && permissions.includes(operation);
+  console.log(`[adminPermissions] Checking ${module} ${operation} permission:`, result, 'Available permissions:', permissions);
+  return result;
+}

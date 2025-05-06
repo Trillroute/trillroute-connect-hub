@@ -7,7 +7,7 @@ export const useAdminLevelManagement = (loadAdmins: () => Promise<void>) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleUpdateAdminLevel = async (userId: string, newLevelName: string): Promise<void> => {
+  const handleUpdateAdminLevel = async (userId: string, newLevelName: string) => {
     try {
       setIsLoading(true);
       console.log(`[AdminManagement] Updating admin level for ${userId} to ${newLevelName}`);
@@ -18,7 +18,8 @@ export const useAdminLevelManagement = (loadAdmins: () => Promise<void>) => {
         description: 'Admin permission level updated successfully.',
       });
       
-      await loadAdmins();
+      loadAdmins();
+      return true;
     } catch (error: any) {
       console.error('Error updating admin level:', error);
       toast({
@@ -26,6 +27,7 @@ export const useAdminLevelManagement = (loadAdmins: () => Promise<void>) => {
         description: error.message || 'Failed to update permission level. Please try again.',
         variant: 'destructive',
       });
+      return false;
     } finally {
       setIsLoading(false);
     }

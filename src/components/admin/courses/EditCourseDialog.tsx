@@ -1,43 +1,18 @@
-
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Form } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { updateCourse } from './courseService';
-import CourseForm from './CourseForm';
-import { useCourseToastAdapter } from './hooks/useCourseToastAdapter';
-import { Course } from '@/types/course';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Course, DurationMetric, ClassTypeData } from '@/types/course';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
-
-// Import the CourseFormValues type from CourseForm
-import type { CourseFormValues } from './CourseForm';
-
-const courseSchema = z.object({
-  title: z.string().min(2, { message: 'Title must be at least 2 characters' }),
-  description: z.string().optional(),
-  level: z.string().optional(),
-  skill: z.string().optional(),
-  durationType: z.union([z.literal("fixed"), z.literal("recurring")]).optional(),
-  durationValue: z.string().optional(),
-  durationMetric: z.union([z.literal("days"), z.literal("weeks"), z.literal("months"), z.literal("years")]).optional(),
-  base_price: z.number().optional(),
-  is_gst_applicable: z.boolean().optional(),
-  gst_rate: z.number().optional(),
-  discount_metric: z.union([z.literal("percentage"), z.literal("fixed")]).optional(),
-  discount_value: z.number().optional(),
-  discount_validity: z.string().optional(),
-  discount_code: z.string().optional(),
-  image: z.string().optional().default("https://via.placeholder.com/300x200?text=Course"),
-  instructors: z.array(z.string()).optional().default([]),
-  class_types_data: z.array(z.object({
-    class_type_id: z.string(),
-    quantity: z.number()
-  })).optional().default([]),
-});
+import CourseForm, { CourseFormValues } from './CourseForm';
+import { useAuth } from '@/hooks/useAuth';
+import { canManageCourses } from '@/utils/adminPermissions';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EditCourseDialogProps {
   open: boolean;
@@ -46,124 +21,233 @@ interface EditCourseDialogProps {
   onSuccess: () => void;
 }
 
-const EditCourseDialog = ({
-  open,
-  onOpenChange,
-  course,
-  onSuccess,
-}: EditCourseDialogProps) => {
-  const { showSuccessToast, showErrorToast } = useCourseToastAdapter();
-  const { teachers } = useTeachers();
-  const { skills } = useSkills();
+const courseSchema = z.object({
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  level: z.string().min(1, { message: "Level is required" }),
+  skill: z.string().min(1, { message: "Skill is required" }),
+  durationType: z.enum(["fixed", "recurring"]),
+  durationValue: z.string().optional(),
+  durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
+  image: z.string().url({ message: "Must be a valid URL" }),
+  instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
+  class_types_data: z.array(z.object({
+    class_type_id: z.string(),
+    quantity: z.number()
+  })).optional(),
+}).refine((data) => {
+  if (data.durationType === 'fixed') {
+    return !!data.durationValue && !!data.durationMetric;
+  }
+  return true;
+}, {
+  message: "Duration value and metric are required for fixed duration courses",
+  path: ["durationValue"]
+});
+
+const EditCourseDialog: React.FC<EditCourseDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  course, 
+  onSuccess 
+}) => {
+  const { toast } = useToast();
+  const { teachers = [] } = useTeachers();
+  const { skills = [] } = useSkills();
+  const [isLoading, setIsLoading] = useState(false);
+  const { user, isSuperAdmin } = useAuth();
   
+  const hasEditPermission = isSuperAdmin() || 
+    (user?.role === 'admin' && canManageCourses(user, 'edit'));
+
+  console.log('EditCourseDialog - User:', user);
+  console.log('EditCourseDialog - User role:', user?.role);
+  console.log('EditCourseDialog - Is superadmin?', isSuperAdmin());
+  console.log('EditCourseDialog - hasEditPermission:', hasEditPermission);
+  console.log('EditCourseDialog - admin role name:', user?.adminRoleName);
+
+  useEffect(() => {
+    if (open && !hasEditPermission) {
+      console.log('EditCourseDialog - Permission denied, closing dialog');
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+    }
+  }, [open, hasEditPermission, onOpenChange, toast]);
+
+  const instructorIds = Array.isArray(course.instructor_ids) ? course.instructor_ids : [];
+  const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
+  const classTypesData = Array.isArray(course.class_types_data) 
+    ? (course.class_types_data as unknown as ClassTypeData[]) 
+    : [];
+
+  const parseDuration = (duration: string, durationType: string): { value: string, metric: DurationMetric } => {
+    if (durationType !== 'fixed' || !duration) {
+      return { value: '0', metric: 'weeks' };
+    }
+    const parts = duration.split(' ');
+    const value = parts[0] || '0';
+    let metric: DurationMetric = 'weeks';
+    if (parts[1]) {
+      const metricLower = parts[1].toLowerCase();
+      if (['days', 'weeks', 'months', 'years'].includes(metricLower)) {
+        metric = metricLower as DurationMetric;
+      }
+    }
+    return { value, metric };
+  };
+  
+  const { value: durationValue, metric: durationMetric } = parseDuration(
+    course.duration, 
+    course.duration_type
+  );
+
+  const durationType: "fixed" | "recurring" = 
+    (course.duration_type === "fixed" || course.duration_type === "recurring") 
+      ? course.duration_type as "fixed" | "recurring" 
+      : "fixed";
+
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      title: course?.title || '',
-      description: course?.description || '',
-      level: course?.level || '',
-      skill: course?.skill || '',
-      durationType: (course?.duration_type as "fixed" | "recurring") || "fixed",
-      durationValue: course?.duration || '',
-      durationMetric: "days",
-      base_price: course?.base_price || 0,
-      is_gst_applicable: course?.is_gst_applicable || false,
-      gst_rate: course?.gst_rate || 0,
-      discount_metric: (course?.discount_metric as "percentage" | "fixed") || "percentage",
-      discount_value: course?.discount_value || 0,
-      discount_validity: course?.discount_validity || '',
-      discount_code: course?.discount_code || '',
-      image: course?.image || "https://via.placeholder.com/300x200?text=Course",
-      instructors: course?.instructor_ids || [],
-      class_types_data: course?.class_types_data || [],
-    },
+      title: course.title,
+      description: course.description,
+      level: course.level,
+      skill: course.skill,
+      durationValue: durationValue,
+      durationMetric: durationMetric,
+      durationType: durationType,
+      image: course.image,
+      instructors: instructorIds,
+      class_types_data: classTypesData || [],
+    }
   });
 
-  // Update form values when course changes
-  React.useEffect(() => {
-    if (course) {
+  useEffect(() => {
+    if (open) {
       form.reset({
-        title: course.title || '',
-        description: course.description || '',
-        level: course.level || '',
-        skill: course.skill || '',
-        durationType: (course.duration_type as "fixed" | "recurring") || "fixed",
-        durationValue: course.duration || '',
-        durationMetric: "days",
-        base_price: course.base_price || 0,
-        is_gst_applicable: course.is_gst_applicable || false,
-        gst_rate: course.gst_rate || 0,
-        discount_metric: (course.discount_metric as "percentage" | "fixed") || "percentage",
-        discount_value: course.discount_value || 0,
-        discount_validity: course.discount_validity || '',
-        discount_code: course.discount_code || '',
-        image: course.image || "https://via.placeholder.com/300x200?text=Course",
-        instructors: course.instructor_ids || [],
-        class_types_data: course.class_types_data || [],
+        title: course.title,
+        description: course.description,
+        level: course.level,
+        skill: course.skill,
+        durationValue: durationValue,
+        durationMetric: durationMetric,
+        durationType: durationType,
+        image: course.image,
+        instructors: instructorIds,
+        class_types_data: classTypesData || [],
       });
     }
-  }, [course, form]);
+  }, [course, open, durationValue, durationMetric, durationType, form, classTypesData]);
 
-  const onSubmit = async (data: CourseFormValues) => {
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      console.log('EditCourseDialog - Form values updated:', value);
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  const handleUpdateCourse = async (data: CourseFormValues) => {
+    if (!hasEditPermission) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to edit courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+      return;
+    }
+    
     try {
-      // Transform form data to course data
-      const courseData = {
-        title: data.title,
-        description: data.description || '',
-        level: data.level || '',
-        skill: data.skill || '',
-        duration_type: data.durationType || 'fixed',
-        duration: data.durationValue || '0',
-        base_price: data.base_price,
-        is_gst_applicable: data.is_gst_applicable,
-        gst_rate: data.gst_rate,
-        discount_metric: data.discount_metric,
-        discount_value: data.discount_value,
-        discount_validity: data.discount_validity,
-        discount_code: data.discount_code,
-        image: data.image,
-        instructor_ids: data.instructors,
-        class_types_data: data.class_types_data,
-      };
+      setIsLoading(true);
       
-      await updateCourse(course.id, courseData);
-      showSuccessToast('Course updated successfully');
+      let duration = '';
+      if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
+        duration = `${data.durationValue} ${data.durationMetric}`;
+      } else {
+        duration = 'Recurring';
+      }
+      
+      console.log('Updating course with instructors:', data.instructors);
+      console.log('Updating course with class types:', data.class_types_data);
+
+      const { error: courseError } = await supabase
+        .from('courses')
+        .update({
+          title: data.title,
+          description: data.description,
+          level: data.level,
+          skill: data.skill,
+          duration: duration,
+          duration_type: data.durationType,
+          image: data.image,
+          instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
+          student_ids: studentIds,
+          students: studentIds.length,
+          // Cast to any to bypass TypeScript error
+          class_types_data: data.class_types_data || [] as any,
+        })
+        .eq('id', course.id);
+        
+      if (courseError) {
+        console.error('Error updating course:', courseError);
+        toast({
+          title: 'Error',
+          description: 'Failed to update course. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       onOpenChange(false);
       onSuccess();
+      
+      toast({
+        title: "Course Updated",
+        description: `${data.title} has been successfully updated`,
+        duration: 3000,
+      });
     } catch (error) {
-      console.error('Error updating course:', error);
-      showErrorToast('Failed to update course. Please try again.');
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={open && hasEditPermission} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Course</DialogTitle>
+          <DialogDescription>
+            Update the course information below.
+          </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-music-500"></div>
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[calc(100vh-14rem)] pr-4">
             <CourseForm 
               form={form} 
-              teachers={teachers || []}
-              skills={skills || []}
-              onSubmit={onSubmit}
+              onSubmit={handleUpdateCourse} 
+              teachers={teachers}
+              skills={skills}
+              submitButtonText="Update Course"
+              cancelAction={() => onOpenChange(false)}
             />
-            
-            <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Update Course</Button>
-            </div>
-          </form>
-        </Form>
+          </ScrollArea>
+        )}
       </DialogContent>
     </Dialog>
   );

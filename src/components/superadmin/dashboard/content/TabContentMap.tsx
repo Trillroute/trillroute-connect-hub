@@ -7,12 +7,6 @@ import TeacherContent from './TeacherContent';
 import PlaceholderContent from './PlaceholderContent';
 import SchedulingContent from './SchedulingContent';
 import UserAvailabilityContent from './UserAvailabilityContent';
-import LevelManagement from '@/components/admin/levels/LevelManagement';
-import StudentManagement from '@/components/admin/StudentManagement';
-import AdminManagement from '@/components/superadmin/AdminManagement';
-import CourseManagement from '@/components/admin/CourseManagement';
-import LeadManagement from '@/components/admin/LeadManagement';
-import ClassTypeManagement from '@/components/admin/class-types/ClassTypeManagement';
 import { DashboardStats, UserActivityData } from '@/components/superadmin/hooks/useDashboardData';
 import { Lead } from '@/types/lead';
 
@@ -49,19 +43,6 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
           handleYearChange={handleYearChange}
         />
       ) : null;
-    
-    case 'students':
-      return <StudentManagement />;
-      
-    case 'courses':
-      return <CourseManagement />;
-    
-    case 'classTypes':
-      return <ClassTypeManagement />;
-      
-    case 'leads':
-      return <LeadManagement />;
-      
     case 'leads-cards':
       return leads && onEditLead && onDeleteLead ? (
         <LeadsKanbanContent
@@ -71,22 +52,12 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
           onDelete={onDeleteLead}
         />
       ) : null;
-      
-    case 'admins':
-      return <AdminManagement />;
-      
-    case 'levels':
-      return <LevelManagement />;
-      
     case 'teachers':
       return <TeacherContent />;
-      
     case 'scheduling':
       return <SchedulingContent />;
-      
     case 'user-availability':
       return <UserAvailabilityContent />;
-      
     default:
       return <PlaceholderContent tab={activeTab} />;
   }

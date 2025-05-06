@@ -1,28 +1,28 @@
 
 import React from 'react';
 import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
-import { Card, CardContent } from '@/components/ui/card';
-import AdminManagement from '@/components/superadmin/AdminManagement';
-import LevelManagement from '@/components/admin/levels/LevelManagement';
-import StudentManagement from '@/components/admin/StudentManagement';
-import TeacherManagement from '@/components/admin/TeacherManagement';
-import CourseManagement from '@/components/admin/CourseManagement';
-import LeadManagement from '@/components/admin/LeadManagement';
-import DashboardOverview from './DashboardOverview';
+import { DashboardStats, UserActivityData } from '../hooks/useDashboardData';
+import { Lead } from "@/types/lead";
+
+// Import our components
+import TodayContent from './content/TodayContent';
+import LeadsKanbanContent from './content/LeadsKanbanContent';
+import SchedulingContent from './content/SchedulingContent';
+import TabContentMap from './content/TabContentMap';
 
 interface DashboardContentProps {
   activeTab: ActiveTab;
-  stats: any;
-  userActivityData: any;
+  stats: DashboardStats;
+  userActivityData: UserActivityData[];
   currentYear: number;
-  handleYearChange: (year: number) => void;
-  leads: any[];
+  handleYearChange: (change: number) => void;
+  leads: Lead[];
   leadsLoading: boolean;
-  onEditLead: (lead: any) => void;
-  onDeleteLead: (lead: any) => void;
+  onEditLead: (lead: Lead) => void;
+  onDeleteLead: (lead: Lead) => void;
 }
 
-const DashboardContent = ({
+const DashboardContent: React.FC<DashboardContentProps> = ({
   activeTab,
   stats,
   userActivityData,
@@ -32,53 +32,48 @@ const DashboardContent = ({
   leadsLoading,
   onEditLead,
   onDeleteLead
-}: DashboardContentProps) => {
-  switch (activeTab) {
-    case 'today':
-      return (
-        <DashboardOverview
-          stats={stats}
-          userActivityData={userActivityData}
-          currentYear={currentYear}
-          handleYearChange={handleYearChange}
-        />
-      );
-    case 'students':
-      return <StudentManagement />;
-    case 'teachers':
-      return <TeacherManagement />;
-    case 'admins':
-      return <AdminManagement />;
-    case 'levels':
-      return <LevelManagement />;
-    case 'courses':
-    case 'classTypes':
-      return (
-        <CourseManagement 
-          canAddCourse={true}
-          canEditCourse={true}
-          canDeleteCourse={true}
-        />
-      );
-    case 'leads':
-    case 'leads-cards':
-      return (
-        <LeadManagement
-          canAddLead={true}
-          canEditLead={true}
-          canDeleteLead={true}
-        />
-      );
-    default:
-      return (
-        <Card>
-          <CardContent className="p-8">
-            <h3 className="text-lg font-medium">Coming Soon</h3>
-            <p className="text-gray-500">This section is under development.</p>
-          </CardContent>
-        </Card>
-      );
+}) => {
+  // Handle specific tabs with dedicated components
+  if (activeTab === 'today') {
+    return (
+      <TodayContent 
+        stats={stats}
+        userActivityData={userActivityData}
+        currentYear={currentYear}
+        handleYearChange={handleYearChange}
+      />
+    );
   }
+
+  if (activeTab === 'leads-cards') {
+    return (
+      <LeadsKanbanContent
+        leads={leads}
+        loading={leadsLoading}
+        onEdit={onEditLead}
+        onDelete={onDeleteLead}
+      />
+    );
+  }
+
+  if (activeTab === 'scheduling') {
+    return <SchedulingContent />;
+  }
+
+  // For all other tabs, use the TabContentMap component
+  return (
+    <TabContentMap 
+      activeTab={activeTab} 
+      stats={stats}
+      userActivityData={userActivityData}
+      currentYear={currentYear}
+      handleYearChange={handleYearChange}
+      leads={leads}
+      leadsLoading={leadsLoading}
+      onEditLead={onEditLead}
+      onDeleteLead={onDeleteLead}
+    />
+  );
 };
 
 export default DashboardContent;

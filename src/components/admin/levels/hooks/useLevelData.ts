@@ -1,10 +1,9 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 import { fetchLevels, deleteLevel as deleteLevelApi, createLevel, updateLevel } from '../LevelService';
 import { useToast } from '@/hooks/use-toast';
 import { Level } from '../LevelTable';
-import { updateCachedAdminRoles } from '@/utils/permissions/permissionCache';
 
 export function useLevelData() {
   const [levels, setLevels] = useState<AdminLevelDetailed[]>([]);
@@ -12,30 +11,27 @@ export function useLevelData() {
   const { toast } = useToast();
 
   // Fetch levels
-  const loadLevels = useCallback(async () => {
+  const loadLevels = async () => {
     setIsLoading(true);
     try {
       const levelsData = await fetchLevels();
       setLevels(levelsData);
-      
-      // Update cached roles for permission system
-      updateCachedAdminRoles(levelsData);
     } catch (error) {
       console.error('Error fetching levels:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to fetch admin levels. Please try again.',
+        description: 'Failed to fetch levels. Please try again.',
       });
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  };
 
   // Load levels on mount
   useEffect(() => {
     loadLevels();
-  }, [loadLevels]);
+  }, []);
 
   // Handlers for CRUD operations
   const handleCreateLevel = async (levelData: Omit<AdminLevelDetailed, 'id'>) => {
@@ -44,7 +40,7 @@ export function useLevelData() {
       await createLevel(levelData);
       toast({
         title: 'Success',
-        description: 'Admin level created successfully',
+        description: 'Level created successfully',
       });
       loadLevels();
       return true;
@@ -53,7 +49,7 @@ export function useLevelData() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to create admin level. Please try again.',
+        description: 'Failed to create level. Please try again.',
       });
       return false;
     } finally {
@@ -67,7 +63,7 @@ export function useLevelData() {
       await updateLevel(id, levelData);
       toast({
         title: 'Success',
-        description: 'Admin level updated successfully',
+        description: 'Level updated successfully',
       });
       loadLevels();
       return true;
@@ -76,7 +72,7 @@ export function useLevelData() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to update admin level. Please try again.',
+        description: 'Failed to update level. Please try again.',
       });
       return false;
     } finally {
@@ -92,7 +88,7 @@ export function useLevelData() {
       await deleteLevelApi(level.id);
       toast({
         title: 'Success',
-        description: 'Admin level deleted successfully',
+        description: 'Level deleted successfully',
       });
       loadLevels();
       return true;
@@ -101,7 +97,7 @@ export function useLevelData() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to delete admin level. Please try again.',
+        description: 'Failed to delete level. Please try again.',
       });
       return false;
     } finally {
@@ -120,7 +116,7 @@ export function useLevelData() {
       
       toast({
         title: 'Success',
-        description: `${ids.length} admin levels deleted successfully`,
+        description: `${ids.length} levels deleted successfully`,
       });
       
       loadLevels();
@@ -130,7 +126,7 @@ export function useLevelData() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to delete some or all admin levels. Please try again.',
+        description: 'Failed to delete some or all levels. Please try again.',
       });
       return false;
     } finally {

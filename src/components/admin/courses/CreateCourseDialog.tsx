@@ -1,45 +1,20 @@
-
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useEffect, useState } from 'react';
+import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Form } from '@/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { createCourse } from './courseService';
-import CourseForm from './CourseForm';
-import { useCourseToastAdapter } from './hooks/useCourseToastAdapter';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { CourseFormValues } from './CourseForm';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useSkills } from '@/hooks/useSkills';
-
-// Import the CourseFormValues type from CourseForm
-import type { CourseFormValues } from './CourseForm';
-
-const courseSchema = z.object({
-  title: z.string().min(2, { message: 'Title must be at least 2 characters' }),
-  description: z.string().optional(),
-  level: z.string().optional(),
-  skill: z.string().optional(),
-  durationType: z.union([z.literal("fixed"), z.literal("recurring")]).optional(),
-  durationValue: z.string().optional(),
-  durationMetric: z.union([z.literal("days"), z.literal("weeks"), z.literal("months"), z.literal("years")]).optional(),
-  base_price: z.number().optional(),
-  is_gst_applicable: z.boolean().optional(),
-  gst_rate: z.number().optional(),
-  discount_metric: z.union([z.literal("percentage"), z.literal("fixed")]).optional(),
-  discount_value: z.number().optional(),
-  discount_validity: z.string().optional(),
-  discount_code: z.string().optional(),
-  image: z.string().optional().default("https://via.placeholder.com/300x200?text=Course"),
-  instructors: z.array(z.string()).optional().default([]),
-  class_types_data: z.array(z.object({
-    class_type_id: z.string(),
-    quantity: z.number()
-  })).optional().default([]),
-});
-
-// Make sure this type matches with CourseFormValues
-type FormValues = z.infer<typeof courseSchema>;
+import CourseForm from './CourseForm';
+import { useAuth } from '@/hooks/useAuth';
+import { canManageCourses } from '@/utils/adminPermissions';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CreateCourseDialogProps {
   open: boolean;
@@ -47,99 +22,215 @@ interface CreateCourseDialogProps {
   onSuccess: () => void;
 }
 
-const CreateCourseDialog = ({
-  open,
-  onOpenChange,
-  onSuccess,
-}: CreateCourseDialogProps) => {
-  const { showSuccessToast, showErrorToast } = useCourseToastAdapter();
-  const { teachers } = useTeachers();
-  const { skills } = useSkills();
-  
+const courseSchema = z.object({
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  description: z.string().min(10, { message: "Description must be at least 10 characters" }),
+  level: z.string().min(1, { message: "Level is required" }),
+  skill: z.string().min(1, { message: "Skill is required" }),
+  durationType: z.enum(["fixed", "recurring"]),
+  durationValue: z.string().optional(),
+  durationMetric: z.enum(["days", "weeks", "months", "years"]).optional(),
+  image: z.string().url({ message: "Must be a valid URL" }),
+  instructors: z.array(z.string()).min(1, { message: "At least one instructor is required" }),
+  class_types_data: z.array(z.object({
+    class_type_id: z.string(),
+    quantity: z.number()
+  })).optional(),
+  base_price: z.number().min(0, { message: "Base price must be 0 or greater" }),
+  is_gst_applicable: z.boolean(),
+  gst_rate: z.number().min(0).max(100).optional(),
+  discount_metric: z.enum(["percentage", "fixed"]),
+  discount_value: z.number().min(0).optional(),
+  discount_validity: z.string().optional(),
+  discount_code: z.string().optional(),
+}).refine((data) => {
+  if (data.durationType === 'fixed') {
+    return !!data.durationValue && !!data.durationMetric;
+  }
+  return true;
+}, {
+  message: "Duration value and metric are required for fixed duration courses",
+  path: ["durationValue"]
+}).refine((data) => {
+  if (data.is_gst_applicable) {
+    return !!data.gst_rate;
+  }
+  return true;
+}, {
+  message: "GST rate is required when GST is applicable",
+  path: ["gst_rate"]
+});
+
+const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenChange, onSuccess }) => {
+  const { toast } = useToast();
+  const { teachers = [] } = useTeachers();
+  const { skills = [] } = useSkills();
+  const [isLoading, setIsLoading] = useState(false);
+  const { user, isSuperAdmin } = useAuth();
+
+  const hasAddPermission = isSuperAdmin() ||
+    (user?.role === 'admin' && canManageCourses(user, 'add'));
+
+  useEffect(() => {
+    if (open && !hasAddPermission) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to add courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+    }
+  }, [open, hasAddPermission, onOpenChange, toast]);
+
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
       title: '',
       description: '',
-      level: '',
+      level: 'Beginner',
       skill: '',
-      durationType: "fixed",
+      durationType: 'fixed',
       durationValue: '',
-      durationMetric: "days",
+      durationMetric: 'weeks',
+      image: '',
+      instructors: [],
+      class_types_data: [],
       base_price: 0,
       is_gst_applicable: false,
       gst_rate: 0,
-      discount_metric: "percentage",
+      discount_metric: 'percentage',
       discount_value: 0,
       discount_validity: '',
       discount_code: '',
-      image: "https://via.placeholder.com/300x200?text=Course",
-      instructors: [],
-      class_types_data: [],
-    },
+    }
   });
 
-  const onSubmit = async (data: CourseFormValues) => {
+  const handleCreateCourse = async (data: CourseFormValues) => {
+    if (!hasAddPermission) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to add courses.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+      return;
+    }
+    
     try {
-      // Transform form data to course data
-      const courseData = {
-        title: data.title,
-        description: data.description || '',
-        level: data.level || '',
-        skill: data.skill || '',
-        duration_type: data.durationType || 'fixed',
-        duration: data.durationValue || '0',
-        base_price: data.base_price,
-        is_gst_applicable: data.is_gst_applicable,
-        gst_rate: data.gst_rate,
-        discount_metric: data.discount_metric,
-        discount_value: data.discount_value,
-        discount_validity: data.discount_validity,
-        discount_code: data.discount_code,
-        image: data.image || "https://via.placeholder.com/300x200?text=Course",
-        instructor_ids: data.instructors || [],
-        class_types_data: data.class_types_data || [],
-      };
+      setIsLoading(true);
+      
+      let duration = '';
+      if (data.durationType === 'fixed' && data.durationValue && data.durationMetric) {
+        duration = `${data.durationValue} ${data.durationMetric}`;
+      } else {
+        duration = 'Recurring';
+      }
 
-      await createCourse(courseData);
-      showSuccessToast('Course created successfully');
-      form.reset();
+      let finalPrice = data.base_price;
+      if (data.is_gst_applicable && data.gst_rate) {
+        finalPrice += (finalPrice * data.gst_rate) / 100;
+      }
+      
+      if (data.discount_value && data.discount_value > 0) {
+        if (data.discount_metric === 'percentage') {
+          finalPrice -= (finalPrice * data.discount_value) / 100;
+        } else {
+          finalPrice -= data.discount_value;
+        }
+      }
+      
+      const { data: courseData, error: courseError } = await supabase
+        .from('courses')
+        .insert({
+          title: data.title,
+          description: data.description,
+          level: data.level,
+          skill: data.skill,
+          duration: duration,
+          duration_type: data.durationType,
+          image: data.image,
+          instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
+          students: 0,
+          student_ids: [],
+          class_types_data: data.class_types_data ? data.class_types_data as any : [],
+          base_price: data.base_price,
+          is_gst_applicable: data.is_gst_applicable,
+          gst_rate: data.is_gst_applicable ? data.gst_rate : 0,
+          final_price: finalPrice,
+          discount_metric: data.discount_metric,
+          discount_value: data.discount_value || 0,
+          discount_validity: data.discount_validity || null,
+          discount_code: data.discount_code || null,
+        })
+        .select()
+        .single();
+        
+      if (courseError) {
+        console.error('Error creating course:', courseError);
+        toast({
+          title: 'Error',
+          description: 'Failed to create course. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       onOpenChange(false);
       onSuccess();
+      
+      toast({
+        title: "Course Created",
+        description: `${data.title} has been successfully created`,
+        duration: 3000,
+      });
     } catch (error) {
-      console.error('Error creating course:', error);
-      showErrorToast('Failed to create course. Please try again.');
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Create New Course</DialogTitle>
+    <Dialog open={open && hasAddPermission} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle className="text-2xl font-bold text-music-600">Create New Course</DialogTitle>
+          <p className="text-muted-foreground mt-2">
+            Fill in the course details below. All fields marked with * are required.
+          </p>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <CourseForm 
-              form={form} 
-              teachers={teachers || []}
-              skills={skills || []}
-              onSubmit={onSubmit}
-            />
-            
-            <div className="flex justify-end space-x-2">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Create Course</Button>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader className="h-8 w-8 animate-spin text-music-500" />
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[calc(100vh-8rem)]">
+            <div className="p-6 pt-2">
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="duration">Duration</TabsTrigger>
+                  <TabsTrigger value="pricing">Pricing</TabsTrigger>
+                  <TabsTrigger value="discount">Discount</TabsTrigger>
+                </TabsList>
+                <CourseForm 
+                  form={form} 
+                  onSubmit={handleCreateCourse} 
+                  teachers={teachers}
+                  skills={skills}
+                  submitButtonText="Create Course"
+                  cancelAction={() => onOpenChange(false)}
+                />
+              </Tabs>
             </div>
-          </form>
-        </Form>
+          </ScrollArea>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -1,11 +1,11 @@
 
-import { AdminLevel } from './types';
+import { AdminLevel } from "./types";
 
-// Default/fallback admin levels when database fetch fails
-export const FALLBACK_ADMIN_LEVELS: AdminLevel[] = [
-  {
+// Fallback permissions mapping in case we can't fetch from database
+export const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
+  "Limited View": {
     name: "Limited View",
-    description: "View-only administrator",
+    description: "Limited view-only access",
     studentPermissions: ["view"],
     teacherPermissions: ["view"],
     adminPermissions: [],
@@ -13,24 +13,34 @@ export const FALLBACK_ADMIN_LEVELS: AdminLevel[] = [
     coursePermissions: ["view"],
     levelPermissions: []
   },
-  {
-    name: "Standard Admin",
-    description: "Regular administrator permissions",
-    studentPermissions: ["view", "add", "edit"],
-    teacherPermissions: ["view", "add"],
-    adminPermissions: [],
-    leadPermissions: ["view", "add", "edit"],
-    coursePermissions: ["view", "edit"],
-    levelPermissions: ["view"]
+  "SuperAdmin": {
+    name: "SuperAdmin",
+    description: "Full access to all features",
+    studentPermissions: ["view", "add", "edit", "delete"],
+    teacherPermissions: ["view", "add", "edit", "delete"],
+    adminPermissions: ["view", "add", "edit", "delete"],
+    leadPermissions: ["view", "add", "edit", "delete"],
+    coursePermissions: ["view", "add", "edit", "delete"],
+    levelPermissions: ["view", "add", "edit", "delete"]
   },
-  {
-    name: "Full Access",
-    description: "Complete administrative access",
+  "Super Admin": {
+    name: "Super Admin",
+    description: "Full access to all features",
+    studentPermissions: ["view", "add", "edit", "delete"],
+    teacherPermissions: ["view", "add", "edit", "delete"],
+    adminPermissions: ["view", "add", "edit", "delete"],
+    leadPermissions: ["view", "add", "edit", "delete"],
+    coursePermissions: ["view", "add", "edit", "delete"],
+    levelPermissions: ["view", "add", "edit", "delete"]
+  },
+  "Upper Manager": {
+    name: "Upper Manager",
+    description: "Management access",
     studentPermissions: ["view", "add", "edit", "delete"],
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view"],
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"],
-    levelPermissions: ["view", "add", "edit", "delete"]
+    levelPermissions: ["view"]
   }
-];
+};

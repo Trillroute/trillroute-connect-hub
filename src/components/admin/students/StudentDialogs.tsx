@@ -9,13 +9,13 @@ import ViewUserDialog from "../users/ViewUserDialog";
 interface StudentDialogsProps {
   isAddDialogOpen: boolean;
   setIsAddDialogOpen: (open: boolean) => void;
-  handleAddStudent: (user: NewUserData) => Promise<void>; // Change to Promise<void>
+  handleAddStudent: (user: NewUserData) => void;
   isEditDialogOpen: boolean;
   setIsEditDialogOpen: (open: boolean) => void;
   handleUpdateStudent: (id: string, userData: Partial<UserManagementUser>) => Promise<void>;
   isDeleteDialogOpen: boolean;
   setIsDeleteDialogOpen: (open: boolean) => void;
-  handleDeleteStudent: () => Promise<void>;
+  handleDeleteStudent: () => void;
   isViewDialogOpen: boolean;
   setIsViewDialogOpen: (open: boolean) => void;
   studentToEdit: UserManagementUser | null;

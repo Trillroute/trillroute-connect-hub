@@ -8,9 +8,8 @@ import {
   DollarSign, 
   Flag, 
   Home, 
+  Lock, 
   MessageSquare, 
-  Shield, 
-  ShieldCheck,
   UserPlus, 
   Users 
 } from "lucide-react";
@@ -58,6 +57,11 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
         id: "classTypes",
         label: "Class Types",
         value: "classTypes",
+      },
+      {
+        id: "courseManagement",
+        label: "Course Management",
+        value: "courseManagement",
       },
     ],
   },
@@ -115,25 +119,6 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
     requiredPermission: AdminPermission.VIEW_TEACHERS
   },
   {
-    id: "access",
-    label: "Access Management",
-    icon: Shield,
-    submenu: [
-      {
-        id: "admins",
-        label: "Administrators",
-        value: "admins",
-        requiredPermission: AdminPermission.VIEW_ADMINS
-      },
-      {
-        id: "levels",
-        label: "Permission Levels",
-        value: "levels",
-        requiredPermission: AdminPermission.VIEW_LEVELS
-      }
-    ]
-  },
-  {
     id: "intramural",
     label: "Intramural",
     value: "intramural",
@@ -144,5 +129,29 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
     label: "Reports",
     value: "reports",
     icon: BarChart,
+  },
+  {
+    id: "access",
+    label: "Access",
+    icon: Lock,
+    submenu: [
+      {
+        id: "admins",
+        label: "Admins",
+        value: "admins",
+        requiredPermission: AdminPermission.VIEW_ADMINS
+      },
+      {
+        id: "levels",
+        label: "Levels",
+        value: "levels",
+        requiredPermission: AdminPermission.VIEW_LEVELS
+      },
+      {
+        id: "access",
+        label: "Access Control",
+        value: "access",
+      },
+    ],
   },
 ];

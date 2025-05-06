@@ -161,14 +161,7 @@ const AdminManagement = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  // This is a fixed function to check if a user is a valid admin
-  const isValidAdmin = (user: UserManagementUser) => {
-    return user.role === 'admin';
-  };
-
-  const isUserSuperAdmin = isSuperAdmin();
-
-  if (!isUserSuperAdmin) {
+  if (!isSuperAdmin()) {
     return (
       <Card>
         <CardContent className="p-8">

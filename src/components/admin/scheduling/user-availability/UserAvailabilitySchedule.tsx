@@ -4,7 +4,7 @@ import { DayAvailability } from '@/hooks/useUserAvailability';
 import DayAvailabilityPanel from './DayAvailabilityPanel';
 import CopyDayDialog from './CopyDayDialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, Plus } from 'lucide-react';
+import { Loader2, RefreshCw, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface UserAvailabilityScheduleProps {
@@ -32,7 +32,6 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [localLoading, setLocalLoading] = useState(loading);
   const [operationInProgress, setOperationInProgress] = useState(false);
-  const [expandedDays, setExpandedDays] = useState<string[]>([]);
   
   // Debug log when component renders or availability changes
   useEffect(() => {
@@ -47,16 +46,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         slots: day.slots
       }))
     });
-    
-    // Expand days with slots by default
-    const daysWithSlots = dailyAvailability
-      .filter(day => day.slots.length > 0)
-      .map(day => day.dayOfWeek.toString());
-      
-    if (daysWithSlots.length > 0 && !loading) {
-      setExpandedDays(daysWithSlots);
-    }
-  }, [dailyAvailability, loading]);
+  }, [dailyAvailability, loading, isRefreshing, userId]);
   
   // Use this effect to sync the loading prop but prevent too frequent updates
   useEffect(() => {
@@ -93,14 +83,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     console.log(`Adding slot for day ${dayOfWeek}: ${startTime} - ${endTime}`);
     setOperationInProgress(true);
     try {
-      const result = await onAddSlot(dayOfWeek, startTime, endTime);
-      if (result) {
-        // Ensure this day is expanded after adding a slot
-        if (!expandedDays.includes(dayOfWeek.toString())) {
-          setExpandedDays([...expandedDays, dayOfWeek.toString()]);
-        }
-      }
-      return result;
+      return await onAddSlot(dayOfWeek, startTime, endTime);
     } finally {
       setTimeout(() => setOperationInProgress(false), 300);
     }
@@ -130,25 +113,17 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     console.log(`Copying slots from day ${fromDay} to day ${toDay}`);
     setOperationInProgress(true);
     try {
-      const result = await onCopyDay(fromDay, toDay);
-      // Ensure target day is expanded after copying slots
-      if (result && !expandedDays.includes(toDay.toString())) {
-        setExpandedDays([...expandedDays, toDay.toString()]);
-      }
-      return result;
+      return await onCopyDay(fromDay, toDay);
     } finally {
       setTimeout(() => setOperationInProgress(false), 300);
     }
   };
 
   // Define what "content loading" means 
-  const isContentLoading = (localLoading && (dailyAvailability.length === 0 || !dailyAvailability[0])) || operationInProgress;
+  const isContentLoading = (localLoading && (dailyAvailability.length === 0 || !dailyAvailability[0]?.slots)) || operationInProgress;
   
   // Check if we have valid data to display
   const hasData = dailyAvailability.length > 0;
-
-  const totalSlotsCount = dailyAvailability.reduce((total, day) => total + day.slots.length, 0);
-  console.log(`Total slots across all days: ${totalSlotsCount}`);
 
   return (
     <div className="p-4">
@@ -186,15 +161,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="mb-2 text-sm text-muted-foreground">
-            {totalSlotsCount} total slots defined across all days
-          </div>
-          <Accordion 
-            type="multiple" 
-            className="w-full"
-            value={expandedDays}
-            onValueChange={setExpandedDays}
-          >
+          <Accordion type="multiple" className="w-full">
             {dailyAvailability.map((day) => (
               <AccordionItem key={day.dayOfWeek} value={day.dayOfWeek.toString()}>
                 <div className="flex items-center">

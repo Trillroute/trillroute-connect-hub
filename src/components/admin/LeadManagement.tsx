@@ -14,7 +14,6 @@ import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
 import { canManageLeads } from '@/utils/adminPermissions';
 import LeadKanbanBoard from './leads/LeadKanbanBoard';
-import { useLeadToastAdapter } from './leads/hooks/useLeadToastAdapter';
 
 interface LeadManagementProps {
   canAddLead?: boolean;
@@ -28,7 +27,6 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   canDeleteLead = true
 }) => {
   const { toast } = useToast();
-  const { showToast, showSuccessToast, showErrorToast } = useLeadToastAdapter();
   const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -55,10 +53,8 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   console.log('LeadManagement - isSuperAdmin:', isSuperAdmin);
   console.log('LeadManagement - effectiveCanEditLead:', effectiveCanEditLead);
   console.log('LeadManagement - admin role name:', user?.adminRoleName);
-  
-  // Fix argument count error by checking user's role first
-  const canEditLeadsPermission = user?.role === 'admin' ? canManageLeads(user) : 'N/A';
-  console.log('LeadManagement - can edit leads permission:', canEditLeadsPermission);
+  console.log('LeadManagement - can edit leads permission:', 
+    user?.role === 'admin' ? canManageLeads(user, 'edit') : 'N/A');
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -91,12 +87,15 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
     }
     
     if (user?.role === 'admin') {
-      // Fix: Remove parameters from canManageLeads call
-      const hasPermission = canManageLeads(user);
+      const hasPermission = canManageLeads(user, 'edit');
       console.log('LeadManagement - Admin has edit permission:', hasPermission);
       
       if (!hasPermission) {
-        showToast("Permission Denied", "You don't have permission to edit leads.");
+        toast({
+          title: "Permission Denied",
+          description: "You don't have permission to edit leads.",
+          variant: "destructive",
+        });
         return;
       }
     }
@@ -114,12 +113,15 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
     }
     
     if (user?.role === 'admin') {
-      // Fix: Remove parameters from canManageLeads call
-      const hasPermission = canManageLeads(user);
+      const hasPermission = canManageLeads(user, 'delete');
       console.log('LeadManagement - Admin has delete permission:', hasPermission);
       
       if (!hasPermission) {
-        showToast("Permission Denied", "You don't have permission to delete leads.");
+        toast({
+          title: "Permission Denied",
+          description: "You don't have permission to delete leads.",
+          variant: "destructive",
+        });
         return;
       }
     }

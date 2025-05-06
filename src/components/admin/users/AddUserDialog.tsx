@@ -1,247 +1,247 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useToastAdapter } from '../courses/hooks/useToastAdapter';
 
-const roleEnum = z.enum(['student', 'teacher', 'admin']);
-
-const userSchema = z.object({
-  firstName: z.string().min(2, {
-    message: "First name must be at least 2 characters.",
-  }),
-  lastName: z.string().min(2, {
-    message: "Last name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters.",
-  }),
-  role: roleEnum,
-  adminLevelName: z.string().optional(),
-});
-
-export type NewUserData = z.infer<typeof userSchema>;
-export type UserRole = z.infer<typeof roleEnum>;
+export interface NewUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: 'student' | 'teacher' | 'admin' | 'superadmin';
+  adminLevelName?: string;
+  dateOfBirth?: string;
+  profilePhoto?: string;
+  parentName?: string;
+  guardianRelation?: string;
+  primaryPhone?: string;
+  secondaryPhone?: string;
+  whatsappEnabled?: boolean;
+  address?: string;
+  idProof?: string;
+}
 
 interface AddUserDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddUser: (userData: NewUserData) => Promise<void>;
+  onAddUser: (userData: NewUserData) => void;
   isLoading: boolean;
   allowAdminCreation: boolean;
-  defaultRole: UserRole;
-  title?: string; // Make title optional
+  defaultRole?: 'student' | 'teacher' | 'admin';
+  title?: string;
 }
 
-const AddUserDialog: React.FC<AddUserDialogProps> = ({
-  isOpen,
-  onOpenChange,
-  onAddUser,
+const AddUserDialog = ({ 
+  isOpen, 
+  onOpenChange, 
+  onAddUser, 
   isLoading,
   allowAdminCreation,
   defaultRole,
-  title = "Add User" // Default title
-}) => {
-  const { toast } = useToast();
-  const { showToast } = useToastAdapter();
-  const [role, setRole] = useState<UserRole>(defaultRole);
-
-  const form = useForm<NewUserData>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      role: defaultRole,
-      adminLevelName: 'Limited View'
-    },
-    mode: "onChange",
-  });
+  title = 'Add User'
+}: AddUserDialogProps) => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'student' | 'teacher' | 'admin'>(defaultRole || 'student');
+  const [adminLevelName, setAdminLevelName] = useState<string>('Limited View');
+  const [adminLevels, setAdminLevels] = useState<{name: string, description: string}[]>([]);
+  const [isLoadingLevels, setIsLoadingLevels] = useState(false);
 
   useEffect(() => {
-    form.setValue('role', role);
-  }, [role, form]);
+    if (isOpen && (role === 'admin' || defaultRole === 'admin')) {
+      loadAdminLevels();
+    }
+  }, [isOpen, role, defaultRole]);
 
-  const onSubmit = async (data: NewUserData) => {
+  const loadAdminLevels = async () => {
     try {
-      if (data.role === 'admin' && !allowAdminCreation) {
-        showToast('Unauthorized', 'You are not allowed to create admin users.', 'destructive');
+      setIsLoadingLevels(true);
+      const { data, error } = await supabase
+        .from('admin_levels')
+        .select('name, description')
+        .order('id', { ascending: true });
+        
+      if (error) {
+        console.error('Error loading admin levels:', error);
         return;
       }
       
-      await onAddUser(data);
-      form.reset();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error("Error adding user:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add user. Please try again.",
-        variant: "destructive",
-      });
+      if (data && data.length > 0) {
+        setAdminLevels(data);
+        setAdminLevelName(data[0].name); // Select the first level by default
+      } else {
+        // Fallback default levels
+        setAdminLevels([
+          { name: 'Limited View', description: 'View-only administrator' },
+          { name: 'Standard Admin', description: 'Regular administrator permissions' },
+          { name: 'Full Access', description: 'Complete administrative access' }
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading admin levels:', error);
+    } finally {
+      setIsLoadingLevels(false);
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    onAddUser({
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      ...(role === 'admin' ? { adminLevelName } : {})
+    });
+  };
+
+  const resetForm = () => {
+    setFirstName('');
+    setLastName('');
+    setEmail('');
+    setPassword('');
+    setRole(defaultRole || 'student');
+    setAdminLevelName('Limited View');
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new user. All fields are required.
+          </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid gap-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="firstName"
-                    className="text-right inline-block w-full pr-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    placeholder="First Name"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...form.register("firstName")}
-                  />
-                  {form.formState.errors.firstName && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.firstName?.message}
-                    </p>
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+          
+          {!defaultRole && (
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={role} onValueChange={(value: 'student' | 'teacher' | 'admin') => setRole(value)}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="student">Student</SelectItem>
+                  <SelectItem value="teacher">Teacher</SelectItem>
+                  {allowAdminCreation && (
+                    <SelectItem value="admin">Administrator</SelectItem>
                   )}
-                </div>
-                <div>
-                  <label
-                    htmlFor="lastName"
-                    className="text-right inline-block w-full pr-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    placeholder="Last Name"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...form.register("lastName")}
-                  />
-                  {form.formState.errors.lastName && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.lastName?.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="text-right inline-block w-full pr-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="Email"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  {...form.register("email")}
-                />
-                {form.formState.errors.email && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.email?.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="password"
-                  className="text-right inline-block w-full pr-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="Password"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  {...form.register("password")}
-                />
-                {form.formState.errors.password && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.password?.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="role"
-                  className="text-right inline-block w-full pr-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Role
-                </label>
-                <select
-                  id="role"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  {...form.register("role")}
-                  onChange={(e) => {
-                    setRole(e.target.value as UserRole);
-                    form.setValue('role', e.target.value as UserRole);
-                  }}
-                  value={role}
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  {allowAdminCreation && <option value="admin">Admin</option>}
-                </select>
-                {form.formState.errors.role && (
-                  <p className="text-sm text-red-500">
-                    {form.formState.errors.role?.message}
-                  </p>
-                )}
-              </div>
-
-              {role === 'admin' && (
-                <div>
-                  <label
-                    htmlFor="adminLevelName"
-                    className="text-right inline-block w-full pr-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Admin Level
-                  </label>
-                  <select
-                    id="adminLevelName"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    {...form.register("adminLevelName")}
-                  >
-                    <option value="Limited View">Limited View</option>
-                    <option value="Full Access">Full Access</option>
-                  </select>
-                  {form.formState.errors.adminLevelName && (
-                    <p className="text-sm text-red-500">
-                      {form.formState.errors.adminLevelName?.message}
-                    </p>
-                  )}
-                </div>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {(role === 'admin' && allowAdminCreation) && (
+            <div className="space-y-2">
+              <Label htmlFor="adminLevelName">Admin Permission Level</Label>
+              <Select 
+                value={adminLevelName} 
+                onValueChange={(value: string) => setAdminLevelName(value)}
+                disabled={isLoadingLevels}
+              >
+                <SelectTrigger id="adminLevelName">
+                  <SelectValue placeholder={isLoadingLevels ? "Loading..." : "Select admin level"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {adminLevels.map(level => (
+                    <SelectItem key={level.name} value={level.name}>
+                      {level.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {isLoadingLevels && (
+                <div className="text-xs text-muted-foreground mt-1">Loading admin levels...</div>
               )}
             </div>
-            <Button disabled={isLoading} type="submit">
-              {isLoading ? "Adding..." : "Add User"}
+          )}
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => handleOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancel
             </Button>
-          </form>
-        </Form>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Adding...' : 'Add User'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

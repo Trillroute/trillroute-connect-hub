@@ -14,26 +14,22 @@ export function transformAvailabilityData(availabilitySlots: UserAvailability[])
   }));
   
   // Add slots to their corresponding days
-  if (Array.isArray(availabilitySlots)) {
-    availabilitySlots.forEach(slot => {
-      console.log(`Processing slot: dayOfWeek=${slot.dayOfWeek}, time=${slot.startTime}-${slot.endTime}, id=${slot.id}`);
-      const dayIndex = slot.dayOfWeek;
-      if (dayIndex >= 0 && dayIndex < 7) {
-        weeklyAvailability[dayIndex].slots.push(slot);
-      } else {
-        console.error(`Invalid day of week in availability data: ${dayIndex}`);
-      }
-    });
-  } else {
-    console.error("availabilitySlots is not an array:", availabilitySlots);
-  }
+  availabilitySlots.forEach(slot => {
+    console.log(`Processing slot: dayOfWeek=${slot.dayOfWeek}, time=${slot.startTime}-${slot.endTime}`);
+    const dayIndex = slot.dayOfWeek;
+    if (dayIndex >= 0 && dayIndex < 7) {
+      weeklyAvailability[dayIndex].slots.push(slot);
+    } else {
+      console.error(`Invalid day of week in availability data: ${dayIndex}`);
+    }
+  });
   
   // Sort slots by start time within each day
   weeklyAvailability.forEach(day => {
     day.slots.sort((a, b) => {
       return a.startTime.localeCompare(b.startTime);
     });
-    console.log(`Day ${day.dayName} has ${day.slots.length} slots`);
+    console.log(`Day ${day.dayName} now has ${day.slots.length} slots`);
   });
   
   return weeklyAvailability;

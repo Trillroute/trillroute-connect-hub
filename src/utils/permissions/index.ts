@@ -7,7 +7,7 @@ export * from './types';
 // Core permission checking
 export * from './permissionCheck';
 export * from './modulePermissions';
-export * from './accessControl';  // This import now points to the .tsx file
+export * from './accessControl';
 
 // Helper functions
 export * from './roleHelpers';

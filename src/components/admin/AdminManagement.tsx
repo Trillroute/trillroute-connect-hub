@@ -1,13 +1,19 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, RefreshCw, Search } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Input } from '@/components/ui/input';
-import { UserManagementUser } from '@/types/student';
-import AdminTable from '@/components/admin/admin/AdminTable';
+import { useAdminManagement } from './hooks/useAdminManagement';
+import AdminTable from './admin/AdminTable';
+import AdminDialogs from './admin/AdminDialogs';
+import { updateCachedAdminRoles } from '@/utils/adminPermissions';
+import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
+import AdminHeader from './admin/AdminHeader';
+import { ViewMode } from './admin/ViewControls';
 
 interface AdminManagementProps {
   canAddAdmin?: boolean;
@@ -16,148 +22,129 @@ interface AdminManagementProps {
   canEditAdminLevel?: boolean;
 }
 
-const AdminManagement: React.FC<AdminManagementProps> = ({
-  canAddAdmin = true,
-  canEditAdmin = true,
-  canDeleteAdmin = true,
-  canEditAdminLevel = true
-}) => {
+const AdminManagement = ({ 
+  canAddAdmin = false,
+  canEditAdmin = false,
+  canDeleteAdmin = false,
+  canEditAdminLevel = false
+}: AdminManagementProps) => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { user, isSuperAdmin } = useAuth();
-  const [admins, setAdmins] = useState<UserManagementUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState<UserManagementUser | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredAdmins, setFilteredAdmins] = useState<UserManagementUser[]>([]);
+  const { isSuperAdmin } = useAuth();
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const {
+    admins,
+    isLoading,
+    adminToEdit,
+    adminToDelete,
+    adminToView,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    isViewDialogOpen,
+    loadAdmins,
+    setIsEditDialogOpen,
+    setIsDeleteDialogOpen,
+    setIsViewDialogOpen,
+    handleAddAdmin,
+    handleUpdateAdmin,
+    handleDeleteAdmin,
+    handleUpdateAdminLevel,
+    openEditDialog,
+    openViewDialog,
+    openDeleteDialog,
+    isAdminEditable,
+    canAdminBeDeleted,
+    effectiveCanEditAdminLevel
+  } = useAdminManagement({
+    canEditAdmin,
+    canDeleteAdmin,
+    canEditAdminLevel,
+    toast
+  });
 
   useEffect(() => {
-    fetchAdmins();
-  }, []);
+    const loadAdminRoles = async () => {
+      try {
+        const roles = await fetchAdminRoles();
+        if (roles && roles.length > 0) {
+          updateCachedAdminRoles(roles);
+        }
+      } catch (error) {
+        console.error('Error loading admin roles:', error);
+      }
+    };
+    loadAdminRoles();
+    loadAdmins();
+  }, [loadAdmins]);
 
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredAdmins(admins);
-      return;
+  // Bulk delete logic
+  const handleBulkDelete = async () => {
+    for (const id of selectedIds) {
+      const admin = admins.find(a => a.id === id);
+      // Only attempt delete if allowed
+      if (admin && canAdminBeDeleted(admin)) {
+        // Instead of passing admin object, first set it as the admin to delete, then call handleDeleteAdmin
+        openDeleteDialog(admin);
+        await handleDeleteAdmin(); // Call without arguments since it operates on adminToDelete state
+      }
     }
-
-    const filtered = admins.filter(admin => {
-      const query = searchQuery.toLowerCase();
-      return (
-        admin.firstName.toLowerCase().includes(query) ||
-        admin.lastName.toLowerCase().includes(query) ||
-        admin.email.toLowerCase().includes(query) ||
-        (admin.roleName && admin.roleName.toLowerCase().includes(query))
-      );
+    setSelectedIds([]);
+    toast({
+      title: 'Success',
+      description: 'Selected administrators deleted.',
     });
-
-    setFilteredAdmins(filtered);
-  }, [admins, searchQuery]);
-
-  const fetchAdmins = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('custom_users')
-        .select('*')
-        .eq('role', 'admin')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform the data to match UserManagementUser structure
-      const transformedData = data.map((admin: any) => ({
-        id: admin.id,
-        firstName: admin.first_name,
-        lastName: admin.last_name,
-        email: admin.email,
-        role: admin.role,
-        roleName: admin.admin_level_name,
-        createdAt: admin.created_at,
-      }));
-
-      setAdmins(transformedData);
-    } catch (error) {
-      console.error('Error fetching admins:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load admins. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
+    loadAdmins();
   };
-
-  const openEditDialog = (admin: UserManagementUser) => {
-    setSelectedAdmin(admin);
-    setIsEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (admin: UserManagementUser) => {
-    setSelectedAdmin(admin);
-    setIsDeleteDialogOpen(true);
-  };
-
-  if (!isSuperAdmin()) {
-    return (
-      <Card>
-        <CardContent className="p-8">
-          <h3 className="text-lg font-medium">Permission Denied</h3>
-          <p className="text-gray-500">You don't have permission to manage administrators.</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <div>
-            <CardTitle>Admin Management</CardTitle>
-            <CardDescription>Manage administrators</CardDescription>
-          </div>
-          <div className="flex flex-row gap-2 items-center">
-            <Button
-              variant="outline"
-              onClick={fetchAdmins}
-              className="flex items-center gap-2"
-              size="sm"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </Button>
-            <Button
-              onClick={() => setIsCreateDialogOpen(true)}
-              className="bg-primary text-white flex items-center gap-2"
-              size="sm"
-            >
-              <Plus className="h-4 w-4" />
-              Add Admin
-            </Button>
-          </div>
-        </div>
+    <Card>
+      <CardHeader>
+        <AdminHeader 
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onRefresh={loadAdmins}
+          onAddAdmin={() => setIsAddDialogOpen(true)}
+          selectedIds={selectedIds}
+          onBulkDelete={handleBulkDelete}
+          canAddAdmin={canAddAdmin}
+          isSuperAdmin={isSuperAdmin()}
+          isLoading={isLoading}
+        />
       </CardHeader>
       <CardContent>
-        <div className="relative w-full max-w-md mb-4">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            type="search"
-            placeholder="Search admins..."
-            className="pl-9 w-full"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
         <AdminTable 
-          admins={filteredAdmins} 
-          isLoading={loading} 
-          onEdit={openEditDialog} 
+          admins={admins}
+          isLoading={isLoading}
+          onEdit={openEditDialog}
           onDelete={openDeleteDialog}
+          onView={openViewDialog}
+          viewMode={viewMode}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+          canEdit={isAdminEditable}
+          canDelete={canAdminBeDeleted}
+        />
+        <AdminDialogs
+          isAddDialogOpen={isAddDialogOpen}
+          setIsAddDialogOpen={setIsAddDialogOpen}
+          isEditDialogOpen={isEditDialogOpen}
+          setIsEditDialogOpen={setIsEditDialogOpen}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          isViewDialogOpen={isViewDialogOpen}
+          setIsViewDialogOpen={setIsViewDialogOpen}
+          adminToEdit={adminToEdit}
+          adminToDelete={adminToDelete}
+          adminToView={adminToView}
+          handleAddAdmin={handleAddAdmin}
+          handleUpdateAdmin={handleUpdateAdmin}
+          handleDeleteAdmin={handleDeleteAdmin}
+          handleUpdateAdminLevel={handleUpdateAdminLevel}
+          isLoading={isLoading}
+          canAddAdmin={canAddAdmin}
+          effectiveCanEditAdminLevel={effectiveCanEditAdminLevel || isSuperAdmin()} 
         />
       </CardContent>
     </Card>
