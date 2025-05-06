@@ -15,6 +15,7 @@ import StudentManagement from '@/components/admin/StudentManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
 import LevelManagement from '@/components/admin/levels/LevelManagement';
 import ClassTypeManagement from '@/components/admin/class-types/ClassTypeManagement';
+import TeacherManagement from '@/components/admin/TeacherManagement';
 
 interface TabContentMapProps {
   activeTab: ActiveTab;
@@ -68,7 +69,11 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       ) : null;
       
     case 'teachers':
-      return <TeacherContent />;
+      return <TeacherManagement 
+        canAddUser={true}
+        canEditUser={true}
+        canDeleteUser={true}
+      />;
       
     case 'scheduling':
       return <SchedulingContent />;
