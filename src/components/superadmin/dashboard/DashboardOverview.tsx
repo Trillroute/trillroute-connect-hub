@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import UserGrowthChart from './UserGrowthChart';
 import AdminStats from './AdminStats';
-import { DashboardStats, UserActivityData } from '../../superadmin/hooks/useDashboardData';
+import { DashboardStats, UserActivityData } from '@/components/superadmin/hooks/useDashboardData';
 
 interface DashboardOverviewProps {
   stats: {

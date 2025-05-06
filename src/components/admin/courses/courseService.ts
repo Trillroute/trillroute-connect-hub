@@ -1,12 +1,20 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Course, ClassTypeData } from '@/types/course';
+import { Json } from '@/integrations/supabase/types';
+import { formatClassTypesData } from '@/utils/courseHelpers';
 
 // Create a new course
 export const createCourse = async (courseData: Partial<Course>): Promise<Course> => {
+  // Convert class_types_data to JSON string if it exists
+  const dataToInsert = {
+    ...courseData,
+    class_types_data: courseData.class_types_data ? JSON.stringify(courseData.class_types_data) : null
+  };
+  
   const { data, error } = await supabase
     .from('courses')
-    .insert(courseData)
+    .insert(dataToInsert)
     .select()
     .single();
     
@@ -14,17 +22,21 @@ export const createCourse = async (courseData: Partial<Course>): Promise<Course>
   
   return {
     ...data,
-    class_types_data: (typeof data.class_types_data === 'string' 
-      ? JSON.parse(data.class_types_data) 
-      : data.class_types_data) as ClassTypeData[]
+    class_types_data: formatClassTypesData(data.class_types_data)
   } as Course;
 };
 
 // Update an existing course
 export const updateCourse = async (id: string, courseData: Partial<Course>): Promise<Course> => {
+  // Convert class_types_data to JSON string if it exists
+  const dataToUpdate = {
+    ...courseData,
+    class_types_data: courseData.class_types_data ? JSON.stringify(courseData.class_types_data) : undefined
+  };
+  
   const { data, error } = await supabase
     .from('courses')
-    .update(courseData)
+    .update(dataToUpdate)
     .eq('id', id)
     .select()
     .single();
@@ -33,9 +45,7 @@ export const updateCourse = async (id: string, courseData: Partial<Course>): Pro
   
   return {
     ...data,
-    class_types_data: (typeof data.class_types_data === 'string' 
-      ? JSON.parse(data.class_types_data) 
-      : data.class_types_data) as ClassTypeData[]
+    class_types_data: formatClassTypesData(data.class_types_data)
   } as Course;
 };
 
@@ -61,9 +71,7 @@ export const fetchCourseById = async (id: string): Promise<Course> => {
   
   return {
     ...data,
-    class_types_data: (typeof data.class_types_data === 'string' 
-      ? JSON.parse(data.class_types_data) 
-      : data.class_types_data) as ClassTypeData[]
+    class_types_data: formatClassTypesData(data.class_types_data)
   } as Course;
 };
 
@@ -78,8 +86,6 @@ export const fetchAllCourses = async (): Promise<Course[]> => {
   
   return data.map(course => ({
     ...course,
-    class_types_data: (typeof course.class_types_data === 'string' 
-      ? JSON.parse(course.class_types_data) 
-      : course.class_types_data) as ClassTypeData[]
+    class_types_data: formatClassTypesData(course.class_types_data)
   })) as Course[];
 };
