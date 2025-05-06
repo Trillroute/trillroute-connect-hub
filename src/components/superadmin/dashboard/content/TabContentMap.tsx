@@ -9,7 +9,7 @@ import SchedulingContent from './SchedulingContent';
 import UserAvailabilityContent from './UserAvailabilityContent';
 import { DashboardStats, UserActivityData } from '@/components/superadmin/hooks/useDashboardData';
 import { Lead } from '@/types/lead';
-import AdminManagement from '@/components/superadmin/AdminManagement';
+import AdminManagement from '@/components/admin/AdminManagement';
 import CourseManagement from '@/components/admin/CourseManagement';
 import StudentManagement from '@/components/admin/StudentManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
@@ -106,7 +106,12 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       />;
       
     case 'admins':
-      return <AdminManagement />;
+      return <AdminManagement 
+        canAddAdmin={true}
+        canEditAdmin={true}
+        canDeleteAdmin={true}
+        canEditAdminLevel={true}
+      />;
       
     case 'levels':
       return <LevelManagement 
