@@ -14,10 +14,13 @@ export const createCourse = async (courseData: Partial<Course>): Promise<Course>
   // Convert class_types_data to JSON string if it exists
   const dataToInsert = {
     ...courseData,
-    class_types_data: courseData.class_types_data ? JSON.stringify(courseData.class_types_data) : null,
-    // Explicitly include required fields
+    // Explicitly include required fields to match database schema
     title: courseData.title,
-    description: courseData.description
+    description: courseData.description,
+    // Set duration field if not provided (database requires it)
+    duration: courseData.duration || '0',
+    // Handle class_types_data conversion
+    class_types_data: courseData.class_types_data ? JSON.stringify(courseData.class_types_data) : null
   };
   
   const { data, error } = await supabase

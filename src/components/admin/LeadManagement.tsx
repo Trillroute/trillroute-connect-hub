@@ -56,8 +56,10 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   console.log('LeadManagement - isSuperAdmin:', isSuperAdmin);
   console.log('LeadManagement - effectiveCanEditLead:', effectiveCanEditLead);
   console.log('LeadManagement - admin role name:', user?.adminRoleName);
-  console.log('LeadManagement - can edit leads permission:', 
-    user?.role === 'admin' ? canManageLeads(user, 'edit') : 'N/A');
+  
+  // Fix argument count error by checking user's role first
+  const canEditLeadsPermission = user?.role === 'admin' ? canManageLeads(user) : 'N/A';
+  console.log('LeadManagement - can edit leads permission:', canEditLeadsPermission);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -90,7 +92,8 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
     }
     
     if (user?.role === 'admin') {
-      const hasPermission = canManageLeads(user, 'edit');
+      // Fix: Remove parameters from canManageLeads call
+      const hasPermission = canManageLeads(user);
       console.log('LeadManagement - Admin has edit permission:', hasPermission);
       
       if (!hasPermission) {
@@ -112,7 +115,8 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
     }
     
     if (user?.role === 'admin') {
-      const hasPermission = canManageLeads(user, 'delete');
+      // Fix: Remove parameters from canManageLeads call
+      const hasPermission = canManageLeads(user);
       console.log('LeadManagement - Admin has delete permission:', hasPermission);
       
       if (!hasPermission) {
