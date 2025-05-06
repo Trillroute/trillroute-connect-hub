@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { 
   createAvailabilitySlot,
@@ -28,18 +27,17 @@ export function useAvailabilityActions(
         slots: []
       }));
       setDailyAvailability(emptyAvailability);
-      setLoading(false);
       return;
     }
 
     try {
       console.log(`Fetching availability for user: ${userId}`);
-      setLoading(true);
       const availability = await fetchUserAvailability(userId);
       console.log(`Retrieved availability data for ${userId}:`, availability);
       const transformed = transformAvailabilityData(availability);
       console.log('Transformed availability data:', transformed);
       setDailyAvailability(transformed);
+      return transformed;
     } catch (error) {
       console.error("Error refreshing availability:", error);
       toast({
@@ -54,8 +52,7 @@ export function useAvailabilityActions(
         slots: []
       }));
       setDailyAvailability(emptyAvailability);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 

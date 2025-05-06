@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ContentWrapper from './ContentWrapper';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from "@/components/ui/badge";
@@ -33,20 +33,25 @@ const UserAvailabilityContent: React.FC = () => {
     copyDaySlots
   } = useUserAvailability(selectedUserId || undefined);
 
-  // Set the initial selected user to the current user
+  // Set the initial selected user to the current user - only once when staffMembers load
   useEffect(() => {
-    if (user && !selectedUserId && !isLoadingStaff) {
+    if (user && !selectedUserId && !isLoadingStaff && staffMembers.length > 0) {
       console.log('Setting initial selectedUserId to current user:', user.id);
       setSelectedUserId(user.id);
     }
-  }, [user, selectedUserId, isLoadingStaff]);
+  }, [user, selectedUserId, isLoadingStaff, staffMembers.length]);
 
-  const handleUserChange = (userId: string) => {
+  const handleUserChange = useCallback((userId: string) => {
     console.log('User changed to:', userId);
     setSelectedUserId(userId);
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
+    if (isLoadingAvailability) {
+      console.log('Already refreshing, skipping request');
+      return;
+    }
+    
     try {
       await refreshAvailability();
       toast({
@@ -61,13 +66,11 @@ const UserAvailabilityContent: React.FC = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [refreshAvailability, isLoadingAvailability, toast]);
 
   // Find selected user details
   const selectedUser = staffMembers.find(member => member.id === selectedUserId);
   const isOwnAvailability = selectedUserId === user?.id;
-  
-  const isLoading = isLoadingStaff || isLoadingAvailability;
   
   return (
     <ContentWrapper

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DayAvailabilityPanel from './DayAvailabilityPanel';
@@ -30,24 +30,33 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const handleTabChange = (value: string) => {
+  const handleTabChange = useCallback((value: string) => {
     setActiveDay(value);
-  };
+  }, []);
 
-  const handleCopyDay = () => {
+  const handleCopyDay = useCallback(() => {
     setIsCopyDialogOpen(true);
-  };
+  }, []);
   
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     if (loading || isRefreshing) return;
     
     setIsRefreshing(true);
     try {
       await onRefresh();
     } finally {
-      setIsRefreshing(false);
+      // Slightly delay the loading state change to prevent UI flicker
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
     }
-  };
+  }, [loading, isRefreshing, onRefresh]);
+
+  console.log("UserAvailabilitySchedule rendering", {
+    loading,
+    isRefreshing,
+    availabilityCount: dailyAvailability.length
+  });
 
   return (
     <div className="p-4">
@@ -75,7 +84,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         </div>
       </div>
       
-      {loading ? (
+      {loading && !isRefreshing ? (
         <div className="flex justify-center items-center h-48">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -84,7 +93,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
           No availability data could be loaded
         </div>
       ) : (
-        <Tabs defaultValue={activeDay} onValueChange={handleTabChange}>
+        <Tabs defaultValue={activeDay} value={activeDay} onValueChange={handleTabChange}>
           <TabsList className="grid grid-cols-7 w-full">
             {dailyAvailability.map((day) => (
               <TabsTrigger key={day.dayOfWeek} value={day.dayOfWeek.toString()}>

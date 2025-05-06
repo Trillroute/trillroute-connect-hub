@@ -46,21 +46,43 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   }, [targetUserId, fetchAvailability]);
 
   useEffect(() => {
-    // Set loading to true on userId change
-    setLoading(true);
+    let isMounted = true;
     
-    if (targetUserId) {
-      console.log('User ID changed, refreshing availability for:', targetUserId);
-      refreshAvailability().catch(err => {
-        console.error('Error refreshing availability:', err);
-        setLoading(false);
-      });
-    } else {
-      // If no user ID, set empty data and stop loading
-      console.log('No user ID available, setting empty availability data');
-      setDailyAvailability([]);
-      setLoading(false);
-    }
+    const loadAvailability = async () => {
+      // Set loading to true on userId change
+      setLoading(true);
+      
+      if (targetUserId) {
+        console.log('User ID changed, refreshing availability for:', targetUserId);
+        try {
+          await refreshAvailability();
+        } catch (err) {
+          console.error('Error refreshing availability:', err);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      } else {
+        // If no user ID, set empty data and stop loading
+        console.log('No user ID available, setting empty availability data');
+        const emptyAvailability = daysOfWeek.map((dayName, index) => ({
+          dayOfWeek: index,
+          dayName,
+          slots: []
+        }));
+        if (isMounted) {
+          setDailyAvailability(emptyAvailability);
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadAvailability();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [targetUserId, refreshAvailability]);
 
   return {
