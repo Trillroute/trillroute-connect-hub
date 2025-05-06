@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,22 +9,17 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+
+export type UserRole = 'admin' | 'student' | 'teacher' | 'superadmin';
 
 export interface NewUserData {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  role: 'student' | 'teacher' | 'admin' | 'superadmin';
+  role: UserRole;
   adminLevelName?: string;
   dateOfBirth?: string;
   profilePhoto?: string;
@@ -42,9 +37,8 @@ interface AddUserDialogProps {
   onOpenChange: (open: boolean) => void;
   onAddUser: (userData: NewUserData) => void;
   isLoading: boolean;
-  allowAdminCreation: boolean;
-  defaultRole?: 'student' | 'teacher' | 'admin';
-  title?: string;
+  allowAdminCreation?: boolean;
+  defaultRole?: UserRole;
 }
 
 const AddUserDialog = ({ 
@@ -60,7 +54,7 @@ const AddUserDialog = ({
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'teacher' | 'admin'>(defaultRole || 'student');
+  const [role, setRole] = useState<UserRole>(defaultRole || 'student');
   const [adminLevelName, setAdminLevelName] = useState<string>('Limited View');
   const [adminLevels, setAdminLevels] = useState<{name: string, description: string}[]>([]);
   const [isLoadingLevels, setIsLoadingLevels] = useState(false);
@@ -188,7 +182,7 @@ const AddUserDialog = ({
           {!defaultRole && (
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value: 'student' | 'teacher' | 'admin') => setRole(value)}>
+              <Select value={role} onValueChange={(value: UserRole) => setRole(value)}>
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>

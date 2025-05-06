@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -12,7 +11,7 @@ import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import UserTable from './users/UserTable';
-import AddUserDialog, { NewUserData } from './users/AddUserDialog';
+import AddUserDialog, { NewUserData, UserRole } from './users/AddUserDialog';
 import DeleteUserDialog from './users/DeleteUserDialog';
 import ViewUserDialog from './users/ViewUserDialog';
 import EditAdminLevelDialog from './users/EditAdminLevelDialog';
@@ -89,7 +88,7 @@ const AdminManagement = ({
       setIsLoading(true);
       const adminData = {
         ...userData,
-        role: 'admin'
+        role: 'admin' as UserRole
       };
       
       await addUser(adminData);
@@ -165,6 +164,11 @@ const AdminManagement = ({
     }
   };
 
+  // Fix the function type mismatch
+  const canDeleteUserFn = (user: UserManagementUser) => {
+    return canAdminBeDeleted(user);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -194,7 +198,7 @@ const AdminManagement = ({
           onViewUser={openViewDialog}
           onDeleteUser={openDeleteDialog}
           onEditAdminLevel={openEditAdminLevelDialog}
-          canDeleteUser={canAdminBeDeleted}
+          canDeleteUser={canDeleteUserFn}
           canEditAdminLevel={effectiveCanEditAdminLevel}
           userRole="admin"
         />

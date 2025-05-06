@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { NewUserData } from './AddUserDialog';
 import { UserManagementUser } from '@/types/student';
+import { mapDatabaseUserToUserModel } from '@/utils/userMappers';
 
 export const fetchAllUsers = async () => {
   try {
@@ -15,7 +16,7 @@ export const fetchAllUsers = async () => {
       throw new Error('Failed to fetch users');
     }
 
-    return data as UserManagementUser[];
+    return data.map(mapDatabaseUserToUserModel) as UserManagementUser[];
   } catch (error) {
     console.error('Error in fetchAllUsers:', error);
     throw error;
@@ -35,7 +36,7 @@ export const fetchAllAdmins = async () => {
       throw new Error('Failed to fetch administrators');
     }
 
-    return data as UserManagementUser[];
+    return data.map(mapDatabaseUserToUserModel) as UserManagementUser[];
   } catch (error) {
     console.error('Error in fetchAllAdmins:', error);
     throw error;
@@ -73,7 +74,8 @@ export const addUser = async (userData: NewUserData) => {
       first_name: userData.firstName,
       last_name: userData.lastName,
       role: userData.role,
-      admin_level_name: userData.role === 'admin' ? (userData.adminRoleName || 'Limited View') : null,
+      admin_level_name: userData.role === 'admin' ? (userData.adminLevelName || 'Limited View') : null,
+      password_hash: 'placeholder_hash' // Add this required field with a placeholder
     });
 
     if (dbError) {
