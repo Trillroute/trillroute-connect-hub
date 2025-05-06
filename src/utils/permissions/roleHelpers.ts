@@ -1,34 +1,37 @@
 
-/**
- * Helper function to check if an admin level name is a SuperAdmin equivalent
- */
-export function isSuperAdminLevel(levelName: string | undefined): boolean {
-  if (!levelName) return false;
-  // Normalize the level name for comparison
-  const normalizedName = levelName.toLowerCase().replace(/\s+/g, '');
-  return normalizedName === 'superadmin' || normalizedName === 'super admin';
-}
+import { AdminLevel } from './types';
 
 /**
- * Helper function to map module and operation to permission key
+ * Check if the admin level name indicates a superadmin role
+ * Case insensitive and ignores spaces
  */
-export function getPermissionKey(module: string, operation: string): string | null {
-  const key = `${operation.toUpperCase()}_${module.toUpperCase()}S`;
-  return key || null;
-}
+export const isSuperAdminLevel = (name?: string): boolean => {
+  if (!name) return false;
+  const normalized = name.toLowerCase().replace(/\s+/g, '');
+  return normalized === 'superadmin';
+};
 
 /**
- * Helper function to check if a specific module permission exists
+ * Check if a role has a specific permission for a module
  */
-export function checkModulePermission(
-  roleInfo: { [key: string]: any }, 
+export const checkModulePermission = (
+  role: AdminLevel, 
   module: string, 
-  operation: string
-): boolean {
-  const permissionsKey = `${module}Permissions`;
-  const permissions = roleInfo[permissionsKey] as string[];
+  operation: 'view' | 'add' | 'edit' | 'delete'
+): boolean => {
+  if (!role) return false;
   
-  const result = Array.isArray(permissions) && permissions.includes(operation);
-  console.log(`[adminPermissions] Checking ${module} ${operation} permission:`, result, 'Available permissions:', permissions);
-  return result;
-}
+  // Map the module name to the corresponding permission set
+  const permissionKey = `${module}Permissions` as keyof AdminLevel;
+  
+  // Get permission array, ensuring we handle unexpected data formats
+  const permissions = role[permissionKey];
+  
+  if (!Array.isArray(permissions)) {
+    console.error(`[roleHelpers] Invalid permissions format for ${module} in role ${role.name}`);
+    return false;
+  }
+  
+  // Check if the operation is included in the permissions
+  return permissions.includes(operation);
+};

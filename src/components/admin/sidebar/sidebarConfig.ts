@@ -8,8 +8,8 @@ import {
   DollarSign, 
   Flag, 
   Home, 
-  Lock, 
   MessageSquare, 
+  Shield, 
   UserPlus, 
   Users 
 } from "lucide-react";
@@ -126,22 +126,10 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
     icon: BarChart,
   },
   {
-    id: "access",
-    label: "Access",
-    icon: Lock,
-    submenu: [
-      {
-        id: "admins",
-        label: "Admins",
-        value: "admins",
-        requiredPermission: AdminPermission.VIEW_ADMINS
-      },
-      {
-        id: "levels",
-        label: "Levels",
-        value: "levels",
-        requiredPermission: AdminPermission.VIEW_LEVELS
-      }
-    ],
+    id: "levels",
+    label: "Permission Levels",
+    value: "levels",
+    icon: Shield,
+    requiredPermission: AdminPermission.VIEW_LEVELS
   },
 ];

@@ -1,13 +1,14 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLevelDetailed, AdminLevelBasic } from '@/types/adminLevel';
+import { clearPermissionCache } from '@/utils/permissions/permissionCache';
 
 // Mapper function to convert from Supabase data format to our app's format
 const mapToAdminLevel = (level: any): AdminLevelDetailed => {
   return {
     id: level.id,
     name: level.name,
-    description: level.description,
+    description: level.description || '',
     studentPermissions: level.student_permissions || [],
     teacherPermissions: level.teacher_permissions || [],
     adminPermissions: level.admin_permissions || [],
@@ -18,17 +19,20 @@ const mapToAdminLevel = (level: any): AdminLevelDetailed => {
 };
 
 // Mapper function to convert from our app's format to Supabase data format
-const mapToSupabaseLevel = (level: Omit<AdminLevelDetailed, 'id'>): any => {
-  return {
-    name: level.name,
-    description: level.description,
-    student_permissions: level.studentPermissions,
-    teacher_permissions: level.teacherPermissions,
-    admin_permissions: level.adminPermissions,
-    lead_permissions: level.leadPermissions,
-    course_permissions: level.coursePermissions,
-    level_permissions: level.levelPermissions,
-  };
+const mapToSupabaseLevel = (level: Partial<AdminLevelDetailed>): any => {
+  const result: any = {};
+  
+  // Only include fields that are defined
+  if (level.name !== undefined) result.name = level.name;
+  if (level.description !== undefined) result.description = level.description;
+  if (level.studentPermissions !== undefined) result.student_permissions = level.studentPermissions;
+  if (level.teacherPermissions !== undefined) result.teacher_permissions = level.teacherPermissions;
+  if (level.adminPermissions !== undefined) result.admin_permissions = level.adminPermissions;
+  if (level.leadPermissions !== undefined) result.lead_permissions = level.leadPermissions;
+  if (level.coursePermissions !== undefined) result.course_permissions = level.coursePermissions;
+  if (level.levelPermissions !== undefined) result.level_permissions = level.levelPermissions;
+  
+  return result;
 };
 
 export const createAdminLevel = async (level: Omit<AdminLevelDetailed, 'id'>): Promise<AdminLevelDetailed | null> => {
@@ -45,6 +49,9 @@ export const createAdminLevel = async (level: Omit<AdminLevelDetailed, 'id'>): P
       console.error('Error creating admin level:', error);
       return null;
     }
+    
+    // Clear permission cache after creating a new level
+    clearPermissionCache();
 
     return mapToAdminLevel(data);
   } catch (error) {
@@ -53,7 +60,6 @@ export const createAdminLevel = async (level: Omit<AdminLevelDetailed, 'id'>): P
   }
 };
 
-// Export with different names for backward compatibility
 export const fetchAdminLevels = async (): Promise<AdminLevelDetailed[]> => {
   try {
     const { data, error } = await supabase
@@ -72,9 +78,9 @@ export const fetchAdminLevels = async (): Promise<AdminLevelDetailed[]> => {
   }
 };
 
-export const updateAdminLevel = async (id: number, updates: Partial<Omit<AdminLevelDetailed, 'id'>>): Promise<AdminLevelDetailed | null> => {
+export const updateAdminLevel = async (id: number, updates: Partial<AdminLevelDetailed>): Promise<AdminLevelDetailed | null> => {
   try {
-    const supabaseUpdates = mapToSupabaseLevel(updates as Omit<AdminLevelDetailed, 'id'>);
+    const supabaseUpdates = mapToSupabaseLevel(updates);
 
     const { data, error } = await supabase
       .from('admin_levels')
@@ -87,6 +93,9 @@ export const updateAdminLevel = async (id: number, updates: Partial<Omit<AdminLe
       console.error('Error updating admin level:', error);
       return null;
     }
+    
+    // Clear permission cache after updating a level
+    clearPermissionCache();
 
     return mapToAdminLevel(data);
   } catch (error) {
@@ -106,6 +115,9 @@ export const deleteAdminLevel = async (id: number): Promise<boolean> => {
       console.error('Error deleting admin level:', error);
       return false;
     }
+    
+    // Clear permission cache after deleting a level
+    clearPermissionCache();
 
     return true;
   } catch (error) {
