@@ -58,11 +58,6 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
         label: "Class Types",
         value: "classTypes",
       },
-      {
-        id: "courseManagement",
-        label: "Course Management",
-        value: "courseManagement",
-      },
     ],
   },
   {
