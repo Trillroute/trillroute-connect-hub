@@ -40,7 +40,7 @@ export enum AdminPermission {
   DELETE_LEVELS = 'delete_levels'
 }
 
-// Export the AdminLevel interface
+// AdminLevel interface
 export interface AdminLevel {
   name: string;
   description: string;
@@ -49,5 +49,5 @@ export interface AdminLevel {
   adminPermissions: string[];
   leadPermissions: string[];
   coursePermissions: string[];
-  levelPermissions: string[];
+  levelPermissions?: string[];
 }

@@ -1,54 +1,38 @@
 
-import { UserManagementUser } from "@/types/student";
-import { PermissionUser } from "./types";
-import { canManageStudents, canManageTeachers, canManageCourses, canManageLeads, canManageLevels } from "./modulePermissions";
+import { ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { AdminPermission } from './types';
+import { hasPermission } from './permissionCheck';
 
-/**
- * Helper to check if user has access to any user management features
- */
-export const hasUserManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
-  if (user?.role === 'superadmin') {
-    return true;
-  }
-  
-  return canManageStudents(user, 'view') || 
-         canManageTeachers(user, 'view') ||
-         canManageStudents(user, 'add') ||
-         canManageTeachers(user, 'add');
+// Higher-order component to control access based on permissions
+export const withPermission = (
+  Component: React.ComponentType,
+  requiredPermission: AdminPermission
+) => {
+  return function PermissionGatedComponent(props: any) {
+    const { user } = useAuth();
+    
+    if (!hasPermission(user, requiredPermission)) {
+      return null;
+    }
+    
+    return <Component {...props} />;
+  };
 };
 
-/**
- * Helper to check if user has access to any course management features
- */
-export const hasCourseManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
-  if (user?.role === 'superadmin') {
-    return true;
-  }
-  
-  return canManageCourses(user, 'view') ||
-         canManageCourses(user, 'add');
-};
+// Component to conditionally render content based on permissions
+interface PermissionGateProps {
+  permission: AdminPermission;
+  fallback?: ReactNode;
+  children: ReactNode;
+}
 
-/**
- * Helper to check if user has access to any lead management features
- */
-export const hasLeadManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
-  if (user?.role === 'superadmin') {
-    return true;
+export const PermissionGate = ({ permission, fallback = null, children }: PermissionGateProps) => {
+  const { user } = useAuth();
+  
+  if (!hasPermission(user, permission)) {
+    return <>{fallback}</>;
   }
   
-  return canManageLeads(user, 'view') ||
-         canManageLeads(user, 'add');
-};
-
-/**
- * Helper to check if user has access to any level management features
- */
-export const hasLevelManagementAccess = (user: UserManagementUser | PermissionUser | null): boolean => {
-  if (user?.role === 'superadmin') {
-    return true;
-  }
-  
-  return canManageLevels(user, 'view') ||
-         canManageLevels(user, 'add');
+  return <>{children}</>;
 };

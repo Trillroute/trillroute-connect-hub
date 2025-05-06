@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Shield, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { clearPermissionCache } from '@/utils/permissions/permissionCache';
+import { clearPermissionCache } from '@/utils/permissions';
 
 interface PermissionsDialogProps {
   level: AdminLevelDetailed | null;

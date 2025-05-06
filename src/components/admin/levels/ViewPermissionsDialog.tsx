@@ -44,14 +44,20 @@ const ViewPermissionsDialog = ({
   };
 
   // Helper function to ensure we have a string array
-  const ensureStringArray = (permissions: string | number | string[]): string[] => {
+  const ensureStringArray = (permissions: string | string[] | number | undefined): string[] => {
     if (Array.isArray(permissions)) {
-      return permissions;
+      return permissions.map(p => String(p));
+    }
+    if (typeof permissions === 'string') {
+      return [permissions];
+    }
+    if (typeof permissions === 'number') {
+      return [String(permissions)];
     }
     return [];
   };
 
-  const renderPermissionBadges = (permissions: string | number | string[]) => {
+  const renderPermissionBadges = (permissions: string | string[] | number | undefined) => {
     const permissionArray = ensureStringArray(permissions);
     
     return permissionArray.length > 0 ? (

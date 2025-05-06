@@ -3,17 +3,23 @@ import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, RefreshCw, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserManagementUser } from '@/types/student';
+import UserTable from './users/UserTable';
+import AddUserDialog, { NewUserData } from './users/AddUserDialog';
+import DeleteUserDialog from './users/DeleteUserDialog';
+import ViewUserDialog from './users/ViewUserDialog';
+import EditAdminLevelDialog from './users/EditAdminLevelDialog';
+import { fetchAllAdmins, addUser, deleteUser } from './users/UserService';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminManagement } from './hooks/useAdminManagement';
-import AdminTable from './admin/AdminTable';
-import AdminDialogs from './admin/AdminDialogs';
-import { updateCachedAdminRoles } from '@/utils/adminPermissions';
-import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
-import AdminHeader from './admin/AdminHeader';
-import { ViewMode } from './admin/ViewControls';
+import { useAdminPermissions } from './hooks/admin/useAdminPermissions';
+import { useAdminLevelManagement } from './hooks/admin/useAdminLevelManagement';
 
 interface AdminManagementProps {
   canAddAdmin?: boolean;
@@ -22,129 +28,209 @@ interface AdminManagementProps {
   canEditAdminLevel?: boolean;
 }
 
-const AdminManagement = ({ 
-  canAddAdmin = false,
-  canEditAdmin = false,
-  canDeleteAdmin = false,
-  canEditAdminLevel = false
+const AdminManagement = ({
+  canAddAdmin = true,
+  canEditAdmin = true,
+  canDeleteAdmin = true,
+  canEditAdminLevel = true,
 }: AdminManagementProps) => {
+  const [admins, setAdmins] = useState<UserManagementUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditAdminLevelDialogOpen, setIsEditAdminLevelDialogOpen] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState<UserManagementUser | null>(null);
+  const [adminToView, setAdminToView] = useState<UserManagementUser | null>(null);
+  const [adminToEdit, setAdminToEdit] = useState<UserManagementUser | null>(null);
   const { toast } = useToast();
-  const { isSuperAdmin } = useAuth();
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const {
-    admins,
-    isLoading,
-    adminToEdit,
-    adminToDelete,
-    adminToView,
-    isEditDialogOpen,
-    isDeleteDialogOpen,
-    isViewDialogOpen,
-    loadAdmins,
-    setIsEditDialogOpen,
-    setIsDeleteDialogOpen,
-    setIsViewDialogOpen,
-    handleAddAdmin,
-    handleUpdateAdmin,
-    handleDeleteAdmin,
-    handleUpdateAdminLevel,
-    openEditDialog,
-    openViewDialog,
-    openDeleteDialog,
+  const { isAdmin, isSuperAdmin } = useAuth();
+  
+  const { 
+    effectiveCanEditAdminLevel,
     isAdminEditable,
-    canAdminBeDeleted,
-    effectiveCanEditAdminLevel
-  } = useAdminManagement({
-    canEditAdmin,
-    canDeleteAdmin,
-    canEditAdminLevel,
-    toast
-  });
+    canAdminBeDeleted
+  } = useAdminPermissions(canEditAdmin, canDeleteAdmin, canEditAdminLevel);
+
+  const loadAdmins = async () => {
+    try {
+      setIsLoading(true);
+      const adminsData = await fetchAllAdmins();
+      setAdmins(adminsData.filter(user => user.role === 'admin'));
+    } catch (error) {
+      console.error('Error fetching admins:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch administrators. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const { handleUpdateAdminLevel, isUpdatingLevel } = useAdminLevelManagement(loadAdmins);
 
   useEffect(() => {
-    const loadAdminRoles = async () => {
-      try {
-        const roles = await fetchAdminRoles();
-        if (roles && roles.length > 0) {
-          updateCachedAdminRoles(roles);
-        }
-      } catch (error) {
-        console.error('Error loading admin roles:', error);
-      }
-    };
-    loadAdminRoles();
     loadAdmins();
-  }, [loadAdmins]);
+  }, []);
 
-  // Bulk delete logic
-  const handleBulkDelete = async () => {
-    for (const id of selectedIds) {
-      const admin = admins.find(a => a.id === id);
-      // Only attempt delete if allowed
-      if (admin && canAdminBeDeleted(admin)) {
-        // Instead of passing admin object, first set it as the admin to delete, then call handleDeleteAdmin
-        openDeleteDialog(admin);
-        await handleDeleteAdmin(); // Call without arguments since it operates on adminToDelete state
+  const handleAddAdmin = async (userData: NewUserData) => {
+    try {
+      if (!userData.firstName || !userData.lastName || !userData.email || !userData.password) {
+        toast({
+          title: 'Missing fields',
+          description: 'Please fill in all required fields.',
+          variant: 'destructive',
+        });
+        return;
       }
+      
+      setIsLoading(true);
+      const adminData = {
+        ...userData,
+        role: 'admin'
+      };
+      
+      await addUser(adminData);
+
+      toast({
+        title: 'Success',
+        description: 'Administrator added successfully.',
+      });
+      
+      setIsAddDialogOpen(false);
+      loadAdmins();
+    } catch (error: any) {
+      console.error('Error adding admin:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add administrator. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setSelectedIds([]);
-    toast({
-      title: 'Success',
-      description: 'Selected administrators deleted.',
-    });
-    loadAdmins();
+  };
+
+  const handleDeleteAdmin = async () => {
+    if (!adminToDelete) return;
+    
+    try {
+      setIsLoading(true);
+      await deleteUser(adminToDelete.id);
+
+      toast({
+        title: 'Success',
+        description: 'Administrator removed successfully.',
+      });
+      
+      setIsDeleteDialogOpen(false);
+      setAdminToDelete(null);
+      loadAdmins();
+    } catch (error: any) {
+      console.error('Error deleting admin:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete administrator. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openViewDialog = (admin: UserManagementUser) => {
+    setAdminToView(admin);
+    setIsViewDialogOpen(true);
+  };
+
+  const openDeleteDialog = (admin: UserManagementUser) => {
+    setAdminToDelete(admin);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const openEditAdminLevelDialog = (admin: UserManagementUser) => {
+    setAdminToEdit(admin);
+    setIsEditAdminLevelDialogOpen(true);
+  };
+
+  const handleDeleteFromView = () => {
+    if (adminToView) {
+      setAdminToDelete(adminToView);
+      setIsViewDialogOpen(false);
+      setTimeout(() => {
+        setIsDeleteDialogOpen(true);
+      }, 100);
+    }
   };
 
   return (
     <Card>
       <CardHeader>
-        <AdminHeader 
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          onRefresh={loadAdmins}
-          onAddAdmin={() => setIsAddDialogOpen(true)}
-          selectedIds={selectedIds}
-          onBulkDelete={handleBulkDelete}
-          canAddAdmin={canAddAdmin}
-          isSuperAdmin={isSuperAdmin()}
-          isLoading={isLoading}
-        />
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Administrator Management</CardTitle>
+            <CardDescription>Manage administrator accounts and permissions</CardDescription>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={loadAdmins}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            {canAddAdmin && (
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Administrator
+              </Button>
+            )}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <AdminTable 
-          admins={admins}
+        <UserTable 
+          users={admins}
           isLoading={isLoading}
-          onEdit={openEditDialog}
-          onDelete={openDeleteDialog}
-          onView={openViewDialog}
-          viewMode={viewMode}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
-          canEdit={isAdminEditable}
-          canDelete={canAdminBeDeleted}
+          onViewUser={openViewDialog}
+          onDeleteUser={openDeleteDialog}
+          onEditAdminLevel={openEditAdminLevelDialog}
+          canDeleteUser={canAdminBeDeleted}
+          canEditAdminLevel={effectiveCanEditAdminLevel}
+          userRole="admin"
         />
-        <AdminDialogs
-          isAddDialogOpen={isAddDialogOpen}
-          setIsAddDialogOpen={setIsAddDialogOpen}
-          isEditDialogOpen={isEditDialogOpen}
-          setIsEditDialogOpen={setIsEditDialogOpen}
-          isDeleteDialogOpen={isDeleteDialogOpen}
-          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-          isViewDialogOpen={isViewDialogOpen}
-          setIsViewDialogOpen={setIsViewDialogOpen}
-          adminToEdit={adminToEdit}
-          adminToDelete={adminToDelete}
-          adminToView={adminToView}
-          handleAddAdmin={handleAddAdmin}
-          handleUpdateAdmin={handleUpdateAdmin}
-          handleDeleteAdmin={handleDeleteAdmin}
-          handleUpdateAdminLevel={handleUpdateAdminLevel}
+        
+        <AddUserDialog
+          isOpen={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onAddUser={handleAddAdmin}
           isLoading={isLoading}
-          canAddAdmin={canAddAdmin}
-          effectiveCanEditAdminLevel={effectiveCanEditAdminLevel || isSuperAdmin()} 
+          allowAdminCreation={true}
+          defaultRole="admin"
+        />
+        
+        <DeleteUserDialog
+          user={adminToDelete}
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onDelete={handleDeleteAdmin}
+          isLoading={isLoading}
+          userRole="Administrator"
+        />
+        
+        <ViewUserDialog
+          user={adminToView}
+          isOpen={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          onDeleteUser={handleDeleteFromView}
+          canDeleteUser={adminToView ? canAdminBeDeleted(adminToView) : false}
+        />
+
+        <EditAdminLevelDialog
+          admin={adminToEdit}
+          isOpen={isEditAdminLevelDialogOpen}
+          onOpenChange={setIsEditAdminLevelDialogOpen}
+          onUpdateLevel={handleUpdateAdminLevel}
+          isLoading={isUpdatingLevel}
         />
       </CardContent>
     </Card>

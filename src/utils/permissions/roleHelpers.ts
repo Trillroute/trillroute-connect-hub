@@ -1,37 +1,41 @@
 
 import { AdminLevel } from './types';
 
-/**
- * Check if the admin level name indicates a superadmin role
- * Case insensitive and ignores spaces
- */
-export const isSuperAdminLevel = (name?: string): boolean => {
-  if (!name) return false;
-  const normalized = name.toLowerCase().replace(/\s+/g, '');
-  return normalized === 'superadmin';
-};
+// Helper functions for working with admin roles
 
-/**
- * Check if a role has a specific permission for a module
- */
-export const checkModulePermission = (
-  role: AdminLevel, 
-  module: string, 
-  operation: 'view' | 'add' | 'edit' | 'delete'
+// Check if a role has a specific permission for a specific module
+export const roleHasPermission = (
+  role: AdminLevel | null,
+  module: 'student' | 'teacher' | 'admin' | 'lead' | 'course' | 'level',
+  permission: 'view' | 'add' | 'edit' | 'delete'
 ): boolean => {
   if (!role) return false;
   
-  // Map the module name to the corresponding permission set
   const permissionKey = `${module}Permissions` as keyof AdminLevel;
-  
-  // Get permission array, ensuring we handle unexpected data formats
   const permissions = role[permissionKey];
   
-  if (!Array.isArray(permissions)) {
-    console.error(`[roleHelpers] Invalid permissions format for ${module} in role ${role.name}`);
-    return false;
-  }
+  if (!permissions) return false;
   
-  // Check if the operation is included in the permissions
-  return permissions.includes(operation);
+  return (permissions as string[]).includes(permission);
+};
+
+// Get all permissions for a role and module
+export const getRoleModulePermissions = (
+  role: AdminLevel | null,
+  module: 'student' | 'teacher' | 'admin' | 'lead' | 'course' | 'level'
+): string[] => {
+  if (!role) return [];
+  
+  const permissionKey = `${module}Permissions` as keyof AdminLevel;
+  const permissions = role[permissionKey];
+  
+  if (!permissions) return [];
+  
+  return permissions as string[];
+};
+
+// Get a display name for a role level
+export const getRoleLevelDisplay = (roleName?: string): string => {
+  if (!roleName) return 'Limited Access';
+  return roleName;
 };

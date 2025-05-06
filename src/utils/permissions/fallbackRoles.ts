@@ -1,11 +1,9 @@
 
 import { AdminLevel } from './types';
 
-/**
- * Default admin roles as fallback if the database is unavailable
- */
-export const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
-  "Limited View": {
+// Default/fallback admin levels when database fetch fails
+export const FALLBACK_ADMIN_LEVELS: AdminLevel[] = [
+  {
     name: "Limited View",
     description: "View-only administrator",
     studentPermissions: ["view"],
@@ -15,7 +13,7 @@ export const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     coursePermissions: ["view"],
     levelPermissions: []
   },
-  "Standard Admin": {
+  {
     name: "Standard Admin",
     description: "Regular administrator permissions",
     studentPermissions: ["view", "add", "edit"],
@@ -25,7 +23,7 @@ export const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     coursePermissions: ["view", "edit"],
     levelPermissions: ["view"]
   },
-  "Full Access": {
+  {
     name: "Full Access",
     description: "Complete administrative access",
     studentPermissions: ["view", "add", "edit", "delete"],
@@ -34,15 +32,5 @@ export const FALLBACK_ADMIN_ROLES: Record<string, AdminLevel> = {
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"],
     levelPermissions: ["view", "add", "edit", "delete"]
-  },
-  "Super Admin": {
-    name: "Super Admin",
-    description: "Complete system access",
-    studentPermissions: ["view", "add", "edit", "delete"],
-    teacherPermissions: ["view", "add", "edit", "delete"],
-    adminPermissions: ["view", "add", "edit", "delete"],
-    leadPermissions: ["view", "add", "edit", "delete"],
-    coursePermissions: ["view", "add", "edit", "delete"],
-    levelPermissions: ["view", "add", "edit", "delete"]
   }
-};
+];

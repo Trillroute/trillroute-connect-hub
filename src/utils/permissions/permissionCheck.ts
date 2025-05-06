@@ -1,87 +1,116 @@
 
-import { UserManagementUser } from "@/types/student";
-import { AdminPermission, PermissionUser } from "./types";
-import { isSuperAdminLevel, checkModulePermission } from "./roleHelpers";
-import { getCachedRole, hasCachedPermission, getCachedPermission, setCachedPermission } from "./permissionCache";
-import { FALLBACK_ADMIN_ROLES } from "./fallbackRoles";
+import { AdminPermission, PermissionUser } from './types';
+import { getAdminRoleByName, getCachedPermission, cachePermission } from './permissionCache';
 
-/**
- * Check if a user has a specific permission
- */
-export const hasPermission = (
-  user: UserManagementUser | PermissionUser | null, 
-  permission: AdminPermission
-): boolean => {
+// Check if a user has a specific permission
+export const hasPermission = (user: PermissionUser | null, permission: AdminPermission): boolean => {
   if (!user) return false;
   
-  // Always check for superadmin first - superadmins have all permissions
-  if (user.role === 'superadmin') {
-    console.log('[adminPermissions] Superadmin always has permission:', permission);
-    return true;
+  // Superadmin has all permissions
+  if (user.role === 'superadmin') return true;
+  
+  // Only admins have administrative permissions
+  if (user.role !== 'admin') return false;
+  
+  // Check cached permission
+  const cachedResult = getCachedPermission(user.id, permission);
+  if (cachedResult !== null) return cachedResult;
+  
+  // Get admin role by name
+  const adminRole = getAdminRoleByName(user.adminRoleName);
+  if (!adminRole) return false;
+  
+  // Calculate permissions based on admin role
+  let isAllowed = false;
+  
+  switch(permission) {
+    // Student permissions
+    case AdminPermission.VIEW_STUDENTS:
+      isAllowed = adminRole.studentPermissions.includes('view');
+      break;
+    case AdminPermission.ADD_STUDENTS:
+      isAllowed = adminRole.studentPermissions.includes('add');
+      break;
+    case AdminPermission.EDIT_STUDENTS:
+      isAllowed = adminRole.studentPermissions.includes('edit');
+      break;
+    case AdminPermission.DELETE_STUDENTS:
+      isAllowed = adminRole.studentPermissions.includes('delete');
+      break;
+      
+    // Teacher permissions
+    case AdminPermission.VIEW_TEACHERS:
+      isAllowed = adminRole.teacherPermissions.includes('view');
+      break;
+    case AdminPermission.ADD_TEACHERS:
+      isAllowed = adminRole.teacherPermissions.includes('add');
+      break;
+    case AdminPermission.EDIT_TEACHERS:
+      isAllowed = adminRole.teacherPermissions.includes('edit');
+      break;
+    case AdminPermission.DELETE_TEACHERS:
+      isAllowed = adminRole.teacherPermissions.includes('delete');
+      break;
+      
+    // Admin permissions
+    case AdminPermission.VIEW_ADMINS:
+      isAllowed = adminRole.adminPermissions.includes('view');
+      break;
+    case AdminPermission.ADD_ADMINS:
+      isAllowed = adminRole.adminPermissions.includes('add');
+      break;
+    case AdminPermission.EDIT_ADMINS:
+      isAllowed = adminRole.adminPermissions.includes('edit');
+      break;
+    case AdminPermission.DELETE_ADMINS:
+      isAllowed = adminRole.adminPermissions.includes('delete');
+      break;
+      
+    // Lead permissions
+    case AdminPermission.VIEW_LEADS:
+      isAllowed = adminRole.leadPermissions.includes('view');
+      break;
+    case AdminPermission.ADD_LEADS:
+      isAllowed = adminRole.leadPermissions.includes('add');
+      break;
+    case AdminPermission.EDIT_LEADS:
+      isAllowed = adminRole.leadPermissions.includes('edit');
+      break;
+    case AdminPermission.DELETE_LEADS:
+      isAllowed = adminRole.leadPermissions.includes('delete');
+      break;
+      
+    // Course permissions
+    case AdminPermission.VIEW_COURSES:
+      isAllowed = adminRole.coursePermissions.includes('view');
+      break;
+    case AdminPermission.ADD_COURSES:
+      isAllowed = adminRole.coursePermissions.includes('add');
+      break;
+    case AdminPermission.EDIT_COURSES:
+      isAllowed = adminRole.coursePermissions.includes('edit');
+      break;
+    case AdminPermission.DELETE_COURSES:
+      isAllowed = adminRole.coursePermissions.includes('delete');
+      break;
+      
+    // Level permissions
+    case AdminPermission.VIEW_LEVELS:
+      isAllowed = adminRole.levelPermissions?.includes('view') || false;
+      break;
+    case AdminPermission.ADD_LEVELS:
+      isAllowed = adminRole.levelPermissions?.includes('add') || false;
+      break;
+    case AdminPermission.EDIT_LEVELS:
+      isAllowed = adminRole.levelPermissions?.includes('edit') || false;
+      break;
+    case AdminPermission.DELETE_LEVELS:
+      isAllowed = adminRole.levelPermissions?.includes('delete') || false;
+      break;
   }
   
-  // Only admins can have these permissions
-  if (user.role !== 'admin') {
-    console.log('[adminPermissions] User is not admin or superadmin, denying permission:', permission);
-    return false;
-  }
+  // Cache the permission check result
+  cachePermission(user.id, permission, isAllowed);
   
-  // Use cache for better performance
-  const cacheKey = `${user.id}:${permission}`;
-  if (hasCachedPermission(cacheKey)) {
-    const result = getCachedPermission(cacheKey) || false;
-    console.log(`[adminPermissions] Using cached permission for ${cacheKey}:`, result);
-    return result;
-  }
-  
-  // Use adminRoleName to get the role info
-  const adminRoleName = 'adminRoleName' in user ? user.adminRoleName : undefined;
-  console.log('[adminPermissions] Checking permissions with adminRoleName:', adminRoleName);
-  
-  // If the adminRoleName is a SuperAdmin equivalent, grant all permissions
-  if (isSuperAdminLevel(adminRoleName)) {
-    console.log('[adminPermissions] User has SuperAdmin role name, granting permission');
-    setCachedPermission(cacheKey, true);
-    return true;
-  }
-  
-  // Check if we have the role cached first
-  const roleInfo = adminRoleName ? getCachedRole(adminRoleName) : undefined;
-  
-  // Fall back to default roles if no specific role found
-  let effectiveRoleInfo;
-  if (roleInfo) {
-    console.log('[adminPermissions] Using cached role info:', roleInfo.name);
-    effectiveRoleInfo = roleInfo;
-  } else if (adminRoleName && FALLBACK_ADMIN_ROLES[adminRoleName]) {
-    console.log('[adminPermissions] Using fallback role for:', adminRoleName);
-    effectiveRoleInfo = FALLBACK_ADMIN_ROLES[adminRoleName];
-  } else {
-    console.log('[adminPermissions] Using default Limited View role');
-    effectiveRoleInfo = FALLBACK_ADMIN_ROLES["Limited View"];
-  }
-  
-  let hasPermission = false;
-  
-  // Map permission enum to module and operation
-  if (permission.startsWith('VIEW_')) {
-    const module = permission.substring(5).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'view');
-  } else if (permission.startsWith('ADD_')) {
-    const module = permission.substring(4).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'add');
-  } else if (permission.startsWith('EDIT_')) {
-    const module = permission.substring(5).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'edit');
-  } else if (permission.startsWith('DELETE_')) {
-    const module = permission.substring(7).toLowerCase().replace('s', '');
-    hasPermission = checkModulePermission(effectiveRoleInfo, module, 'delete');
-  }
-  
-  console.log(`[adminPermissions] Permission check for ${permission}:`, hasPermission);
-  
-  // Cache the result
-  setCachedPermission(cacheKey, hasPermission);
-  
-  return hasPermission;
+  return isAllowed;
 };
