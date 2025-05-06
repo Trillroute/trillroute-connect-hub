@@ -12,6 +12,7 @@ import StudentManagement from '@/components/admin/StudentManagement';
 import AdminManagement from '@/components/superadmin/AdminManagement';
 import CourseManagement from '@/components/admin/CourseManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
+import ClassTypeManagement from '@/components/admin/class-types/ClassTypeManagement';
 import { DashboardStats, UserActivityData } from '@/components/superadmin/hooks/useDashboardData';
 import { Lead } from '@/types/lead';
 
@@ -55,6 +56,9 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     case 'courses':
       return <CourseManagement />;
     
+    case 'classTypes':
+      return <ClassTypeManagement />;
+      
     case 'leads':
       return <LeadManagement />;
       
