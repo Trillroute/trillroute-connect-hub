@@ -141,12 +141,7 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
         label: "Levels",
         value: "levels",
         requiredPermission: AdminPermission.VIEW_LEVELS
-      },
-      {
-        id: "access",
-        label: "Access Control",
-        value: "access",
-      },
+      }
     ],
   },
 ];
