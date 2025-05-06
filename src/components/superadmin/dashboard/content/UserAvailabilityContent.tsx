@@ -8,11 +8,13 @@ import { useUserAvailability } from '@/hooks/useUserAvailability';
 import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 import StaffUserSelector from '@/components/admin/scheduling/user-availability/StaffUserSelector';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const UserAvailabilityContent: React.FC = () => {
   const { role, user } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { staffMembers, loading: isLoadingStaff } = useStaffAvailability();
+  const { toast } = useToast();
   
   console.log('UserAvailabilityContent rendering', { 
     staffCount: staffMembers.length, 
@@ -42,6 +44,23 @@ const UserAvailabilityContent: React.FC = () => {
   const handleUserChange = (userId: string) => {
     console.log('User changed to:', userId);
     setSelectedUserId(userId);
+  };
+
+  const handleRefresh = async () => {
+    try {
+      await refreshAvailability();
+      toast({
+        title: "Availability refreshed",
+        description: "Your availability schedule has been updated.",
+      });
+    } catch (error) {
+      console.error("Error refreshing availability:", error);
+      toast({
+        title: "Refresh failed",
+        description: "Could not refresh availability schedule.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Find selected user details
@@ -94,7 +113,7 @@ const UserAvailabilityContent: React.FC = () => {
               onUpdateSlot={updateSlot}
               onDeleteSlot={deleteSlot}
               onCopyDay={copyDaySlots}
-              onRefresh={refreshAvailability}
+              onRefresh={handleRefresh}
             />
           </>
         ) : (

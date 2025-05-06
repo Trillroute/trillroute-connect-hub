@@ -30,6 +30,13 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const refreshAvailability = useCallback(() => {
     if (!targetUserId) {
       console.log('No target user ID provided, skipping availability fetch');
+      // Initialize with empty data structure
+      const emptyAvailability = daysOfWeek.map((dayName, index) => ({
+        dayOfWeek: index,
+        dayName,
+        slots: []
+      }));
+      setDailyAvailability(emptyAvailability);
       setLoading(false);
       return Promise.resolve();
     }
@@ -39,9 +46,15 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   }, [targetUserId, fetchAvailability]);
 
   useEffect(() => {
+    // Set loading to true on userId change
+    setLoading(true);
+    
     if (targetUserId) {
       console.log('User ID changed, refreshing availability for:', targetUserId);
-      refreshAvailability();
+      refreshAvailability().catch(err => {
+        console.error('Error refreshing availability:', err);
+        setLoading(false);
+      });
     } else {
       // If no user ID, set empty data and stop loading
       console.log('No user ID available, setting empty availability data');

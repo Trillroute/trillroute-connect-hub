@@ -5,6 +5,8 @@ import { UserAvailability, mapDbAvailability, UserAvailabilityMap } from "./type
 // Get all availability slots for a user
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
   try {
+    console.log(`API call: fetching availability for user ${userId}`);
+    
     const { data, error } = await supabase
       .from("user_availability")
       .select("*")
@@ -16,6 +18,7 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
       return [];
     }
 
+    console.log(`API result: found ${data?.length || 0} availability slots for user ${userId}`);
     return data ? data.map(mapDbAvailability) : [];
   } catch (err) {
     console.error("Failed to fetch user availability:", err);
@@ -31,6 +34,8 @@ export const createAvailabilitySlot = async (
   endTime: string
 ): Promise<UserAvailability | null> => {
   try {
+    console.log(`Creating availability slot: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}`);
+    
     const { data, error } = await supabase
       .from("user_availability")
       .insert({
@@ -47,6 +52,7 @@ export const createAvailabilitySlot = async (
       return null;
     }
 
+    console.log("Availability slot created successfully:", data);
     return data ? mapDbAvailability(data) : null;
   } catch (err) {
     console.error("Failed to create availability slot:", err);

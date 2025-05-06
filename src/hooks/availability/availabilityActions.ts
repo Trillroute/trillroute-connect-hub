@@ -20,6 +20,7 @@ export function useAvailabilityActions(
   
   const refreshAvailability = async () => {
     if (!userId) {
+      console.log('Cannot refresh availability: No user ID provided');
       // Create empty availability data structure for each day of the week
       const emptyAvailability = daysOfWeek.map((dayName, index) => ({
         dayOfWeek: index,
@@ -31,11 +32,11 @@ export function useAvailabilityActions(
       return;
     }
 
-    setLoading(true);
     try {
-      console.log('Fetching availability for user:', userId);
+      console.log(`Fetching availability for user: ${userId}`);
+      setLoading(true);
       const availability = await fetchUserAvailability(userId);
-      console.log('Retrieved availability data:', availability);
+      console.log(`Retrieved availability data for ${userId}:`, availability);
       const transformed = transformAvailabilityData(availability);
       console.log('Transformed availability data:', transformed);
       setDailyAvailability(transformed);

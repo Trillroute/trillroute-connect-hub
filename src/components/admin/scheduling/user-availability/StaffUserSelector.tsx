@@ -1,17 +1,14 @@
 
 import React from 'react';
-import { Loader2, User, Users } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { StaffMember } from '@/hooks/useStaffAvailability';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
 } from '@/components/ui/select';
+import { StaffMember } from '@/hooks/useStaffAvailability';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StaffUserSelectorProps {
   staffMembers: StaffMember[];
@@ -26,101 +23,35 @@ const StaffUserSelector: React.FC<StaffUserSelectorProps> = ({
   isLoading,
   onUserChange
 }) => {
-  const { user, isSuperAdmin } = useAuth();
-  
-  console.log('StaffUserSelector props:', { 
-    staffCount: staffMembers.length, 
-    selectedUserId, 
-    isLoading,
-    currentUser: user?.id
+  console.log('StaffUserSelector props:', {
+    staffCount: staffMembers.length,
+    selectedUserId,
+    isLoading
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-2 border rounded-md bg-white">
-        <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading users...
-      </div>
-    );
+    return <Skeleton className="h-10 w-full" />;
   }
 
-  if (!staffMembers || staffMembers.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-2 border rounded-md bg-white">
-        No staff members found
-      </div>
-    );
+  if (staffMembers.length === 0) {
+    return <p className="text-sm text-gray-500">No staff members available</p>;
   }
-
-  // Group staff members by role
-  const teachers = staffMembers.filter(staff => staff.role === 'teacher' && staff.id !== user?.id);
-  const admins = staffMembers.filter(staff => staff.role === 'admin' && staff.id !== user?.id);
-  const superadmins = staffMembers.filter(staff => staff.role === 'superadmin' && staff.id !== user?.id);
-  const currentUser = staffMembers.find(staff => staff.id === user?.id);
 
   return (
     <Select
-      defaultValue={selectedUserId || undefined}
+      value={selectedUserId || undefined}
       onValueChange={onUserChange}
+      disabled={isLoading}
     >
-      <SelectTrigger className="w-full bg-white">
+      <SelectTrigger className="w-full">
         <SelectValue placeholder="Select a user" />
       </SelectTrigger>
       <SelectContent>
-        {/* Self section */}
-        {currentUser && (
-          <SelectGroup>
-            <SelectLabel>Your Availability</SelectLabel>
-            <SelectItem value={currentUser.id} className="flex items-center gap-2">
-              <User className="h-4 w-4 mr-1" />
-              {currentUser.name} (You)
-            </SelectItem>
-          </SelectGroup>
-        )}
-
-        {/* Teachers section */}
-        {teachers.length > 0 && (
-          <SelectGroup>
-            <SelectLabel>Teachers</SelectLabel>
-            {teachers.map(staff => (
-              <SelectItem key={staff.id} value={staff.id}>
-                <span className="flex items-center">
-                  <User className="h-4 w-4 mr-1" />
-                  {staff.name}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        )}
-
-        {/* Admins section - only for superadmins and admins */}
-        {(isSuperAdmin() || user?.role === 'admin') && admins.length > 0 && (
-          <SelectGroup>
-            <SelectLabel>Admins</SelectLabel>
-            {admins.map(staff => (
-              <SelectItem key={staff.id} value={staff.id}>
-                <span className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  {staff.name}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        )}
-
-        {/* SuperAdmins section - only visible to other superadmins */}
-        {isSuperAdmin() && superadmins.length > 0 && (
-          <SelectGroup>
-            <SelectLabel>SuperAdmins</SelectLabel>
-            {superadmins.map(staff => (
-              <SelectItem key={staff.id} value={staff.id}>
-                <span className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  {staff.name}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        )}
+        {staffMembers.map((staff) => (
+          <SelectItem key={staff.id} value={staff.id}>
+            {staff.name} ({staff.role})
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

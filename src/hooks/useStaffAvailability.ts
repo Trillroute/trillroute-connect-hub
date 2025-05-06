@@ -36,7 +36,7 @@ export function useStaffAvailability() {
         return;
       }
 
-      console.log('Staff data fetched:', data);
+      console.log('Staff data fetched:', data?.length || 0, 'members');
       
       if (data) {
         const mappedStaff: StaffMember[] = data.map(user => ({
@@ -47,7 +47,7 @@ export function useStaffAvailability() {
           name: `${user.first_name} ${user.last_name}`
         }));
 
-        console.log('Mapped staff members:', mappedStaff);
+        console.log('Mapped staff members:', mappedStaff.length);
         setStaffMembers(mappedStaff);
       }
     } catch (err) {
