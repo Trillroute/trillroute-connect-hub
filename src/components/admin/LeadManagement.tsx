@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import { Lead } from '@/types/lead';
 import { Input } from '@/components/ui/input';
 import { canManageLeads } from '@/utils/adminPermissions';
 import LeadKanbanBoard from './leads/LeadKanbanBoard';
-import { useLeadToast } from './leads/hooks/useLeadToast';
+import { useLeadToastAdapter } from './leads/hooks/useLeadToastAdapter';
 
 interface LeadManagementProps {
   canAddLead?: boolean;
@@ -28,7 +29,7 @@ const LeadManagement: React.FC<LeadManagementProps> = ({
   canDeleteLead = true
 }) => {
   const { toast } = useToast();
-  const { showToast } = useLeadToast();
+  const { showToast } = useLeadToastAdapter();
   const { user } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);

@@ -53,16 +53,20 @@ const DashboardContent = ({
       return <LevelManagement />;
     case 'courses':
     case 'classTypes':
-      return <CourseManagement selectedTab={activeTab} />;
+      return (
+        <CourseManagement 
+          canAddCourse={true}
+          canEditCourse={true}
+          canDeleteCourse={true}
+        />
+      );
     case 'leads':
     case 'leads-cards':
       return (
         <LeadManagement
-          initialView={activeTab === 'leads-cards' ? 'kanban' : 'table'}
-          leads={leads}
-          isLoading={leadsLoading}
-          onEditLead={onEditLead}
-          onDeleteLead={onDeleteLead}
+          canAddLead={true}
+          canEditLead={true}
+          canDeleteLead={true}
         />
       );
     default:

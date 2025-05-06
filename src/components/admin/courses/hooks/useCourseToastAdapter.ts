@@ -1,18 +1,24 @@
 
 import { useToast } from '@/hooks/use-toast';
 
-// Create a specific adapter for course management components
+// This adapter helps fix the incompatibility between different toast implementations
 export const useCourseToastAdapter = () => {
   const { toast } = useToast();
   
-  // Correct toast function that handles the object pattern required
-  const showToast = (title: string, description: string, variant?: 'default' | 'destructive') => {
+  const showSuccessToast = (message: string) => {
     toast({
-      title,
-      description,
-      variant: variant || 'default'
+      title: "Success",
+      description: message,
     });
   };
   
-  return { showToast };
+  const showErrorToast = (message: string) => {
+    toast({
+      title: "Error",
+      description: message,
+      variant: "destructive"
+    });
+  };
+  
+  return { showSuccessToast, showErrorToast };
 };

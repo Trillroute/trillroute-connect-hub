@@ -1,111 +1,112 @@
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { useCourses } from '@/hooks/useCourses';
-import { Course } from '@/types/course';
-import { canManageCourses } from '@/utils/permissions';
-import { supabase } from '@/integrations/supabase/client';
-import { useCourseToastAdapter } from './useCourseToastAdapter';
 
-export function useCourseManagement() {
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { useCourseToastAdapter } from './useCourseToastAdapter';
+import { useAuth } from '@/hooks/useAuth';
+import { fetchCourses, deleteCourse } from '../courseService';
+
+export const useCourseManagement = () => {
   const { toast } = useToast();
-  const { showToast } = useCourseToastAdapter();
-  const { user, isSuperAdmin } = useAuth();
+  const { showSuccessToast, showErrorToast } = useCourseToastAdapter();
+  const { isSuperAdmin, isAdmin } = useAuth();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const { courses, loading, fetchCourses } = useCourses();
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
-
-  // Force superadmin to always have permissions
-  const userCanEdit = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'edit'));
-  const userCanDelete = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'delete'));
-  const userCanAdd = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'add'));
-
-  const getEffectivePermissions = (canEditCourse = true, canDeleteCourse = true, canAddCourse = true) => {
-    return {
-      effectiveCanEditCourse: canEditCourse && userCanEdit,
-      effectiveCanDeleteCourse: canDeleteCourse && userCanDelete,
-      effectiveCanAddCourse: canAddCourse && userCanAdd
-    };
+  
+  // Function to fetch courses with error handling
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchCourses();
+      setCourses(data);
+    } catch (error) {
+      showErrorToast("Failed to load courses");
+      console.error("Error fetching courses:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openViewDialog = (course: Course) => {
+  // Load courses on component mount
+  useEffect(() => {
+    loadCourses();
+  }, []);
+  
+  // Filter courses based on search query
+  const getFilteredCourses = (query, courseList) => {
+    if (!query.trim()) return courseList;
+    
+    return courseList.filter(course => {
+      const searchableText = `${course.name} ${course.description} ${course.level || ''} ${course.instrument || ''}`.toLowerCase();
+      return searchableText.includes(query.toLowerCase());
+    });
+  };
+  
+  // Dialog handlers
+  const openViewDialog = (course) => {
     setSelectedCourse(course);
     setIsViewDialogOpen(true);
   };
-
-  const openEditDialog = (course: Course) => {
+  
+  const openEditDialog = (course) => {
     setSelectedCourse(course);
     setIsEditDialogOpen(true);
   };
-
-  const openDeleteDialog = (course: Course) => {
+  
+  const openDeleteDialog = (course) => {
     setSelectedCourse(course);
     setIsDeleteDialogOpen(true);
   };
-
-  const handleBulkDelete = async (courseIds: string[], canDelete: boolean) => {
-    if (!canDelete) {
-      showToast("Permission Denied", "You don't have permission to delete courses.", "destructive");
+  
+  // Permission checking
+  const getEffectivePermissions = (canEdit, canDelete, canAdd) => {
+    const isSuperAdminUser = isSuperAdmin();
+    
+    return {
+      effectiveCanEditCourse: isSuperAdminUser ? true : canEdit,
+      effectiveCanDeleteCourse: isSuperAdminUser ? true : canDelete,
+      effectiveCanAddCourse: isSuperAdminUser ? true : canAdd
+    };
+  };
+  
+  // Bulk delete handler
+  const handleBulkDelete = async (courseIds, hasPermission) => {
+    if (!hasPermission) {
+      showErrorToast("You don't have permission to delete courses");
       return;
     }
-
+    
     try {
-      const { error } = await supabase
-        .from('courses')
-        .delete()
-        .in('id', courseIds);
-        
-      if (error) {
-        console.error('Error deleting courses:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to delete courses. Please try again.',
-          variant: 'destructive',
-        });
-        return;
+      setLoading(true);
+      
+      for (const id of courseIds) {
+        await deleteCourse(id);
       }
       
-      showToast("Courses Deleted", `Successfully deleted ${courseIds.length} course(s)`);
-      
-      // Refresh courses
-      fetchCourses();
+      showSuccessToast(`Successfully deleted ${courseIds.length} courses`);
+      await loadCourses();
     } catch (error) {
-      console.error('Unexpected error:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
+      showErrorToast("Failed to delete some courses");
+      console.error("Error during bulk delete:", error);
+    } finally {
+      setLoading(false);
     }
   };
-
-  const getFilteredCourses = (query: string, courseList: Course[]) => {
-    if (!query) return courseList;
-    
-    return courseList.filter(course => 
-      course.title.toLowerCase().includes(query.toLowerCase()) ||
-      course.description.toLowerCase().includes(query.toLowerCase()) ||
-      course.level.toLowerCase().includes(query.toLowerCase()) ||
-      course.skill.toLowerCase().includes(query.toLowerCase())
-    );
-  };
-
+  
   return {
-    // State
     isCreateDialogOpen, setIsCreateDialogOpen,
     isViewDialogOpen, setIsViewDialogOpen,
     isEditDialogOpen, setIsEditDialogOpen,
     isDeleteDialogOpen, setIsDeleteDialogOpen,
-    selectedCourse, setSelectedCourse,
-    courses, loading, fetchCourses,
+    selectedCourse, courses, loading, fetchCourses: loadCourses,
     searchQuery, setSearchQuery,
     viewMode, setViewMode,
-    // Functions
     getEffectivePermissions,
     openViewDialog,
     openEditDialog,
@@ -113,4 +114,4 @@ export function useCourseManagement() {
     handleBulkDelete,
     getFilteredCourses
   };
-}
+};
