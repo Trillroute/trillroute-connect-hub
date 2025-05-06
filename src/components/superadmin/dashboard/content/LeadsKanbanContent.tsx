@@ -21,7 +21,7 @@ const LeadsKanbanContent: React.FC<LeadsKanbanContentProps> = ({
     <div className="max-w-[1400px] mx-auto w-full">
       <Card className="shadow-none border-0">
         <CardHeader>
-          <CardTitle>Leads Kanban Board</CardTitle>
+          <CardTitle>Leads Cards View</CardTitle>
           <CardDescription>
             Drag and drop leads between statuses to update their progress.
           </CardDescription>

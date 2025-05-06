@@ -84,7 +84,7 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
       },
       {
         id: "leads-cards",
-        label: "Leads Kanban",
+        label: "Leads Cards",
         value: "leads-cards",
       },
     ],
@@ -150,3 +150,4 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
     ],
   },
 ];
+
