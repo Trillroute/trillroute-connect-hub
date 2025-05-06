@@ -61,7 +61,7 @@ const UserAvailabilityContent: React.FC = () => {
     }
     
     try {
-      await refreshAvailability(true);
+      await refreshAvailability();
       toast({
         title: "Availability refreshed",
         description: "Your availability schedule has been updated.",

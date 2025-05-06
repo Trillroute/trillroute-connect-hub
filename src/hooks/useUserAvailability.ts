@@ -30,7 +30,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     setDailyAvailability
   );
 
-  const refreshAvailability = useCallback(async (showLoadingState = true) => {
+  const refreshAvailability = useCallback(async () => {
     if (refreshingRef.current) {
       console.log('Already refreshing, skipping duplicate request');
       return;
@@ -52,7 +52,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     console.log('Refreshing availability for user ID:', targetUserId);
     try {
       refreshingRef.current = true;
-      await fetchAvailability(showLoadingState);
+      await fetchAvailability();
     } catch (error) {
       console.error('Error in refreshAvailability:', error);
       // Loading state is already set to false in the actions
@@ -93,7 +93,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
           // Only show loading state on initial load or user change
           const showLoading = isInitialLoad.current || previousUserId !== targetUserId;
           refreshingRef.current = true;
-          await refreshAvailability(showLoading);
+          await refreshAvailability();
           if (isMounted) {
             isInitialLoad.current = false;
           }
