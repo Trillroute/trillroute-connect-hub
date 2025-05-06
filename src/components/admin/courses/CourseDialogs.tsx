@@ -37,8 +37,6 @@ const CourseDialogs: React.FC<CourseDialogsProps> = ({
   effectiveCanDeleteCourse,
   effectiveCanAddCourse
 }) => {
-  if (!selectedCourse && !isCreateDialogOpen) return null;
-  
   return (
     <>
       {effectiveCanAddCourse && (
