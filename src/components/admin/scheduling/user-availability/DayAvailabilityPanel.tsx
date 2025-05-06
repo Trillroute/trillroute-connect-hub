@@ -64,18 +64,6 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
 
   return (
     <div className="py-2">
-      <div className="flex justify-between items-center mb-4">
-        <Button 
-          onClick={() => setIsAddDialogOpen(true)}
-          variant="outline"
-          size="sm"
-          className="ml-auto"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Time Slot
-        </Button>
-      </div>
-      
       {day.slots.length === 0 ? (
         <div className="text-center py-4 text-gray-500">
           No availability slots defined for {day.dayName}

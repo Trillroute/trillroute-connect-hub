@@ -5,7 +5,6 @@ import DayAvailabilityPanel from './DayAvailabilityPanel';
 import CopyDayDialog from './CopyDayDialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw, ChevronDown, ChevronUp, Plus } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface UserAvailabilityScheduleProps {
@@ -33,7 +32,6 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [localLoading, setLocalLoading] = useState(loading);
   const [operationInProgress, setOperationInProgress] = useState(false);
-  const [expandedDays, setExpandedDays] = useState<string[]>([]);
   
   // Use this effect to sync the loading prop but prevent too frequent updates
   useEffect(() => {
