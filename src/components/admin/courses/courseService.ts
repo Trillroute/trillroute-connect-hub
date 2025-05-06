@@ -76,7 +76,7 @@ export async function getCourseById(id: string): Promise<Course | null> {
 // Update a course
 export async function updateCourse(id: string, updates: Partial<Course>): Promise<Course> {
   try {
-    // Convert class_types_data to string if it's an array
+    // Handle class_types_data conversion here if needed
     const processedUpdates = {
       ...updates
     };
