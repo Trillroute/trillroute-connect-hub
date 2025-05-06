@@ -67,7 +67,10 @@ export function useAvailabilityActions(
     
     try {
       // Don't set loading to true here to prevent flickering
+      console.log(`Creating slot for user ${userId}, day ${dayOfWeek}: ${startTime}-${endTime}`);
       const result = await createAvailabilitySlot(userId, dayOfWeek, startTime, endTime);
+      console.log("Create slot result:", result);
+      
       if (result) {
         // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();

@@ -18,7 +18,7 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
       return [];
     }
 
-    console.log(`API result: found ${data?.length || 0} availability slots for user ${userId}`);
+    console.log(`API result: found ${data?.length || 0} availability slots for user ${userId}`, data);
     return data ? data.map(mapDbAvailability) : [];
   } catch (err) {
     console.error("Failed to fetch user availability:", err);

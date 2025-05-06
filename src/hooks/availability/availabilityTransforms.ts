@@ -4,6 +4,8 @@ import { DayAvailability } from './types';
 import { daysOfWeek } from './dayUtils';
 
 export function transformAvailabilityData(availabilitySlots: UserAvailability[]): DayAvailability[] {
+  console.log("Transforming availability data:", availabilitySlots);
+  
   // Create a structure for every day of the week
   const weeklyAvailability: DayAvailability[] = daysOfWeek.map((dayName, index) => ({
     dayOfWeek: index,
@@ -13,6 +15,7 @@ export function transformAvailabilityData(availabilitySlots: UserAvailability[])
   
   // Add slots to their corresponding days
   availabilitySlots.forEach(slot => {
+    console.log(`Processing slot: dayOfWeek=${slot.dayOfWeek}, time=${slot.startTime}-${slot.endTime}`);
     const dayIndex = slot.dayOfWeek;
     if (dayIndex >= 0 && dayIndex < 7) {
       weeklyAvailability[dayIndex].slots.push(slot);
@@ -26,6 +29,7 @@ export function transformAvailabilityData(availabilitySlots: UserAvailability[])
     day.slots.sort((a, b) => {
       return a.startTime.localeCompare(b.startTime);
     });
+    console.log(`Day ${day.dayName} now has ${day.slots.length} slots`);
   });
   
   return weeklyAvailability;

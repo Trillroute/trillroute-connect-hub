@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,6 +23,15 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
 }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState<UserAvailability | null>(null);
+  
+  // Debug log when component renders or day changes
+  useEffect(() => {
+    console.log(`DayAvailabilityPanel for ${day.dayName}:`, {
+      dayOfWeek: day.dayOfWeek,
+      slots: day.slots,
+      slotsCount: day.slots.length
+    });
+  }, [day]);
   
   const handleOpenEditDialog = (slot: UserAvailability) => {
     setEditingSlot(slot);

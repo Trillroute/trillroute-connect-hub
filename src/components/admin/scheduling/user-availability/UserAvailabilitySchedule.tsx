@@ -33,6 +33,21 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [localLoading, setLocalLoading] = useState(loading);
   const [operationInProgress, setOperationInProgress] = useState(false);
   
+  // Debug log when component renders or availability changes
+  useEffect(() => {
+    console.log("UserAvailabilitySchedule rendering:", {
+      availabilityCount: dailyAvailability.length,
+      loading,
+      isRefreshing,
+      userId,
+      slots: dailyAvailability.map(day => ({
+        dayName: day.dayName,
+        slotsCount: day.slots.length,
+        slots: day.slots
+      }))
+    });
+  }, [dailyAvailability, loading, isRefreshing, userId]);
+  
   // Use this effect to sync the loading prop but prevent too frequent updates
   useEffect(() => {
     if (loading && !operationInProgress) {
@@ -65,6 +80,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
 
   // Wrap slot operations to manage local loading state
   const handleAddSlot = async (dayOfWeek: number, startTime: string, endTime: string) => {
+    console.log(`Adding slot for day ${dayOfWeek}: ${startTime} - ${endTime}`);
     setOperationInProgress(true);
     try {
       return await onAddSlot(dayOfWeek, startTime, endTime);
@@ -74,6 +90,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   };
   
   const handleUpdateSlot = async (id: string, startTime: string, endTime: string) => {
+    console.log(`Updating slot ${id}: ${startTime} - ${endTime}`);
     setOperationInProgress(true);
     try {
       return await onUpdateSlot(id, startTime, endTime);
@@ -83,6 +100,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   };
   
   const handleDeleteSlot = async (id: string) => {
+    console.log(`Deleting slot ${id}`);
     setOperationInProgress(true);
     try {
       return await onDeleteSlot(id);
@@ -92,6 +110,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   };
   
   const handleCopyDayOperation = async (fromDay: number, toDay: number) => {
+    console.log(`Copying slots from day ${fromDay} to day ${toDay}`);
     setOperationInProgress(true);
     try {
       return await onCopyDay(fromDay, toDay);
