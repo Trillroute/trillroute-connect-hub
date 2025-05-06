@@ -11,12 +11,14 @@ interface CourseManagementProps {
   canAddCourse?: boolean;
   canDeleteCourse?: boolean;
   canEditCourse?: boolean;
+  selectedTab?: string; // Added for compatibility with DashboardContent
 }
 
 const CourseManagement: React.FC<CourseManagementProps> = ({ 
   canAddCourse = true, 
   canDeleteCourse = true,
-  canEditCourse = true
+  canEditCourse = true,
+  selectedTab
 }) => {
   const {
     isCreateDialogOpen, setIsCreateDialogOpen,

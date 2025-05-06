@@ -9,13 +9,25 @@ import { Button } from '@/components/ui/button';
 import { updateCourse } from './courseService';
 import CourseForm from './CourseForm';
 import { useCourseToastAdapter } from './hooks/useCourseToastAdapter';
+import { Course } from '@/types/course';
 
 // Schema and types
 const courseSchema = z.object({
-  // Define your schema...
-  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  title: z.string().min(2, { message: 'Title must be at least 2 characters' }),
   description: z.string().optional(),
-  // Add other fields as needed
+  level: z.string().optional(),
+  skill: z.string().optional(),
+  durationType: z.union([z.literal("fixed"), z.literal("recurring")]).optional(),
+  durationValue: z.string().optional(),
+  durationMetric: z.union([z.literal("days"), z.literal("weeks"), z.literal("months"), z.literal("years")]).optional(),
+  base_price: z.number().optional(),
+  is_gst_applicable: z.boolean().optional(),
+  gst_rate: z.number().optional(),
+  discount_metric: z.union([z.literal("percentage"), z.literal("fixed")]).optional(),
+  discount_value: z.number().optional(),
+  discount_validity: z.string().optional(),
+  discount_code: z.string().optional(),
+  // Add other necessary fields
 });
 
 type CourseFormValues = z.infer<typeof courseSchema>;
@@ -23,7 +35,7 @@ type CourseFormValues = z.infer<typeof courseSchema>;
 interface EditCourseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  course: any; // Replace with proper type
+  course: Course;
   onSuccess: () => void;
 }
 
@@ -38,9 +50,18 @@ const EditCourseDialog = ({
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      name: course?.name || '',
+      title: course?.title || '',
       description: course?.description || '',
-      // Set other default values...
+      level: course?.level || '',
+      skill: course?.skill || '',
+      durationType: (course?.duration_type as "fixed" | "recurring") || "fixed",
+      base_price: course?.base_price || 0,
+      is_gst_applicable: course?.is_gst_applicable || false,
+      gst_rate: course?.gst_rate || 0,
+      discount_metric: (course?.discount_metric as "percentage" | "fixed") || "percentage",
+      discount_value: course?.discount_value || 0,
+      discount_validity: course?.discount_validity || '',
+      discount_code: course?.discount_code || '',
     },
   });
 
@@ -48,9 +69,18 @@ const EditCourseDialog = ({
   React.useEffect(() => {
     if (course) {
       form.reset({
-        name: course.name || '',
+        title: course.title || '',
         description: course.description || '',
-        // Set other values...
+        level: course.level || '',
+        skill: course.skill || '',
+        durationType: (course.duration_type as "fixed" | "recurring") || "fixed",
+        base_price: course.base_price || 0,
+        is_gst_applicable: course.is_gst_applicable || false,
+        gst_rate: course.gst_rate || 0,
+        discount_metric: (course.discount_metric as "percentage" | "fixed") || "percentage",
+        discount_value: course.discount_value || 0,
+        discount_validity: course.discount_validity || '',
+        discount_code: course.discount_code || '',
       });
     }
   }, [course, form]);
