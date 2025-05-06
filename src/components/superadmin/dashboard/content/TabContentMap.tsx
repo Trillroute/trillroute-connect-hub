@@ -98,13 +98,6 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     // Students case is already handled by the early return above, 
     // but including it here for completeness
     
-    case 'courses':
-      return <CourseManagement 
-        canAddCourse={true}
-        canEditCourse={true}
-        canDeleteCourse={true}
-      />;
-      
     case 'classTypes':
       return <ClassTypeManagement />;
       

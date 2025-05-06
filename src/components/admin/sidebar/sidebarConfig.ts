@@ -49,11 +49,6 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
     icon: Book,
     submenu: [
       {
-        id: "courses",
-        label: "Courses",
-        value: "courses",
-      },
-      {
         id: "classTypes",
         label: "Class Types",
         value: "classTypes",

@@ -12,7 +12,6 @@ import { sidebarMenuItems } from "./sidebar/sidebarConfig";
 export type ActiveTab =
   | "today"
   | "students"
-  | "courses"
   | "classTypes"
   | "fees"
   | "communication"
@@ -36,7 +35,7 @@ interface SuperAdminSidebarProps {
 const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabChange }) => {
   // Track open state of each submenu
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
-    courses: activeTab === 'classTypes' || activeTab === 'courseManagement' || activeTab === 'courses',
+    courses: activeTab === 'classTypes' || activeTab === 'courseManagement',
     access: activeTab === 'admins' || activeTab === 'levels' || activeTab === 'access',
     leads: activeTab === 'leads' || activeTab === 'leads-cards',
     scheduling: activeTab === 'scheduling' || activeTab === 'user-availability',
