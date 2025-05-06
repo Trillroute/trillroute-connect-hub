@@ -14,7 +14,7 @@ import { Lead } from "@/types/lead";
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('students'); // Set default tab to 'students' for testing
+  const [activeTab, setActiveTab] = useState<ActiveTab>('students'); // Default tab set to 'students'
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
 import TodayContent from './TodayContent';
@@ -94,9 +95,8 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     case 'user-availability':
       return <UserAvailabilityContent />;
       
-    // This case should not be reached for 'students' due to the early return above
-    // But we'll keep it for completeness and as a fallback
     case 'students':
+      // This is a fallback - the early return above should handle this case
       console.log("Fallback: Rendering StudentManagement component");
       return <StudentManagement 
         canAddUser={true}
