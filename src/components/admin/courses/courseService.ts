@@ -12,7 +12,7 @@ const convertJsonClassTypeData = (course: any): Course => {
       (typeof course.class_types_data === 'string' 
         ? JSON.parse(course.class_types_data) 
         : course.class_types_data) as ClassTypeData[]
-  } as Course;
+  };
 };
 
 // Create a new course
