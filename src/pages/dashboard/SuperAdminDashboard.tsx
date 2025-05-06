@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import SuperAdminSidebar, { ActiveTab } from "@/components/admin/SuperAdminSidebar";
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +17,10 @@ const SuperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('today'); // Default tab set to 'today'
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
+
+  useEffect(() => {
+    console.log("Current activeTab:", activeTab);
+  }, [activeTab]);
 
   // Dashboard data for statistics and charts
   const {
@@ -42,6 +46,7 @@ const SuperAdminDashboard = () => {
   // Handle tab changes and log the activity
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
+    console.log("Tab changed to:", tab);
     if (user) {
       logActivity({
         userId: user.id,

@@ -40,6 +40,8 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
   onEditLead,
   onDeleteLead
 }) => {
+  console.log("TabContentMap rendering with activeTab:", activeTab);
+
   switch (activeTab) {
     case 'today':
       return stats && userActivityData && currentYear && handleYearChange ? (
@@ -82,6 +84,7 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       return <UserAvailabilityContent />;
       
     case 'students':
+      console.log("Rendering StudentManagement component");
       return <StudentManagement 
         canAddUser={true}
         canEditUser={true}
@@ -124,6 +127,7 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       return <PlaceholderContent tab={activeTab} />;
       
     default:
+      console.log("Default case: Rendering PlaceholderContent for tab:", activeTab);
       return <PlaceholderContent tab={activeTab} />;
   }
 };

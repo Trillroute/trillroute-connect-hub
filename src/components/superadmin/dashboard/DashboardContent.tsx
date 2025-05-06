@@ -28,6 +28,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   onEditLead,
   onDeleteLead
 }) => {
+  console.log("DashboardContent rendering with activeTab:", activeTab);
+  
   // For all tabs, use the TabContentMap component
   return (
     <TabContentMap 
