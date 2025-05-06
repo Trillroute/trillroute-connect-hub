@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Course } from '@/types/course';
 import { deleteCourse } from '../courseService';
 import { supabase } from '@/integrations/supabase/client';
+import { formatClassTypesData } from '@/utils/courseHelpers';
 
 export const useCourseManagement = () => {
   const { toast } = useToast();
@@ -45,14 +46,13 @@ export const useCourseManagement = () => {
       
       // Parse class_types_data if necessary
       const parsedData = (data || []).map((course) => {
-        const transformed = {
+        return {
           ...course,
           class_types_data: course.class_types_data ? 
             (typeof course.class_types_data === 'string' 
               ? JSON.parse(course.class_types_data) 
               : course.class_types_data)
-        };
-        return transformed as Course;
+        } as Course;
       });
       
       setCourses(parsedData);
