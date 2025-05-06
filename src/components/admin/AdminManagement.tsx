@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { UserManagementUser } from '@/types/student';
+import AdminTable from '@/components/admin/admin/AdminTable';
 
 interface AdminManagementProps {
   canAddAdmin?: boolean;
@@ -153,14 +153,12 @@ const AdminManagement: React.FC<AdminManagementProps> = ({
           />
         </div>
         
-        {/* Use the admin/admin/AdminTable component instead of admins/AdminTable */}
-        <div className="border rounded-md p-4">
-          <p className="text-muted-foreground text-center py-8">Loading administrators...</p>
-          <p className="text-center text-sm text-muted-foreground mb-4">
-            Please check the import paths and component structure. The AdminTable component 
-            is either missing or imported from the wrong location.
-          </p>
-        </div>
+        <AdminTable 
+          admins={filteredAdmins} 
+          isLoading={loading} 
+          onEdit={openEditDialog} 
+          onDelete={openDeleteDialog}
+        />
       </CardContent>
     </Card>
   );

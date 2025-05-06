@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Course, ClassTypeData } from '@/types/course';
 import { Json } from '@/integrations/supabase/types';
@@ -17,6 +16,8 @@ export const createCourse = async (courseData: Partial<Course>): Promise<Course>
     // Explicitly include required fields to match database schema
     title: courseData.title,
     description: courseData.description,
+    // Set default image if not provided (database requires it)
+    image: courseData.image || 'default-course-image.jpg',
     // Set duration field if not provided (database requires it)
     duration: courseData.duration || '0',
     // Handle class_types_data conversion
