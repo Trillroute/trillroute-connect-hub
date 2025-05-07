@@ -23,42 +23,46 @@ const SchedulingContent: React.FC = () => {
     switch(filterType) {
       case 'role-teacher':
         return { 
-          filterType: 'role', 
+          filterType: 'role' as const, 
           filterValues: ['teacher'],
           title: 'Teacher Calendar' 
         };
       case 'role-student':
         return { 
-          filterType: 'role', 
+          filterType: 'role' as const, 
           filterValues: ['student'],
           title: 'Student Calendar' 
         };
       case 'role-admin':
         return { 
-          filterType: 'role', 
+          filterType: 'role' as const, 
           filterValues: ['admin', 'superadmin'],
           title: 'Admin Calendar' 
         };
       case 'role-staff':
         return { 
-          filterType: 'role', 
+          filterType: 'role' as const, 
           filterValues: ['teacher', 'admin', 'superadmin'],
           title: 'Staff Calendar' 
         };
       case 'course':
         return { 
-          filterType: 'course', 
+          filterType: 'course' as const, 
           filterValues: [selectedId],
           title: courses.find(c => c.id === selectedId)?.title || 'Course Calendar' 
         };
       case 'skill':
         return { 
-          filterType: 'skill', 
+          filterType: 'skill' as const, 
           filterValues: [selectedId],
           title: skills.find(s => s.id === selectedId)?.name || 'Skill Calendar' 
         };
       default:
-        return { title: 'All Events' };
+        return { 
+          title: 'All Events',
+          filterType: undefined,
+          filterValues: undefined
+        };
     }
   };
 

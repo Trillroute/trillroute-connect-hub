@@ -6,10 +6,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface FilteredCalendarProps {
+export interface FilteredCalendarProps {
   title: string;
   description?: string;
-  filterType?: 'role' | 'course' | 'user' | 'skill';
+  filterType?: 'role' | 'course' | 'skill' | 'user';
   filterValues?: string[];
   userIds?: string[];
   hasAdminAccess?: boolean;

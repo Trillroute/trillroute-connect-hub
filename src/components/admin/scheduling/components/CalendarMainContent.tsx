@@ -48,7 +48,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   return (
     <div className="flex flex-col h-full">
       <CalendarHeader 
-        title={<CalendarTitle viewMode={viewMode} currentDate={currentDate} />}
+        title={
+          <CalendarTitle viewMode={viewMode} currentDate={currentDate} />
+        }
         showEventListToggle={true}
         onToggleEventList={() => setShowEventList(!showEventList)}
         isEventListShown={showEventList}
