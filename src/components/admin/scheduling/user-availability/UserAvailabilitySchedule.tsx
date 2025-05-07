@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
 import CopyDayDialog from './CopyDayDialog';

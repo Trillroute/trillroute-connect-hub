@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/accordion';
 import TimeSlotDialog from '../TimeSlotDialog';
 import AvailabilitySlotCard from '../day-panel/AvailabilitySlotCard';
+import { Badge } from '@/components/ui/badge';
+import { AVAILABILITY_CATEGORIES } from '@/services/availability/types';
 
 interface DayAvailabilityListProps {
   day: DayAvailability;
@@ -54,6 +56,26 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
     return success;
   };
 
+  // Function to get badge color based on category
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'Session':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'Break':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'Office':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'Meeting':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'Class Setup':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'QC':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
   return (
     <Accordion type="single" collapsible className="border rounded-md">
       <AccordionItem value={day.dayName}>
@@ -66,14 +88,29 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
         <AccordionContent>
           <div className="p-4 space-y-4">
             {day.slots.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="space-y-2">
                 {day.slots.map((slot) => (
-                  <AvailabilitySlotCard
-                    key={slot.id}
-                    slot={slot}
-                    onEdit={handleEditSlot}
-                    onDelete={onDeleteSlot}
-                  />
+                  <div key={slot.id} className="flex items-center justify-between p-3 border rounded-lg shadow-sm hover:bg-gray-50">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}</span>
+                        <Badge variant="outline" className={getCategoryColor(slot.category)}>
+                          {slot.category}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditSlot(slot)}>Edit</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-500 hover:bg-red-50 hover:border-red-200" 
+                        onClick={() => onDeleteSlot(slot.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
