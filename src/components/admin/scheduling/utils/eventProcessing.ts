@@ -33,20 +33,38 @@ export const fetchFilteredEvents = async ({
     
     // Process course filtering
     if ((courseIds && courseIds.length > 0) || courseId) {
-      const coursesToFilter = courseIds.length > 0 ? courseIds : [courseId];
-      query = query.in('course_id', coursesToFilter.filter(Boolean));
+      const coursesToFilter = [...courseIds];
+      if (courseId) coursesToFilter.push(courseId);
+      
+      // Filter out null/undefined values and apply the filter
+      const validCourseIds = coursesToFilter.filter(Boolean);
+      if (validCourseIds.length > 0) {
+        query = query.in('course_id', validCourseIds);
+      }
     }
     
     // Process skill filtering
     if ((skillIds && skillIds.length > 0) || skillId) {
-      const skillsToFilter = skillIds.length > 0 ? skillIds : [skillId];
-      query = query.in('skill_id', skillsToFilter.filter(Boolean));
+      const skillsToFilter = [...skillIds];
+      if (skillId) skillsToFilter.push(skillId);
+      
+      // Filter out null/undefined values and apply the filter
+      const validSkillIds = skillsToFilter.filter(Boolean);
+      if (validSkillIds.length > 0) {
+        query = query.in('skill_id', validSkillIds);
+      }
     }
     
     // Process user filtering
     if ((userIds && userIds.length > 0) || userId) {
-      const usersToFilter = userIds.length > 0 ? userIds : [userId];
-      query = query.in('user_id', usersToFilter.filter(Boolean));
+      const usersToFilter = [...userIds];
+      if (userId) usersToFilter.push(userId);
+      
+      // Filter out null/undefined values and apply the filter
+      const validUserIds = usersToFilter.filter(Boolean);
+      if (validUserIds.length > 0) {
+        query = query.in('user_id', validUserIds);
+      }
     }
     
     // Process role filtering

@@ -2,55 +2,90 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { 
-  DropdownMenu,
+  Calendar as CalendarIcon,
+  LayoutGrid,
+  List, 
+  CalendarDays, 
+  CalendarRange
+} from 'lucide-react';
+import { useCalendar } from '../context/CalendarContext';
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
+  DropdownMenuItem
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-export interface ViewOption {
-  value: string;
-  label: string;
-}
 
 interface ViewModeSelectorProps {
-  viewMode: string;
-  setViewMode: (mode: string) => void;
-  viewOptions: ViewOption[];
+  showEventList?: boolean;
+  setShowEventList?: (show: boolean) => void;
 }
 
 const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
-  viewMode,
-  setViewMode,
-  viewOptions
+  showEventList,
+  setShowEventList
 }) => {
-  const currentView = viewOptions.find(opt => opt.value === viewMode)?.label || 'Select View';
-  
+  const { viewMode, setViewMode } = useCalendar();
+
+  const handleViewChange = (mode: 'day' | 'week' | 'month') => {
+    setViewMode(mode);
+  };
+
+  // Toggle event list view if provided
+  const toggleEventList = () => {
+    if (setShowEventList && showEventList !== undefined) {
+      setShowEventList(!showEventList);
+    }
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2 bg-white border rounded-md w-[150px] justify-between">
-          <span>{currentView}</span>
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[150px] bg-white">
-        {viewOptions.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onClick={() => setViewMode(option.value)}
-            className={cn(
-              "cursor-pointer", 
-              viewMode === option.value ? "bg-gray-100" : ""
-            )}
-          >
-            {option.label}
+    <div className="flex space-x-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="flex items-center gap-1">
+            {viewMode === 'day' && <CalendarIcon className="h-4 w-4" />}
+            {viewMode === 'week' && <CalendarRange className="h-4 w-4" />}
+            {viewMode === 'month' && <CalendarDays className="h-4 w-4" />}
+            <span>{viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} View</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => handleViewChange('day')}>
+            <CalendarIcon className="h-4 w-4 mr-2" />
+            Day View
           </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem onClick={() => handleViewChange('week')}>
+            <CalendarRange className="h-4 w-4 mr-2" />
+            Week View
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleViewChange('month')}>
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Month View
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {setShowEventList && showEventList !== undefined && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleEventList}
+          className="flex items-center gap-1"
+        >
+          {showEventList ? (
+            <>
+              <LayoutGrid className="h-4 w-4" />
+              <span>Grid View</span>
+            </>
+          ) : (
+            <>
+              <List className="h-4 w-4" />
+              <span>List View</span>
+            </>
+          )}
+        </Button>
+      )}
+    </div>
   );
 };
 
