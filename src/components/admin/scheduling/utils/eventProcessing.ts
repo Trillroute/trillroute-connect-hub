@@ -33,7 +33,7 @@ export const fetchFilteredEvents = async ({
     
     // Process course filtering
     if ((courseIds && courseIds.length > 0) || courseId) {
-      const coursesToFilter = [...courseIds];
+      const coursesToFilter: string[] = [...(courseIds || [])];
       if (courseId) coursesToFilter.push(courseId);
       
       // Filter out null/undefined values and apply the filter
@@ -45,7 +45,7 @@ export const fetchFilteredEvents = async ({
     
     // Process skill filtering
     if ((skillIds && skillIds.length > 0) || skillId) {
-      const skillsToFilter = [...skillIds];
+      const skillsToFilter: string[] = [...(skillIds || [])];
       if (skillId) skillsToFilter.push(skillId);
       
       // Filter out null/undefined values and apply the filter
@@ -57,7 +57,7 @@ export const fetchFilteredEvents = async ({
     
     // Process user filtering
     if ((userIds && userIds.length > 0) || userId) {
-      const usersToFilter = [...userIds];
+      const usersToFilter: string[] = [...(userIds || [])];
       if (userId) usersToFilter.push(userId);
       
       // Filter out null/undefined values and apply the filter
