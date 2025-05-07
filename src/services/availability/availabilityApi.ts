@@ -66,6 +66,14 @@ export const createAvailabilitySlot = async (
       throw error;
     }
 
+    // Log the current session details before making the insert
+    const sessionDetails = await supabase.auth.getSession();
+    console.log("Current session details:", {
+      userId: sessionDetails.data.session?.user.id,
+      loggedInAs: sessionDetails.data.session?.user.email,
+      role: sessionDetails.data.session?.user.user_metadata?.role
+    });
+
     const { data, error } = await supabase
       .from("user_availability")
       .insert({
