@@ -28,7 +28,7 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
       >
         <SelectTrigger className="w-full">
           <div className="flex items-center gap-2">
-            {selectedCourseId && <BookOpen className="h-4 w-4" />}
+            {selectedCourseId && selectedCourseId !== 'none' && <BookOpen className="h-4 w-4" />}
             <SelectValue placeholder="Select a course (optional)" />
           </div>
         </SelectTrigger>

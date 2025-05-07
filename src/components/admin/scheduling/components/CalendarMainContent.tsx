@@ -23,10 +23,14 @@ import { useStudents } from '@/hooks/useStudents';
 
 interface CalendarMainContentProps {
   hasAdminAccess?: boolean;
+  title?: string;
+  description?: string;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
-  hasAdminAccess = false
+  hasAdminAccess = false,
+  title,
+  description
 }) => {
   const [showEventList, setShowEventList] = useState(false);
   const { 
@@ -67,7 +71,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   ];
 
   // Create the title element to pass to CalendarHeader
-  const titleElement = <CalendarTitle viewMode={viewMode} currentDate={currentDate} />;
+  const titleElement = title ? 
+    <div>{title}</div> : 
+    <CalendarTitle viewMode={viewMode} currentDate={currentDate} />;
 
   // Get appropriate options based on filter type
   const getFilterOptions = () => {
@@ -132,9 +138,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
 
         {/* Filter type selector */}
         <Select 
-          value={filterType || ''} 
+          value={filterType || 'none'} 
           onValueChange={(value) => {
-            setFilterType(value as any || null);
+            setFilterType(value === 'none' ? null : value as any);
             setSelectedFilter(null);
           }}
         >
@@ -142,7 +148,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
             <SelectValue placeholder="Select filter" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">No filter</SelectItem>
+            <SelectItem value="none">No filter</SelectItem>
             {filterOptions.map(option => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -154,7 +160,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         {/* Conditional filter value selector */}
         {filterType && (
           <Select 
-            value={selectedFilter || ''} 
+            value={selectedFilter || 'none'} 
             onValueChange={setSelectedFilter}
             disabled={getFilterOptions().length === 0}
           >
@@ -162,6 +168,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
               <SelectValue placeholder={`Select a ${filterType}`} />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="none">Select an option</SelectItem>
               {getFilterOptions().map(option => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}

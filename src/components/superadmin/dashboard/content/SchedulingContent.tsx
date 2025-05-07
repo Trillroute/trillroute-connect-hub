@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ContentWrapper from './ContentWrapper';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +17,17 @@ const SchedulingContent: React.FC = () => {
   
   const [filterType, setFilterType] = useState<string>('all');
   const [selectedId, setSelectedId] = useState<string>('');
+  
+  // Reset selected ID when filter type changes
+  useEffect(() => {
+    if (filterType === 'course' && courses.length > 0) {
+      setSelectedId(courses[0].id);
+    } else if (filterType === 'skill' && skills.length > 0) {
+      setSelectedId(skills[0].id);
+    } else {
+      setSelectedId('');
+    }
+  }, [filterType, courses, skills]);
   
   // Calculate which values to pass to FilteredCalendar based on the filter type
   const getFilterProps = () => {
@@ -86,7 +97,7 @@ const SchedulingContent: React.FC = () => {
             
             {(filterType === 'course' || filterType === 'skill') && (
               <div className="mb-4">
-                {filterType === 'course' && (
+                {filterType === 'course' && courses.length > 0 && (
                   <Select 
                     value={selectedId} 
                     onValueChange={setSelectedId}
@@ -104,7 +115,7 @@ const SchedulingContent: React.FC = () => {
                   </Select>
                 )}
                 
-                {filterType === 'skill' && (
+                {filterType === 'skill' && skills.length > 0 && (
                   <Select 
                     value={selectedId} 
                     onValueChange={setSelectedId}

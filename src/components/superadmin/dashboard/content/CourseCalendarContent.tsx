@@ -28,7 +28,7 @@ const CourseCalendarContent: React.FC = () => {
         <Select 
           value={selectedCourseId} 
           onValueChange={setSelectedCourseId}
-          disabled={loading}
+          disabled={loading || courses.length === 0}
         >
           <SelectTrigger className="w-full sm:w-[300px]">
             <SelectValue placeholder="Select a course" />

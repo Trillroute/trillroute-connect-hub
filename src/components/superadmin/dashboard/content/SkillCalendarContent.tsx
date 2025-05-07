@@ -28,7 +28,7 @@ const SkillCalendarContent: React.FC = () => {
         <Select 
           value={selectedSkillId} 
           onValueChange={setSelectedSkillId}
-          disabled={loading}
+          disabled={loading || skills.length === 0}
         >
           <SelectTrigger className="w-full sm:w-[300px]">
             <SelectValue placeholder="Select a skill" />
