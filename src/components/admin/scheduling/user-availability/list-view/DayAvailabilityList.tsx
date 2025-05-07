@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
@@ -23,10 +23,16 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
   isExpanded,
   onToggleExpand
 }) => {
+  // Handle click on the add button to prevent propagation
+  const handleAddButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddSlot();
+  };
+
   return (
-    <div className="mb-4 border rounded-md">
+    <div className="mb-4 border rounded-md shadow-sm">
       <div 
-        className="flex justify-between items-center p-3 bg-gray-100 cursor-pointer"
+        className="flex justify-between items-center p-3 bg-gray-100 cursor-pointer transition-colors hover:bg-gray-200"
         onClick={onToggleExpand}
       >
         <div className="flex-1">
@@ -36,10 +42,7 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
         <Button 
           size="sm" 
           variant="ghost" 
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddSlot();
-          }}
+          onClick={handleAddButtonClick}
         >
           <Plus className="h-4 w-4 mr-1" />
           Add Slot
@@ -49,14 +52,16 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
       {isExpanded && (
         <div className="p-3 bg-gray-50">
           {day.slots.length > 0 ? (
-            day.slots.map(slot => (
-              <AvailabilityListItem
-                key={slot.id}
-                slot={slot}
-                onEdit={onEditSlot}
-                onDelete={onDeleteSlot}
-              />
-            ))
+            <div className="space-y-2">
+              {day.slots.map(slot => (
+                <AvailabilityListItem
+                  key={slot.id}
+                  slot={slot}
+                  onEdit={onEditSlot}
+                  onDelete={onDeleteSlot}
+                />
+              ))}
+            </div>
           ) : (
             <p className="text-gray-500 text-center py-4">
               No availability slots for {day.dayName}
@@ -68,4 +73,4 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
   );
 };
 
-export default DayAvailabilityList;
+export default memo(DayAvailabilityList);
