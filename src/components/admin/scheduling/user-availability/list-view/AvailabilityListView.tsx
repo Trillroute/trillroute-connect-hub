@@ -43,13 +43,20 @@ const AvailabilityListView: React.FC<AvailabilityListViewProps> = ({
     setIsDialogOpen(true);
   };
 
-  const handleSaveSlot = async (startTime: string, endTime: string) => {
+  const handleSaveSlot = async (startTime: string, endTime: string): Promise<boolean> => {
+    let success = false;
+    
     if (editingSlot) {
-      await onUpdateSlot(editingSlot.id, startTime, endTime);
+      success = await onUpdateSlot(editingSlot.id, startTime, endTime);
     } else if (activeDayOfWeek !== null) {
-      await onAddSlot(activeDayOfWeek, startTime, endTime);
+      success = await onAddSlot(activeDayOfWeek, startTime, endTime);
     }
-    setIsDialogOpen(false);
+    
+    if (success) {
+      setIsDialogOpen(false);
+    }
+    
+    return success;
   };
 
   return (
