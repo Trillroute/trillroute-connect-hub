@@ -5,7 +5,7 @@ import { UserAvailability, mapDbAvailability } from "./types";
 // Get all availability slots for a user
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
   try {
-    console.log(`API call: fetching availability for user ${userId}`);
+    console.log(`API call: fetching availability for user ${userId} from user_availability table`);
     
     const { data, error } = await supabase
       .from("user_availability")
@@ -34,7 +34,7 @@ export const createAvailabilitySlot = async (
   endTime: string
 ): Promise<UserAvailability | null> => {
   try {
-    console.log(`Creating availability slot: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}`);
+    console.log(`Creating availability slot in user_availability table: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}`);
     
     // Format startTime and endTime to ensure consistent format (HH:MM:SS)
     const formattedStartTime = startTime.includes(':') ? 

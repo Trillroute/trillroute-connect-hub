@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UserAvailability } from '@/services/userAvailabilityService';
 import AvailabilitySlotCard from './AvailabilitySlotCard';
 import EmptyDayMessage from './EmptyDayMessage';
@@ -17,8 +17,15 @@ const AvailabilitySlotsGrid: React.FC<AvailabilitySlotsGridProps> = ({
   onEditSlot,
   onDeleteSlot
 }) => {
-  // Log the slots to help with debugging
-  console.log(`Rendering AvailabilitySlotsGrid for ${dayName}:`, slots);
+  // Enhanced logging for better debugging
+  useEffect(() => {
+    console.log(`[AvailabilitySlotsGrid] Rendering slots for ${dayName}:`, 
+      slots ? slots.map(slot => ({
+        id: slot.id,
+        time: `${slot.startTime}-${slot.endTime}`,
+        userId: slot.userId
+      })) : 'No slots');
+  }, [slots, dayName]);
   
   if (!slots || slots.length === 0) {
     return <EmptyDayMessage dayName={dayName} />;
