@@ -16,7 +16,6 @@ const TeacherCalendarContent: React.FC = () => {
       <div className="h-[calc(100vh-220px)]">
         <FilteredCalendar
           title="Teacher Calendar"
-          description="Events for all teacher accounts"
           filterType="role"
           filterValues={['teacher']}
           hasAdminAccess={hasAdminAccess}

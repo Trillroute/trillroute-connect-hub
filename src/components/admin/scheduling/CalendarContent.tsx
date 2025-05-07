@@ -13,6 +13,7 @@ interface CalendarContentProps {
   courseId?: string;
   skillId?: string;
   title?: string;
+  description?: string;
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({ 
@@ -22,7 +23,8 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   roleFilter,
   courseId,
   skillId,
-  title
+  title,
+  description
 }) => {
   const { 
     currentDate,
@@ -53,7 +55,11 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <CalendarMainContent hasAdminAccess={hasAdminAccess} />
+      <CalendarMainContent 
+        hasAdminAccess={hasAdminAccess}
+        title={title}
+        description={description}
+      />
       
       {isCreateEventOpen && (
         <CreateEventDialog

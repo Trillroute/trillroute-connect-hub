@@ -8,13 +8,15 @@ interface FilteredCalendarProps {
   filterValues?: string[];
   hasAdminAccess?: boolean;
   title?: string;
+  description?: string;
 }
 
 const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
   filterType,
   filterValues = [],
   hasAdminAccess = false,
-  title = "Calendar"
+  title = "Calendar",
+  description
 }) => {
   // Process filter props to map to the right properties
   const filterProps = () => {
@@ -39,6 +41,7 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
         <CalendarContent 
           hasAdminAccess={hasAdminAccess}
           title={title}
+          description={description}
           {...filterProps()}
         />
       </div>

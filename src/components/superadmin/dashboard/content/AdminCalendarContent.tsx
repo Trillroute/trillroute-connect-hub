@@ -16,7 +16,6 @@ const AdminCalendarContent: React.FC = () => {
       <div className="h-[calc(100vh-220px)]">
         <FilteredCalendar
           title="Admin Calendar"
-          description="Events for all admin and superadmin accounts"
           filterType="role"
           filterValues={['admin', 'superadmin']}
           hasAdminAccess={hasAdminAccess}
