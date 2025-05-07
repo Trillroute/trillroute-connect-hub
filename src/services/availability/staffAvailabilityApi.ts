@@ -7,7 +7,7 @@ export const fetchAllStaffAvailability = async (): Promise<UserAvailabilityMap> 
   try {
     const { data: users, error: usersError } = await supabase
       .from("custom_users")
-      .select("id, first_name, last_name")
+      .select("id, first_name, last_name, role")
       .in("role", ["teacher", "admin", "superadmin"]);
 
     if (usersError) {
@@ -16,10 +16,12 @@ export const fetchAllStaffAvailability = async (): Promise<UserAvailabilityMap> 
     }
 
     if (!users || users.length === 0) {
+      console.log("No staff users found");
       return {};
     }
 
     const userIds = users.map(user => user.id);
+    console.log(`Found ${userIds.length} staff members, fetching their availability`);
 
     const { data, error } = await supabase
       .from("user_availability")
@@ -32,6 +34,8 @@ export const fetchAllStaffAvailability = async (): Promise<UserAvailabilityMap> 
       return {};
     }
 
+    console.log(`Found ${data?.length || 0} availability slots for staff members`);
+
     // Group by user_id
     const availabilityByUser: UserAvailabilityMap = {};
     
@@ -40,7 +44,7 @@ export const fetchAllStaffAvailability = async (): Promise<UserAvailabilityMap> 
       availabilityByUser[user.id] = {
         slots: [],
         name: fullName,
-        role: "staff" // We'll update this later if needed
+        role: user.role // Include the user's role from the database
       };
     });
 

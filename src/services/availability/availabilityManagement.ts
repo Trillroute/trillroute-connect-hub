@@ -1,31 +1,33 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Copy availability from one day to another
+// Copy all available time slots from one day to another
 export const copyDayAvailability = async (
   userId: string,
   fromDay: number,
   toDay: number
 ): Promise<boolean> => {
   try {
-    // First, get all slots for the source day
-    const { data: sourceSlots, error: sourceError } = await supabase
+    // First, get all slots for the "from" day
+    const { data: sourceSlots, error: fetchError } = await supabase
       .from("user_availability")
       .select("*")
       .eq("user_id", userId)
       .eq("day_of_week", fromDay);
 
-    if (sourceError) {
-      console.error("Error fetching source day slots:", sourceError);
+    if (fetchError) {
+      console.error("Error fetching source day slots:", fetchError);
       return false;
     }
 
     if (!sourceSlots || sourceSlots.length === 0) {
-      console.warn("No slots found for the source day");
+      console.log(`No slots found for day ${fromDay} to copy`);
       return false;
     }
 
-    // Delete existing slots for the target day
+    console.log(`Found ${sourceSlots.length} slots to copy from day ${fromDay} to day ${toDay}`);
+
+    // Delete existing slots for the "to" day
     const { error: deleteError } = await supabase
       .from("user_availability")
       .delete()
@@ -33,11 +35,11 @@ export const copyDayAvailability = async (
       .eq("day_of_week", toDay);
 
     if (deleteError) {
-      console.error("Error deleting existing slots for target day:", deleteError);
+      console.error("Error deleting existing slots:", deleteError);
       return false;
     }
 
-    // Create new slots for the target day based on source day
+    // Prepare new slots for insertion
     const newSlots = sourceSlots.map(slot => ({
       user_id: userId,
       day_of_week: toDay,
@@ -45,15 +47,17 @@ export const copyDayAvailability = async (
       end_time: slot.end_time
     }));
 
+    // Insert the new slots
     const { error: insertError } = await supabase
       .from("user_availability")
       .insert(newSlots);
 
     if (insertError) {
-      console.error("Error copying slots to target day:", insertError);
+      console.error("Error copying slots:", insertError);
       return false;
     }
 
+    console.log(`Successfully copied ${newSlots.length} slots to day ${toDay}`);
     return true;
   } catch (err) {
     console.error("Failed to copy day availability:", err);

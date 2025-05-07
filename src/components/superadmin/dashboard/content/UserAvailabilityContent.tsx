@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 const UserAvailabilityContent: React.FC = () => {
   const { role, user } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const { staffMembers, loading: isLoadingStaff } = useStaffAvailability();
+  const { staffMembers, loading: isLoadingStaff, refetch: refetchStaffMembers } = useStaffAvailability();
   const { toast } = useToast();
   const [isUserChanging, setIsUserChanging] = useState(false);
   
@@ -31,6 +31,13 @@ const UserAvailabilityContent: React.FC = () => {
       setSelectedUserId(user.id);
     }
   }, [user, selectedUserId]);
+  
+  // Force refetch staff members data on initial render
+  useEffect(() => {
+    console.log('Initial load: fetching staff members data');
+    refetchStaffMembers();
+    // Only run this on first render
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   const { 
     loading: isLoadingAvailability,
@@ -84,8 +91,8 @@ const UserAvailabilityContent: React.FC = () => {
   
   return (
     <ContentWrapper
-      title="User Availability"
-      description="Define when users are available throughout the week"
+      title="Staff Availability"
+      description="View and manage when staff members are available throughout the week"
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <Badge variant="outline" className="bg-gray-100">

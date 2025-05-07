@@ -27,7 +27,9 @@ export const useStaffAvailability = (): UseStaffAvailabilityResult => {
     setLoading(true);
     setError(null);
     try {
+      console.log("Fetching staff availability data...");
       const data = await fetchAllStaffAvailability();
+      console.log("Received staff availability data:", data);
       setAvailabilityByUser(data);
       
       // Extract staff members from the data
@@ -37,6 +39,7 @@ export const useStaffAvailability = (): UseStaffAvailabilityResult => {
         role: userData.role || 'staff'
       }));
       
+      console.log("Extracted staff members:", members);
       setStaffMembers(members);
     } catch (err) {
       console.error("Error in useStaffAvailability hook:", err);

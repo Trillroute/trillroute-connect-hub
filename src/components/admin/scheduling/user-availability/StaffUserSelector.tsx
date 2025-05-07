@@ -40,7 +40,7 @@ const StaffUserSelector: React.FC<StaffUserSelectorProps> = ({
       <SelectContent>
         {staffMembers.map((member) => (
           <SelectItem key={member.id} value={member.id}>
-            {member.name} {member.role ? `(${member.role})` : ''}
+            {member.name} <span className="text-xs text-muted-foreground ml-1">({member.role})</span>
           </SelectItem>
         ))}
       </SelectContent>
