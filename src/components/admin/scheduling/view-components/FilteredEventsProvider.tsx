@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useCalendar } from '../context/CalendarContext';
+import { fetchFilteredEvents } from '../utils/eventProcessing';
 
 interface FilteredEventsProviderProps {
   children: React.ReactNode;
@@ -25,9 +26,6 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       return;
     }
 
-    // Import and use the event filtering utility
-    const { fetchFilteredEvents } = require('../utils/eventProcessing');
-    
     // Apply the appropriate filter
     const applyFilter = async () => {
       switch (filterType) {
