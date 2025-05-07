@@ -99,17 +99,23 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         }
         
         // Map to calendar events format
-        const mappedEvents = filteredData.map(event => ({
-          id: event.id,
-          title: event.title,
-          start: new Date(event.start_time),
-          end: new Date(event.end_time),
-          description: event.description,
-          color: getRoleColor(event.custom_users?.role),
-          // Fix: location property is not available on event object,
-          // so we'll extract it from metadata if available or use empty string
-          location: event.metadata && event.metadata.location ? event.metadata.location : '',
-        }));
+        const mappedEvents = filteredData.map(event => {
+          // Extract location from metadata if it's an object with a location property
+          let locationValue = '';
+          if (event.metadata && typeof event.metadata === 'object') {
+            locationValue = event.metadata.location || '';
+          }
+          
+          return {
+            id: event.id,
+            title: event.title,
+            start: new Date(event.start_time),
+            end: new Date(event.end_time),
+            description: event.description,
+            color: getRoleColor(event.custom_users?.role),
+            location: locationValue
+          };
+        });
         
         // Update events in context
         setEvents(mappedEvents);

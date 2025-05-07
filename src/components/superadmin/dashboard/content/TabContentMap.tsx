@@ -16,12 +16,6 @@ import LeadManagement from '@/components/admin/LeadManagement';
 import LevelManagement from '@/components/admin/levels/LevelManagement';
 import ClassTypeManagement from '@/components/admin/class-types/ClassTypeManagement';
 import TeacherManagement from '@/components/admin/TeacherManagement';
-import TeacherCalendarContent from './TeacherCalendarContent';
-import StudentCalendarContent from './StudentCalendarContent';
-import AdminCalendarContent from './AdminCalendarContent';
-import CourseCalendarContent from './CourseCalendarContent';
-import StaffCalendarContent from './StaffCalendarContent';
-import SkillCalendarContent from './SkillCalendarContent';
 
 interface TabContentMapProps {
   activeTab: ActiveTab;
@@ -98,23 +92,14 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     case 'scheduling':
       return <SchedulingContent />;
       
+    // All specialized calendar views now redirected to the main Calendar component
     case 'teacher-calendar':
-      return <TeacherCalendarContent />;
-      
     case 'student-calendar':
-      return <StudentCalendarContent />;
-      
     case 'admin-calendar':
-      return <AdminCalendarContent />;
-      
     case 'course-calendar':
-      return <CourseCalendarContent />;
-      
     case 'staff-calendar':
-      return <StaffCalendarContent />;
-      
     case 'skill-calendar':
-      return <SkillCalendarContent />;
+      return <SchedulingContent />;
       
     case 'user-availability':
       return <UserAvailabilityContent />;
