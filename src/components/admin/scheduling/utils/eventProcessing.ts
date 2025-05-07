@@ -32,13 +32,20 @@ export const fetchFilteredEvents = async ({
         custom_users!user_id (first_name, last_name, role)
       `);
     
-    // Process course filtering with explicit types
+    // Process course filtering with explicit types - avoiding array methods
     const filterCourses: string[] = [];
-    if (courseId) filterCourses.push(courseId);
-    if (courseIds && courseIds.length > 0) {
+    
+    // Add single courseId if it exists
+    if (courseId) {
+      filterCourses.push(courseId);
+    }
+    
+    // Add multiple courseIds if they exist
+    if (courseIds && Array.isArray(courseIds)) {
       for (let i = 0; i < courseIds.length; i++) {
-        const id = courseIds[i];
-        if (id) filterCourses.push(id);
+        if (courseIds[i]) {
+          filterCourses.push(courseIds[i]);
+        }
       }
     }
     
@@ -46,13 +53,20 @@ export const fetchFilteredEvents = async ({
       query = query.in('course_id', filterCourses);
     }
     
-    // Process skill filtering with explicit types
+    // Process skill filtering with explicit types - avoiding array methods
     const filterSkills: string[] = [];
-    if (skillId) filterSkills.push(skillId);
-    if (skillIds && skillIds.length > 0) {
+    
+    // Add single skillId if it exists
+    if (skillId) {
+      filterSkills.push(skillId);
+    }
+    
+    // Add multiple skillIds if they exist
+    if (skillIds && Array.isArray(skillIds)) {
       for (let i = 0; i < skillIds.length; i++) {
-        const id = skillIds[i];
-        if (id) filterSkills.push(id);
+        if (skillIds[i]) {
+          filterSkills.push(skillIds[i]);
+        }
       }
     }
     
@@ -60,13 +74,20 @@ export const fetchFilteredEvents = async ({
       query = query.in('skill_id', filterSkills);
     }
     
-    // Process user filtering with explicit types
+    // Process user filtering with explicit types - avoiding array methods
     const filterUsers: string[] = [];
-    if (userId) filterUsers.push(userId);
-    if (userIds && userIds.length > 0) {
+    
+    // Add single userId if it exists
+    if (userId) {
+      filterUsers.push(userId);
+    }
+    
+    // Add multiple userIds if they exist
+    if (userIds && Array.isArray(userIds)) {
       for (let i = 0; i < userIds.length; i++) {
-        const id = userIds[i];
-        if (id) filterUsers.push(id);
+        if (userIds[i]) {
+          filterUsers.push(userIds[i]);
+        }
       }
     }
     
