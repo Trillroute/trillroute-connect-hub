@@ -7,7 +7,7 @@ import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import AvailabilityListView from './list-view/AvailabilityListView';
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, memo, useEffect } from 'react';
 
 interface UserAvailabilityScheduleProps {
   dailyAvailability: DayAvailability[];
@@ -33,6 +33,14 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [operationInProgress, setOperationInProgress] = useState(false);
+  const [stableAvailability, setStableAvailability] = useState<DayAvailability[]>(dailyAvailability);
+  
+  // Update stable availability only when meaningful changes occur
+  useEffect(() => {
+    if (!loading && dailyAvailability.length > 0) {
+      setStableAvailability(dailyAvailability);
+    }
+  }, [loading, dailyAvailability]);
   
   const handleRefresh = useCallback(async () => {
     if (loading || isRefreshing) return;
@@ -111,7 +119,9 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   }, [onDeleteSlot]);
   
   const isContentLoading = loading || operationInProgress;
-  const hasData = dailyAvailability.length > 0;
+  const hasData = stableAvailability.length > 0;
+  const showLoadingSkeleton = isContentLoading && !hasData;
+  const showEmptyState = !isContentLoading && !hasData;
 
   return (
     <div className="p-4">
@@ -140,13 +150,13 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
       </div>
       
       {/* Content */}
-      {isContentLoading ? (
+      {showLoadingSkeleton ? (
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
           <Skeleton className="h-12 w-full" />
         </div>
-      ) : !hasData ? (
+      ) : showEmptyState ? (
         <Alert variant="default" className="bg-gray-50">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>No Data Available</AlertTitle>
@@ -156,7 +166,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         </Alert>
       ) : (
         <AvailabilityListView
-          dailyAvailability={dailyAvailability}
+          dailyAvailability={stableAvailability}
           onAddSlot={handleAddSlot}
           onUpdateSlot={handleUpdateSlot}
           onDeleteSlot={handleDeleteSlot}
@@ -168,7 +178,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
         <CopyDayDialog 
           open={isCopyDialogOpen} 
           onOpenChange={setIsCopyDialogOpen}
-          daysOfWeek={dailyAvailability.map(day => ({ 
+          daysOfWeek={stableAvailability.map(day => ({ 
             dayOfWeek: day.dayOfWeek, 
             dayName: day.dayName 
           }))}

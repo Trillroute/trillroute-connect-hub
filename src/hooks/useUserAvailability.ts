@@ -14,6 +14,8 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const [previousUserId, setPreviousUserId] = useState<string | undefined>(userId);
   const isInitialLoad = useRef(true);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMounted = useRef(true);
+  const fetchInProgress = useRef(false);
   
   // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
@@ -31,9 +33,16 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   );
 
   const refreshAvailability = useCallback(async () => {
+    // Prevent multiple simultaneous refresh calls
+    if (fetchInProgress.current) {
+      console.log('Refresh already in progress, skipping redundant call');
+      return;
+    }
+    
     // Clear any existing timeout
     if (fetchTimeoutRef.current) {
       clearTimeout(fetchTimeoutRef.current);
+      fetchTimeoutRef.current = null;
     }
 
     if (!targetUserId) {
@@ -50,10 +59,16 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     }
     
     console.log('Refreshing availability for user ID:', targetUserId);
+    fetchInProgress.current = true;
+    
     try {
       await fetchAvailability();
     } catch (error) {
       console.error('Error in refreshAvailability:', error);
+    } finally {
+      if (isMounted.current) {
+        fetchInProgress.current = false;
+      }
     }
   }, [targetUserId, fetchAvailability]);
 
@@ -71,18 +86,28 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
         slots: []
       }));
       setDailyAvailability(emptyAvailability);
+      
+      // Cancel any pending fetches for previous user
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
+      }
     }
   }, [targetUserId, previousUserId]);
 
   // Load availability data whenever targetUserId changes
   useEffect(() => {
-    let isMounted = true;
+    isMounted.current = true;
     
     const loadAvailability = async () => {
+      if (fetchInProgress.current) return;
+
       try {
-        if (targetUserId && isMounted) {
+        if (targetUserId && isMounted.current) {
+          console.log(`Initial load of availability for user ${targetUserId}`);
           await refreshAvailability();
-          if (isMounted) {
+          
+          if (isMounted.current) {
             isInitialLoad.current = false;
           }
         } else {
@@ -91,18 +116,20 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
         }
       } catch (err) {
         console.error('Error in initial load of availability:', err);
-        if (isMounted) {
+        if (isMounted.current) {
           setLoading(false);
         }
       }
     };
     
-    loadAvailability();
+    // Small delay to handle quick user switches more gracefully
+    fetchTimeoutRef.current = setTimeout(loadAvailability, 100);
     
     return () => {
-      isMounted = false;
+      isMounted.current = false;
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
       }
     };
   }, [targetUserId, refreshAvailability]);

@@ -10,6 +10,7 @@ import {
 import { daysOfWeek } from './dayUtils';
 import { transformAvailabilityData } from './availabilityTransforms';
 import { UseAvailabilityActions, DayAvailability } from './types';
+import { useCallback } from 'react';
 
 export function useAvailabilityActions(
   userId: string, 
@@ -18,7 +19,7 @@ export function useAvailabilityActions(
 ): UseAvailabilityActions {
   const { toast } = useToast();
   
-  const refreshAvailability = async () => {
+  const refreshAvailability = useCallback(async () => {
     if (!userId) {
       console.warn('Cannot refresh availability: No user ID provided');
       // Create empty availability data structure for each day of the week
@@ -36,23 +37,31 @@ export function useAvailabilityActions(
       setLoading(true);
       console.log(`Fetching availability for user: ${userId}`);
       
-      // Add a timeout to prevent infinite loading state
-      const timeoutPromise = new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error("Request timeout")), 10000);
-      });
+      // Use AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
       
-      const availabilityPromise = fetchUserAvailability(userId);
-      
-      // Race between the actual request and the timeout
-      const availability = await Promise.race([
-        availabilityPromise,
-        timeoutPromise
-      ]) as any;
-      
-      console.log(`Retrieved availability data:`, availability);
-      
-      const transformed = transformAvailabilityData(availability);
-      setDailyAvailability(transformed);
+      try {
+        const availability = await fetchUserAvailability(userId);
+        clearTimeout(timeoutId);
+        
+        if (availability && Array.isArray(availability)) {
+          console.log(`Retrieved availability data:`, availability);
+          const transformed = transformAvailabilityData(availability);
+          setDailyAvailability(transformed);
+        } else {
+          console.warn(`Unexpected availability data structure:`, availability);
+          throw new Error("Invalid availability data format");
+        }
+      } catch (error: any) {
+        clearTimeout(timeoutId);
+        
+        if (error.name === 'AbortError') {
+          console.error("Request timed out fetching availability");
+          throw new Error("Request timeout");
+        }
+        throw error;
+      }
     } catch (error) {
       console.error("Error refreshing availability:", error);
       toast({
@@ -60,6 +69,7 @@ export function useAvailabilityActions(
         description: "There was an error loading the availability schedule. Using placeholder data.",
         variant: "destructive"
       });
+      
       // Still provide an empty structure so the UI can render
       const emptyAvailability = daysOfWeek.map((dayName, index) => ({
         dayOfWeek: index,
@@ -70,9 +80,9 @@ export function useAvailabilityActions(
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, setLoading, setDailyAvailability, toast]);
 
-  const addSlot = async (dayOfWeek: number, startTime: string, endTime: string) => {
+  const addSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
     if (!userId) {
       toast({
         title: "Error",
@@ -104,9 +114,9 @@ export function useAvailabilityActions(
       });
       return false;
     }
-  };
+  }, [userId, refreshAvailability, toast]);
 
-  const updateSlot = async (id: string, startTime: string, endTime: string) => {
+  const updateSlot = useCallback(async (id: string, startTime: string, endTime: string) => {
     try {
       const success = await updateAvailabilitySlot(id, startTime, endTime);
       if (success) {
@@ -126,9 +136,9 @@ export function useAvailabilityActions(
       });
       return false;
     }
-  };
+  }, [refreshAvailability, toast]);
 
-  const deleteSlot = async (id: string) => {
+  const deleteSlot = useCallback(async (id: string) => {
     try {
       const success = await deleteAvailabilitySlot(id);
       if (success) {
@@ -148,9 +158,9 @@ export function useAvailabilityActions(
       });
       return false;
     }
-  };
+  }, [refreshAvailability, toast]);
 
-  const copyDaySlots = async (fromDay: number, toDay: number) => {
+  const copyDaySlots = useCallback(async (fromDay: number, toDay: number) => {
     if (!userId) return false;
     
     try {
@@ -177,7 +187,7 @@ export function useAvailabilityActions(
       });
       return false;
     }
-  };
+  }, [userId, refreshAvailability, toast]);
 
   return {
     refreshAvailability,

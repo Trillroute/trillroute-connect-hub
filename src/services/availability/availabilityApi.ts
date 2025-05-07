@@ -7,8 +7,8 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
   try {
     console.log(`API call: fetching availability for user ${userId}`);
     
-    // Add retry mechanism for better reliability
-    const maxRetries = 2;
+    // Add robust retry mechanism with exponential backoff
+    const maxRetries = 3;
     let retries = 0;
     let lastError = null;
     
@@ -18,32 +18,35 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
           .from("user_availability")
           .select("*")
           .eq("user_id", userId)
-          .order("day_of_week", { ascending: true });
+          .order("day_of_week", { ascending: true })
+          .order("start_time", { ascending: true });
 
         if (error) {
           throw error;
         }
 
-        if (!data || data.length === 0) {
-          console.log(`No availability slots found for user ${userId}`);
+        if (!data) {
+          console.log(`No availability data returned for user ${userId}`);
           return [];
         }
 
         const mappedData = data.map(mapDbAvailability);
-        console.log(`Found ${mappedData.length} availability slots for user ${userId}`);
+        console.log(`Successfully fetched ${mappedData.length} availability slots for user ${userId}`);
         
         return mappedData;
       } catch (err) {
         lastError = err;
         retries++;
         if (retries <= maxRetries) {
-          console.log(`Retrying API call (${retries}/${maxRetries})...`);
-          // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Exponential backoff with jitter
+          const delay = Math.min(1000 * Math.pow(2, retries - 1) + Math.random() * 1000, 8000);
+          console.log(`Retry ${retries}/${maxRetries} after ${delay}ms for user ${userId}`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     }
     
+    console.error(`All ${maxRetries} retries failed for user ${userId}`);
     throw lastError || new Error("Maximum retries exceeded");
   } catch (err) {
     console.error("Failed to fetch user availability:", err);
