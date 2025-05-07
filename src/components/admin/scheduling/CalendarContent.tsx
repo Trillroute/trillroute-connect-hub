@@ -11,13 +11,19 @@ import { supabase } from '@/integrations/supabase/client';
 interface CalendarContentProps {
   hasAdminAccess?: boolean;
   userId?: string;
+  userIds?: string[];
   roleFilter?: string[];
+  courseId?: string;
+  skillId?: string;
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({ 
   hasAdminAccess = false,
   userId,
-  roleFilter
+  userIds,
+  roleFilter,
+  courseId,
+  skillId
 }) => {
   const [showEventList, setShowEventList] = useState(false);
   const { 
@@ -31,65 +37,110 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
     refreshEvents
   } = useCalendar();
 
-  // Apply filters based on userId and roleFilter
+  // Apply filters based on provided criteria
   useEffect(() => {
-    if (userId || (roleFilter && roleFilter.length > 0)) {
-      const fetchFilteredEvents = async () => {
-        try {
-          // Start building the query
-          let query = supabase.from('user_events').select(`
-            *,
-            custom_users!user_id (first_name, last_name, role)
-          `);
-          
-          // Filter by specific user if provided
-          if (userId) {
-            query = query.eq('user_id', userId);
-          }
-          
-          // Fetch events
-          const { data, error } = await query;
-          
-          if (error) {
-            console.error("Error fetching filtered events:", error);
+    const fetchFilteredEvents = async () => {
+      try {
+        // Start building the query
+        let query = supabase.from('user_events').select(`
+          *,
+          custom_users!user_id (id, first_name, last_name, role)
+        `);
+        
+        // Filter by specific user ID
+        if (userId) {
+          query = query.eq('user_id', userId);
+        }
+        
+        // Filter by multiple user IDs
+        if (userIds && userIds.length > 0) {
+          query = query.in('user_id', userIds);
+        }
+        
+        // Filter by course ID
+        if (courseId) {
+          query = query.ilike('description', `%course_id:${courseId}%`);
+        }
+        
+        // Filter by skill ID
+        if (skillId) {
+          // Get users with this skill (both teachers and students)
+          const { data: skillUsers } = await supabase
+            .from('user_skills')
+            .select('user_id')
+            .eq('skill_id', skillId);
+            
+          if (skillUsers && skillUsers.length > 0) {
+            const skillUserIds = skillUsers.map(item => item.user_id);
+            query = query.in('user_id', skillUserIds);
+          } else {
+            // No users have this skill, return empty events
+            setEvents([]);
             return;
           }
-          
-          // Filter by role if needed
-          let filteredData = data;
-          if (roleFilter && roleFilter.length > 0) {
-            filteredData = data.filter(event => {
-              const userRole = event.custom_users?.role;
-              return userRole && roleFilter.includes(userRole);
-            });
-          }
-          
-          // Map to calendar events format
-          const mappedEvents = filteredData.map(event => ({
-            id: event.id,
-            title: event.title,
-            start: new Date(event.start_time),
-            end: new Date(event.end_time),
-            description: event.description,
-            color: event.custom_users?.role === 'teacher' ? '#4f46e5' : 
-                   event.custom_users?.role === 'admin' ? '#0891b2' : 
-                   event.custom_users?.role === 'student' ? '#16a34a' : 
-                   event.custom_users?.role === 'superadmin' ? '#9333ea' : '#6b7280',
-          }));
-          
-          // Update events in context
-          setEvents(mappedEvents);
-        } catch (err) {
-          console.error("Failed to fetch filtered events:", err);
         }
-      };
-      
+        
+        // Fetch events
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error("Error fetching filtered events:", error);
+          setEvents([]);
+          return;
+        }
+        
+        // Further filter by role if needed
+        let filteredData = data;
+        if (roleFilter && roleFilter.length > 0) {
+          filteredData = data.filter(event => {
+            const userRole = event.custom_users?.role;
+            return userRole && roleFilter.includes(userRole);
+          });
+        }
+        
+        // Map to calendar events format
+        const mappedEvents = filteredData.map(event => ({
+          id: event.id,
+          title: event.title,
+          start: new Date(event.start_time),
+          end: new Date(event.end_time),
+          description: event.description,
+          color: getRoleColor(event.custom_users?.role),
+          location: event.location,
+        }));
+        
+        // Update events in context
+        setEvents(mappedEvents);
+      } catch (err) {
+        console.error("Failed to fetch filtered events:", err);
+        setEvents([]);
+      }
+    };
+    
+    // Determine if we need to use filters or regular refresh
+    if (userId || userIds?.length > 0 || roleFilter?.length > 0 || courseId || skillId) {
       fetchFilteredEvents();
     } else {
       // If no filters are applied, use the regular refresh
       refreshEvents();
     }
-  }, [userId, roleFilter, setEvents, refreshEvents]);
+  }, [userId, userIds, roleFilter, courseId, skillId, setEvents, refreshEvents]);
+
+  // Get color based on role
+  const getRoleColor = (role?: string): string => {
+    switch (role) {
+      case 'teacher':
+        return '#4f46e5'; // Indigo
+      case 'admin':
+        return '#0891b2'; // Cyan
+      case 'student': 
+        return '#16a34a'; // Green
+      case 'superadmin':
+        return '#9333ea'; // Purple
+      default:
+        return '#6b7280'; // Gray
+    }
+  };
 
   // Format title based on view mode and current date
   let title;

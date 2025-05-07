@@ -18,6 +18,12 @@ export type ActiveTab =
   | "leads"
   | "leads-cards"
   | "scheduling"
+  | "teacher-calendar"
+  | "student-calendar"
+  | "admin-calendar"
+  | "course-calendar"
+  | "staff-calendar"
+  | "skill-calendar"
   | "user-availability"
   | "teachers"
   | "intramural"
@@ -38,7 +44,10 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
     courses: activeTab === 'classTypes' || activeTab === 'courseManagement',
     access: activeTab === 'admins' || activeTab === 'levels' || activeTab === 'access',
     leads: activeTab === 'leads' || activeTab === 'leads-cards',
-    scheduling: activeTab === 'scheduling' || activeTab === 'user-availability',
+    scheduling: activeTab === 'scheduling' || activeTab === 'teacher-calendar' || 
+               activeTab === 'student-calendar' || activeTab === 'admin-calendar' || 
+               activeTab === 'course-calendar' || activeTab === 'staff-calendar' || 
+               activeTab === 'skill-calendar' || activeTab === 'user-availability',
     students: activeTab === 'students', // Make sure students tab is included
   });
 

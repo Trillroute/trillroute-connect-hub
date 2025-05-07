@@ -1,15 +1,9 @@
 
 import React from 'react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  CalendarDays, 
-  Calendar as CalendarIcon, 
-  List 
-} from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCalendar } from './context/CalendarContext';
-import LayersDropdown from './LayersDropdown';
 
 interface CalendarHeaderProps {
   title: string;
@@ -19,9 +13,9 @@ interface CalendarHeaderProps {
   hasAdminAccess?: boolean;
 }
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({ 
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   title,
-  showEventListToggle = true,
+  showEventListToggle = false,
   onToggleEventList,
   isEventListShown = false,
   hasAdminAccess = false
@@ -29,83 +23,46 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   const { 
     viewMode, 
     setViewMode, 
+    goToToday, 
     goToPrevious, 
     goToNext, 
-    goToToday 
+    isCreateEventOpen
   } = useCalendar();
-  
+
   return (
-    <div className="flex justify-between items-center p-4 border-b border-gray-200">
+    <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
       <div className="flex items-center gap-2">
-        {hasAdminAccess && <LayersDropdown />}
-        <h3 className="text-xl font-semibold ml-2">{title}</h3>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        {/* View toggle buttons */}
-        <div className="flex border rounded-md overflow-hidden shadow-sm mr-2">
-          <Button
-            variant={viewMode === 'day' ? "default" : "ghost"}
-            className="px-2 rounded-none"
-            onClick={() => setViewMode('day')}
-          >
-            <CalendarIcon className="w-4 h-4 mr-1" />
-            <span>Day</span>
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" onClick={goToPrevious}>
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          
-          <Button
-            variant={viewMode === 'week' ? "default" : "ghost"}
-            className="px-2 rounded-none"
-            onClick={() => setViewMode('week')}
-          >
-            <CalendarDays className="w-4 h-4 mr-1" />
-            <span>Week</span>
-          </Button>
-          
-          <Button
-            variant={viewMode === 'month' ? "default" : "ghost"}
-            className="px-2 rounded-none"
-            onClick={() => setViewMode('month')}
-          >
-            <CalendarDays className="w-4 h-4 mr-1" />
-            <span>Month</span>
+          <Button variant="outline" size="icon" onClick={goToNext}>
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        
-        {/* List view toggle for all views */}
-        {showEventListToggle && onToggleEventList && (
+        <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
+        <h3 className="text-lg font-semibold ml-2">{title}</h3>
+      </div>
+
+      <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+        <Tabs defaultValue={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}>
+          <TabsList className="grid grid-cols-3 w-[240px]">
+            <TabsTrigger value="day">Day</TabsTrigger>
+            <TabsTrigger value="week">Week</TabsTrigger>
+            <TabsTrigger value="month">Month</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {showEventListToggle && (
           <Button 
-            variant="outline" 
-            size="sm" 
+            variant={isEventListShown ? "default" : "outline"} 
+            size="icon" 
             onClick={onToggleEventList}
-            className="mr-2"
+            className={isEventListShown ? "bg-primary text-primary-foreground" : ""}
           >
-            {isEventListShown ? (
-              <>
-                <CalendarIcon className="w-4 h-4 mr-1" />
-                <span>Calendar</span>
-              </>
-            ) : (
-              <>
-                <List className="w-4 h-4 mr-1" />
-                <span>List</span>
-              </>
-            )}
+            <List className="h-4 w-4" />
           </Button>
         )}
-        
-        {/* Navigation buttons */}
-        <div className="flex border rounded-md overflow-hidden shadow-sm">
-          <Button variant="ghost" className="px-2 rounded-none" onClick={goToToday}>
-            Today
-          </Button>
-          <Button variant="ghost" className="px-2 rounded-none" onClick={goToPrevious}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" className="px-2 rounded-none" onClick={goToNext}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
       </div>
     </div>
   );
