@@ -102,8 +102,8 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         const mappedEvents = filteredData.map(event => {
           // Extract location from metadata if it's an object with a location property
           let locationValue = '';
-          if (event.metadata && typeof event.metadata === 'object') {
-            locationValue = event.metadata.location || '';
+          if (event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)) {
+            locationValue = (event.metadata as Record<string, any>).location || '';
           }
           
           return {

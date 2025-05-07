@@ -6,6 +6,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSkills } from '@/hooks/useSkills';
 import { useCourses } from '@/hooks/useCourses';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const SchedulingContent: React.FC = () => {
