@@ -92,7 +92,7 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     case 'scheduling':
       return <SchedulingContent />;
       
-    // All specialized calendar views now redirected to the main Calendar component
+    // All calendar views now redirect to the main Calendar component
     case 'teacher-calendar':
     case 'student-calendar':
     case 'admin-calendar':
@@ -104,9 +104,6 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     case 'user-availability':
       return <UserAvailabilityContent />;
       
-    // Students case is already handled by the early return above, 
-    // but including it here for completeness
-    
     case 'classTypes':
       return <ClassTypeManagement />;
       

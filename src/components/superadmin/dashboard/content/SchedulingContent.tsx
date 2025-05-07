@@ -1,194 +1,132 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import ContentWrapper from './ContentWrapper';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import { useSkills } from '@/hooks/useSkills';
 import { useCourses } from '@/hooks/useCourses';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Button } from '@/components/ui/button';
-import { ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const SchedulingContent: React.FC = () => {
   const { role, isAdmin, isSuperAdmin } = useAuth();
   const hasAdminAccess = isAdmin() || isSuperAdmin();
   
-  // For skill calendar
   const { skills } = useSkills();
-  const [selectedSkillId, setSelectedSkillId] = useState<string>('');
-  
-  // For course calendar
   const { courses } = useCourses();
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   
-  // Set initial values when data loads
-  useEffect(() => {
-    if (skills.length > 0 && !selectedSkillId) {
-      setSelectedSkillId(skills[0]?.id || '');
-    }
-    if (courses.length > 0 && !selectedCourseId) {
-      setSelectedCourseId(courses[0]?.id || '');
-    }
-  }, [skills, courses, selectedSkillId, selectedCourseId]);
+  const [filterType, setFilterType] = useState<string>('all');
+  const [selectedId, setSelectedId] = useState<string>('');
   
+  // Calculate which values to pass to FilteredCalendar based on the filter type
+  const getFilterProps = () => {
+    switch(filterType) {
+      case 'role-teacher':
+        return { 
+          filterType: 'role', 
+          filterValues: ['teacher'],
+          title: 'Teacher Calendar' 
+        };
+      case 'role-student':
+        return { 
+          filterType: 'role', 
+          filterValues: ['student'],
+          title: 'Student Calendar' 
+        };
+      case 'role-admin':
+        return { 
+          filterType: 'role', 
+          filterValues: ['admin', 'superadmin'],
+          title: 'Admin Calendar' 
+        };
+      case 'role-staff':
+        return { 
+          filterType: 'role', 
+          filterValues: ['teacher', 'admin', 'superadmin'],
+          title: 'Staff Calendar' 
+        };
+      case 'course':
+        return { 
+          filterType: 'course', 
+          filterValues: [selectedId],
+          title: courses.find(c => c.id === selectedId)?.title || 'Course Calendar' 
+        };
+      case 'skill':
+        return { 
+          filterType: 'skill', 
+          filterValues: [selectedId],
+          title: skills.find(s => s.id === selectedId)?.name || 'Skill Calendar' 
+        };
+      default:
+        return { title: 'All Events' };
+    }
+  };
+
   return (
     <ContentWrapper
       title="Calendar"
       description="View and manage all calendar events"
     >
       <div className="space-y-6">
-        {/* Main Calendar (Always open) */}
-        <div className="h-[500px]">
-          <FilteredCalendar
-            title="Master Calendar"
-            description="All events across the system"
-            hasAdminAccess={hasAdminAccess}
-          />
-        </div>
-        
-        {/* Role-Based Calendars (Collapsible) */}
-        <FilteredCalendar
-          title="Teacher Calendar"
-          description="Events for all teacher accounts"
-          filterType="role"
-          filterValues={['teacher']}
-          hasAdminAccess={hasAdminAccess}
-          isCollapsible={true}
-          defaultOpen={false}
-        />
-        
-        <FilteredCalendar
-          title="Student Calendar"
-          description="Events for all student accounts"
-          filterType="role"
-          filterValues={['student']}
-          hasAdminAccess={hasAdminAccess}
-          isCollapsible={true}
-          defaultOpen={false}
-        />
-        
-        <FilteredCalendar
-          title="Admin Calendar"
-          description="Events for all admin and superadmin accounts"
-          filterType="role"
-          filterValues={['admin', 'superadmin']}
-          hasAdminAccess={hasAdminAccess}
-          isCollapsible={true}
-          defaultOpen={false}
-        />
-        
-        <FilteredCalendar
-          title="Staff Calendar"
-          description="Events for all teachers, admins, and superadmins"
-          filterType="role"
-          filterValues={['teacher', 'admin', 'superadmin']}
-          hasAdminAccess={hasAdminAccess}
-          isCollapsible={true}
-          defaultOpen={false}
-        />
-        
-        {/* Course Calendar (Collapsible with selector) */}
-        <div className="border rounded-lg bg-white mb-6">
-          <Collapsible className="w-full">
-            <div className="flex items-center p-4 border-b">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="icon" className="mr-2">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-              <div>
-                <h2 className="text-lg font-semibold">Course Calendar</h2>
-                <p className="text-sm text-gray-500">View events for specific courses</p>
-              </div>
-            </div>
-            <CollapsibleContent className="p-4">
+        <div className="border rounded-lg bg-white p-4">
+          <Tabs defaultValue="all" onValueChange={setFilterType} className="w-full">
+            <TabsList className="grid grid-cols-4 lg:grid-cols-7 mb-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="role-teacher">Teachers</TabsTrigger>
+              <TabsTrigger value="role-student">Students</TabsTrigger>
+              <TabsTrigger value="role-admin">Admins</TabsTrigger>
+              <TabsTrigger value="role-staff">Staff</TabsTrigger>
+              <TabsTrigger value="course">Course</TabsTrigger>
+              <TabsTrigger value="skill">Skill</TabsTrigger>
+            </TabsList>
+            
+            {(filterType === 'course' || filterType === 'skill') && (
               <div className="mb-4">
-                <Select 
-                  value={selectedCourseId} 
-                  onValueChange={setSelectedCourseId}
-                >
-                  <SelectTrigger className="w-full sm:w-[300px]">
-                    <SelectValue placeholder="Select a course" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map(course => (
-                      <SelectItem key={course.id} value={course.id}>
-                        {course.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="h-[400px]">
-                {selectedCourseId ? (
-                  <FilteredCalendar
-                    title={courses.find(c => c.id === selectedCourseId)?.title || "Course Calendar"}
-                    filterType="course"
-                    filterValues={[selectedCourseId]}
-                    hasAdminAccess={hasAdminAccess}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full border rounded-md bg-gray-50">
-                    <p className="text-gray-500">Please select a course to view its calendar</p>
-                  </div>
+                {filterType === 'course' && (
+                  <Select 
+                    value={selectedId} 
+                    onValueChange={setSelectedId}
+                  >
+                    <SelectTrigger className="w-full sm:w-[300px]">
+                      <SelectValue placeholder="Select a course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courses.map(course => (
+                        <SelectItem key={course.id} value={course.id}>
+                          {course.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                
+                {filterType === 'skill' && (
+                  <Select 
+                    value={selectedId} 
+                    onValueChange={setSelectedId}
+                  >
+                    <SelectTrigger className="w-full sm:w-[300px]">
+                      <SelectValue placeholder="Select a skill" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {skills.map(skill => (
+                        <SelectItem key={skill.id} value={skill.id}>
+                          {skill.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
-        
-        {/* Skill Calendar (Collapsible with selector) */}
-        <div className="border rounded-lg bg-white mb-6">
-          <Collapsible className="w-full">
-            <div className="flex items-center p-4 border-b">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="icon" className="mr-2">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-              <div>
-                <h2 className="text-lg font-semibold">Skill Calendar</h2>
-                <p className="text-sm text-gray-500">View events by skill</p>
-              </div>
+            )}
+            
+            <div className="h-[600px]">
+              <FilteredCalendar
+                {...getFilterProps()}
+                hasAdminAccess={hasAdminAccess}
+              />
             </div>
-            <CollapsibleContent className="p-4">
-              <div className="mb-4">
-                <Select 
-                  value={selectedSkillId} 
-                  onValueChange={setSelectedSkillId}
-                >
-                  <SelectTrigger className="w-full sm:w-[300px]">
-                    <SelectValue placeholder="Select a skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {skills.map(skill => (
-                      <SelectItem key={skill.id} value={skill.id}>
-                        {skill.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="h-[400px]">
-                {selectedSkillId ? (
-                  <FilteredCalendar
-                    title={skills.find(s => s.id === selectedSkillId)?.name || "Selected Skill"}
-                    filterType="skill"
-                    filterValues={[selectedSkillId]}
-                    hasAdminAccess={hasAdminAccess}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full border rounded-md bg-gray-50">
-                    <p className="text-gray-500">Please select a skill to view its calendar</p>
-                  </div>
-                )}
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+          </Tabs>
         </div>
       </div>
     </ContentWrapper>

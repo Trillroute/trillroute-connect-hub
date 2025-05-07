@@ -91,50 +91,9 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
   },
   {
     id: "scheduling",
-    label: "Scheduling",
+    label: "Calendar",
+    value: "scheduling",
     icon: Calendar,
-    submenu: [
-      {
-        id: "scheduling",
-        label: "General Calendar",
-        value: "scheduling"
-      },
-      {
-        id: "teacher-calendar",
-        label: "Teacher Calendar",
-        value: "teacher-calendar"
-      },
-      {
-        id: "student-calendar",
-        label: "Student Calendar",
-        value: "student-calendar"
-      },
-      {
-        id: "admin-calendar",
-        label: "Admin Calendar",
-        value: "admin-calendar"
-      },
-      {
-        id: "course-calendar",
-        label: "Course Calendar",
-        value: "course-calendar"
-      },
-      {
-        id: "staff-calendar",
-        label: "Staff Calendar",
-        value: "staff-calendar"
-      },
-      {
-        id: "skill-calendar",
-        label: "Skill Calendar",
-        value: "skill-calendar"
-      },
-      {
-        id: "user-availability",
-        label: "User Availability",
-        value: "user-availability"
-      }
-    ]
   },
   {
     id: "teachers",
