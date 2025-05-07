@@ -35,7 +35,20 @@ export function useAvailabilityActions(
     try {
       setLoading(true);
       console.log(`Fetching availability for user: ${userId}`);
-      const availability = await fetchUserAvailability(userId);
+      
+      // Add a timeout to prevent infinite loading state
+      const timeoutPromise = new Promise<null>((_, reject) => {
+        setTimeout(() => reject(new Error("Request timeout")), 10000);
+      });
+      
+      const availabilityPromise = fetchUserAvailability(userId);
+      
+      // Race between the actual request and the timeout
+      const availability = await Promise.race([
+        availabilityPromise,
+        timeoutPromise
+      ]) as any;
+      
       console.log(`Retrieved availability data:`, availability);
       
       const transformed = transformAvailabilityData(availability);
@@ -44,7 +57,7 @@ export function useAvailabilityActions(
       console.error("Error refreshing availability:", error);
       toast({
         title: "Failed to load availability",
-        description: "There was an error loading the availability schedule",
+        description: "There was an error loading the availability schedule. Using placeholder data.",
         variant: "destructive"
       });
       // Still provide an empty structure so the UI can render

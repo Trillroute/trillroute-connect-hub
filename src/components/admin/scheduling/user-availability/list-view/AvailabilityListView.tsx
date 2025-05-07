@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
 import DayAvailabilityList from './DayAvailabilityList';
 import TimeSlotDialog from '../TimeSlotDialog';
@@ -22,6 +22,7 @@ const AvailabilityListView: React.FC<AvailabilityListViewProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeDayOfWeek, setActiveDayOfWeek] = useState<number | null>(null);
   const [editingSlot, setEditingSlot] = useState<UserAvailability | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Memoize these functions to prevent unnecessary re-renders
   const toggleDayExpansion = useCallback((dayOfWeek: number) => {
@@ -45,33 +46,42 @@ const AvailabilityListView: React.FC<AvailabilityListViewProps> = ({
   }, []);
 
   const handleSaveSlot = useCallback(async (startTime: string, endTime: string): Promise<boolean> => {
-    let success = false;
+    if (isProcessing) return false;
     
-    if (editingSlot) {
-      success = await onUpdateSlot(editingSlot.id, startTime, endTime);
-    } else if (activeDayOfWeek !== null) {
-      success = await onAddSlot(activeDayOfWeek, startTime, endTime);
+    setIsProcessing(true);
+    try {
+      let success = false;
+      
+      if (editingSlot) {
+        success = await onUpdateSlot(editingSlot.id, startTime, endTime);
+      } else if (activeDayOfWeek !== null) {
+        success = await onAddSlot(activeDayOfWeek, startTime, endTime);
+      }
+      
+      if (success) {
+        setIsDialogOpen(false);
+      }
+      
+      return success;
+    } catch (error) {
+      console.error("Error saving slot:", error);
+      return false;
+    } finally {
+      setIsProcessing(false);
     }
-    
-    if (success) {
-      setIsDialogOpen(false);
-    }
-    
-    return success;
-  }, [editingSlot, activeDayOfWeek, onUpdateSlot, onAddSlot]);
+  }, [editingSlot, activeDayOfWeek, onUpdateSlot, onAddSlot, isProcessing]);
 
   // Get the active day's name for the dialog
-  const activeDayName = activeDayOfWeek !== null && dailyAvailability[activeDayOfWeek] 
-    ? dailyAvailability[activeDayOfWeek].dayName 
-    : '';
-
-  // Memoize the MemoizedDayAvailabilityList component to prevent unnecessary re-renders
-  const MemoizedDayAvailabilityList = memo(DayAvailabilityList);
+  const activeDayName = useMemo(() => {
+    if (activeDayOfWeek === null) return '';
+    const activeDay = dailyAvailability.find(day => day.dayOfWeek === activeDayOfWeek);
+    return activeDay ? activeDay.dayName : '';
+  }, [activeDayOfWeek, dailyAvailability]);
 
   return (
     <div className="space-y-4">
       {dailyAvailability.map(day => (
-        <MemoizedDayAvailabilityList
+        <DayAvailabilityList
           key={day.dayOfWeek}
           day={day}
           onAddSlot={() => handleOpenAddDialog(day.dayOfWeek)}
@@ -95,4 +105,4 @@ const AvailabilityListView: React.FC<AvailabilityListViewProps> = ({
   );
 };
 
-export default React.memo(AvailabilityListView);
+export default memo(AvailabilityListView);

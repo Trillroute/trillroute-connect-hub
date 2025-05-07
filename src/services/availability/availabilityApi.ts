@@ -7,35 +7,44 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
   try {
     console.log(`API call: fetching availability for user ${userId}`);
     
-    // Log the session for debugging
-    const sessionDetails = await supabase.auth.getSession();
-    console.log("Current session when fetching availability:", {
-      userId: sessionDetails.data.session?.user.id,
-      loggedInAs: sessionDetails.data.session?.user.email,
-      role: sessionDetails.data.session?.user.user_metadata?.role,
-      targetUserId: userId
-    });
+    // Add retry mechanism for better reliability
+    const maxRetries = 2;
+    let retries = 0;
+    let lastError = null;
     
-    const { data, error } = await supabase
-      .from("user_availability")
-      .select("*")
-      .eq("user_id", userId)
-      .order("day_of_week", { ascending: true });
+    while (retries <= maxRetries) {
+      try {
+        const { data, error } = await supabase
+          .from("user_availability")
+          .select("*")
+          .eq("user_id", userId)
+          .order("day_of_week", { ascending: true });
 
-    if (error) {
-      console.error("Error fetching user availability:", error);
-      throw error;
+        if (error) {
+          throw error;
+        }
+
+        if (!data || data.length === 0) {
+          console.log(`No availability slots found for user ${userId}`);
+          return [];
+        }
+
+        const mappedData = data.map(mapDbAvailability);
+        console.log(`Found ${mappedData.length} availability slots for user ${userId}`);
+        
+        return mappedData;
+      } catch (err) {
+        lastError = err;
+        retries++;
+        if (retries <= maxRetries) {
+          console.log(`Retrying API call (${retries}/${maxRetries})...`);
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
     }
-
-    if (!data || data.length === 0) {
-      console.log(`No availability slots found for user ${userId}`);
-      return [];
-    }
-
-    const mappedData = data.map(mapDbAvailability);
-    console.log(`Found ${mappedData.length} availability slots for user ${userId}`);
     
-    return mappedData;
+    throw lastError || new Error("Maximum retries exceeded");
   } catch (err) {
     console.error("Failed to fetch user availability:", err);
     throw err;

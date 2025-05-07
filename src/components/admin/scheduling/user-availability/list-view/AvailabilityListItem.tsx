@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { format, parse } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2 } from 'lucide-react';
@@ -16,8 +16,8 @@ const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
   onEdit,
   onDelete
 }) => {
-  // Format time string for display
-  const formatTimeString = (timeString: string) => {
+  // Format time string for display - memoize this calculation
+  const formatTimeString = useCallback((timeString: string) => {
     try {
       // Parse the time string and format it to 12-hour format
       const date = parse(timeString, 'HH:mm:ss', new Date());
@@ -26,20 +26,24 @@ const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
       console.error('Error formatting time:', error);
       return timeString;
     }
-  };
+  }, []);
 
   const startTimeFormatted = formatTimeString(slot.startTime);
   const endTimeFormatted = formatTimeString(slot.endTime);
 
-  const handleEditClick = () => {
+  const handleEditClick = useCallback(() => {
     onEdit(slot);
-  };
+  }, [onEdit, slot]);
 
-  const handleDeleteClick = async () => {
+  const handleDeleteClick = useCallback(async () => {
     if (window.confirm(`Are you sure you want to delete this availability slot?`)) {
-      await onDelete(slot.id);
+      try {
+        await onDelete(slot.id);
+      } catch (error) {
+        console.error("Error deleting slot:", error);
+      }
     }
-  };
+  }, [onDelete, slot.id]);
 
   return (
     <div className="flex items-center justify-between p-2 border rounded bg-white">
@@ -68,4 +72,5 @@ const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
   );
 };
 
+// Use React.memo to prevent unnecessary re-renders
 export default memo(AvailabilityListItem);

@@ -7,7 +7,7 @@ import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import AvailabilityListView from './list-view/AvailabilityListView';
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 
 interface UserAvailabilityScheduleProps {
   dailyAvailability: DayAvailability[];
@@ -34,66 +34,81 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [operationInProgress, setOperationInProgress] = useState(false);
   
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     if (loading || isRefreshing) return;
     
     setIsRefreshing(true);
     try {
       await onRefresh();
+    } catch (error) {
+      console.error("Error during refresh:", error);
     } finally {
+      // Use a delay to prevent UI flickering
       setTimeout(() => {
         setIsRefreshing(false);
       }, 500);
     }
-  };
+  }, [loading, isRefreshing, onRefresh]);
 
-  const handleCopyDay = () => {
+  const handleCopyDay = useCallback(() => {
     setIsCopyDialogOpen(true);
-  };
+  }, []);
   
-  const handleCopyDayOperation = async (fromDay: number, toDay: number) => {
+  const handleCopyDayOperation = useCallback(async (fromDay: number, toDay: number) => {
     setOperationInProgress(true);
     try {
       return await onCopyDay(fromDay, toDay);
+    } catch (error) {
+      console.error("Error copying day:", error);
+      return false;
     } finally {
       setTimeout(() => {
         setOperationInProgress(false);
       }, 500);
     }
-  };
+  }, [onCopyDay]);
   
-  const handleAddSlot = async (dayOfWeek: number, startTime: string, endTime: string) => {
+  const handleAddSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
     setOperationInProgress(true);
     try {
       return await onAddSlot(dayOfWeek, startTime, endTime);
+    } catch (error) {
+      console.error("Error adding slot:", error);
+      return false;
     } finally {
       setTimeout(() => {
         setOperationInProgress(false);
       }, 500);
     }
-  };
+  }, [onAddSlot]);
   
-  const handleUpdateSlot = async (id: string, startTime: string, endTime: string) => {
+  const handleUpdateSlot = useCallback(async (id: string, startTime: string, endTime: string) => {
     setOperationInProgress(true);
     try {
       return await onUpdateSlot(id, startTime, endTime);
+    } catch (error) {
+      console.error("Error updating slot:", error);
+      return false;
     } finally {
       setTimeout(() => {
         setOperationInProgress(false);
       }, 500);
     }
-  };
+  }, [onUpdateSlot]);
   
-  const handleDeleteSlot = async (id: string) => {
+  const handleDeleteSlot = useCallback(async (id: string) => {
     setOperationInProgress(true);
     try {
       return await onDeleteSlot(id);
+    } catch (error) {
+      console.error("Error deleting slot:", error);
+      return false;
     } finally {
       setTimeout(() => {
         setOperationInProgress(false);
       }, 500);
     }
-  };
+  }, [onDeleteSlot]);
   
   const isContentLoading = loading || operationInProgress;
   const hasData = dailyAvailability.length > 0;
@@ -132,11 +147,11 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
           <Skeleton className="h-12 w-full" />
         </div>
       ) : !hasData ? (
-        <Alert variant="destructive">
+        <Alert variant="default" className="bg-gray-50">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>No Data Available</AlertTitle>
           <AlertDescription>
-            Failed to load availability data. Please try refreshing.
+            No availability data could be loaded. This might be due to connection issues or because no availability has been set yet.
           </AlertDescription>
         </Alert>
       ) : (
@@ -164,4 +179,4 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
   );
 };
 
-export default UserAvailabilitySchedule;
+export default memo(UserAvailabilitySchedule);

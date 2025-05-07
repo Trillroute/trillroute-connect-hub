@@ -13,6 +13,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const [dailyAvailability, setDailyAvailability] = useState<DayAvailability[]>([]);
   const [previousUserId, setPreviousUserId] = useState<string | undefined>(userId);
   const isInitialLoad = useRef(true);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
@@ -30,6 +31,11 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   );
 
   const refreshAvailability = useCallback(async () => {
+    // Clear any existing timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+
     if (!targetUserId) {
       console.log('No target user ID provided, skipping availability fetch');
       // Initialize with empty data structure
@@ -44,7 +50,11 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     }
     
     console.log('Refreshing availability for user ID:', targetUserId);
-    await fetchAvailability();
+    try {
+      await fetchAvailability();
+    } catch (error) {
+      console.error('Error in refreshAvailability:', error);
+    }
   }, [targetUserId, fetchAvailability]);
 
   // When user ID changes, set loading state to true and update previous user ID
@@ -81,6 +91,9 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
         }
       } catch (err) {
         console.error('Error in initial load of availability:', err);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
@@ -88,6 +101,9 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     
     return () => {
       isMounted = false;
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
     };
   }, [targetUserId, refreshAvailability]);
 
