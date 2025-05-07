@@ -47,7 +47,7 @@ export function useUserSkills(): UseUserSkillsResult {
       const bySkill: Record<string, string[]> = {};
       const byUser: Record<string, string[]> = {};
       
-      data?.forEach(item => {
+      data?.forEach((item: UserSkill) => {
         // Group by skill
         if (!bySkill[item.skill_id]) {
           bySkill[item.skill_id] = [];
