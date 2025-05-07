@@ -59,10 +59,11 @@ export const createAvailabilitySlot = async (
   userId: string,
   dayOfWeek: number,
   startTime: string,
-  endTime: string
+  endTime: string,
+  category: string = 'Session'
 ): Promise<UserAvailability> => {
   try {
-    console.log(`Creating availability slot: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}`);
+    console.log(`Creating availability slot: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}, category=${category}`);
     
     // Format startTime and endTime to ensure consistent format (HH:MM)
     const formattedStartTime = startTime.includes(':') ? startTime : `${startTime}:00`;
@@ -74,7 +75,8 @@ export const createAvailabilitySlot = async (
         user_id: userId,
         day_of_week: dayOfWeek,
         start_time: formattedStartTime,
-        end_time: formattedEndTime
+        end_time: formattedEndTime,
+        category: category
       })
       .select()
       .single();
@@ -96,20 +98,28 @@ export const createAvailabilitySlot = async (
 export const updateAvailabilitySlot = async (
   id: string,
   startTime: string,
-  endTime: string
+  endTime: string,
+  category?: string
 ): Promise<boolean> => {
   try {
     // Format startTime and endTime to ensure consistent format (HH:MM)
     const formattedStartTime = startTime.includes(':') ? startTime : `${startTime}:00`;
     const formattedEndTime = endTime.includes(':') ? endTime : `${endTime}:00`;
 
+    const updateData: any = {
+      start_time: formattedStartTime,
+      end_time: formattedEndTime,
+      updated_at: new Date().toISOString()
+    };
+    
+    // Only include category if it's provided
+    if (category !== undefined) {
+      updateData.category = category;
+    }
+
     const { error } = await supabase
       .from("user_availability")
-      .update({
-        start_time: formattedStartTime,
-        end_time: formattedEndTime,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq("id", id);
 
     if (error) {

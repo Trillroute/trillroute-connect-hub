@@ -82,7 +82,7 @@ export function useAvailabilityActions(
     }
   }, [userId, setLoading, setDailyAvailability, toast]);
 
-  const addSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
+  const addSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string, category: string = 'Session') => {
     if (!userId) {
       toast({
         title: "Error",
@@ -93,14 +93,14 @@ export function useAvailabilityActions(
     }
     
     try {
-      console.log(`Creating slot for user ${userId}, day ${dayOfWeek}: ${startTime}-${endTime}`);
-      const result = await createAvailabilitySlot(userId, dayOfWeek, startTime, endTime);
+      console.log(`Creating slot for user ${userId}, day ${dayOfWeek}: ${startTime}-${endTime}, category=${category}`);
+      const result = await createAvailabilitySlot(userId, dayOfWeek, startTime, endTime, category);
       
       if (result) {
         await refreshAvailability();
         toast({
           title: "Availability added",
-          description: `Added availability for ${daysOfWeek[dayOfWeek]} from ${startTime} to ${endTime}`,
+          description: `Added ${category} availability for ${daysOfWeek[dayOfWeek]} from ${startTime} to ${endTime}`,
         });
         return true;
       }
@@ -116,9 +116,9 @@ export function useAvailabilityActions(
     }
   }, [userId, refreshAvailability, toast]);
 
-  const updateSlot = useCallback(async (id: string, startTime: string, endTime: string) => {
+  const updateSlot = useCallback(async (id: string, startTime: string, endTime: string, category: string) => {
     try {
-      const success = await updateAvailabilitySlot(id, startTime, endTime);
+      const success = await updateAvailabilitySlot(id, startTime, endTime, category);
       if (success) {
         await refreshAvailability();
         toast({

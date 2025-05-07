@@ -16,8 +16,8 @@ export interface UseAvailabilityResult {
   loading: boolean;
   dailyAvailability: DayAvailability[];
   refreshAvailability: () => Promise<void>;
-  addSlot: (dayOfWeek: number, startTime: string, endTime: string) => Promise<boolean>;
-  updateSlot: (id: string, startTime: string, endTime: string) => Promise<boolean>;
+  addSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  updateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   deleteSlot: (id: string) => Promise<boolean>;
   copyDaySlots: (fromDay: number, toDay: number) => Promise<boolean>;
   daysOfWeek: string[];
@@ -25,8 +25,8 @@ export interface UseAvailabilityResult {
 
 export interface UseAvailabilityActions {
   refreshAvailability: () => Promise<void>;
-  addSlot: (dayOfWeek: number, startTime: string, endTime: string) => Promise<boolean>;
-  updateSlot: (id: string, startTime: string, endTime: string) => Promise<boolean>;
+  addSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  updateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   deleteSlot: (id: string) => Promise<boolean>;
   copyDaySlots: (fromDay: number, toDay: number) => Promise<boolean>;
 }

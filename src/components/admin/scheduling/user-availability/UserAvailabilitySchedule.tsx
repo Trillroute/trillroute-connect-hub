@@ -12,8 +12,8 @@ import { useState, useCallback, memo, useEffect } from 'react';
 interface UserAvailabilityScheduleProps {
   dailyAvailability: DayAvailability[];
   loading: boolean;
-  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string) => Promise<boolean>;
-  onUpdateSlot: (id: string, startTime: string, endTime: string) => Promise<boolean>;
+  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onDeleteSlot: (id: string) => Promise<boolean>;
   onCopyDay: (fromDay: number, toDay: number) => Promise<boolean>;
   onRefresh: () => Promise<void>;
@@ -76,10 +76,10 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     }
   }, [onCopyDay]);
   
-  const handleAddSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
+  const handleAddSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string, category: string) => {
     setOperationInProgress(true);
     try {
-      return await onAddSlot(dayOfWeek, startTime, endTime);
+      return await onAddSlot(dayOfWeek, startTime, endTime, category);
     } catch (error) {
       console.error("Error adding slot:", error);
       return false;
@@ -90,10 +90,10 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     }
   }, [onAddSlot]);
   
-  const handleUpdateSlot = useCallback(async (id: string, startTime: string, endTime: string) => {
+  const handleUpdateSlot = useCallback(async (id: string, startTime: string, endTime: string, category: string) => {
     setOperationInProgress(true);
     try {
-      return await onUpdateSlot(id, startTime, endTime);
+      return await onUpdateSlot(id, startTime, endTime, category);
     } catch (error) {
       console.error("Error updating slot:", error);
       return false;

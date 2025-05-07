@@ -4,8 +4,8 @@ import { UserAvailability } from '@/services/userAvailabilityService';
 import { useToast } from '@/hooks/use-toast';
 
 interface UseTimeSlotDialogProps {
-  onAddSlot: (startTime: string, endTime: string) => Promise<boolean>;
-  onUpdateSlot: (id: string, startTime: string, endTime: string) => Promise<boolean>;
+  onAddSlot: (startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
 }
 
 export function useTimeSlotDialog({ onAddSlot, onUpdateSlot }: UseTimeSlotDialogProps) {
@@ -23,13 +23,13 @@ export function useTimeSlotDialog({ onAddSlot, onUpdateSlot }: UseTimeSlotDialog
     setEditingSlot(null);
   };
   
-  const handleSaveSlot = async (startTime: string, endTime: string) => {
+  const handleSaveSlot = async (startTime: string, endTime: string, category: string) => {
     let success = false;
     
     if (editingSlot) {
-      success = await onUpdateSlot(editingSlot.id, startTime, endTime);
+      success = await onUpdateSlot(editingSlot.id, startTime, endTime, category);
     } else {
-      success = await onAddSlot(startTime, endTime);
+      success = await onAddSlot(startTime, endTime, category);
     }
     
     if (success) {

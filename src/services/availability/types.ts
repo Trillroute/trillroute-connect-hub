@@ -7,6 +7,7 @@ export interface UserAvailability {
   dayOfWeek: number; // 0 = Sunday, 6 = Saturday
   startTime: string; // Format: "HH:MM" in 24-hour format
   endTime: string; // Format: "HH:MM" in 24-hour format
+  category: string; // Category of the availability slot
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +30,7 @@ export const mapDbAvailability = (dbItem: any): UserAvailability => {
     dayOfWeek: dbItem.day_of_week,
     startTime: dbItem.start_time,
     endTime: dbItem.end_time,
+    category: dbItem.category || 'Session', // Default to 'Session' if not set
     createdAt: new Date(dbItem.created_at),
     updatedAt: new Date(dbItem.updated_at)
   };
@@ -47,3 +49,15 @@ export interface UserAvailabilityInfo {
 export interface UserAvailabilityMap {
   [userId: string]: UserAvailabilityInfo;
 }
+
+// Available categories for availability slots
+export const AVAILABILITY_CATEGORIES = [
+  'Session', 
+  'Break', 
+  'Office', 
+  'Meeting', 
+  'Class Setup', 
+  'QC'
+] as const;
+
+export type AvailabilityCategory = typeof AVAILABILITY_CATEGORIES[number];

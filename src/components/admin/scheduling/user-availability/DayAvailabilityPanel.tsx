@@ -8,8 +8,8 @@ import AvailabilitySlotsGrid from './day-panel/AvailabilitySlotsGrid';
 
 interface DayAvailabilityPanelProps {
   day: DayAvailability;
-  onAddSlot: (startTime: string, endTime: string) => Promise<boolean>;
-  onUpdateSlot: (id: string, startTime: string, endTime: string) => Promise<boolean>;
+  onAddSlot: (startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onDeleteSlot: (id: string) => Promise<boolean>;
 }
 
@@ -52,6 +52,7 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
         onSave={handleSaveSlot}
         initialStartTime={editingSlot?.startTime}
         initialEndTime={editingSlot?.endTime}
+        initialCategory={editingSlot?.category}
         isEditing={!!editingSlot}
         day={day.dayName}
       />

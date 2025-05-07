@@ -17,26 +17,36 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format, parse } from 'date-fns';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar, Clock, Tag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AVAILABILITY_CATEGORIES } from '@/services/availability/types';
 
 interface TimeSlotDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (startTime: string, endTime: string) => Promise<boolean>;
+  onSave: (startTime: string, endTime: string, category: string) => Promise<boolean>;
   initialStartTime?: string;
   initialEndTime?: string;
+  initialCategory?: string;
   isEditing: boolean;
   day: string;
 }
 
 const formSchema = z.object({
   startTime: z.string().min(1, "Start time is required"),
-  endTime: z.string().min(1, "End time is required")
+  endTime: z.string().min(1, "End time is required"),
+  category: z.string().min(1, "Category is required")
 }).refine(data => {
   try {
     const startTime = parse(data.startTime, 'HH:mm', new Date());
@@ -56,6 +66,7 @@ const TimeSlotDialog: React.FC<TimeSlotDialogProps> = ({
   onSave,
   initialStartTime,
   initialEndTime,
+  initialCategory = 'Session',
   isEditing,
   day
 }) => {
@@ -67,10 +78,11 @@ const TimeSlotDialog: React.FC<TimeSlotDialogProps> = ({
     defaultValues: {
       startTime: initialStartTime ? format(parse(initialStartTime, 'HH:mm:ss', new Date()), 'HH:mm') : "09:00",
       endTime: initialEndTime ? format(parse(initialEndTime, 'HH:mm:ss', new Date()), 'HH:mm') : "17:00",
+      category: initialCategory
     }
   });
   
-  // Update form values when initialStartTime or initialEndTime changes
+  // Update form values when initialStartTime, initialEndTime, or initialCategory changes
   useEffect(() => {
     if (initialStartTime) {
       form.setValue('startTime', format(parse(initialStartTime, 'HH:mm:ss', new Date()), 'HH:mm'));
@@ -78,12 +90,15 @@ const TimeSlotDialog: React.FC<TimeSlotDialogProps> = ({
     if (initialEndTime) {
       form.setValue('endTime', format(parse(initialEndTime, 'HH:mm:ss', new Date()), 'HH:mm'));
     }
-  }, [initialStartTime, initialEndTime, form]);
+    if (initialCategory) {
+      form.setValue('category', initialCategory);
+    }
+  }, [initialStartTime, initialEndTime, initialCategory, form]);
   
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSaving(true);
-      const success = await onSave(values.startTime, values.endTime);
+      const success = await onSave(values.startTime, values.endTime, values.category);
       if (!success) {
         toast({
           title: "Error",
@@ -119,7 +134,10 @@ const TimeSlotDialog: React.FC<TimeSlotDialogProps> = ({
                 name="startTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Time</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Start Time
+                    </FormLabel>
                     <FormControl>
                       <input
                         type="time"
@@ -137,7 +155,10 @@ const TimeSlotDialog: React.FC<TimeSlotDialogProps> = ({
                 name="endTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Time</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      End Time
+                    </FormLabel>
                     <FormControl>
                       <input
                         type="time"
@@ -150,6 +171,38 @@ const TimeSlotDialog: React.FC<TimeSlotDialogProps> = ({
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    Category
+                  </FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {AVAILABILITY_CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

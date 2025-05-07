@@ -725,6 +725,7 @@ export type Database = {
       }
       user_availability: {
         Row: {
+          category: string | null
           created_at: string
           day_of_week: number
           end_time: string
@@ -734,6 +735,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           day_of_week: number
           end_time: string
@@ -743,6 +745,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           day_of_week?: number
           end_time?: string
