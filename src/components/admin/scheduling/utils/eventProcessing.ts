@@ -24,6 +24,7 @@ export const fetchFilteredEvents = async ({
   setEvents
 }: FilterOptions): Promise<void> => {
   try {
+    // Start with base query
     let query = supabase
       .from('user_events')
       .select(`
@@ -31,63 +32,48 @@ export const fetchFilteredEvents = async ({
         custom_users!user_id (first_name, last_name, role)
       `);
     
-    // Process course filtering
-    if ((courseIds && courseIds.length > 0) || courseId) {
-      const coursesToFilter: string[] = [];
+    // Process course filtering - simplified approach
+    if (courseId || (courseIds && courseIds.length > 0)) {
+      // Create a safe list of course IDs to filter by
+      const filterCourses: string[] = [];
       
-      // Add courseIds array items if they exist
-      if (courseIds && courseIds.length > 0) {
-        coursesToFilter.push(...courseIds);
-      }
+      // Only add valid IDs to avoid null/undefined issues
+      if (courseId) filterCourses.push(courseId);
+      if (courseIds) courseIds.forEach(id => id && filterCourses.push(id));
       
-      // Add courseId if it exists
-      if (courseId) {
-        coursesToFilter.push(courseId);
-      }
-      
-      // Apply the filter if we have valid course IDs
-      if (coursesToFilter.length > 0) {
-        query = query.in('course_id', coursesToFilter);
+      // Only apply filter if we have valid IDs
+      if (filterCourses.length > 0) {
+        query = query.in('course_id', filterCourses);
       }
     }
     
-    // Process skill filtering
-    if ((skillIds && skillIds.length > 0) || skillId) {
-      const skillsToFilter: string[] = [];
+    // Process skill filtering - simplified approach
+    if (skillId || (skillIds && skillIds.length > 0)) {
+      // Create a safe list of skill IDs to filter by
+      const filterSkills: string[] = [];
       
-      // Add skillIds array items if they exist
-      if (skillIds && skillIds.length > 0) {
-        skillsToFilter.push(...skillIds);
-      }
+      // Only add valid IDs to avoid null/undefined issues
+      if (skillId) filterSkills.push(skillId);
+      if (skillIds) skillIds.forEach(id => id && filterSkills.push(id));
       
-      // Add skillId if it exists
-      if (skillId) {
-        skillsToFilter.push(skillId);
-      }
-      
-      // Apply the filter if we have valid skill IDs
-      if (skillsToFilter.length > 0) {
-        query = query.in('skill_id', skillsToFilter);
+      // Only apply filter if we have valid IDs
+      if (filterSkills.length > 0) {
+        query = query.in('skill_id', filterSkills);
       }
     }
     
-    // Process user filtering
-    if ((userIds && userIds.length > 0) || userId) {
-      const usersToFilter: string[] = [];
+    // Process user filtering - simplified approach
+    if (userId || (userIds && userIds.length > 0)) {
+      // Create a safe list of user IDs to filter by
+      const filterUsers: string[] = [];
       
-      // Add userIds array items if they exist
-      if (userIds && userIds.length > 0) {
-        usersToFilter.push(...userIds);
-      }
+      // Only add valid IDs to avoid null/undefined issues
+      if (userId) filterUsers.push(userId);
+      if (userIds) userIds.forEach(id => id && filterUsers.push(id));
       
-      // Add userId if it exists
-      if (userId) {
-        usersToFilter.push(userId);
-      }
-      
-      // Apply the filter if we have valid user IDs
-      if (usersToFilter.length > 0) {
-        query = query.in('user_id', usersToFilter);
+      // Only apply filter if we have valid IDs
+      if (filterUsers.length > 0) {
+        query = query.in('user_id', filterUsers);
       }
     }
     
