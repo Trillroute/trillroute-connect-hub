@@ -45,12 +45,13 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     { value: 'day', label: 'Day View' },
   ];
 
+  // Create the title element to pass to CalendarHeader
+  const titleElement = <CalendarTitle viewMode={viewMode} currentDate={currentDate} />;
+
   return (
     <div className="flex flex-col h-full">
       <CalendarHeader 
-        title={
-          <CalendarTitle viewMode={viewMode} currentDate={currentDate} />
-        }
+        title={titleElement}
         showEventListToggle={true}
         onToggleEventList={() => setShowEventList(!showEventList)}
         isEventListShown={showEventList}

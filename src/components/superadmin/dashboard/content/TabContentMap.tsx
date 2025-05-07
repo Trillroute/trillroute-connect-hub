@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
 import TodayContent from './TodayContent';
@@ -90,15 +89,6 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       />;
       
     case 'scheduling':
-      return <SchedulingContent />;
-      
-    // All calendar views now redirect to the main Calendar component
-    case 'teacher-calendar':
-    case 'student-calendar':
-    case 'admin-calendar':
-    case 'course-calendar':
-    case 'staff-calendar':
-    case 'skill-calendar':
       return <SchedulingContent />;
       
     case 'user-availability':

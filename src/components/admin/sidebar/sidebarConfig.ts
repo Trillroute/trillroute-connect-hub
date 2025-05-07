@@ -91,9 +91,20 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
   },
   {
     id: "scheduling",
-    label: "Calendar",
-    value: "scheduling",
+    label: "Scheduling",
     icon: Calendar,
+    submenu: [
+      {
+        id: "calendar",
+        label: "Calendar",
+        value: "scheduling",
+      },
+      {
+        id: "user-availability",
+        label: "User Availability",
+        value: "user-availability",
+      },
+    ],
   },
   {
     id: "teachers",
