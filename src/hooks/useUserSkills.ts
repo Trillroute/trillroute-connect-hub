@@ -4,11 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface UserSkill {
-  id: string;
   user_id: string;
   skill_id: string;
-  level: string | null;
-  created_at: string;
+  level?: string | null;
 }
 
 interface UseUserSkillsResult {
@@ -34,33 +32,41 @@ export function useUserSkills(): UseUserSkillsResult {
       setError(null);
       
       const { data, error: fetchError } = await supabase
-        .from('user_skills')
-        .select('*');
+        .from('custom_users')
+        .select('id, skills')
+        .not('skills', 'is', null);
       
       if (fetchError) {
         throw new Error(fetchError.message);
       }
       
-      setUserSkills(data || []);
-      
-      // Process data for lookups
+      // Transform the data to match the previous structure
+      const transformedData: UserSkill[] = [];
       const bySkill: Record<string, string[]> = {};
       const byUser: Record<string, string[]> = {};
       
-      data?.forEach((item: UserSkill) => {
-        // Group by skill
-        if (!bySkill[item.skill_id]) {
-          bySkill[item.skill_id] = [];
+      data?.forEach((user) => {
+        if (user.skills && user.skills.length > 0) {
+          // Add each skill for this user to our transformed data
+          user.skills.forEach((skillId: string) => {
+            transformedData.push({
+              user_id: user.id,
+              skill_id: skillId
+            });
+            
+            // Group by skill
+            if (!bySkill[skillId]) {
+              bySkill[skillId] = [];
+            }
+            bySkill[skillId].push(user.id);
+          });
+          
+          // Group by user
+          byUser[user.id] = user.skills;
         }
-        bySkill[item.skill_id].push(item.user_id);
-        
-        // Group by user
-        if (!byUser[item.user_id]) {
-          byUser[item.user_id] = [];
-        }
-        byUser[item.user_id].push(item.skill_id);
       });
       
+      setUserSkills(transformedData);
       setUsersBySkill(bySkill);
       setSkillsByUser(byUser);
       

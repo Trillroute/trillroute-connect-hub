@@ -64,14 +64,14 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         
         // Filter by skill ID
         if (skillId) {
-          // Get users with this skill (both teachers and students)
+          // Get users with this skill (using the new skills array column)
           const { data: skillUsers } = await supabase
-            .from('user_skills')
-            .select('user_id')
-            .eq('skill_id', skillId);
+            .from('custom_users')
+            .select('id')
+            .contains('skills', [skillId]);
             
           if (skillUsers && skillUsers.length > 0) {
-            const skillUserIds = skillUsers.map(item => item.user_id);
+            const skillUserIds = skillUsers.map(item => item.id);
             query = query.in('user_id', skillUserIds);
           } else {
             // No users have this skill, return empty events
