@@ -58,7 +58,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
           case 'course':
             const { data: courses, error: coursesError } = await supabase
               .from('courses')
-              .select('id, name');
+              .select('id, title as name');
             
             if (coursesError) throw coursesError;
             data = courses || [];

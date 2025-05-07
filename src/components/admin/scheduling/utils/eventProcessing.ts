@@ -32,7 +32,7 @@ export const fetchFilteredEvents = async ({
         custom_users!user_id (first_name, last_name, role)
       `);
     
-    // Process course filtering with explicit types - avoiding array methods
+    // Process course filtering - rewritten to avoid deep type instantiation
     const filterCourses: string[] = [];
     
     // Add single courseId if it exists
@@ -40,11 +40,12 @@ export const fetchFilteredEvents = async ({
       filterCourses.push(courseId);
     }
     
-    // Add multiple courseIds if they exist
-    if (courseIds && Array.isArray(courseIds)) {
+    // Add multiple courseIds if they exist - safely iterate over array
+    if (courseIds && Array.isArray(courseIds) && courseIds.length > 0) {
       for (let i = 0; i < courseIds.length; i++) {
-        if (courseIds[i]) {
-          filterCourses.push(courseIds[i]);
+        const id = courseIds[i];
+        if (id) {
+          filterCourses.push(id);
         }
       }
     }
@@ -53,7 +54,7 @@ export const fetchFilteredEvents = async ({
       query = query.in('course_id', filterCourses);
     }
     
-    // Process skill filtering with explicit types - avoiding array methods
+    // Process skill filtering - rewritten to avoid deep type instantiation
     const filterSkills: string[] = [];
     
     // Add single skillId if it exists
@@ -61,11 +62,12 @@ export const fetchFilteredEvents = async ({
       filterSkills.push(skillId);
     }
     
-    // Add multiple skillIds if they exist
-    if (skillIds && Array.isArray(skillIds)) {
+    // Add multiple skillIds if they exist - safely iterate over array
+    if (skillIds && Array.isArray(skillIds) && skillIds.length > 0) {
       for (let i = 0; i < skillIds.length; i++) {
-        if (skillIds[i]) {
-          filterSkills.push(skillIds[i]);
+        const id = skillIds[i];
+        if (id) {
+          filterSkills.push(id);
         }
       }
     }
@@ -74,7 +76,7 @@ export const fetchFilteredEvents = async ({
       query = query.in('skill_id', filterSkills);
     }
     
-    // Process user filtering with explicit types - avoiding array methods
+    // Process user filtering - rewritten to avoid deep type instantiation
     const filterUsers: string[] = [];
     
     // Add single userId if it exists
@@ -82,11 +84,12 @@ export const fetchFilteredEvents = async ({
       filterUsers.push(userId);
     }
     
-    // Add multiple userIds if they exist
-    if (userIds && Array.isArray(userIds)) {
+    // Add multiple userIds if they exist - safely iterate over array
+    if (userIds && Array.isArray(userIds) && userIds.length > 0) {
       for (let i = 0; i < userIds.length; i++) {
-        if (userIds[i]) {
-          filterUsers.push(userIds[i]);
+        const id = userIds[i];
+        if (id) {
+          filterUsers.push(id);
         }
       }
     }
@@ -96,7 +99,7 @@ export const fetchFilteredEvents = async ({
     }
     
     // Process role filtering
-    if (roleFilter && roleFilter.length > 0) {
+    if (roleFilter && Array.isArray(roleFilter) && roleFilter.length > 0) {
       const { data: userIds } = await supabase
         .from('custom_users')
         .select('id')
