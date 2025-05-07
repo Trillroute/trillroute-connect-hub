@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCourses } from '@/hooks/useCourses';
 import { useSkills } from '@/hooks/useSkills';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useStudents } from '@/hooks/useStudents';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 
 export interface FilterOption {
   value: string;
@@ -16,26 +16,31 @@ interface FilterSelectorProps {
   setFilterType: (type: string | null) => void;
   selectedFilter: string | null;
   setSelectedFilter: (id: string | null) => void;
+  selectedFilters?: string[];
+  setSelectedFilters?: (ids: string[]) => void;
 }
 
 const FilterSelector: React.FC<FilterSelectorProps> = ({
   filterType,
   setFilterType,
   selectedFilter,
-  setSelectedFilter
+  setSelectedFilter,
+  selectedFilters = [],
+  setSelectedFilters = () => {}
 }) => {
   const { courses } = useCourses();
   const { skills } = useSkills();
   const { teachers } = useTeachers();
   const { students } = useStudents();
 
-  // Reset selected filter when filter type changes
+  // Reset selected filters when filter type changes
   useEffect(() => {
     setSelectedFilter(null);
-  }, [filterType, setSelectedFilter]);
+    setSelectedFilters([]);
+  }, [filterType, setSelectedFilter, setSelectedFilters]);
 
   // Get appropriate options based on filter type
-  const getFilterOptions = (): FilterOption[] => {
+  const getFilterOptions = (): Option[] => {
     switch (filterType) {
       case 'course':
         return courses.map(course => ({ 
@@ -72,6 +77,12 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     { type: 'skill', label: 'Skill' }
   ];
 
+  const handleMultiSelectChange = (selected: string[]) => {
+    setSelectedFilters(selected);
+    // Also update the single selection state for backward compatibility
+    setSelectedFilter(selected.length > 0 ? selected[0] : null);
+  };
+
   return (
     <div className="flex flex-col gap-2 w-full">
       {/* Segmented control for primary filter types */}
@@ -82,6 +93,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
             onClick={() => {
               setFilterType(option.type === 'all' ? null : option.type);
               setSelectedFilter(null);
+              setSelectedFilters([]);
             }}
             className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
               (option.type === 'all' && !filterType) || filterType === option.type
@@ -94,23 +106,15 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         ))}
       </div>
 
-      {/* Secondary filter dropdown (appears only when Course/Skill/etc is selected) */}
+      {/* Secondary filter dropdown with multi-select (appears only when Course/Skill/etc is selected) */}
       {(['course', 'skill', 'teacher', 'student'].includes(filterType || '') && getFilterOptions().length > 0) && (
-        <Select 
-          value={selectedFilter || 'none'} 
-          onValueChange={setSelectedFilter}
-        >
-          <SelectTrigger className="w-full bg-white">
-            <SelectValue placeholder={`Select a ${filterType}`} />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            {getFilterOptions().map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelect
+          options={getFilterOptions()}
+          selected={selectedFilters}
+          onChange={handleMultiSelectChange}
+          placeholder={`Select ${filterType}(s)`}
+          className="w-full bg-white"
+        />
       )}
     </div>
   );

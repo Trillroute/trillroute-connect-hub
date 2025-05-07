@@ -7,6 +7,7 @@ interface FilteredEventsProviderProps {
   children: React.ReactNode;
   filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterId?: string | null;
+  filterIds?: string[];
 }
 
 /**
@@ -15,11 +16,12 @@ interface FilteredEventsProviderProps {
 export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   children,
   filterType,
-  filterId
+  filterId,
+  filterIds = []
 }) => {
   const { refreshEvents, setEvents } = useCalendar();
   
-  // Apply filters when filter type or ID changes
+  // Apply filters when filter type or IDs change
   useEffect(() => {
     if (!filterType) {
       refreshEvents();
@@ -28,24 +30,26 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
 
     // Apply the appropriate filter
     const applyFilter = async () => {
+      const ids = filterIds.length > 0 ? filterIds : (filterId ? [filterId] : []);
+      
       switch (filterType) {
         case 'course':
-          await fetchFilteredEvents({ courseId: filterId, setEvents });
+          await fetchFilteredEvents({ courseIds: ids, setEvents });
           break;
         case 'skill':
-          await fetchFilteredEvents({ skillId: filterId, setEvents });
+          await fetchFilteredEvents({ skillIds: ids, setEvents });
           break;
         case 'teacher':
           await fetchFilteredEvents({ 
             roleFilter: ['teacher'],
-            userId: filterId,
+            userIds: ids,
             setEvents 
           });
           break;
         case 'student':
           await fetchFilteredEvents({ 
             roleFilter: ['student'],
-            userId: filterId,
+            userIds: ids,
             setEvents 
           });
           break;
@@ -67,7 +71,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     };
 
     applyFilter();
-  }, [filterType, filterId, refreshEvents, setEvents]);
+  }, [filterType, filterId, filterIds, refreshEvents, setEvents]);
 
   return <>{children}</>;
 };

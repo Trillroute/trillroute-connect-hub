@@ -13,6 +13,7 @@ interface CalendarViewRendererProps {
   onDateClick: (date: Date) => void;
   filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterId?: string | null;
+  filterIds?: string[];
 }
 
 const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
@@ -23,10 +24,11 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   onDeleteEvent,
   onDateClick,
   filterType,
-  filterId
+  filterId,
+  filterIds = []
 }) => {
   return (
-    <FilteredEventsProvider filterType={filterType} filterId={filterId}>
+    <FilteredEventsProvider filterType={filterType} filterId={filterId} filterIds={filterIds}>
       <ViewSelector 
         viewMode={viewMode}
         showEventList={showEventList}

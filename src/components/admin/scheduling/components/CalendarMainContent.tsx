@@ -1,111 +1,79 @@
 
 import React, { useState } from 'react';
-import CalendarHeader from '../CalendarHeader';
-import CalendarSidebar from '../CalendarSidebar';
-import EventListView from '../EventListView';
-import CalendarViewRenderer from '../CalendarViewRenderer';
 import { useCalendar } from '../context/CalendarContext';
-import CalendarTitle from './CalendarTitle';
-import { useEventHandlers } from './EventHandlers';
-import ViewModeSelector, { ViewOption } from './ViewModeSelector';
+import CalendarHeader from '../CalendarHeader';
+import CalendarViewRenderer from '../CalendarViewRenderer';
+import ViewModeSelector from './ViewModeSelector';
 import FilterSelector from './FilterSelector';
+import LayersDropdown from '../LayersDropdown';
+import EventHandlers from './EventHandlers';
 
 interface CalendarMainContentProps {
-  hasAdminAccess?: boolean;
+  hasAdminAccess: boolean;
   title?: string;
   description?: string;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
-  hasAdminAccess = false,
-  title,
-  description
+  hasAdminAccess,
+  title = "Calendar",
+  description,
 }) => {
-  const [showEventList, setShowEventList] = useState(false);
-  const { 
-    currentDate, 
-    viewMode, 
-    setViewMode,
-    isCreateEventOpen, 
-    setIsCreateEventOpen
-  } = useCalendar();
-  
-  const { 
-    handleCreateEventClick, 
-    handleEditEvent, 
-    handleDeleteEvent, 
-    handleDateClick 
-  } = useEventHandlers();
-
-  // State for selectors
+  const { viewMode, currentDate, setIsCreateEventOpen } = useCalendar();
+  const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(null);
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [showEventList, setShowEventList] = useState(false);
 
-  const viewOptions: ViewOption[] = [
-    { value: 'day', label: 'Day View' },
-    { value: 'week', label: 'Week View' },
-    { value: 'month', label: 'Month View' },
-  ];
-
-  // Create the title element to pass to CalendarHeader
-  const titleElement = title ? 
-    <div>{title}</div> : 
-    <CalendarTitle viewMode={viewMode} currentDate={currentDate} />;
+  // Event handlers from the EventHandlers component
+  const { handleCreateEvent, handleEditEvent, handleDeleteEvent, handleDateClick } = 
+    EventHandlers({ hasAdminAccess, setIsCreateEventOpen });
 
   return (
     <div className="flex flex-col h-full">
-      <CalendarHeader 
-        title={titleElement}
-        showEventListToggle={true}
-        onToggleEventList={() => setShowEventList(!showEventList)}
-        isEventListShown={showEventList}
-        hasAdminAccess={hasAdminAccess}
-        onCreateEvent={() => setIsCreateEventOpen(true)}
-      />
-      
-      <div className="px-6 py-4">
-        <div className="grid grid-cols-1 gap-4">
-          {/* View and filter selectors */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="w-full md:w-[150px]">
-              <ViewModeSelector 
-                viewMode={viewMode} 
-                setViewMode={(mode) => setViewMode(mode as any)}
-                viewOptions={viewOptions}
-              />
-            </div>
-            <div className="flex-1">
-              <FilterSelector 
-                filterType={filterType}
-                setFilterType={(type) => setFilterType(type as any)}
-                selectedFilter={selectedFilter}
-                setSelectedFilter={setSelectedFilter}
-              />
-            </div>
+      <div className="border-b pb-4 px-4">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">{title}</h2>
+            {description && <p className="text-gray-500 text-sm mt-1">{description}</p>}
+          </div>
+          <div className="flex flex-col md:flex-row gap-2 md:items-center">
+            <ViewModeSelector 
+              showEventList={showEventList} 
+              setShowEventList={setShowEventList}
+            />
+            <LayersDropdown />
           </div>
         </div>
-      </div>
-      
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full">
-          {showEventList ? (
-            <EventListView 
-              onEditEvent={handleEditEvent}
-              onDeleteEvent={handleDeleteEvent}
-            />
-          ) : (
-            <CalendarViewRenderer 
-              viewMode={viewMode}
-              showEventList={showEventList}
-              onCreateEvent={() => setIsCreateEventOpen(true)}
-              onEditEvent={handleEditEvent}
-              onDeleteEvent={handleDeleteEvent}
-              onDateClick={handleDateClick}
-              filterType={filterType}
-              filterId={selectedFilter}
-            />
-          )}
+        
+        <div className="mt-4">
+          <FilterSelector 
+            filterType={filterType} 
+            setFilterType={setFilterType}
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+            selectedFilters={selectedFilters}
+            setSelectedFilters={setSelectedFilters}
+          />
         </div>
+
+        <div className="mt-4">
+          <CalendarHeader />
+        </div>
+      </div>
+
+      <div className="flex-grow overflow-y-auto">
+        <CalendarViewRenderer
+          viewMode={viewMode}
+          showEventList={showEventList}
+          onCreateEvent={handleCreateEvent}
+          onEditEvent={handleEditEvent}
+          onDeleteEvent={handleDeleteEvent}
+          onDateClick={handleDateClick}
+          filterType={filterType as any}
+          filterId={selectedFilter}
+          filterIds={selectedFilters}
+        />
       </div>
     </div>
   );
