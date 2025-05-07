@@ -106,7 +106,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
           end: new Date(event.end_time),
           description: event.description,
           color: getRoleColor(event.custom_users?.role),
-          location: event.location || '', // Provide default empty string for location
+          location: event.location || '', // This line is causing the TypeScript error
         }));
         
         // Update events in context
