@@ -25,9 +25,17 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [showEventList, setShowEventList] = useState(false);
 
-  // Event handlers from the EventHandlers component
-  const { handleCreateEvent, handleEditEvent, handleDeleteEvent, handleDateClick } = 
-    EventHandlers({ hasAdminAccess, setIsCreateEventOpen });
+  // Get event handlers from the EventHandlers utility
+  const eventHandlers = EventHandlers({ 
+    hasAdminAccess, 
+    setIsCreateEventOpen 
+  });
+
+  const viewOptions = [
+    { value: 'day', label: 'Day' },
+    { value: 'week', label: 'Week' },
+    { value: 'month', label: 'Month' }
+  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -39,9 +47,20 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           </div>
           <div className="flex flex-col md:flex-row gap-2 md:items-center">
             <ViewModeSelector 
-              showEventList={showEventList} 
-              setShowEventList={setShowEventList}
+              viewMode={viewMode}
+              setViewMode={(mode) => useCalendar().setViewMode(mode)}
+              viewOptions={viewOptions}
             />
+            <div className="flex items-center">
+              <button
+                onClick={() => setShowEventList(!showEventList)}
+                className={`px-3 py-1 text-sm border rounded-md ml-2 ${
+                  showEventList ? "bg-blue-600 text-white" : "bg-white"
+                }`}
+              >
+                List View
+              </button>
+            </div>
             <LayersDropdown />
           </div>
         </div>
@@ -66,10 +85,10 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         <CalendarViewRenderer
           viewMode={viewMode}
           showEventList={showEventList}
-          onCreateEvent={handleCreateEvent}
-          onEditEvent={handleEditEvent}
-          onDeleteEvent={handleDeleteEvent}
-          onDateClick={handleDateClick}
+          onCreateEvent={eventHandlers.handleCreateEvent}
+          onEditEvent={eventHandlers.handleEditEvent}
+          onDeleteEvent={eventHandlers.handleDeleteEvent}
+          onDateClick={eventHandlers.handleDateClick}
           filterType={filterType as any}
           filterId={selectedFilter}
           filterIds={selectedFilters}

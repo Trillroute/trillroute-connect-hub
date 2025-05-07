@@ -33,31 +33,80 @@ export const fetchFilteredEvents = async ({
     
     // Process course filtering
     if ((courseIds && courseIds.length > 0) || courseId) {
-      const coursesToFilter = courseIds.length > 0 ? courseIds : [courseId];
-      query = query.in('course_id', coursesToFilter.filter(Boolean));
+      const coursesToFilter: string[] = [];
+      
+      // Add courseIds if it exists and has items
+      if (Array.isArray(courseIds) && courseIds.length > 0) {
+        for (const id of courseIds) {
+          if (id) coursesToFilter.push(id);
+        }
+      }
+      
+      // Add courseId if it exists
+      if (courseId) {
+        coursesToFilter.push(courseId);
+      }
+      
+      // Apply filter only if we have courses to filter
+      if (coursesToFilter.length > 0) {
+        query = query.in('course_id', coursesToFilter);
+      }
     }
     
     // Process skill filtering
     if ((skillIds && skillIds.length > 0) || skillId) {
-      const skillsToFilter = skillIds.length > 0 ? skillIds : [skillId];
-      query = query.in('skill_id', skillsToFilter.filter(Boolean));
+      const skillsToFilter: string[] = [];
+      
+      // Add skillIds if it exists and has items
+      if (Array.isArray(skillIds) && skillIds.length > 0) {
+        for (const id of skillIds) {
+          if (id) skillsToFilter.push(id);
+        }
+      }
+      
+      // Add skillId if it exists
+      if (skillId) {
+        skillsToFilter.push(skillId);
+      }
+      
+      // Apply filter only if we have skills to filter
+      if (skillsToFilter.length > 0) {
+        query = query.in('skill_id', skillsToFilter);
+      }
     }
     
     // Process user filtering
     if ((userIds && userIds.length > 0) || userId) {
-      const usersToFilter = userIds.length > 0 ? userIds : [userId];
-      query = query.in('user_id', usersToFilter.filter(Boolean));
+      const usersToFilter: string[] = [];
+      
+      // Add userIds if it exists and has items
+      if (Array.isArray(userIds) && userIds.length > 0) {
+        for (const id of userIds) {
+          if (id) usersToFilter.push(id);
+        }
+      }
+      
+      // Add userId if it exists
+      if (userId) {
+        usersToFilter.push(userId);
+      }
+      
+      // Apply filter only if we have users to filter
+      if (usersToFilter.length > 0) {
+        query = query.in('user_id', usersToFilter);
+      }
     }
     
     // Process role filtering
-    if (roleFilter && roleFilter.length > 0) {
+    if (roleFilter && Array.isArray(roleFilter) && roleFilter.length > 0) {
       const { data: userIds } = await supabase
         .from('custom_users')
         .select('id')
         .in('role', roleFilter);
       
       if (userIds && userIds.length > 0) {
-        query = query.in('user_id', userIds.map(u => u.id));
+        const filteredUserIds = userIds.map(u => u.id);
+        query = query.in('user_id', filteredUserIds);
       }
     }
     

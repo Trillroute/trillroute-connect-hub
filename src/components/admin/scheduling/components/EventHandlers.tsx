@@ -1,49 +1,62 @@
 
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
+import { useCalendar } from '../context/CalendarContext';
 
 interface EventHandlersProps {
-  onCreateEventClick: () => void;
-  onEditEvent: (event: CalendarEvent) => void;
-  onDeleteEvent: (event: CalendarEvent) => void;
-  onDateClick: (date: Date) => void;
+  hasAdminAccess: boolean;
+  setIsCreateEventOpen: (isOpen: boolean) => void;
 }
 
 const EventHandlers: React.FC<EventHandlersProps> = ({
-  onCreateEventClick,
-  onEditEvent,
-  onDeleteEvent,
-  onDateClick
+  hasAdminAccess,
+  setIsCreateEventOpen
 }) => {
-  // This component doesn't render anything visible
-  // It's just a container for event handler functions
-  return null;
-};
-
-export default EventHandlers;
-
-// These are the handler functions for event operations
-export const useEventHandlers = () => {
-  const handleCreateEventClick = () => {
-    console.log('Create event clicked');
+  const { handleCreateEvent, handleUpdateEvent, handleDeleteEvent } = useCalendar();
+  
+  // Create wrapper functions that include permission checks
+  const handleCreateEventWithCheck = () => {
+    if (hasAdminAccess) {
+      setIsCreateEventOpen(true);
+    } else {
+      console.log('No permission to create events');
+    }
   };
 
-  const handleEditEvent = (event: CalendarEvent) => {
-    console.log('Edit event:', event);
+  const handleEditEventWithCheck = (event: CalendarEvent) => {
+    if (hasAdminAccess) {
+      console.log('Edit event:', event);
+      // The editing logic will be implemented in the dialog
+    } else {
+      console.log('No permission to edit events');
+    }
   };
 
-  const handleDeleteEvent = (event: CalendarEvent) => {
-    console.log('Delete event:', event);
+  const handleDeleteEventWithCheck = (event: CalendarEvent) => {
+    if (hasAdminAccess) {
+      console.log('Delete event:', event);
+      if (event.id) {
+        handleDeleteEvent(event.id);
+      }
+    } else {
+      console.log('No permission to delete events');
+    }
   };
 
   const handleDateClick = (date: Date) => {
     console.log('Date clicked:', date);
+    if (hasAdminAccess) {
+      setIsCreateEventOpen(true);
+    }
   };
 
+  // Return the handlers as an object
   return {
-    handleCreateEventClick,
-    handleEditEvent,
-    handleDeleteEvent,
+    handleCreateEvent: handleCreateEventWithCheck,
+    handleEditEvent: handleEditEventWithCheck,
+    handleDeleteEvent: handleDeleteEventWithCheck,
     handleDateClick
   };
 };
+
+export default EventHandlers;

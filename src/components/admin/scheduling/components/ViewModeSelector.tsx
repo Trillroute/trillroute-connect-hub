@@ -26,7 +26,14 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   setViewMode,
   viewOptions
 }) => {
-  const currentView = viewOptions.find(opt => opt.value === viewMode)?.label || 'Select View';
+  // Add a safety check to make sure viewOptions is an array
+  const options = Array.isArray(viewOptions) ? viewOptions : [
+    { value: 'day', label: 'Day' },
+    { value: 'week', label: 'Week' },
+    { value: 'month', label: 'Month' }
+  ];
+  
+  const currentView = options.find(opt => opt.value === viewMode)?.label || 'Select View';
   
   return (
     <DropdownMenu>
@@ -37,7 +44,7 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[150px] bg-white">
-        {viewOptions.map((option) => (
+        {options.map((option) => (
           <DropdownMenuItem
             key={option.value}
             onClick={() => setViewMode(option.value)}
