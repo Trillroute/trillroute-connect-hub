@@ -24,7 +24,6 @@ export const fetchFilteredEvents = async ({
   setEvents
 }: FilterOptions): Promise<void> => {
   try {
-    // Start with base query
     let query = supabase
       .from('user_events')
       .select(`
@@ -32,74 +31,26 @@ export const fetchFilteredEvents = async ({
         custom_users!user_id (first_name, last_name, role)
       `);
     
-    // Process course filtering - rewritten to avoid deep type instantiation
-    const filterCourses: string[] = [];
-    
-    // Add single courseId if it exists
-    if (courseId) {
-      filterCourses.push(courseId);
+    // Process course filtering
+    if ((courseIds && courseIds.length > 0) || courseId) {
+      const coursesToFilter = courseIds.length > 0 ? courseIds : [courseId];
+      query = query.in('course_id', coursesToFilter.filter(Boolean));
     }
     
-    // Add multiple courseIds if they exist - safely iterate over array
-    if (courseIds && Array.isArray(courseIds) && courseIds.length > 0) {
-      for (let i = 0; i < courseIds.length; i++) {
-        const id = courseIds[i];
-        if (id) {
-          filterCourses.push(id);
-        }
-      }
+    // Process skill filtering
+    if ((skillIds && skillIds.length > 0) || skillId) {
+      const skillsToFilter = skillIds.length > 0 ? skillIds : [skillId];
+      query = query.in('skill_id', skillsToFilter.filter(Boolean));
     }
     
-    if (filterCourses.length > 0) {
-      query = query.in('course_id', filterCourses);
-    }
-    
-    // Process skill filtering - rewritten to avoid deep type instantiation
-    const filterSkills: string[] = [];
-    
-    // Add single skillId if it exists
-    if (skillId) {
-      filterSkills.push(skillId);
-    }
-    
-    // Add multiple skillIds if they exist - safely iterate over array
-    if (skillIds && Array.isArray(skillIds) && skillIds.length > 0) {
-      for (let i = 0; i < skillIds.length; i++) {
-        const id = skillIds[i];
-        if (id) {
-          filterSkills.push(id);
-        }
-      }
-    }
-    
-    if (filterSkills.length > 0) {
-      query = query.in('skill_id', filterSkills);
-    }
-    
-    // Process user filtering - rewritten to avoid deep type instantiation
-    const filterUsers: string[] = [];
-    
-    // Add single userId if it exists
-    if (userId) {
-      filterUsers.push(userId);
-    }
-    
-    // Add multiple userIds if they exist - safely iterate over array
-    if (userIds && Array.isArray(userIds) && userIds.length > 0) {
-      for (let i = 0; i < userIds.length; i++) {
-        const id = userIds[i];
-        if (id) {
-          filterUsers.push(id);
-        }
-      }
-    }
-    
-    if (filterUsers.length > 0) {
-      query = query.in('user_id', filterUsers);
+    // Process user filtering
+    if ((userIds && userIds.length > 0) || userId) {
+      const usersToFilter = userIds.length > 0 ? userIds : [userId];
+      query = query.in('user_id', usersToFilter.filter(Boolean));
     }
     
     // Process role filtering
-    if (roleFilter && Array.isArray(roleFilter) && roleFilter.length > 0) {
+    if (roleFilter && roleFilter.length > 0) {
       const { data: userIds } = await supabase
         .from('custom_users')
         .select('id')

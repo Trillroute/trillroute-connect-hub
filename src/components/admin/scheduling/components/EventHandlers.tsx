@@ -1,27 +1,31 @@
 
 import React from 'react';
-import { useCalendar } from '../context/CalendarContext';
 import { CalendarEvent } from '../context/calendarTypes';
 
-// Define the returned handlers interface for better type safety
-export interface EventHandlerFunctions {
-  handleCreateEvent: () => void;
-  handleEditEvent: (event: CalendarEvent) => void;
-  handleDeleteEvent: (event: CalendarEvent) => void;
-  handleDateClick: (date: Date) => void;
-}
-
 interface EventHandlersProps {
-  hasAdminAccess: boolean;
+  onCreateEventClick: () => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onDateClick: (date: Date) => void;
 }
 
-export const useEventHandlers = ({ hasAdminAccess }: EventHandlersProps): EventHandlerFunctions => {
-  const { setIsCreateEventOpen } = useCalendar();
-  
-  const handleCreateEvent = () => {
-    if (hasAdminAccess) {
-      setIsCreateEventOpen(true);
-    }
+const EventHandlers: React.FC<EventHandlersProps> = ({
+  onCreateEventClick,
+  onEditEvent,
+  onDeleteEvent,
+  onDateClick
+}) => {
+  // This component doesn't render anything visible
+  // It's just a container for event handler functions
+  return null;
+};
+
+export default EventHandlers;
+
+// These are the handler functions for event operations
+export const useEventHandlers = () => {
+  const handleCreateEventClick = () => {
+    console.log('Create event clicked');
   };
 
   const handleEditEvent = (event: CalendarEvent) => {
@@ -37,15 +41,9 @@ export const useEventHandlers = ({ hasAdminAccess }: EventHandlersProps): EventH
   };
 
   return {
-    handleCreateEvent,
+    handleCreateEventClick,
     handleEditEvent,
     handleDeleteEvent,
     handleDateClick
   };
 };
-
-// This is a stub component that doesn't render anything
-// It's here for compatibility but we're using the hook instead
-const EventHandlers: React.FC = () => null;
-
-export default EventHandlers;

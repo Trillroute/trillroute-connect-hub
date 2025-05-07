@@ -6,7 +6,7 @@ import CalendarViewRenderer from '../CalendarViewRenderer';
 import ViewModeSelector from './ViewModeSelector';
 import FilterSelector from './FilterSelector';
 import LayersDropdown from '../LayersDropdown';
-import { useEventHandlers } from './EventHandlers';
+import EventHandlers from './EventHandlers';
 
 interface CalendarMainContentProps {
   hasAdminAccess: boolean;
@@ -19,15 +19,15 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   title = "Calendar",
   description,
 }) => {
-  const { viewMode } = useCalendar();
+  const { viewMode, currentDate, setIsCreateEventOpen } = useCalendar();
   const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [showEventList, setShowEventList] = useState(false);
 
-  // Use the event handlers hook instead of the component
+  // Event handlers from the EventHandlers component
   const { handleCreateEvent, handleEditEvent, handleDeleteEvent, handleDateClick } = 
-    useEventHandlers({ hasAdminAccess });
+    EventHandlers({ hasAdminAccess, setIsCreateEventOpen });
 
   return (
     <div className="flex flex-col h-full">
@@ -38,7 +38,10 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
             {description && <p className="text-gray-500 text-sm mt-1">{description}</p>}
           </div>
           <div className="flex flex-col md:flex-row gap-2 md:items-center">
-            <ViewModeSelector />
+            <ViewModeSelector 
+              showEventList={showEventList} 
+              setShowEventList={setShowEventList}
+            />
             <LayersDropdown />
           </div>
         </div>
@@ -55,14 +58,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         </div>
 
         <div className="mt-4">
-          <CalendarHeader 
-            title={title || "Calendar"}
-            showEventListToggle={true}
-            onToggleEventList={() => setShowEventList(!showEventList)}
-            isEventListShown={showEventList}
-            hasAdminAccess={hasAdminAccess}
-            onCreateEvent={handleCreateEvent}
-          />
+          <CalendarHeader />
         </div>
       </div>
 
