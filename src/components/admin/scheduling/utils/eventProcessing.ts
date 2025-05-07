@@ -32,49 +32,46 @@ export const fetchFilteredEvents = async ({
         custom_users!user_id (first_name, last_name, role)
       `);
     
-    // Process course filtering - simplified approach
-    if (courseId || (courseIds && courseIds.length > 0)) {
-      // Create a safe list of course IDs to filter by
-      const filterCourses: string[] = [];
-      
-      // Only add valid IDs to avoid null/undefined issues
-      if (courseId) filterCourses.push(courseId);
-      if (courseIds) courseIds.forEach(id => id && filterCourses.push(id));
-      
-      // Only apply filter if we have valid IDs
-      if (filterCourses.length > 0) {
-        query = query.in('course_id', filterCourses);
+    // Process course filtering with explicit types
+    const filterCourses: string[] = [];
+    if (courseId) filterCourses.push(courseId);
+    if (courseIds && courseIds.length > 0) {
+      for (let i = 0; i < courseIds.length; i++) {
+        const id = courseIds[i];
+        if (id) filterCourses.push(id);
       }
     }
     
-    // Process skill filtering - simplified approach
-    if (skillId || (skillIds && skillIds.length > 0)) {
-      // Create a safe list of skill IDs to filter by
-      const filterSkills: string[] = [];
-      
-      // Only add valid IDs to avoid null/undefined issues
-      if (skillId) filterSkills.push(skillId);
-      if (skillIds) skillIds.forEach(id => id && filterSkills.push(id));
-      
-      // Only apply filter if we have valid IDs
-      if (filterSkills.length > 0) {
-        query = query.in('skill_id', filterSkills);
+    if (filterCourses.length > 0) {
+      query = query.in('course_id', filterCourses);
+    }
+    
+    // Process skill filtering with explicit types
+    const filterSkills: string[] = [];
+    if (skillId) filterSkills.push(skillId);
+    if (skillIds && skillIds.length > 0) {
+      for (let i = 0; i < skillIds.length; i++) {
+        const id = skillIds[i];
+        if (id) filterSkills.push(id);
       }
     }
     
-    // Process user filtering - simplified approach
-    if (userId || (userIds && userIds.length > 0)) {
-      // Create a safe list of user IDs to filter by
-      const filterUsers: string[] = [];
-      
-      // Only add valid IDs to avoid null/undefined issues
-      if (userId) filterUsers.push(userId);
-      if (userIds) userIds.forEach(id => id && filterUsers.push(id));
-      
-      // Only apply filter if we have valid IDs
-      if (filterUsers.length > 0) {
-        query = query.in('user_id', filterUsers);
+    if (filterSkills.length > 0) {
+      query = query.in('skill_id', filterSkills);
+    }
+    
+    // Process user filtering with explicit types
+    const filterUsers: string[] = [];
+    if (userId) filterUsers.push(userId);
+    if (userIds && userIds.length > 0) {
+      for (let i = 0; i < userIds.length; i++) {
+        const id = userIds[i];
+        if (id) filterUsers.push(id);
       }
+    }
+    
+    if (filterUsers.length > 0) {
+      query = query.in('user_id', filterUsers);
     }
     
     // Process role filtering
