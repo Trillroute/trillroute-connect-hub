@@ -1,7 +1,7 @@
 
 import React, { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { ViewList, Plus, LayoutGrid } from 'lucide-react';
+import { List, Plus, LayoutGrid } from 'lucide-react';
 
 interface CalendarHeaderProps {
   title: ReactNode; // Changed from string to ReactNode to accept elements
@@ -31,7 +31,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             onClick={onToggleEventList}
             title={isEventListShown ? "Show Calendar" : "Show Event List"}
           >
-            {isEventListShown ? <LayoutGrid className="h-4 w-4" /> : <ViewList className="h-4 w-4" />}
+            {isEventListShown ? <LayoutGrid className="h-4 w-4" /> : <List className="h-4 w-4" />}
             <span className="sr-only">
               {isEventListShown ? "Show Calendar" : "Show Event List"}
             </span>
