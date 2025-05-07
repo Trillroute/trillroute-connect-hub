@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { List, Plus, LayoutGrid } from 'lucide-react';
 
 interface CalendarHeaderProps {
-  title: ReactNode; // Changed from string to ReactNode to accept elements
+  title: ReactNode;
   showEventListToggle?: boolean;
   onToggleEventList?: () => void;
   isEventListShown?: boolean;
   hasAdminAccess?: boolean;
+  onCreateEvent?: () => void;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({
@@ -16,14 +17,15 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   showEventListToggle = false,
   onToggleEventList,
   isEventListShown = false,
-  hasAdminAccess = false
+  hasAdminAccess = false,
+  onCreateEvent
 }) => {
   return (
-    <div className="flex items-center justify-between py-2 px-4 border-b">
+    <div className="flex items-center justify-between py-4 px-6 border-b">
       <div className="flex items-center space-x-2">
-        {typeof title === 'string' ? <h2 className="text-lg font-semibold">{title}</h2> : title}
+        {typeof title === 'string' ? <h2 className="text-xl font-semibold">{title}</h2> : title}
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         {showEventListToggle && onToggleEventList && (
           <Button 
             variant="ghost" 
@@ -38,14 +40,13 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           </Button>
         )}
         
-        {hasAdminAccess && (
+        {hasAdminAccess && onCreateEvent && (
           <Button 
             size="sm" 
-            onClick={() => {}} 
-            variant="outline"
-            className="ml-2"
+            onClick={onCreateEvent}
+            className="gap-1 bg-primary text-white"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="h-4 w-4" />
             Create Event
           </Button>
         )}

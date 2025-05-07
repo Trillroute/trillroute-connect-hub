@@ -4,7 +4,7 @@ import { useCalendar } from '../context/CalendarContext';
 
 interface FilteredEventsProviderProps {
   children: React.ReactNode;
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | null;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterId?: string | null;
 }
 
@@ -20,7 +20,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   
   // Apply filters when filter type or ID changes
   useEffect(() => {
-    if (!filterType || !filterId) {
+    if (!filterType) {
       refreshEvents();
       return;
     }
@@ -48,6 +48,18 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
           await fetchFilteredEvents({ 
             roleFilter: ['student'],
             userId: filterId,
+            setEvents 
+          });
+          break;
+        case 'admin':
+          await fetchFilteredEvents({ 
+            roleFilter: ['admin'], 
+            setEvents 
+          });
+          break;
+        case 'staff':
+          await fetchFilteredEvents({ 
+            roleFilter: ['teacher', 'admin', 'superadmin'], 
             setEvents 
           });
           break;

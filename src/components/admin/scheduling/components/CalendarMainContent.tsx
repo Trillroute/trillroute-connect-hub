@@ -39,12 +39,12 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
 
   // State for selectors
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | null>(null);
+  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(null);
 
   const viewOptions: ViewOption[] = [
-    { value: 'month', label: 'Month View' },
-    { value: 'week', label: 'Week View' },
     { value: 'day', label: 'Day View' },
+    { value: 'week', label: 'Week View' },
+    { value: 'month', label: 'Month View' },
   ];
 
   // Create the title element to pass to CalendarHeader
@@ -60,27 +60,34 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         onToggleEventList={() => setShowEventList(!showEventList)}
         isEventListShown={showEventList}
         hasAdminAccess={hasAdminAccess}
+        onCreateEvent={() => setIsCreateEventOpen(true)}
       />
       
-      <div className="flex flex-wrap gap-2 px-4 py-2 border-b items-center">
-        <ViewModeSelector 
-          viewMode={viewMode} 
-          setViewMode={(mode) => setViewMode(mode as any)}
-          viewOptions={viewOptions}
-        />
-
-        <FilterSelector 
-          filterType={filterType}
-          setFilterType={(type) => setFilterType(type as any)}
-          selectedFilter={selectedFilter}
-          setSelectedFilter={setSelectedFilter}
-        />
+      <div className="px-6 py-4">
+        <div className="grid grid-cols-1 gap-4">
+          {/* View and filter selectors */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="w-full md:w-[150px]">
+              <ViewModeSelector 
+                viewMode={viewMode} 
+                setViewMode={(mode) => setViewMode(mode as any)}
+                viewOptions={viewOptions}
+              />
+            </div>
+            <div className="flex-1">
+              <FilterSelector 
+                filterType={filterType}
+                setFilterType={(type) => setFilterType(type as any)}
+                selectedFilter={selectedFilter}
+                setSelectedFilter={setSelectedFilter}
+              />
+            </div>
+          </div>
+        </div>
       </div>
       
-      <div className="flex flex-1 overflow-hidden">
-        <CalendarSidebar />
-        
-        <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full">
           {showEventList ? (
             <EventListView 
               onEditEvent={handleEditEvent}

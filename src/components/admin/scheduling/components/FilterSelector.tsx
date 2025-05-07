@@ -34,14 +34,6 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     setSelectedFilter(null);
   }, [filterType, setSelectedFilter]);
 
-  // Filter options
-  const filterOptions: FilterOption[] = [
-    { value: 'course', label: 'Filter by Course' },
-    { value: 'skill', label: 'Filter by Skill' },
-    { value: 'teacher', label: 'Filter by Teacher' },
-    { value: 'student', label: 'Filter by Student' }
-  ];
-
   // Get appropriate options based on filter type
   const getFilterOptions = (): FilterOption[] => {
     switch (filterType) {
@@ -70,41 +62,48 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     }
   };
 
-  return (
-    <div className="flex flex-wrap gap-2 items-center">
-      {/* Filter type selector */}
-      <Select 
-        value={filterType || 'none'} 
-        onValueChange={(value) => {
-          setFilterType(value === 'none' ? null : value);
-          setSelectedFilter(null);
-        }}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select filter" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">No filter</SelectItem>
-          {filterOptions.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+  const options = [
+    { type: 'all', label: 'All' },
+    { type: 'teacher', label: 'Teachers' },
+    { type: 'student', label: 'Students' },
+    { type: 'admin', label: 'Admins' },
+    { type: 'staff', label: 'Staff' },
+    { type: 'course', label: 'Course' },
+    { type: 'skill', label: 'Skill' }
+  ];
 
-      {/* Conditional filter value selector */}
-      {filterType && (
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      {/* Segmented control for primary filter types */}
+      <div className="flex rounded-md bg-gray-100 p-1">
+        {options.map((option) => (
+          <button
+            key={option.type}
+            onClick={() => {
+              setFilterType(option.type === 'all' ? null : option.type);
+              setSelectedFilter(null);
+            }}
+            className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+              (option.type === 'all' && !filterType) || filterType === option.type
+                ? 'bg-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Secondary filter dropdown (appears only when Course/Skill/etc is selected) */}
+      {(['course', 'skill', 'teacher', 'student'].includes(filterType || '') && getFilterOptions().length > 0) && (
         <Select 
           value={selectedFilter || 'none'} 
           onValueChange={setSelectedFilter}
-          disabled={getFilterOptions().length === 0}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full bg-white">
             <SelectValue placeholder={`Select a ${filterType}`} />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Select an option</SelectItem>
+          <SelectContent className="max-h-[300px]">
             {getFilterOptions().map(option => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}

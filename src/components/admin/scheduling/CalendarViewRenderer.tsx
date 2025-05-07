@@ -11,7 +11,7 @@ interface CalendarViewRendererProps {
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
   onDateClick: (date: Date) => void;
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | null;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterId?: string | null;
 }
 

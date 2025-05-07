@@ -26,20 +26,25 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   setViewMode,
   viewOptions
 }) => {
+  const currentView = viewOptions.find(opt => opt.value === viewMode)?.label || 'Select View';
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2">
-          {viewOptions.find(opt => opt.value === viewMode)?.label || 'Select View'}
-          <ChevronDown className="h-4 w-4" />
+        <Button variant="outline" className="flex items-center gap-2 bg-white border rounded-md w-[150px] justify-between">
+          <span>{currentView}</span>
+          <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[200px]">
+      <DropdownMenuContent align="start" className="w-[150px] bg-white">
         {viewOptions.map((option) => (
           <DropdownMenuItem
             key={option.value}
             onClick={() => setViewMode(option.value)}
-            className={cn(viewMode === option.value ? "bg-gray-100" : "")}
+            className={cn(
+              "cursor-pointer", 
+              viewMode === option.value ? "bg-gray-100" : ""
+            )}
           >
             {option.label}
           </DropdownMenuItem>
