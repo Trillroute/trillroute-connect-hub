@@ -15,7 +15,7 @@ export function transformAvailabilityData(availabilitySlots: UserAvailability[])
   
   // Add slots to their corresponding days
   availabilitySlots.forEach(slot => {
-    console.log(`Processing slot: dayOfWeek=${slot.dayOfWeek}, time=${slot.startTime}-${slot.endTime}`);
+    console.log(`Processing slot: dayOfWeek=${slot.dayOfWeek}, time=${slot.startTime}-${slot.endTime}, id=${slot.id}`);
     const dayIndex = slot.dayOfWeek;
     if (dayIndex >= 0 && dayIndex < 7) {
       weeklyAvailability[dayIndex].slots.push(slot);

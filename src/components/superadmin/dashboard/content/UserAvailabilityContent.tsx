@@ -9,11 +9,18 @@ import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 import StaffUserSelector from '@/components/admin/scheduling/user-availability/StaffUserSelector';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 const UserAvailabilityContent: React.FC = () => {
   const { role, user } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const { staffMembers, loading: isLoadingStaff, refetch: refetchStaffMembers } = useStaffAvailability();
+  const { 
+    staffMembers, 
+    loading: isLoadingStaff, 
+    refetch: refetchStaffMembers,
+    error: staffError
+  } = useStaffAvailability();
   const { toast } = useToast();
   const [isUserChanging, setIsUserChanging] = useState(false);
   
@@ -21,7 +28,8 @@ const UserAvailabilityContent: React.FC = () => {
     staffCount: staffMembers.length, 
     isLoadingStaff,
     selectedUserId,
-    currentUser: user?.id
+    currentUser: user?.id,
+    staffError: staffError?.message
   });
   
   // Set the initial selected user to the current user - only once when user info is available
@@ -35,7 +43,14 @@ const UserAvailabilityContent: React.FC = () => {
   // Force refetch staff members data on initial render
   useEffect(() => {
     console.log('Initial load: fetching staff members data');
-    refetchStaffMembers();
+    refetchStaffMembers().catch(error => {
+      console.error("Failed to fetch staff members:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load staff members. Please try again.",
+        variant: "destructive"
+      });
+    });
     // Only run this on first render
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
@@ -83,6 +98,23 @@ const UserAvailabilityContent: React.FC = () => {
     }
   }, [refreshAvailability, isLoadingAvailability, isUserChanging, toast]);
 
+  const handleRefreshStaff = useCallback(async () => {
+    try {
+      await refetchStaffMembers();
+      toast({
+        title: "Staff members refreshed",
+        description: "Staff list has been updated."
+      });
+    } catch (error) {
+      console.error("Error refreshing staff members:", error);
+      toast({
+        title: "Staff refresh failed",
+        description: "Could not refresh staff members list.",
+        variant: "destructive"
+      });
+    }
+  }, [refetchStaffMembers, toast]);
+
   // Find selected user details
   const selectedUser = staffMembers.find(member => member.id === selectedUserId);
   const isOwnAvailability = selectedUserId === user?.id;
@@ -95,9 +127,21 @@ const UserAvailabilityContent: React.FC = () => {
       description="View and manage when staff members are available throughout the week"
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <Badge variant="outline" className="bg-gray-100">
-          Viewing as: {role?.toUpperCase()}
-        </Badge>
+        <div className="flex flex-wrap gap-2 items-center">
+          <Badge variant="outline" className="bg-gray-100">
+            Viewing as: {role?.toUpperCase()}
+          </Badge>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefreshStaff}
+            disabled={isLoadingStaff}
+          >
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Refresh Staff
+          </Button>
+        </div>
 
         {/* Show user selector for admins and superadmins */}
         {(role === 'admin' || role === 'superadmin') && (

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { UserAvailability, mapDbAvailability, UserAvailabilityMap } from "./types";
+import { UserAvailability, mapDbAvailability } from "./types";
 
 // Get all availability slots for a user
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
@@ -15,14 +15,14 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
 
     if (error) {
       console.error("Error fetching user availability:", error);
-      return [];
+      throw error;
     }
 
     console.log(`API result: found ${data?.length || 0} availability slots for user ${userId}`, data);
     return data ? data.map(mapDbAvailability) : [];
   } catch (err) {
     console.error("Failed to fetch user availability:", err);
-    return [];
+    throw err;
   }
 };
 
@@ -49,14 +49,14 @@ export const createAvailabilitySlot = async (
 
     if (error) {
       console.error("Error creating availability slot:", error);
-      return null;
+      throw error;
     }
 
     console.log("Availability slot created successfully:", data);
     return data ? mapDbAvailability(data) : null;
   } catch (err) {
     console.error("Failed to create availability slot:", err);
-    return null;
+    throw err;
   }
 };
 
@@ -78,13 +78,13 @@ export const updateAvailabilitySlot = async (
 
     if (error) {
       console.error("Error updating availability slot:", error);
-      return false;
+      throw error;
     }
 
     return true;
   } catch (err) {
     console.error("Failed to update availability slot:", err);
-    return false;
+    throw err;
   }
 };
 
@@ -98,12 +98,12 @@ export const deleteAvailabilitySlot = async (id: string): Promise<boolean> => {
 
     if (error) {
       console.error("Error deleting availability slot:", error);
-      return false;
+      throw error;
     }
 
     return true;
   } catch (err) {
     console.error("Failed to delete availability slot:", err);
-    return false;
+    throw err;
   }
 };

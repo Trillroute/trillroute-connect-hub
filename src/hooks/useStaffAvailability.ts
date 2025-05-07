@@ -29,7 +29,7 @@ export const useStaffAvailability = (): UseStaffAvailabilityResult => {
     try {
       console.log("Fetching staff availability data...");
       const data = await fetchAllStaffAvailability();
-      console.log("Received staff availability data:", data);
+      console.log("Received raw staff availability data:", data);
       setAvailabilityByUser(data);
       
       // Extract staff members from the data

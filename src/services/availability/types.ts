@@ -12,15 +12,18 @@ export interface UserAvailability {
 }
 
 // Convert database format to frontend format
-export const mapDbAvailability = (dbItem: any): UserAvailability => ({
-  id: dbItem.id,
-  userId: dbItem.user_id,
-  dayOfWeek: dbItem.day_of_week,
-  startTime: dbItem.start_time,
-  endTime: dbItem.end_time,
-  createdAt: new Date(dbItem.created_at),
-  updatedAt: new Date(dbItem.updated_at)
-});
+export const mapDbAvailability = (dbItem: any): UserAvailability => {
+  console.log("Mapping DB item to availability object:", dbItem);
+  return {
+    id: dbItem.id,
+    userId: dbItem.user_id,
+    dayOfWeek: dbItem.day_of_week,
+    startTime: dbItem.start_time,
+    endTime: dbItem.end_time,
+    createdAt: new Date(dbItem.created_at),
+    updatedAt: new Date(dbItem.updated_at)
+  };
+};
 
 // User information along with their availability slots
 export interface UserAvailabilityInfo {

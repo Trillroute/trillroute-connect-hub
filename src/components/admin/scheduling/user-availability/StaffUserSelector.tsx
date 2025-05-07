@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type StaffMember } from "@/hooks/useStaffAvailability";
@@ -17,6 +17,15 @@ const StaffUserSelector: React.FC<StaffUserSelectorProps> = ({
   isLoading,
   onUserChange
 }) => {
+  // For debugging
+  useEffect(() => {
+    console.log("StaffUserSelector rendering with:", { 
+      staffCount: staffMembers.length, 
+      members: staffMembers,
+      selectedUserId 
+    });
+  }, [staffMembers, selectedUserId]);
+
   if (isLoading) {
     return <Skeleton className="h-10 w-full" />;
   }
