@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CalendarHeader from '../CalendarHeader';
 import CalendarSidebar from '../CalendarSidebar';
 import EventListView from '../EventListView';
@@ -15,6 +15,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCourses } from '@/hooks/useCourses';
+import { useSkills } from '@/hooks/useSkills';
+import { useTeachers } from '@/hooks/useTeachers';
+import { useStudents } from '@/hooks/useStudents';
 
 interface CalendarMainContentProps {
   hasAdminAccess?: boolean;
@@ -39,6 +44,22 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     handleDateClick 
   } = useEventHandlers();
 
+  // Get data for selectors
+  const { courses } = useCourses();
+  const { skills } = useSkills();
+  const { teachers } = useTeachers();
+  const { students } = useStudents();
+
+  // State for selectors
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | null>(null);
+
+  // Reset selected filter when view mode changes
+  useEffect(() => {
+    setSelectedFilter(null);
+    setFilterType(null);
+  }, [viewMode]);
+
   const viewOptions = [
     { value: 'month', label: 'Month View' },
     { value: 'week', label: 'Week View' },
@@ -47,6 +68,36 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
 
   // Create the title element to pass to CalendarHeader
   const titleElement = <CalendarTitle viewMode={viewMode} currentDate={currentDate} />;
+
+  // Get appropriate options based on filter type
+  const getFilterOptions = () => {
+    switch (filterType) {
+      case 'course':
+        return courses.map(course => ({ value: course.id, label: course.title }));
+      case 'skill':
+        return skills.map(skill => ({ value: skill.id, label: skill.name }));
+      case 'teacher':
+        return teachers.map(teacher => ({ 
+          value: teacher.id, 
+          label: `${teacher.first_name} ${teacher.last_name}` 
+        }));
+      case 'student':
+        return students.map(student => ({ 
+          value: student.id, 
+          label: `${student.first_name} ${student.last_name}` 
+        }));
+      default:
+        return [];
+    }
+  };
+
+  // Filter options
+  const filterOptions = [
+    { value: 'course', label: 'Filter by Course' },
+    { value: 'skill', label: 'Filter by Skill' },
+    { value: 'teacher', label: 'Filter by Teacher' },
+    { value: 'student', label: 'Filter by Student' }
+  ];
 
   return (
     <div className="flex flex-col h-full">
@@ -58,7 +109,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         hasAdminAccess={hasAdminAccess}
       />
       
-      <div className="flex px-4 py-2 border-b">
+      <div className="flex flex-wrap gap-2 px-4 py-2 border-b items-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
@@ -78,6 +129,47 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Filter type selector */}
+        <Select 
+          value={filterType || ''} 
+          onValueChange={(value) => {
+            setFilterType(value as any || null);
+            setSelectedFilter(null);
+          }}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">No filter</SelectItem>
+            {filterOptions.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Conditional filter value selector */}
+        {filterType && (
+          <Select 
+            value={selectedFilter || ''} 
+            onValueChange={setSelectedFilter}
+            disabled={getFilterOptions().length === 0}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder={`Select a ${filterType}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {getFilterOptions().map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       
       <div className="flex flex-1 overflow-hidden">
@@ -97,6 +189,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
               onEditEvent={handleEditEvent}
               onDeleteEvent={handleDeleteEvent}
               onDateClick={handleDateClick}
+              filterType={filterType}
+              filterId={selectedFilter}
             />
           )}
         </div>

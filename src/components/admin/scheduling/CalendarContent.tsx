@@ -12,6 +12,7 @@ interface CalendarContentProps {
   roleFilter?: string[];
   courseId?: string;
   skillId?: string;
+  title?: string;
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({ 
@@ -20,7 +21,8 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   userIds,
   roleFilter,
   courseId,
-  skillId
+  skillId,
+  title
 }) => {
   const { 
     currentDate,
