@@ -8,12 +8,11 @@ interface EventHandlersProps {
   setIsCreateEventOpen: (isOpen: boolean) => void;
 }
 
-// Changed to use React.FC and return JSX with a context provider pattern
-const EventHandlers: React.FC<EventHandlersProps> = ({
+// The key is to change this from a React component to a custom hook
+const useEventHandlers = ({
   hasAdminAccess,
   setIsCreateEventOpen,
-  children
-}) => {
+}: EventHandlersProps) => {
   const { handleCreateEvent, handleUpdateEvent, handleDeleteEvent } = useCalendar();
   
   // Create wrapper functions that include permission checks
@@ -52,16 +51,13 @@ const EventHandlers: React.FC<EventHandlersProps> = ({
     }
   };
 
-  // Create an object with all the handlers
-  const handlers = {
+  // Return the handlers as a hook result
+  return {
     handleCreateEvent: handleCreateEventWithCheck,
     handleEditEvent: handleEditEventWithCheck,
     handleDeleteEvent: handleDeleteEventWithCheck,
     handleDateClick
   };
-
-  // Return the handlers
-  return handlers;
 };
 
-export default EventHandlers;
+export default useEventHandlers;

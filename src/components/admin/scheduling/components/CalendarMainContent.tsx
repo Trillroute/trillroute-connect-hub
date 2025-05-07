@@ -6,7 +6,7 @@ import CalendarViewRenderer from '../CalendarViewRenderer';
 import ViewModeSelector from './ViewModeSelector';
 import FilterSelector from './FilterSelector';
 import LayersDropdown from '../LayersDropdown';
-import EventHandlers from './EventHandlers';
+import useEventHandlers from './EventHandlers';
 import { CalendarViewMode } from '../context/calendarTypes';
 
 interface CalendarMainContentProps {
@@ -26,11 +26,10 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [showEventList, setShowEventList] = useState(false);
 
-  // Get event handlers from the EventHandlers utility
-  const eventHandlers = EventHandlers({ 
+  // Get event handlers from the hook
+  const eventHandlers = useEventHandlers({ 
     hasAdminAccess, 
-    setIsCreateEventOpen,
-    children: null 
+    setIsCreateEventOpen 
   });
 
   const viewOptions = [
