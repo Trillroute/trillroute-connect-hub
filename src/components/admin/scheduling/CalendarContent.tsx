@@ -106,7 +106,9 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
           end: new Date(event.end_time),
           description: event.description,
           color: getRoleColor(event.custom_users?.role),
-          location: event.location || '', // This line is causing the TypeScript error
+          // Fix: location property is not available on event object,
+          // so we'll extract it from metadata if available or use empty string
+          location: event.metadata && event.metadata.location ? event.metadata.location : '',
         }));
         
         // Update events in context
