@@ -1,82 +1,60 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
+import { fetchAllStaffAvailability } from '@/services/availability/staffAvailabilityApi';
+import { UserAvailabilityMap } from '@/services/availability/types';
 
 export interface StaffMember {
   id: string;
-  firstName: string;
-  lastName: string;
-  role: 'teacher' | 'admin' | 'superadmin';
-  name: string; // Combined full name for display
+  name: string;
+  role: string;
 }
 
-export function useStaffAvailability() {
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+interface UseStaffAvailabilityResult {
+  staffMembers: StaffMember[];
+  availabilityByUser: UserAvailabilityMap;
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+export const useStaffAvailability = (): UseStaffAvailabilityResult => {
+  const [availabilityByUser, setAvailabilityByUser] = useState<UserAvailabilityMap>({});
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const [error, setError] = useState<Error | null>(null);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
 
-  const fetchStaffMembers = async () => {
+  const fetchStaffAvailability = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      console.log('Fetching staff availability members...');
+      const data = await fetchAllStaffAvailability();
+      setAvailabilityByUser(data);
       
-      const { data, error } = await supabase
-        .from("custom_users")
-        .select("id, first_name, last_name, role")
-        .in("role", ["teacher", "admin", "superadmin"]);
+      // Extract staff members from the data
+      const members: StaffMember[] = Object.entries(data).map(([id, userData]) => ({
+        id,
+        name: userData.name || 'Unknown User',
+        role: userData.role || 'staff'
+      }));
       
-      if (error) {
-        console.error('Error fetching staff members:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load staff members.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      console.log('Staff data fetched:', data?.length || 0, 'members');
-      
-      if (data) {
-        const mappedStaff: StaffMember[] = data.map(user => ({
-          id: user.id,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          role: user.role as 'teacher' | 'admin' | 'superadmin',
-          name: `${user.first_name} ${user.last_name}`
-        }));
-
-        console.log('Mapped staff members:', mappedStaff.length);
-        setStaffMembers(mappedStaff);
-      }
+      setStaffMembers(members);
     } catch (err) {
-      console.error('Failed to fetch staff members:', err);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred while fetching staff members.',
-        variant: 'destructive',
-      });
+      console.error("Error in useStaffAvailability hook:", err);
+      setError(err instanceof Error ? err : new Error('Failed to load staff availability'));
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStaffMembers();
-    
-    // Set up subscription for real-time updates
-    const subscription = supabase
-      .channel('custom_users_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'custom_users' }, 
-        () => fetchStaffMembers())
-      .subscribe();
-      
-    return () => {
-      subscription.unsubscribe();
-    };
+    fetchStaffAvailability();
   }, []);
 
-  return { staffMembers, loading, fetchStaffMembers };
-}
+  return {
+    staffMembers,
+    availabilityByUser,
+    loading,
+    error,
+    refetch: fetchStaffAvailability
+  };
+};

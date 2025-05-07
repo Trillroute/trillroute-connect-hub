@@ -22,7 +22,14 @@ export const mapDbAvailability = (dbItem: any): UserAvailability => ({
   updatedAt: new Date(dbItem.updated_at)
 });
 
+// User information along with their availability slots
+export interface UserAvailabilityInfo {
+  slots: UserAvailability[];
+  name: string;
+  role?: string;
+}
+
 // Group of availability slots by user ID
 export interface UserAvailabilityMap {
-  [userId: string]: UserAvailability[];
+  [userId: string]: UserAvailabilityInfo;
 }

@@ -1,14 +1,8 @@
 
 import React from 'react';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { StaffMember } from '@/hooks/useStaffAvailability';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { type StaffMember } from "@/hooks/useStaffAvailability";
 
 interface StaffUserSelectorProps {
   staffMembers: StaffMember[];
@@ -23,33 +17,30 @@ const StaffUserSelector: React.FC<StaffUserSelectorProps> = ({
   isLoading,
   onUserChange
 }) => {
-  console.log('StaffUserSelector props:', {
-    staffCount: staffMembers.length,
-    selectedUserId,
-    isLoading
-  });
-
   if (isLoading) {
     return <Skeleton className="h-10 w-full" />;
   }
 
   if (staffMembers.length === 0) {
-    return <p className="text-sm text-gray-500">No staff members available</p>;
+    return (
+      <div className="text-sm text-gray-500">
+        No staff members available
+      </div>
+    );
   }
 
   return (
     <Select
       value={selectedUserId || undefined}
       onValueChange={onUserChange}
-      disabled={isLoading}
     >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select a user" />
+      <SelectTrigger className="w-full" aria-label="Select staff member">
+        <SelectValue placeholder="Select staff member" />
       </SelectTrigger>
       <SelectContent>
-        {staffMembers.map((staff) => (
-          <SelectItem key={staff.id} value={staff.id}>
-            {staff.name} ({staff.role})
+        {staffMembers.map((member) => (
+          <SelectItem key={member.id} value={member.id}>
+            {member.name} {member.role ? `(${member.role})` : ''}
           </SelectItem>
         ))}
       </SelectContent>

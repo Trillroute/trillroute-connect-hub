@@ -36,16 +36,25 @@ export const fetchAllStaffAvailability = async (): Promise<UserAvailabilityMap> 
     const availabilityByUser: UserAvailabilityMap = {};
     
     users.forEach(user => {
-      availabilityByUser[user.id] = [];
+      const fullName = `${user.first_name} ${user.last_name}`;
+      availabilityByUser[user.id] = {
+        slots: [],
+        name: fullName,
+        role: "staff" // We'll update this later if needed
+      };
     });
 
     if (data) {
       data.forEach(slot => {
         const userId = slot.user_id;
         if (!availabilityByUser[userId]) {
-          availabilityByUser[userId] = [];
+          availabilityByUser[userId] = {
+            slots: [],
+            name: "Unknown User",
+            role: "staff"
+          };
         }
-        availabilityByUser[userId].push(mapDbAvailability(slot));
+        availabilityByUser[userId].slots.push(mapDbAvailability(slot));
       });
     }
 
