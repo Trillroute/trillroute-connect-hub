@@ -23,8 +23,6 @@ const Layout = ({ children }: LayoutProps) => {
 
   // For admin pages, header is full width at top, sidebar + content share the below space horizontally
   if (isAdminPage) {
-    // No need to destructure children, the SuperAdminDashboard component
-    // already includes the SuperAdminSidebar component
     return (
       <div className="min-h-screen flex flex-col w-full bg-background">
         {/* Header: always on top, full width */}
@@ -41,7 +39,7 @@ const Layout = ({ children }: LayoutProps) => {
     );
   }
 
-  // Regular pages as before
+  // Regular pages including the Index page
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {!isAuthPage && <Navbar />}

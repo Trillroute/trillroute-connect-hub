@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Music, Headphones, BookOpen, Award, ChevronRight, Play } from 'lucide-react';
 
 const Index = () => {
+  console.log("Rendering Index component");
   return (
-    <div>
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-gray-50 to-white py-20 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-30">
@@ -42,8 +43,6 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
-              
-              {/* Removed the "Join 10000+ music enthusiasts" element */}
             </div>
             
             <div className="lg:w-1/2">
@@ -138,11 +137,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Removed Featured Courses Section */}
-      
-      {/* Removed Testimonials Section */}
-      
-      {/* Stats - Removed mock values */}
+      {/* Stats Section */}
       <section className="py-20 bg-music-500 text-white">
         <div className="container mx-auto px-4">
           <div className="text-center">
@@ -153,8 +148,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-      
-      {/* Removed CTA Section */}
     </div>
   );
 };
