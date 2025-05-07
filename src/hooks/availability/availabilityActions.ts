@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { 
   createAvailabilitySlot,
@@ -81,13 +80,23 @@ export function useAvailabilityActions(
         return true;
       }
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding availability slot:", error);
-      toast({
-        title: "Failed to add availability",
-        description: "There was an error adding your availability",
-        variant: "destructive"
-      });
+      
+      // Check for duplicate entry error
+      if (error?.code === '23505' || (error?.message && error.message.includes('duplicate key value'))) {
+        toast({
+          title: "Slot already exists",
+          description: "This time slot already exists. Please choose a different time slot.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Failed to add availability",
+          description: "There was an error adding your availability",
+          variant: "destructive"
+        });
+      }
       return false;
     }
   };

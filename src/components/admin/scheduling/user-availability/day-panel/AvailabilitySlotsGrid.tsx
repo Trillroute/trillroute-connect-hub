@@ -17,18 +17,21 @@ const AvailabilitySlotsGrid: React.FC<AvailabilitySlotsGridProps> = ({
   onEditSlot,
   onDeleteSlot
 }) => {
-  if (slots.length === 0) {
+  // Log the slots to help with debugging
+  console.log(`Rendering AvailabilitySlotsGrid for ${dayName}:`, slots);
+  
+  if (!slots || slots.length === 0) {
     return <EmptyDayMessage dayName={dayName} />;
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
       {slots.map(slot => (
         <AvailabilitySlotCard
           key={slot.id}
           slot={slot}
-          onEdit={onEditSlot}
-          onDelete={onDeleteSlot}
+          onEdit={() => onEditSlot(slot)}
+          onDelete={() => onDeleteSlot(slot.id)}
         />
       ))}
     </div>
