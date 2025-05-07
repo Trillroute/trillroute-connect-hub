@@ -7,6 +7,7 @@ import ViewModeSelector from './ViewModeSelector';
 import FilterSelector from './FilterSelector';
 import LayersDropdown from '../LayersDropdown';
 import EventHandlers from './EventHandlers';
+import { CalendarViewMode } from '../context/calendarTypes';
 
 interface CalendarMainContentProps {
   hasAdminAccess: boolean;
@@ -28,7 +29,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   // Get event handlers from the EventHandlers utility
   const eventHandlers = EventHandlers({ 
     hasAdminAccess, 
-    setIsCreateEventOpen 
+    setIsCreateEventOpen,
+    children: null 
   });
 
   const viewOptions = [
@@ -47,8 +49,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           </div>
           <div className="flex flex-col md:flex-row gap-2 md:items-center">
             <ViewModeSelector 
-              viewMode={viewMode}
-              setViewMode={(mode) => useCalendar().setViewMode(mode)}
+              viewMode={viewMode as CalendarViewMode}
+              setViewMode={(mode) => useCalendar().setViewMode(mode as CalendarViewMode)}
               viewOptions={viewOptions}
             />
             <div className="flex items-center">
@@ -77,13 +79,13 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         </div>
 
         <div className="mt-4">
-          <CalendarHeader />
+          <CalendarHeader title={title} />
         </div>
       </div>
 
       <div className="flex-grow overflow-y-auto">
         <CalendarViewRenderer
-          viewMode={viewMode}
+          viewMode={viewMode as CalendarViewMode}
           showEventList={showEventList}
           onCreateEvent={eventHandlers.handleCreateEvent}
           onEditEvent={eventHandlers.handleEditEvent}
