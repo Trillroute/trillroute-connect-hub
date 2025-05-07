@@ -1,12 +1,10 @@
 
-import React from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, List } from 'lucide-react';
+import React, { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useCalendar } from './context/CalendarContext';
+import { ViewList, Plus, LayoutGrid } from 'lucide-react';
 
 interface CalendarHeaderProps {
-  title: string;
+  title: ReactNode; // Changed from string to ReactNode to accept elements
   showEventListToggle?: boolean;
   onToggleEventList?: () => void;
   isEventListShown?: boolean;
@@ -20,47 +18,35 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   isEventListShown = false,
   hasAdminAccess = false
 }) => {
-  const { 
-    viewMode, 
-    setViewMode, 
-    goToToday, 
-    goToPrevious, 
-    goToNext, 
-    isCreateEventOpen
-  } = useCalendar();
-
   return (
-    <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon" onClick={goToPrevious}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon" onClick={goToNext}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
-        <h3 className="text-lg font-semibold ml-2">{title}</h3>
+    <div className="flex items-center justify-between py-2 px-4 border-b">
+      <div className="flex items-center space-x-2">
+        {typeof title === 'string' ? <h2 className="text-lg font-semibold">{title}</h2> : title}
       </div>
-
-      <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
-        <Tabs defaultValue={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'week' | 'month')}>
-          <TabsList className="grid grid-cols-3 w-[240px]">
-            <TabsTrigger value="day">Day</TabsTrigger>
-            <TabsTrigger value="week">Week</TabsTrigger>
-            <TabsTrigger value="month">Month</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
-        {showEventListToggle && (
+      <div className="flex items-center space-x-2">
+        {showEventListToggle && onToggleEventList && (
           <Button 
-            variant={isEventListShown ? "default" : "outline"} 
-            size="icon" 
+            variant="ghost" 
+            size="sm" 
             onClick={onToggleEventList}
-            className={isEventListShown ? "bg-primary text-primary-foreground" : ""}
+            title={isEventListShown ? "Show Calendar" : "Show Event List"}
           >
-            <List className="h-4 w-4" />
+            {isEventListShown ? <LayoutGrid className="h-4 w-4" /> : <ViewList className="h-4 w-4" />}
+            <span className="sr-only">
+              {isEventListShown ? "Show Calendar" : "Show Event List"}
+            </span>
+          </Button>
+        )}
+        
+        {hasAdminAccess && (
+          <Button 
+            size="sm" 
+            onClick={() => {}} 
+            variant="outline"
+            className="ml-2"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Create Event
           </Button>
         )}
       </div>
