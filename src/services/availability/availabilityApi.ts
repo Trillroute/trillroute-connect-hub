@@ -18,8 +18,15 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
       throw error;
     }
 
-    console.log(`API result: found ${data?.length || 0} availability slots for user ${userId}`, data);
-    return data ? data.map(mapDbAvailability) : [];
+    if (!data || data.length === 0) {
+      console.log(`API result: No availability slots found for user ${userId}`);
+      return [];
+    }
+
+    const mappedData = data.map(mapDbAvailability);
+    console.log(`API result: found ${mappedData.length} availability slots for user ${userId}:`, mappedData);
+    
+    return mappedData;
   } catch (err) {
     console.error("Failed to fetch user availability:", err);
     throw err;
@@ -45,6 +52,14 @@ export const createAvailabilitySlot = async (
       (endTime.includes('.') ? endTime : endTime.includes(':00') ? endTime : `${endTime}:00`) : 
       `${endTime}:00`;
     
+    // Log the session for debugging
+    const sessionDetails = await supabase.auth.getSession();
+    console.log("Current session details before insert:", {
+      userId: sessionDetails.data.session?.user.id,
+      loggedInAs: sessionDetails.data.session?.user.email,
+      role: sessionDetails.data.session?.user.user_metadata?.role
+    });
+    
     // First, check if this slot already exists to provide better error handling
     const { data: existingSlots, error: checkError } = await supabase
       .from("user_availability")
@@ -66,14 +81,7 @@ export const createAvailabilitySlot = async (
       throw error;
     }
 
-    // Log the current session details before making the insert
-    const sessionDetails = await supabase.auth.getSession();
-    console.log("Current session details:", {
-      userId: sessionDetails.data.session?.user.id,
-      loggedInAs: sessionDetails.data.session?.user.email,
-      role: sessionDetails.data.session?.user.user_metadata?.role
-    });
-
+    // Insert the new slot
     const { data, error } = await supabase
       .from("user_availability")
       .insert({

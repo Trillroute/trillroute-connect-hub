@@ -1,3 +1,4 @@
+
 import { useToast } from '@/hooks/use-toast';
 import { 
   createAvailabilitySlot,
@@ -9,6 +10,7 @@ import {
 import { daysOfWeek } from './dayUtils';
 import { transformAvailabilityData } from './availabilityTransforms';
 import { UseAvailabilityActions, DayAvailability } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useAvailabilityActions(
   userId: string, 
@@ -34,6 +36,15 @@ export function useAvailabilityActions(
     try {
       setLoading(true);
       
+      // Log the session for debugging
+      const sessionDetails = await supabase.auth.getSession();
+      console.log("Current session for availability refresh:", {
+        userId: sessionDetails.data.session?.user.id,
+        loggedInAs: sessionDetails.data.session?.user.email,
+        role: sessionDetails.data.session?.user.user_metadata?.role,
+        targetUserId: userId
+      });
+      
       console.log(`Fetching availability for user: ${userId}`);
       const availability = await fetchUserAvailability(userId);
       console.log(`Retrieved availability data for ${userId}:`, availability);
@@ -45,7 +56,7 @@ export function useAvailabilityActions(
       console.error("Error refreshing availability:", error);
       toast({
         title: "Failed to load availability",
-        description: "There was an error loading your availability schedule",
+        description: "There was an error loading the availability schedule",
         variant: "destructive"
       });
       // Still provide an empty structure so the UI can render
@@ -62,7 +73,14 @@ export function useAvailabilityActions(
   };
 
   const addSlot = async (dayOfWeek: number, startTime: string, endTime: string) => {
-    if (!userId) return false;
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "No user selected. Please select a user first.",
+        variant: "destructive"
+      });
+      return false;
+    }
     
     try {
       // Don't set loading to true here to prevent flickering
@@ -90,10 +108,16 @@ export function useAvailabilityActions(
           description: "This time slot already exists. Please choose a different time slot.",
           variant: "destructive"
         });
+      } else if (error?.message && error.message.includes('violates row-level security policy')) {
+        toast({
+          title: "Permission denied",
+          description: "You don't have permission to add availability for this user.",
+          variant: "destructive"
+        });
       } else {
         toast({
           title: "Failed to add availability",
-          description: "There was an error adding your availability",
+          description: "There was an error adding availability",
           variant: "destructive"
         });
       }

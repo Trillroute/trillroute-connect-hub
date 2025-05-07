@@ -13,25 +13,32 @@ export function transformAvailabilityData(availabilitySlots: UserAvailability[])
     slots: []
   }));
 
-  // Group slots by day of week
-  if (availabilitySlots && availabilitySlots.length > 0) {
+  // Group slots by day of week and log any invalid data
+  if (availabilitySlots && Array.isArray(availabilitySlots) && availabilitySlots.length > 0) {
     availabilitySlots.forEach(slot => {
+      // Validate slot data before processing
+      if (!slot || typeof slot.dayOfWeek !== 'number') {
+        console.error('Invalid slot data:', slot);
+        return;
+      }
+      
       const dayIndex = slot.dayOfWeek;
-      if (dailyAvailability[dayIndex]) {
+      if (dayIndex >= 0 && dayIndex < 7) {
         dailyAvailability[dayIndex].slots.push(slot);
       } else {
-        console.error(`Invalid day index: ${dayIndex}`);
+        console.error(`Invalid day index: ${dayIndex}`, slot);
       }
     });
   } else {
-    console.warn('No availability slots found to transform');
+    console.warn('No availability slots found to transform or data is not in expected format:', availabilitySlots);
   }
 
   // Log the resulting structure for debugging
   console.log('Transformed to daily availability structure:', 
     dailyAvailability.map(day => ({
       day: day.dayName, 
-      slotCount: day.slots.length
+      slotCount: day.slots.length,
+      slots: day.slots.length > 0 ? day.slots : 'No slots'
     }))
   );
   

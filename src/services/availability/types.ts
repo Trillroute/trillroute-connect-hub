@@ -11,10 +11,19 @@ export interface UserAvailability {
   updatedAt: Date;
 }
 
-// Convert database format to frontend format
+// Convert database format to frontend format with detailed logging
 export const mapDbAvailability = (dbItem: any): UserAvailability => {
-  console.log("Mapping DB item to availability object:", dbItem);
-  return {
+  if (!dbItem) {
+    console.error("Attempted to map undefined/null DB item to availability object");
+    throw new Error("Invalid availability data");
+  }
+  
+  if (!dbItem.id || !dbItem.user_id || typeof dbItem.day_of_week !== 'number') {
+    console.error("Invalid DB item structure:", dbItem);
+    throw new Error("DB item missing required fields");
+  }
+  
+  const mappedItem = {
     id: dbItem.id,
     userId: dbItem.user_id,
     dayOfWeek: dbItem.day_of_week,
@@ -23,6 +32,13 @@ export const mapDbAvailability = (dbItem: any): UserAvailability => {
     createdAt: new Date(dbItem.created_at),
     updatedAt: new Date(dbItem.updated_at)
   };
+  
+  console.log("Mapped DB item to availability object:", { 
+    original: dbItem,
+    mapped: mappedItem
+  });
+  
+  return mappedItem;
 };
 
 // User information along with their availability slots

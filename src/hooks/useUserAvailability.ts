@@ -18,6 +18,14 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
   
+  // Debug log when target user ID changes
+  useEffect(() => {
+    console.log(`useUserAvailability hook initialized/updated with targetUserId:`, targetUserId);
+    if (!targetUserId) {
+      console.warn('No target user ID available, availability data may not load correctly');
+    }
+  }, [targetUserId]);
+  
   const { 
     refreshAvailability: fetchAvailability,
     addSlot,
@@ -89,12 +97,15 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
       }
       
       try {
-        if (isMounted) {
+        if (targetUserId && isMounted) {
           refreshingRef.current = true;
           await refreshAvailability();
           if (isMounted) {
             isInitialLoad.current = false;
           }
+        } else {
+          console.log('No targetUserId available, skipping initial load');
+          setLoading(false);
         }
       } catch (err) {
         console.error('Error in initial load of availability:', err);
@@ -109,24 +120,38 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     return () => {
       isMounted = false;
     };
-  }, [targetUserId, refreshAvailability, previousUserId]);
+  }, [targetUserId, refreshAvailability]);
 
   // Enhanced versions of the action functions that prevent loading state flickering
   const enhancedAddSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
+    console.log(`Adding slot for day ${dayOfWeek} from ${startTime} to ${endTime}`);
     return await addSlot(dayOfWeek, startTime, endTime);
   }, [addSlot]);
   
   const enhancedUpdateSlot = useCallback(async (id: string, startTime: string, endTime: string) => {
+    console.log(`Updating slot ${id} to ${startTime}-${endTime}`);
     return await updateSlot(id, startTime, endTime);
   }, [updateSlot]);
   
   const enhancedDeleteSlot = useCallback(async (id: string) => {
+    console.log(`Deleting slot ${id}`);
     return await deleteSlot(id);
   }, [deleteSlot]);
   
   const enhancedCopyDaySlots = useCallback(async (fromDay: number, toDay: number) => {
+    console.log(`Copying slots from day ${fromDay} to day ${toDay}`);
     return await copyDaySlots(fromDay, toDay);
   }, [copyDaySlots]);
+
+  // Debug log when availability data changes
+  useEffect(() => {
+    console.log('Current availability data in hook:', 
+      dailyAvailability.map(day => ({
+        day: day.dayName,
+        slots: day.slots.length
+      }))
+    );
+  }, [dailyAvailability]);
 
   return {
     loading,
