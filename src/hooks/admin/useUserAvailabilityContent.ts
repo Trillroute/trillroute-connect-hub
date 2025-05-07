@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserAvailability, DayAvailability } from '@/hooks/useUserAvailability';
@@ -31,8 +30,8 @@ interface UseUserAvailabilityContentResult {
   
   // Availability actions
   handleRefresh: () => Promise<void>;
-  addSlot: (dayOfWeek: number, startTime: string, endTime: string) => Promise<boolean>;
-  updateSlot: (id: string, startTime: string, endTime: string) => Promise<boolean>;
+  addSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  updateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   deleteSlot: (id: string) => Promise<boolean>;
   copyDaySlots: (fromDay: number, toDay: number) => Promise<boolean>;
 }
