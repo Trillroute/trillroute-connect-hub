@@ -10,7 +10,6 @@ import {
 import { daysOfWeek } from './dayUtils';
 import { transformAvailabilityData } from './availabilityTransforms';
 import { UseAvailabilityActions, DayAvailability } from './types';
-import { supabase } from '@/integrations/supabase/client';
 
 export function useAvailabilityActions(
   userId: string, 
@@ -21,7 +20,7 @@ export function useAvailabilityActions(
   
   const refreshAvailability = async () => {
     if (!userId) {
-      console.log('Cannot refresh availability: No user ID provided');
+      console.warn('Cannot refresh availability: No user ID provided');
       // Create empty availability data structure for each day of the week
       const emptyAvailability = daysOfWeek.map((dayName, index) => ({
         dayOfWeek: index,
@@ -35,22 +34,11 @@ export function useAvailabilityActions(
 
     try {
       setLoading(true);
-      
-      // Log the session for debugging
-      const sessionDetails = await supabase.auth.getSession();
-      console.log("Current session for availability refresh:", {
-        userId: sessionDetails.data.session?.user.id,
-        loggedInAs: sessionDetails.data.session?.user.email,
-        role: sessionDetails.data.session?.user.user_metadata?.role,
-        targetUserId: userId
-      });
-      
       console.log(`Fetching availability for user: ${userId}`);
       const availability = await fetchUserAvailability(userId);
-      console.log(`Retrieved availability data for ${userId}:`, availability);
+      console.log(`Retrieved availability data:`, availability);
       
       const transformed = transformAvailabilityData(availability);
-      console.log('Transformed availability data:', transformed);
       setDailyAvailability(transformed);
     } catch (error) {
       console.error("Error refreshing availability:", error);
@@ -66,7 +54,6 @@ export function useAvailabilityActions(
         slots: []
       }));
       setDailyAvailability(emptyAvailability);
-      throw error;
     } finally {
       setLoading(false);
     }
@@ -83,13 +70,10 @@ export function useAvailabilityActions(
     }
     
     try {
-      // Don't set loading to true here to prevent flickering
       console.log(`Creating slot for user ${userId}, day ${dayOfWeek}: ${startTime}-${endTime}`);
       const result = await createAvailabilitySlot(userId, dayOfWeek, startTime, endTime);
-      console.log("Create slot result:", result);
       
       if (result) {
-        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability added",
@@ -100,37 +84,19 @@ export function useAvailabilityActions(
       return false;
     } catch (error: any) {
       console.error("Error adding availability slot:", error);
-      
-      // Check for duplicate entry error
-      if (error?.code === '23505' || (error?.message && error.message.includes('duplicate key value'))) {
-        toast({
-          title: "Slot already exists",
-          description: "This time slot already exists. Please choose a different time slot.",
-          variant: "destructive"
-        });
-      } else if (error?.message && error.message.includes('violates row-level security policy')) {
-        toast({
-          title: "Permission denied",
-          description: "You don't have permission to add availability for this user.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Failed to add availability",
-          description: "There was an error adding availability",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Failed to add availability",
+        description: "There was an error adding availability",
+        variant: "destructive"
+      });
       return false;
     }
   };
 
   const updateSlot = async (id: string, startTime: string, endTime: string) => {
     try {
-      // Don't set loading to true here to prevent flickering
       const success = await updateAvailabilitySlot(id, startTime, endTime);
       if (success) {
-        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability updated",
@@ -151,10 +117,8 @@ export function useAvailabilityActions(
 
   const deleteSlot = async (id: string) => {
     try {
-      // Don't set loading to true here to prevent flickering
       const success = await deleteAvailabilitySlot(id);
       if (success) {
-        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability removed",
@@ -177,10 +141,8 @@ export function useAvailabilityActions(
     if (!userId) return false;
     
     try {
-      // Don't set loading to true here to prevent flickering
       const success = await copyDayAvailability(userId, fromDay, toDay);
       if (success) {
-        // We'll handle loading state in the UserAvailabilitySchedule component
         await refreshAvailability();
         toast({
           title: "Availability copied",

@@ -37,8 +37,6 @@ export const fetchAllStaffAvailability = async (): Promise<UserAvailabilityMap> 
       throw availabilityError;
     }
 
-    console.log(`Found ${availabilityData?.length || 0} availability slots for staff members:`, availabilityData);
-
     // Group by user_id
     const availabilityByUser: UserAvailabilityMap = {};
     

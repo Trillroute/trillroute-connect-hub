@@ -11,14 +11,7 @@ export const copyDayAvailability = async (
   toDay: number
 ): Promise<boolean> => {
   try {
-    // Log the session for debugging
-    const sessionDetails = await supabase.auth.getSession();
-    console.log("Current session details for copy operation:", {
-      userId: sessionDetails.data.session?.user.id,
-      loggedInAs: sessionDetails.data.session?.user.email,
-      role: sessionDetails.data.session?.user.user_metadata?.role,
-      operationDetails: `Copying from day ${fromDay} to day ${toDay} for user ${userId}`
-    });
+    console.log(`Copying availability from day ${fromDay} to day ${toDay} for user ${userId}`);
     
     // Get all availability slots for the user
     const allSlots = await fetchUserAvailability(userId);
@@ -31,7 +24,7 @@ export const copyDayAvailability = async (
       return false;
     }
     
-    console.log(`Found ${sourceDaySlots.length} slots to copy from day ${fromDay} to day ${toDay}`, sourceDaySlots);
+    console.log(`Found ${sourceDaySlots.length} slots to copy from day ${fromDay} to day ${toDay}`);
     
     // First, delete any existing slots for the target day
     const { error: deleteError } = await supabase

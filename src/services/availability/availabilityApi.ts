@@ -5,7 +5,16 @@ import { UserAvailability, mapDbAvailability } from "./types";
 // Get all availability slots for a user
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
   try {
-    console.log(`API call: fetching availability for user ${userId} from user_availability table`);
+    console.log(`API call: fetching availability for user ${userId}`);
+    
+    // Log the session for debugging
+    const sessionDetails = await supabase.auth.getSession();
+    console.log("Current session when fetching availability:", {
+      userId: sessionDetails.data.session?.user.id,
+      loggedInAs: sessionDetails.data.session?.user.email,
+      role: sessionDetails.data.session?.user.user_metadata?.role,
+      targetUserId: userId
+    });
     
     const { data, error } = await supabase
       .from("user_availability")
@@ -19,12 +28,12 @@ export const fetchUserAvailability = async (userId: string): Promise<UserAvailab
     }
 
     if (!data || data.length === 0) {
-      console.log(`API result: No availability slots found for user ${userId}`);
+      console.log(`No availability slots found for user ${userId}`);
       return [];
     }
 
     const mappedData = data.map(mapDbAvailability);
-    console.log(`API result: found ${mappedData.length} availability slots for user ${userId}:`, mappedData);
+    console.log(`Found ${mappedData.length} availability slots for user ${userId}`);
     
     return mappedData;
   } catch (err) {
@@ -39,49 +48,14 @@ export const createAvailabilitySlot = async (
   dayOfWeek: number,
   startTime: string,
   endTime: string
-): Promise<UserAvailability | null> => {
+): Promise<UserAvailability> => {
   try {
-    console.log(`Creating availability slot in user_availability table: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}`);
+    console.log(`Creating availability slot: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}`);
     
-    // Format startTime and endTime to ensure consistent format (HH:MM:SS)
-    const formattedStartTime = startTime.includes(':') ? 
-      (startTime.includes('.') ? startTime : startTime.includes(':00') ? startTime : `${startTime}:00`) : 
-      `${startTime}:00`;
-    
-    const formattedEndTime = endTime.includes(':') ? 
-      (endTime.includes('.') ? endTime : endTime.includes(':00') ? endTime : `${endTime}:00`) : 
-      `${endTime}:00`;
-    
-    // Log the session for debugging
-    const sessionDetails = await supabase.auth.getSession();
-    console.log("Current session details before insert:", {
-      userId: sessionDetails.data.session?.user.id,
-      loggedInAs: sessionDetails.data.session?.user.email,
-      role: sessionDetails.data.session?.user.user_metadata?.role
-    });
-    
-    // First, check if this slot already exists to provide better error handling
-    const { data: existingSlots, error: checkError } = await supabase
-      .from("user_availability")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("day_of_week", dayOfWeek)
-      .eq("start_time", formattedStartTime)
-      .eq("end_time", formattedEndTime);
-    
-    if (checkError) {
-      console.error("Error checking for existing slot:", checkError);
-      throw checkError;
-    }
-    
-    if (existingSlots && existingSlots.length > 0) {
-      console.log("Slot already exists, returning existing slot");
-      const error: any = new Error("This time slot already exists");
-      error.code = "23505"; // Duplicate key error code
-      throw error;
-    }
+    // Format startTime and endTime to ensure consistent format (HH:MM)
+    const formattedStartTime = startTime.includes(':') ? startTime : `${startTime}:00`;
+    const formattedEndTime = endTime.includes(':') ? endTime : `${endTime}:00`;
 
-    // Insert the new slot
     const { data, error } = await supabase
       .from("user_availability")
       .insert({
@@ -99,7 +73,7 @@ export const createAvailabilitySlot = async (
     }
 
     console.log("Availability slot created successfully:", data);
-    return data ? mapDbAvailability(data) : null;
+    return mapDbAvailability(data);
   } catch (err) {
     console.error("Failed to create availability slot:", err);
     throw err;
@@ -113,14 +87,9 @@ export const updateAvailabilitySlot = async (
   endTime: string
 ): Promise<boolean> => {
   try {
-    // Format startTime and endTime to ensure consistent format (HH:MM:SS)
-    const formattedStartTime = startTime.includes(':') ? 
-      (startTime.includes('.') ? startTime : startTime.includes(':00') ? startTime : `${startTime}:00`) : 
-      `${startTime}:00`;
-    
-    const formattedEndTime = endTime.includes(':') ? 
-      (endTime.includes('.') ? endTime : endTime.includes(':00') ? endTime : `${endTime}:00`) : 
-      `${endTime}:00`;
+    // Format startTime and endTime to ensure consistent format (HH:MM)
+    const formattedStartTime = startTime.includes(':') ? startTime : `${startTime}:00`;
+    const formattedEndTime = endTime.includes(':') ? endTime : `${endTime}:00`;
 
     const { error } = await supabase
       .from("user_availability")
@@ -146,6 +115,8 @@ export const updateAvailabilitySlot = async (
 // Delete an availability slot
 export const deleteAvailabilitySlot = async (id: string): Promise<boolean> => {
   try {
+    console.log(`Deleting availability slot with ID: ${id}`);
+    
     const { error } = await supabase
       .from("user_availability")
       .delete()
@@ -156,6 +127,7 @@ export const deleteAvailabilitySlot = async (id: string): Promise<boolean> => {
       throw error;
     }
 
+    console.log("Availability slot deleted successfully");
     return true;
   } catch (err) {
     console.error("Failed to delete availability slot:", err);

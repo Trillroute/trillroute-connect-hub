@@ -13,18 +13,9 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   const [dailyAvailability, setDailyAvailability] = useState<DayAvailability[]>([]);
   const [previousUserId, setPreviousUserId] = useState<string | undefined>(userId);
   const isInitialLoad = useRef(true);
-  const refreshingRef = useRef(false);
   
   // Use the provided userId or fall back to the current user's ID
   const targetUserId = userId || (user ? user.id : '');
-  
-  // Debug log when target user ID changes
-  useEffect(() => {
-    console.log(`useUserAvailability hook initialized/updated with targetUserId:`, targetUserId);
-    if (!targetUserId) {
-      console.warn('No target user ID available, availability data may not load correctly');
-    }
-  }, [targetUserId]);
   
   const { 
     refreshAvailability: fetchAvailability,
@@ -39,11 +30,6 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   );
 
   const refreshAvailability = useCallback(async () => {
-    if (refreshingRef.current) {
-      console.log('Already refreshing, skipping duplicate request');
-      return;
-    }
-    
     if (!targetUserId) {
       console.log('No target user ID provided, skipping availability fetch');
       // Initialize with empty data structure
@@ -58,25 +44,17 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     }
     
     console.log('Refreshing availability for user ID:', targetUserId);
-    try {
-      refreshingRef.current = true;
-      await fetchAvailability();
-    } catch (error) {
-      console.error('Error in refreshAvailability:', error);
-      // Loading state is already set to false in the actions
-    } finally {
-      refreshingRef.current = false;
-    }
+    await fetchAvailability();
   }, [targetUserId, fetchAvailability]);
 
   // When user ID changes, set loading state to true and update previous user ID
   useEffect(() => {
     if (previousUserId !== targetUserId) {
-      console.log(`User changed from ${previousUserId} to ${targetUserId}, resetting loading state`);
+      console.log(`User changed from ${previousUserId} to ${targetUserId}`);
       setLoading(true);
       setPreviousUserId(targetUserId);
       
-      // Reset availability data when user changes to prevent showing previous user's data
+      // Reset availability data when user changes
       const emptyAvailability = daysOfWeek.map((dayName, index) => ({
         dayOfWeek: index,
         dayName,
@@ -91,14 +69,8 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     let isMounted = true;
     
     const loadAvailability = async () => {
-      if (refreshingRef.current) {
-        console.log('Already refreshing in another effect, skipping');
-        return;
-      }
-      
       try {
         if (targetUserId && isMounted) {
-          refreshingRef.current = true;
           await refreshAvailability();
           if (isMounted) {
             isInitialLoad.current = false;
@@ -109,9 +81,6 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
         }
       } catch (err) {
         console.error('Error in initial load of availability:', err);
-        // Error handling is already in refreshAvailability
-      } finally {
-        refreshingRef.current = false;
       }
     };
     
@@ -122,45 +91,14 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
     };
   }, [targetUserId, refreshAvailability]);
 
-  // Enhanced versions of the action functions that prevent loading state flickering
-  const enhancedAddSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string) => {
-    console.log(`Adding slot for day ${dayOfWeek} from ${startTime} to ${endTime}`);
-    return await addSlot(dayOfWeek, startTime, endTime);
-  }, [addSlot]);
-  
-  const enhancedUpdateSlot = useCallback(async (id: string, startTime: string, endTime: string) => {
-    console.log(`Updating slot ${id} to ${startTime}-${endTime}`);
-    return await updateSlot(id, startTime, endTime);
-  }, [updateSlot]);
-  
-  const enhancedDeleteSlot = useCallback(async (id: string) => {
-    console.log(`Deleting slot ${id}`);
-    return await deleteSlot(id);
-  }, [deleteSlot]);
-  
-  const enhancedCopyDaySlots = useCallback(async (fromDay: number, toDay: number) => {
-    console.log(`Copying slots from day ${fromDay} to day ${toDay}`);
-    return await copyDaySlots(fromDay, toDay);
-  }, [copyDaySlots]);
-
-  // Debug log when availability data changes
-  useEffect(() => {
-    console.log('Current availability data in hook:', 
-      dailyAvailability.map(day => ({
-        day: day.dayName,
-        slots: day.slots.length
-      }))
-    );
-  }, [dailyAvailability]);
-
   return {
     loading,
     dailyAvailability,
     refreshAvailability,
-    addSlot: enhancedAddSlot,
-    updateSlot: enhancedUpdateSlot,
-    deleteSlot: enhancedDeleteSlot,
-    copyDaySlots: enhancedCopyDaySlots,
+    addSlot,
+    updateSlot,
+    deleteSlot,
+    copyDaySlots,
     daysOfWeek
   };
 }

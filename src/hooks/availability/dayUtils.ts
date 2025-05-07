@@ -1,6 +1,9 @@
 
 // Utility functions and constants for day-of-week handling
-import { DayOption } from './types';
+export interface DayOption {
+  dayOfWeek: number;
+  dayName: string;
+}
 
 export const daysOfWeek = [
   "Sunday",

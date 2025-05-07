@@ -1,6 +1,5 @@
 
 // Re-export all availability functionality through the main service file
-// This maintains backward compatibility with existing imports
 
 import { UserAvailability, UserAvailabilityMap, mapDbAvailability } from './availability/types';
 import { 

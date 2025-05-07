@@ -33,11 +33,6 @@ export const mapDbAvailability = (dbItem: any): UserAvailability => {
     updatedAt: new Date(dbItem.updated_at)
   };
   
-  console.log("Mapped DB item to availability object:", { 
-    original: dbItem,
-    mapped: mappedItem
-  });
-  
   return mappedItem;
 };
 

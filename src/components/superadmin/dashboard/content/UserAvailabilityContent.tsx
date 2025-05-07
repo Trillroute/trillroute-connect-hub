@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { useUserAvailabilityContent } from '@/hooks/admin/useUserAvailabilityContent';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const UserAvailabilityContent: React.FC = () => {
   const {
@@ -100,7 +102,13 @@ const UserAvailabilityContent: React.FC = () => {
           </>
         ) : (
           <div className="flex justify-center items-center h-full">
-            <p className="text-gray-500">Please select a user to manage their availability</p>
+            <Alert variant="default" className="max-w-md">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>No user selected</AlertTitle>
+              <AlertDescription>
+                Please select a user from the dropdown to manage their availability.
+              </AlertDescription>
+            </Alert>
           </div>
         )}
       </div>

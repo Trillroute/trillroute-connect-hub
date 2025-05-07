@@ -51,7 +51,7 @@ export const useUserAvailabilityContent = (): UseUserAvailabilityContentResult =
     error: staffError
   } = useStaffAvailability();
   
-  // Set the initial selected user to the current user - only once when user info is available
+  // Set the initial selected user to the current user
   useEffect(() => {
     if (user && !selectedUserId && user.id) {
       console.log('Setting initial selectedUserId to current user:', user.id);
@@ -61,7 +61,6 @@ export const useUserAvailabilityContent = (): UseUserAvailabilityContentResult =
   
   // Force refetch staff members data on initial render
   useEffect(() => {
-    console.log('Initial load: fetching staff members data');
     refetchStaffMembers().catch(error => {
       console.error("Failed to fetch staff members:", error);
       toast({
@@ -70,7 +69,6 @@ export const useUserAvailabilityContent = (): UseUserAvailabilityContentResult =
         variant: "destructive"
       });
     });
-    // Only run this on first render
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   // User availability data
@@ -171,4 +169,4 @@ export const useUserAvailabilityContent = (): UseUserAvailabilityContentResult =
     deleteSlot,
     copyDaySlots,
   };
-}
+};
