@@ -33,37 +33,61 @@ export const fetchFilteredEvents = async ({
     
     // Process course filtering
     if ((courseIds && courseIds.length > 0) || courseId) {
-      const coursesToFilter: string[] = [...(courseIds || [])];
-      if (courseId) coursesToFilter.push(courseId);
+      const coursesToFilter: string[] = [];
       
-      // Filter out null/undefined values and apply the filter
-      const validCourseIds = coursesToFilter.filter(Boolean);
-      if (validCourseIds.length > 0) {
-        query = query.in('course_id', validCourseIds);
+      // Add courseIds array items if they exist
+      if (courseIds && courseIds.length > 0) {
+        coursesToFilter.push(...courseIds);
+      }
+      
+      // Add courseId if it exists
+      if (courseId) {
+        coursesToFilter.push(courseId);
+      }
+      
+      // Apply the filter if we have valid course IDs
+      if (coursesToFilter.length > 0) {
+        query = query.in('course_id', coursesToFilter);
       }
     }
     
     // Process skill filtering
     if ((skillIds && skillIds.length > 0) || skillId) {
-      const skillsToFilter: string[] = [...(skillIds || [])];
-      if (skillId) skillsToFilter.push(skillId);
+      const skillsToFilter: string[] = [];
       
-      // Filter out null/undefined values and apply the filter
-      const validSkillIds = skillsToFilter.filter(Boolean);
-      if (validSkillIds.length > 0) {
-        query = query.in('skill_id', validSkillIds);
+      // Add skillIds array items if they exist
+      if (skillIds && skillIds.length > 0) {
+        skillsToFilter.push(...skillIds);
+      }
+      
+      // Add skillId if it exists
+      if (skillId) {
+        skillsToFilter.push(skillId);
+      }
+      
+      // Apply the filter if we have valid skill IDs
+      if (skillsToFilter.length > 0) {
+        query = query.in('skill_id', skillsToFilter);
       }
     }
     
     // Process user filtering
     if ((userIds && userIds.length > 0) || userId) {
-      const usersToFilter: string[] = [...(userIds || [])];
-      if (userId) usersToFilter.push(userId);
+      const usersToFilter: string[] = [];
       
-      // Filter out null/undefined values and apply the filter
-      const validUserIds = usersToFilter.filter(Boolean);
-      if (validUserIds.length > 0) {
-        query = query.in('user_id', validUserIds);
+      // Add userIds array items if they exist
+      if (userIds && userIds.length > 0) {
+        usersToFilter.push(...userIds);
+      }
+      
+      // Add userId if it exists
+      if (userId) {
+        usersToFilter.push(userId);
+      }
+      
+      // Apply the filter if we have valid user IDs
+      if (usersToFilter.length > 0) {
+        query = query.in('user_id', usersToFilter);
       }
     }
     
