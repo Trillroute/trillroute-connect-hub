@@ -6,8 +6,8 @@ import { Edit, Trash, Shield } from 'lucide-react';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 import { Checkbox } from '@/components/ui/checkbox';
 
-export interface Level extends AdminLevelDetailed {
-  id: string;
+export interface Level extends Omit<AdminLevelDetailed, 'id'> {
+  id: string; // Use string type for the id in the UI layer
 }
 
 interface LevelTableProps {
@@ -47,6 +47,14 @@ const LevelTable: React.FC<LevelTableProps> = ({
     } else {
       setSelectedIds(selectedIds.filter((id) => id !== levelId));
     }
+  };
+
+  // Convert string ID to number when passing to handlers
+  const convertLevel = (level: Level): AdminLevelDetailed => {
+    return {
+      ...level,
+      id: Number(level.id)
+    };
   };
 
   return (
@@ -128,7 +136,7 @@ const LevelTable: React.FC<LevelTableProps> = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onViewPermissions(level)}
+                      onClick={() => onViewPermissions(convertLevel(level))}
                       title="Permissions"
                     >
                       <Shield className="h-4 w-4" />
@@ -136,7 +144,7 @@ const LevelTable: React.FC<LevelTableProps> = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onEdit(level)}
+                      onClick={() => onEdit(convertLevel(level))}
                       title="Edit"
                     >
                       <Edit className="h-4 w-4" />
@@ -144,7 +152,7 @@ const LevelTable: React.FC<LevelTableProps> = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onDelete(level)}
+                      onClick={() => onDelete(convertLevel(level))}
                       title="Delete"
                     >
                       <Trash className="h-4 w-4" />

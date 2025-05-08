@@ -5,7 +5,7 @@ import { useRoleManagement } from './useRoleManagement';
 import type { AuthContextType } from '@/types/auth';
 
 // This is a duplicate of useAuth.tsx but kept for backward compatibility
-export const useProvideAuth = (): AuthContextType => {
+export const useProvideAuth = (): Partial<AuthContextType> => {
   const { user, loading, login, logout, isAuthenticated, refreshSession } = useAuthContext();
   const { register } = useRegistration();
   const { isAdmin, isSuperAdmin, role } = useRoleManagement();
