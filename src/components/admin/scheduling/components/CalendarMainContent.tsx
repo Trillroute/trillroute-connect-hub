@@ -97,7 +97,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
                 setSelectedFilter={setSelectedFilter}
                 selectedFilters={selectedFilters}
                 setSelectedFilters={setSelectedFilters}
-                showFilterTypeTabs={false} // Add this prop to control filter tabs visibility
+                showFilterTypeTabs={false} // Hide duplicate filter tabs
               />
             </div>
           )}

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import CalendarMainContent from './components/CalendarMainContent';
 import CreateEventDialog from './CreateEventDialog';
 import { useCalendar } from './context/CalendarContext';
@@ -14,6 +14,7 @@ interface CalendarContentProps {
   skillId?: string;
   title?: string;
   description?: string;
+  initialFilterType?: string | null;
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({ 
@@ -24,7 +25,8 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   courseId,
   skillId,
   title,
-  description
+  description,
+  initialFilterType = null
 }) => {
   const { 
     currentDate,
@@ -32,7 +34,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
     setIsCreateEventOpen, 
     handleCreateEvent
   } = useCalendar();
-
+  
   // Use the custom hook to handle event filtering
   useEventFilters({
     userId,

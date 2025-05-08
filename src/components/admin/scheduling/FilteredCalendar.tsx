@@ -56,6 +56,8 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
             hasAdminAccess={hasAdminAccess}
             title={title}
             description={description}
+            // Pass the initial filter type to avoid showing duplicate tabs
+            initialFilterType={filterType || null}
           />
         </div>
       </FilteredEventsProvider>
