@@ -36,8 +36,7 @@ export const fetchFilteredEvents = async ({
       const coursesToFilter: string[] = [];
       
       // Add courseIds if it exists and has items
-      if (courseIds && Array.isArray(courseIds) && courseIds.length > 0) {
-        // Using standard for loop to avoid TypeScript infinite instantiation
+      if (courseIds && Array.isArray(courseIds)) {
         for (let i = 0; i < courseIds.length; i++) {
           const id = courseIds[i];
           if (id) coursesToFilter.push(id);
@@ -60,8 +59,7 @@ export const fetchFilteredEvents = async ({
       const skillsToFilter: string[] = [];
       
       // Add skillIds if it exists and has items
-      if (skillIds && Array.isArray(skillIds) && skillIds.length > 0) {
-        // Using standard for loop to avoid TypeScript infinite instantiation
+      if (skillIds && Array.isArray(skillIds)) {
         for (let i = 0; i < skillIds.length; i++) {
           const id = skillIds[i];
           if (id) skillsToFilter.push(id);
@@ -84,8 +82,7 @@ export const fetchFilteredEvents = async ({
       const usersToFilter: string[] = [];
       
       // Add userIds if it exists and has items
-      if (userIds && Array.isArray(userIds) && userIds.length > 0) {
-        // Using standard for loop to avoid TypeScript infinite instantiation
+      if (userIds && Array.isArray(userIds)) {
         for (let i = 0; i < userIds.length; i++) {
           const id = userIds[i];
           if (id) usersToFilter.push(id);
