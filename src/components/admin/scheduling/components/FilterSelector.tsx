@@ -181,7 +181,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       {(['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '')) && (
         <MultiSelect
           options={filterOptions}
-          selected={selectedFilters}
+          selected={selectedFilters || []}
           onChange={handleMultiSelectChange}
           placeholder={`Select ${filterType}(s)${isLoading() ? ' (Loading...)' : ''}`}
           className="w-full bg-white"

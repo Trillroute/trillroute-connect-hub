@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Check, Search } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,7 +25,13 @@ const UserSearchList: React.FC<UserSearchListProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   
-  const filteredUsers = getFilteredUsers(layerId);
+  const filteredUsers = getFilteredUsers(layerId) || [];
+  
+  // Filter users based on search query
+  const searchFilteredUsers = filteredUsers
+    .filter(user => 
+      user.name.toLowerCase().includes((searchQuery || '').toLowerCase())
+    );
   
   return (
     <>
@@ -42,31 +48,23 @@ const UserSearchList: React.FC<UserSearchListProps> = ({
       <ScrollArea className="h-[200px]">
         {isLoading ? (
           <DropdownMenuItem disabled>Loading {layerId}...</DropdownMenuItem>
+        ) : searchFilteredUsers.length > 0 ? (
+          searchFilteredUsers.map((user) => (
+            <DropdownMenuItem
+              key={user.id}
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => onUserToggle(user, layerId)}
+            >
+              <div className="flex items-center gap-2 flex-1">
+                <div className={`w-2 h-2 rounded-full ${layerColor}`} />
+                <span>{user.name}</span>
+              </div>
+              {isUserSelected(user.id) && (
+                <Check className="h-4 w-4 text-primary" />
+              )}
+            </DropdownMenuItem>
+          ))
         ) : (
-          filteredUsers
-            .filter(user => 
-              user.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map((user) => (
-              <DropdownMenuItem
-                key={user.id}
-                className="flex items-center gap-2 cursor-pointer"
-                onClick={() => onUserToggle(user, layerId)}
-              >
-                <div className="flex items-center gap-2 flex-1">
-                  <div className={`w-2 h-2 rounded-full ${layerColor}`} />
-                  <span>{user.name}</span>
-                </div>
-                {isUserSelected(user.id) && (
-                  <Check className="h-4 w-4 text-primary" />
-                )}
-              </DropdownMenuItem>
-            ))
-        )}
-        {!isLoading && 
-          filteredUsers
-            .filter(user => user.name.toLowerCase().includes(searchQuery.toLowerCase()))
-            .length === 0 && (
           <DropdownMenuItem disabled>No users found</DropdownMenuItem>
         )}
       </ScrollArea>
