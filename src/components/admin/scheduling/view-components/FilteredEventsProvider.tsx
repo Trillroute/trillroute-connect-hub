@@ -23,33 +23,35 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   
   // Apply filters when filter type or IDs change
   useEffect(() => {
+    console.log('FilteredEventsProvider: Effect triggered', { filterType, filterId, filterIds });
+    
     if (!filterType) {
+      console.log('No filter type specified, refreshing events');
       refreshEvents();
       return;
     }
 
     // Apply the appropriate filter
     const applyFilter = async () => {
-      // Make sure filterIds is a valid array
+      // Ensure filterIds is a valid array
       const safeFilterIds = Array.isArray(filterIds) ? filterIds : [];
       
-      // If we have both filterIds array and a single filterId, combine them safely
+      // Combine filterId and filterIds safely
       const combinedIds: string[] = [];
       
-      // Add filterId if it's a valid string
+      // Add filterId if it's valid
       if (filterId && typeof filterId === 'string') {
         combinedIds.push(filterId);
       }
       
       // Add all valid items from safeFilterIds
-      for (let i = 0; i < safeFilterIds.length; i++) {
-        const id = safeFilterIds[i];
+      safeFilterIds.forEach(id => {
         if (id && typeof id === 'string') {
           combinedIds.push(id);
         }
-      }
+      });
       
-      // Filter out any duplicate IDs
+      // Filter out duplicates
       const uniqueIds = [...new Set(combinedIds)];
       
       console.log(`Applying ${filterType} filter with IDs:`, uniqueIds);
