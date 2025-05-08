@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ContentWrapper from './ContentWrapper';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,16 +12,6 @@ const SchedulingContent: React.FC = () => {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-
-  // Log state changes for debugging
-  useEffect(() => {
-    console.log("SchedulingContent state:", { 
-      filterType, 
-      selectedFilter, 
-      selectedFilters, 
-      hasAdminAccess 
-    });
-  }, [filterType, selectedFilter, selectedFilters, hasAdminAccess]);
 
   return (
     <ContentWrapper
