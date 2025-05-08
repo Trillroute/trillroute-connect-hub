@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronRight, Check } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { EventLayer } from '../../context/calendarTypes';
 import {
   DropdownMenuCheckboxItem,
