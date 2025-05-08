@@ -1,9 +1,9 @@
 
 import { useState } from 'react';
 import { AdminLevelDetailed } from '@/types/adminLevel';
-import { Level } from '../LevelTable';
 
 export function useLevelDialogs() {
+  // Dialog states
   const [selectedLevel, setSelectedLevel] = useState<AdminLevelDetailed | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -11,50 +11,28 @@ export function useLevelDialogs() {
   const [isViewPermissionsDialogOpen, setIsViewPermissionsDialogOpen] = useState(false);
   const [isEditPermissionsDialogOpen, setIsEditPermissionsDialogOpen] = useState(false);
 
-  const openEditDialog = (level: Level | AdminLevelDetailed) => {
-    // Convert string id to number if needed
-    const adminLevel: AdminLevelDetailed = {
-      ...level,
-      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
-    };
-    
-    setSelectedLevel(adminLevel);
+  // Dialog openers
+  const openEditDialog = (level: AdminLevelDetailed) => {
+    setSelectedLevel(level);
     setIsEditDialogOpen(true);
   };
 
-  const openDeleteDialog = (level: Level | AdminLevelDetailed) => {
-    // Convert string id to number if needed
-    const adminLevel: AdminLevelDetailed = {
-      ...level,
-      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
-    };
-    
-    setSelectedLevel(adminLevel);
+  const openDeleteDialog = (level: AdminLevelDetailed) => {
+    setSelectedLevel(level);
     setIsDeleteDialogOpen(true);
   };
 
-  const openViewPermissionsDialog = (level: Level | AdminLevelDetailed) => {
-    // Convert string id to number if needed
-    const adminLevel: AdminLevelDetailed = {
-      ...level,
-      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
-    };
-    
-    setSelectedLevel(adminLevel);
+  const openViewPermissionsDialog = (level: AdminLevelDetailed) => {
+    setSelectedLevel(level);
     setIsViewPermissionsDialogOpen(true);
   };
 
-  const openEditPermissionsDialog = (level: Level | AdminLevelDetailed) => {
-    // Convert string id to number if needed
-    const adminLevel: AdminLevelDetailed = {
-      ...level,
-      id: typeof level.id === 'string' ? parseInt(level.id) : level.id
-    };
-    
-    setSelectedLevel(adminLevel);
+  const openEditPermissionsDialog = (level: AdminLevelDetailed) => {
+    setSelectedLevel(level);
     setIsEditPermissionsDialogOpen(true);
   };
 
+  // Reset all dialog states
   const resetDialogStates = () => {
     setIsCreateDialogOpen(false);
     setIsEditDialogOpen(false);
@@ -80,6 +58,6 @@ export function useLevelDialogs() {
     openDeleteDialog,
     openViewPermissionsDialog,
     openEditPermissionsDialog,
-    resetDialogStates
+    resetDialogStates,
   };
 }

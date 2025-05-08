@@ -95,6 +95,7 @@ export function useLevelManagement(
     effectiveCanDelete,
     visibleColumns,
     toggleColumnVisibility,
-    columnOptions
+    columnOptions,
+    findLevelById
   };
 }

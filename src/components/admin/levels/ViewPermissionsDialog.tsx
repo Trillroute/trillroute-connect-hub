@@ -5,11 +5,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { AdminLevelDetailed, PermissionModuleType } from '@/types/adminLevel';
-import { Check, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ViewPermissionsDialogProps {
@@ -23,8 +23,6 @@ const ViewPermissionsDialog = ({
   isOpen,
   onOpenChange,
 }: ViewPermissionsDialogProps) => {
-  if (!level) return null;
-
   const moduleLabels: Record<PermissionModuleType, string> = {
     student: 'Student Management',
     teacher: 'Teacher Management',
@@ -34,29 +32,31 @@ const ViewPermissionsDialog = ({
     level: 'Level Management',
   };
 
-  const modulePermissions: Record<PermissionModuleType, string[]> = {
-    student: level.studentPermissions || [],
-    teacher: level.teacherPermissions || [],
-    admin: level.adminPermissions || [],
-    lead: level.leadPermissions || [],
-    course: level.coursePermissions || [],
-    level: level.levelPermissions || [],
-  };
+  if (!level) return null;
 
-  const permissionOptions = ['view', 'add', 'edit', 'delete'];
+  const renderPermissionBadges = (permissions: string[], moduleType: string) => {
+    const colors: Record<string, string> = {
+      view: "bg-blue-100 text-blue-800",
+      add: "bg-green-100 text-green-800",
+      edit: "bg-yellow-100 text-yellow-800",
+      delete: "bg-red-100 text-red-800"
+    };
 
-  const renderPermissionStatus = (module: PermissionModuleType, permission: string) => {
-    const hasPermission = modulePermissions[module].includes(permission);
-
-    return hasPermission ? (
-      <div className="flex items-center text-green-600">
-        <Check className="h-4 w-4 mr-1" />
-        <span>Yes</span>
-      </div>
-    ) : (
-      <div className="flex items-center text-gray-400">
-        <X className="h-4 w-4 mr-1" />
-        <span>No</span>
+    return (
+      <div className="flex flex-wrap gap-1 mt-1">
+        <span className="text-xs font-medium text-gray-700 mr-1">{moduleType}:</span>
+        {permissions.length > 0 ? (
+          permissions.map(perm => (
+            <span 
+              key={`${moduleType}-${perm}`} 
+              className={`text-xs px-2 py-0.5 rounded ${colors[perm] || "bg-gray-100 text-gray-800"}`}
+            >
+              {perm}
+            </span>
+          ))
+        ) : (
+          <span className="text-xs text-gray-500">No permissions</span>
+        )}
       </div>
     );
   };
@@ -65,19 +65,14 @@ const ViewPermissionsDialog = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>
-            Permissions for {level.name}
-            <Badge variant="outline" className="ml-2">
-              ID: {level.id}
-            </Badge>
-          </DialogTitle>
+          <DialogTitle>Permissions for {level.name}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-[500px] pr-4">
           <Tabs defaultValue="student">
-            <TabsList className="mb-4">
+            <TabsList className="w-full flex overflow-auto">
               {Object.keys(moduleLabels).map((module) => (
-                <TabsTrigger key={module} value={module}>
+                <TabsTrigger key={module} value={module} className="flex-1">
                   {moduleLabels[module as PermissionModuleType]}
                 </TabsTrigger>
               ))}
@@ -85,6 +80,8 @@ const ViewPermissionsDialog = ({
 
             {Object.keys(moduleLabels).map((moduleKey) => {
               const module = moduleKey as PermissionModuleType;
+              const permissionKey = `${module}Permissions` as keyof typeof level;
+              const permissions = level[permissionKey] as string[];
               
               return (
                 <TabsContent key={module} value={module}>
@@ -93,17 +90,11 @@ const ViewPermissionsDialog = ({
                       {moduleLabels[module]} Permissions
                     </h3>
                     <div className="space-y-3">
-                      {permissionOptions.map((permission) => (
-                        <div
-                          key={permission}
-                          className="flex justify-between items-center p-2 border-b last:border-b-0"
-                        >
-                          <div className="capitalize">
-                            {permission} {moduleLabels[module].toLowerCase().replace(' management', '')}
-                          </div>
-                          {renderPermissionStatus(module, permission)}
-                        </div>
-                      ))}
+                      {permissions.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No permissions assigned.</p>
+                      ) : (
+                        renderPermissionBadges(permissions, moduleLabels[module])
+                      )}
                     </div>
                   </div>
                 </TabsContent>
@@ -111,6 +102,10 @@ const ViewPermissionsDialog = ({
             })}
           </Tabs>
         </ScrollArea>
+
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
