@@ -35,6 +35,8 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
     }
   };
 
+  console.log("Rendering FilteredCalendar with:", { filterType, filterValues, hasAdminAccess, title });
+
   return (
     <CalendarProvider>
       <div className="h-full flex flex-col">

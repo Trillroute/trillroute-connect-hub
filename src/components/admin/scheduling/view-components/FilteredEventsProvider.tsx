@@ -24,6 +24,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   // Apply filters when filter type or IDs change
   useEffect(() => {
     if (!filterType) {
+      console.log("No filterType specified, refreshing all events");
       refreshEvents();
       return;
     }
@@ -31,7 +32,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     // Apply the appropriate filter
     const applyFilter = async () => {
       // Make sure filterIds is an array
-      const safeFilterIds = Array.isArray(filterIds) ? filterIds : [];
+      const safeFilterIds = Array.isArray(filterIds) ? [...filterIds] : [];
       
       // If we have both filterIds array and a single filterId, combine them
       const ids = filterId 
@@ -40,41 +41,48 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       
       console.log(`Applying ${filterType} filter with IDs:`, ids);
       
-      switch (filterType) {
-        case 'course':
-          await fetchFilteredEvents({ courseIds: ids, setEvents });
-          break;
-        case 'skill':
-          await fetchFilteredEvents({ skillIds: ids, setEvents });
-          break;
-        case 'teacher':
-          await fetchFilteredEvents({ 
-            roleFilter: ['teacher'],
-            userIds: ids,
-            setEvents 
-          });
-          break;
-        case 'student':
-          await fetchFilteredEvents({ 
-            roleFilter: ['student'],
-            userIds: ids,
-            setEvents 
-          });
-          break;
-        case 'admin':
-          await fetchFilteredEvents({ 
-            roleFilter: ['admin'], 
-            setEvents 
-          });
-          break;
-        case 'staff':
-          await fetchFilteredEvents({ 
-            roleFilter: ['teacher', 'admin', 'superadmin'], 
-            setEvents 
-          });
-          break;
-        default:
-          refreshEvents();
+      try {
+        switch (filterType) {
+          case 'course':
+            await fetchFilteredEvents({ courseIds: ids, setEvents });
+            break;
+          case 'skill':
+            await fetchFilteredEvents({ skillIds: ids, setEvents });
+            break;
+          case 'teacher':
+            await fetchFilteredEvents({ 
+              roleFilter: ['teacher'],
+              userIds: ids,
+              setEvents 
+            });
+            break;
+          case 'student':
+            await fetchFilteredEvents({ 
+              roleFilter: ['student'],
+              userIds: ids,
+              setEvents 
+            });
+            break;
+          case 'admin':
+            await fetchFilteredEvents({ 
+              roleFilter: ['admin'], 
+              setEvents 
+            });
+            break;
+          case 'staff':
+            await fetchFilteredEvents({ 
+              roleFilter: ['teacher', 'admin', 'superadmin'], 
+              setEvents 
+            });
+            break;
+          default:
+            console.log("Unknown filterType, refreshing all events");
+            refreshEvents();
+        }
+      } catch (error) {
+        console.error("Error applying filter:", error);
+        // Fallback to showing all events
+        refreshEvents();
       }
     };
 

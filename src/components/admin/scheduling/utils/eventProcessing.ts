@@ -24,6 +24,8 @@ export const fetchFilteredEvents = async ({
   setEvents
 }: FilterOptions): Promise<void> => {
   try {
+    console.log('Fetching filtered events with options:', { courseId, courseIds, skillId, skillIds, userId, userIds, roleFilter });
+    
     let query = supabase
       .from('user_events')
       .select(`
@@ -34,11 +36,11 @@ export const fetchFilteredEvents = async ({
     // Process course filtering
     const coursesToFilter: string[] = [];
     
-    // Add courseIds if they exist
+    // Safely add courseIds if they exist
     if (courseIds && Array.isArray(courseIds)) {
-      for (const id of courseIds) {
+      courseIds.forEach(id => {
         if (id) coursesToFilter.push(id);
-      }
+      });
     }
     
     // Add single courseId if it exists
@@ -54,11 +56,11 @@ export const fetchFilteredEvents = async ({
     // Process skill filtering
     const skillsToFilter: string[] = [];
     
-    // Add skillIds if they exist
+    // Safely add skillIds if they exist
     if (skillIds && Array.isArray(skillIds)) {
-      for (const id of skillIds) {
+      skillIds.forEach(id => {
         if (id) skillsToFilter.push(id);
-      }
+      });
     }
     
     // Add single skillId if it exists
@@ -74,11 +76,11 @@ export const fetchFilteredEvents = async ({
     // Process user filtering
     const usersToFilter: string[] = [];
     
-    // Add userIds if they exist
+    // Safely add userIds if they exist
     if (userIds && Array.isArray(userIds)) {
-      for (const id of userIds) {
+      userIds.forEach(id => {
         if (id) usersToFilter.push(id);
-      }
+      });
     }
     
     // Add single userId if it exists
@@ -121,6 +123,7 @@ export const fetchFilteredEvents = async ({
       color: getEventColorByRole(event.custom_users?.role)
     })) : [];
     
+    console.log(`Successfully mapped ${mappedEvents.length} events`);
     setEvents(mappedEvents);
   } catch (err) {
     console.error("Failed to fetch filtered events:", err);

@@ -90,6 +90,7 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       />;
       
     case 'scheduling':
+      console.log("Rendering SchedulingContent component");
       return <SchedulingContent />;
       
     case 'user-availability':
