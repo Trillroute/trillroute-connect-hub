@@ -50,7 +50,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   };
 
   // Handle save event
-  const handleSaveEvent = (eventData) => {
+  const handleSaveEvent = (eventData: any) => {
     handleCreateEvent(eventData);
     setIsCreateEventOpen(false);
   };
@@ -61,6 +61,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         hasAdminAccess={hasAdminAccess}
         title={title}
         description={description}
+        initialFilterType={initialFilterType}
       />
       
       {isCreateEventOpen && (

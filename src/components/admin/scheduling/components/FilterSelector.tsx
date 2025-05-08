@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useCourses } from '@/hooks/useCourses';
 import { useSkills } from '@/hooks/useSkills';
@@ -5,10 +6,13 @@ import { useTeachers } from '@/hooks/useTeachers';
 import { useStudents } from '@/hooks/useStudents';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
 import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 export interface FilterOption {
   value: string;
   label: string;
 }
+
 interface FilterSelectorProps {
   filterType: string | null;
   setFilterType: (type: string | null) => void;
@@ -16,8 +20,9 @@ interface FilterSelectorProps {
   setSelectedFilter: (id: string | null) => void;
   selectedFilters?: string[];
   setSelectedFilters?: (ids: string[]) => void;
-  showFilterTypeTabs?: boolean; // New prop to control filter type tabs visibility
+  showFilterTypeTabs?: boolean; // Prop to control filter type tabs visibility
 }
+
 const FilterSelector: React.FC<FilterSelectorProps> = ({
   filterType,
   setFilterType,
@@ -64,13 +69,14 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       if (data) {
         const mappedUsers = data.map(user => ({
           id: user.id,
-          name: `${user.first_name || ''} ${user.last_name || ''} (${user.role || ''})`
+          name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unnamed User' + ` (${user.role || ''})`
         }));
         setAllUsers(mappedUsers);
         console.log('Fetched staff members:', mappedUsers.length);
       }
     } catch (error) {
       console.error('Error fetching staff members:', error);
+      setAllUsers([]); // Ensure we reset to empty array on error
     } finally {
       setLoadingUsers(false);
     }
@@ -85,14 +91,12 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (filterType === 'staff') {
       fetchStaffMembers();
     }
+  }, [filterType, setSelectedFilter, setSelectedFilters, fetchStaffMembers]);
 
-    // Update filter options based on the new filter type
-    updateFilterOptions();
-  }, [filterType]);
-
-  // Update filter options whenever dependencies change
+  // Update filter options based on the current filter type
   const updateFilterOptions = useCallback(() => {
     let newOptions: Option[] = [];
+    
     switch (filterType) {
       case 'course':
         newOptions = Array.isArray(courses) ? courses.map(course => ({
@@ -127,20 +131,23 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       default:
         newOptions = [];
     }
+    
     setFilterOptions(newOptions);
-    console.log(`Generated ${newOptions.length} options for ${filterType}`);
+    console.log(`Generated ${newOptions.length} options for ${filterType || 'null'}`);
   }, [filterType, courses, skills, teachers, students, allUsers]);
 
   // Update filter options when dependencies change
   useEffect(() => {
     updateFilterOptions();
   }, [courses, skills, teachers, students, allUsers, updateFilterOptions]);
+
   const handleMultiSelectChange = (selected: string[]) => {
     console.log("MultiSelect selection changed:", selected);
     setSelectedFilters(selected || []);
     // Also update the single selection state for backward compatibility
     setSelectedFilter(selected && selected.length > 0 ? selected[0] : null);
   };
+
   const isLoading = () => {
     if (filterType === 'course') return coursesLoading;
     if (filterType === 'skill') return skillsLoading;
@@ -149,34 +156,46 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (filterType === 'staff') return loadingUsers;
     return false;
   };
-  const options = [{
-    type: 'all',
-    label: 'All'
-  }, {
-    type: 'teacher',
-    label: 'Teachers'
-  }, {
-    type: 'student',
-    label: 'Students'
-  }, {
-    type: 'admin',
-    label: 'Admins'
-  }, {
-    type: 'staff',
-    label: 'Staff'
-  }, {
-    type: 'course',
-    label: 'Course'
-  }, {
-    type: 'skill',
-    label: 'Skill'
-  }];
-  return <div className="flex flex-col gap-2 w-full">
-      {/* Segmented control for primary filter types - only show if showFilterTypeTabs is true */}
-      {showFilterTypeTabs}
+
+  const options = [
+    { type: 'all', label: 'All' },
+    { type: 'teacher', label: 'Teachers' }, 
+    { type: 'student', label: 'Students' },
+    { type: 'admin', label: 'Admins' },
+    { type: 'staff', label: 'Staff' },
+    { type: 'course', label: 'Course' },
+    { type: 'skill', label: 'Skill' }
+  ];
+
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      {/* Only show filter type tabs if showFilterTypeTabs is true */}
+      {showFilterTypeTabs && (
+        <Tabs defaultValue={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? null : value)}>
+          <TabsList className="flex rounded-md bg-gray-100 p-1">
+            <TabsTrigger value="all" className="flex-1 px-3 py-1.5 text-sm font-medium">All</TabsTrigger>
+            <TabsTrigger value="teacher" className="flex-1 px-3 py-1.5 text-sm font-medium">Teachers</TabsTrigger>
+            <TabsTrigger value="student" className="flex-1 px-3 py-1.5 text-sm font-medium">Students</TabsTrigger>
+            <TabsTrigger value="admin" className="flex-1 px-3 py-1.5 text-sm font-medium">Admins</TabsTrigger>
+            <TabsTrigger value="staff" className="flex-1 px-3 py-1.5 text-sm font-medium">Staff</TabsTrigger>
+            <TabsTrigger value="course" className="flex-1 px-3 py-1.5 text-sm font-medium">Course</TabsTrigger>
+            <TabsTrigger value="skill" className="flex-1 px-3 py-1.5 text-sm font-medium">Skill</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
 
       {/* Secondary filter dropdown with multi-select */}
-      {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && <MultiSelect options={filterOptions || []} selected={selectedFilters || []} onChange={handleMultiSelectChange} placeholder={`Select ${filterType || ''}(s)${isLoading() ? ' (Loading...)' : ''}`} className="w-full bg-white" />}
-    </div>;
+      {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
+        <MultiSelect 
+          options={filterOptions || []} 
+          selected={selectedFilters || []} 
+          onChange={handleMultiSelectChange} 
+          placeholder={`Select ${filterType || ''}(s)${isLoading() ? ' (Loading...)' : ''}`} 
+          className="w-full bg-white" 
+        />
+      )}
+    </div>
+  );
 };
+
 export default FilterSelector;

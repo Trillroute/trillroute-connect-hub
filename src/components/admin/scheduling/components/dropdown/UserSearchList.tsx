@@ -25,13 +25,13 @@ const UserSearchList: React.FC<UserSearchListProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   
-  const filteredUsers = getFilteredUsers(layerId) || [];
+  // Ensure we have a valid array of users
+  const users = getFilteredUsers(layerId) || [];
   
   // Filter users based on search query
-  const searchFilteredUsers = filteredUsers
-    .filter(user => 
-      user.name.toLowerCase().includes((searchQuery || '').toLowerCase())
-    );
+  const searchFilteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes((searchQuery || '').toLowerCase())
+  );
   
   return (
     <>
