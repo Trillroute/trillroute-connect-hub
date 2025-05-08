@@ -31,11 +31,16 @@ export function MultiSelect({
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLDivElement>(null);
 
-  // Ensure options and selected are always valid arrays
+  // Ensure options is always a valid array
   const safeOptions: Option[] = Array.isArray(options) ? options : [];
+  
+  // Ensure selected is always a valid array
   const safeSelected: string[] = Array.isArray(selected) ? selected : [];
 
-  // Close popover when clicking outside
+  // Log for debugging
+  console.log("MultiSelect options:", safeOptions);
+  console.log("MultiSelect selected:", safeSelected);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
@@ -48,7 +53,6 @@ export function MultiSelect({
     };
   }, []);
 
-  // Handle option selection
   const handleSelect = (value: string) => {
     if (safeSelected.includes(value)) {
       onChange(safeSelected.filter(item => item !== value));
@@ -57,7 +61,6 @@ export function MultiSelect({
     }
   };
 
-  // Handle option removal
   const handleRemove = (value: string) => {
     onChange(safeSelected.filter(item => item !== value));
   };
@@ -111,7 +114,7 @@ export function MultiSelect({
             <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0 bg-white" align="start">
+        <PopoverContent className="w-full p-0 bg-white" align="start" avoidCollisions>
           <Command>
             <ScrollArea className="max-h-[300px]">
               <CommandGroup>
@@ -134,9 +137,7 @@ export function MultiSelect({
                     </CommandItem>
                   ))
                 ) : (
-                  <CommandEmpty className="py-2 px-2 text-center text-sm text-muted-foreground">
-                    No options available
-                  </CommandEmpty>
+                  <CommandEmpty className="py-2 px-2 text-center text-sm text-muted-foreground">No options available</CommandEmpty>
                 )}
               </CommandGroup>
             </ScrollArea>
