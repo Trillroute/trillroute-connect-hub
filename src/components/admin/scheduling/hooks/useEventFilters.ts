@@ -25,8 +25,8 @@ export const useEventFilters = ({
       if (userId || userIds?.length > 0 || roleFilter?.length > 0 || courseId || skillId) {
         await fetchFilteredEvents({
           userIds: userId ? [userId] : userIds,
-          courseId,
-          skillId,
+          courseIds: courseId ? [courseId] : undefined,
+          skillIds: skillId ? [skillId] : undefined,
           roleFilter,
           setEvents
         });
