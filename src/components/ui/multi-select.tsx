@@ -31,6 +31,12 @@ export function MultiSelect({
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLDivElement>(null);
 
+  // Ensure options is always an array
+  const safeOptions = Array.isArray(options) ? options : [];
+  
+  // Ensure selected is always an array
+  const safeSelected = Array.isArray(selected) ? selected : [];
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
@@ -44,15 +50,15 @@ export function MultiSelect({
   }, []);
 
   const handleSelect = (value: string) => {
-    if (selected.includes(value)) {
-      onChange(selected.filter(item => item !== value));
+    if (safeSelected.includes(value)) {
+      onChange(safeSelected.filter(item => item !== value));
     } else {
-      onChange([...selected, value]);
+      onChange([...safeSelected, value]);
     }
   };
 
   const handleRemove = (value: string) => {
-    onChange(selected.filter(item => item !== value));
+    onChange(safeSelected.filter(item => item !== value));
   };
 
   return (
@@ -70,9 +76,9 @@ export function MultiSelect({
             onClick={() => setOpen(!open)}
           >
             <div className="flex flex-wrap gap-1">
-              {selected.length > 0 ? (
-                selected.map(value => {
-                  const selectedOption = options.find(opt => opt.value === value);
+              {safeSelected.length > 0 ? (
+                safeSelected.map(value => {
+                  const selectedOption = safeOptions.find(opt => opt.value === value);
                   return (
                     <Badge key={value} variant="secondary" className="mr-1 mb-1">
                       {selectedOption?.label || value}
@@ -104,28 +110,29 @@ export function MultiSelect({
             <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0 bg-white" align="start">
+        <PopoverContent className="w-full p-0 bg-white" align="start" avoidCollisions>
           <Command>
             <ScrollArea className="max-h-[300px]">
               <CommandGroup className="overflow-visible">
-                {options.map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    onSelect={() => handleSelect(option.value)}
-                    className="cursor-pointer flex items-center gap-2"
-                  >
-                    <div
-                      className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                        selected.includes(option.value) ? "bg-primary text-primary-foreground" : "opacity-50"
-                      )}
+                {safeOptions.length > 0 ? (
+                  safeOptions.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      onSelect={() => handleSelect(option.value)}
+                      className="cursor-pointer flex items-center gap-2"
                     >
-                      {selected.includes(option.value) && <Check className="h-3 w-3" />}
-                    </div>
-                    {option.label}
-                  </CommandItem>
-                ))}
-                {options.length === 0 && (
+                      <div
+                        className={cn(
+                          "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                          safeSelected.includes(option.value) ? "bg-primary text-primary-foreground" : "opacity-50"
+                        )}
+                      >
+                        {safeSelected.includes(option.value) && <Check className="h-3 w-3" />}
+                      </div>
+                      {option.label}
+                    </CommandItem>
+                  ))
+                ) : (
                   <div className="py-2 px-2 text-center text-sm text-muted-foreground">No options available</div>
                 )}
               </CommandGroup>

@@ -32,7 +32,7 @@ export const fetchFilteredEvents = async ({
       `);
     
     // Process course filtering
-    if ((courseIds && courseIds.length > 0) || courseId) {
+    if ((courseIds && Array.isArray(courseIds) && courseIds.length > 0) || courseId) {
       const coursesToFilter: string[] = [];
       
       // Add courseIds if it exists and has items
@@ -55,7 +55,7 @@ export const fetchFilteredEvents = async ({
     }
     
     // Process skill filtering
-    if ((skillIds && skillIds.length > 0) || skillId) {
+    if ((skillIds && Array.isArray(skillIds) && skillIds.length > 0) || skillId) {
       const skillsToFilter: string[] = [];
       
       // Add skillIds if it exists and has items
@@ -78,7 +78,7 @@ export const fetchFilteredEvents = async ({
     }
     
     // Process user filtering
-    if ((userIds && userIds.length > 0) || userId) {
+    if ((userIds && Array.isArray(userIds) && userIds.length > 0) || userId) {
       const usersToFilter: string[] = [];
       
       // Add userIds if it exists and has items

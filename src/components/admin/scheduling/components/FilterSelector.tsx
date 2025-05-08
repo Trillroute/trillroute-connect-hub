@@ -28,10 +28,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   selectedFilters = [],
   setSelectedFilters = () => {}
 }) => {
-  const { courses } = useCourses();
-  const { skills } = useSkills();
-  const { teachers } = useTeachers();
-  const { students } = useStudents();
+  const { courses, loading: coursesLoading } = useCourses();
+  const { skills, loading: skillsLoading } = useSkills();
+  const { teachers, loading: teachersLoading } = useTeachers();
+  const { students, loading: studentsLoading } = useStudents();
 
   // Reset selected filters when filter type changes
   useEffect(() => {
@@ -43,25 +43,25 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   const getFilterOptions = (): Option[] => {
     switch (filterType) {
       case 'course':
-        return courses.map(course => ({ 
+        return Array.isArray(courses) ? courses.map(course => ({ 
           value: course.id, 
-          label: course.title 
-        }));
+          label: course.title || 'Unnamed Course'
+        })) : [];
       case 'skill':
-        return skills.map(skill => ({ 
+        return Array.isArray(skills) ? skills.map(skill => ({ 
           value: skill.id, 
-          label: skill.name 
-        }));
+          label: skill.name || 'Unnamed Skill'
+        })) : [];
       case 'teacher':
-        return teachers.map(teacher => ({ 
+        return Array.isArray(teachers) ? teachers.map(teacher => ({ 
           value: teacher.id, 
-          label: `${teacher.first_name} ${teacher.last_name}` 
-        }));
+          label: `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || 'Unnamed Teacher'
+        })) : [];
       case 'student':
-        return students.map(student => ({ 
+        return Array.isArray(students) ? students.map(student => ({ 
           value: student.id, 
-          label: `${student.first_name} ${student.last_name}` 
-        }));
+          label: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Unnamed Student'
+        })) : [];
       default:
         return [];
     }
@@ -82,6 +82,18 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     // Also update the single selection state for backward compatibility
     setSelectedFilter(selected.length > 0 ? selected[0] : null);
   };
+
+  const isLoading = () => {
+    if (filterType === 'course') return coursesLoading;
+    if (filterType === 'skill') return skillsLoading;
+    if (filterType === 'teacher') return teachersLoading;
+    if (filterType === 'student') return studentsLoading;
+    return false;
+  };
+
+  const options2 = getFilterOptions();
+  console.log(`Filter options for ${filterType}:`, options2);
+  console.log("Selected filters:", selectedFilters);
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -112,7 +124,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
           options={getFilterOptions()}
           selected={selectedFilters}
           onChange={handleMultiSelectChange}
-          placeholder={`Select ${filterType}(s)`}
+          placeholder={`Select ${filterType}(s)${isLoading() ? ' (Loading...)' : ''}`}
           className="w-full bg-white"
         />
       )}
