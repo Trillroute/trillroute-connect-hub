@@ -50,8 +50,10 @@ const CreateLevelDialog: React.FC<CreateLevelDialogProps> = ({
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    // Create level data with required name and description from form values
     const levelData: Omit<AdminLevelDetailed, 'id'> = {
-      ...values,
+      name: values.name, // Ensure name is properly set from form values
+      description: values.description,
       studentPermissions: [],
       teacherPermissions: [],
       adminPermissions: [],
