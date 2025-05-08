@@ -1,24 +1,38 @@
 
-import React from 'react';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Edit, Trash, Shield } from 'lucide-react';
-import { AdminLevelDetailed } from '@/types/adminLevel';
+import React, { useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Eye, Pencil, Shield, Trash } from 'lucide-react';
 
-export interface Level extends Omit<AdminLevelDetailed, 'id'> {
-  id: string; // Use string type for the id in the UI layer
+export interface Level {
+  id: string;
+  name: string;
+  description: string;
+  studentPermissions: string[];
+  teacherPermissions: string[];
+  adminPermissions: string[];
+  leadPermissions: string[];
+  coursePermissions: string[];
+  levelPermissions: string[];
 }
 
 interface LevelTableProps {
   levels: Level[];
   isLoading: boolean;
-  onEdit: (level: AdminLevelDetailed) => void;
-  onDelete: (level: AdminLevelDetailed) => void;
-  onViewPermissions: (level: AdminLevelDetailed) => void;
+  onEdit?: (level: Level) => void;
+  onDelete?: (level: Level) => void;
+  onViewPermissions: (level: Level) => void;
+  onEditPermissions?: (level: Level) => void;
   selectedIds: string[];
   setSelectedIds: (ids: string[]) => void;
-  onBulkDelete?: (ids: string[]) => void;
   visibleColumns: string[];
 }
 
@@ -28,107 +42,103 @@ const LevelTable: React.FC<LevelTableProps> = ({
   onEdit,
   onDelete,
   onViewPermissions,
+  onEditPermissions,
   selectedIds,
   setSelectedIds,
-  onBulkDelete,
   visibleColumns,
 }) => {
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(levels.map((level) => level.id));
-    } else {
+  // Toggle selection of a single item
+  const toggleSelection = (id: string) => {
+    setSelectedIds(
+      selectedIds.includes(id)
+        ? selectedIds.filter((selectedId) => selectedId !== id)
+        : [...selectedIds, id]
+    );
+  };
+
+  // Toggle selection of all items
+  const toggleSelectAll = () => {
+    if (selectedIds.length === levels.length) {
       setSelectedIds([]);
-    }
-  };
-
-  const handleSelectLevel = (levelId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIds([...selectedIds, levelId]);
     } else {
-      setSelectedIds(selectedIds.filter((id) => id !== levelId));
+      setSelectedIds(levels.map((level) => level.id));
     }
   };
 
-  // Convert string ID to number when passing to handlers
-  const convertLevel = (level: Level): AdminLevelDetailed => {
-    return {
-      ...level,
-      id: Number(level.id)
-    };
+  // Calculate total permissions for a level
+  const calculateTotalPermissions = (level: Level): number => {
+    return (
+      level.studentPermissions.length +
+      level.teacherPermissions.length +
+      level.adminPermissions.length +
+      level.leadPermissions.length +
+      level.coursePermissions.length +
+      level.levelPermissions.length
+    );
   };
 
   return (
-    <div className="rounded-md border">
+    <div className="relative">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">
               <Checkbox
-                checked={selectedIds.length === levels.length && levels.length > 0}
-                onCheckedChange={handleSelectAll}
+                checked={
+                  levels.length > 0 && selectedIds.length === levels.length
+                }
+                onCheckedChange={toggleSelectAll}
                 aria-label="Select all"
               />
             </TableHead>
-            {visibleColumns.includes('name') && <TableHead>Name</TableHead>}
-            {visibleColumns.includes('description') && <TableHead>Description</TableHead>}
-            {visibleColumns.includes('permissions') && <TableHead>Permissions</TableHead>}
+            {visibleColumns.includes('name') && (
+              <TableHead>Name</TableHead>
+            )}
+            {visibleColumns.includes('description') && (
+              <TableHead>Description</TableHead>
+            )}
+            {visibleColumns.includes('permissions') && (
+              <TableHead>Permissions</TableHead>
+            )}
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center">
+              <TableCell colSpan={5} className="text-center py-8">
                 Loading...
               </TableCell>
             </TableRow>
           ) : levels.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center">
-                No admin levels found
+              <TableCell colSpan={5} className="text-center py-8">
+                No levels found.
               </TableCell>
             </TableRow>
           ) : (
             levels.map((level) => (
               <TableRow key={level.id}>
-                <TableCell>
+                <TableCell className="p-2">
                   <Checkbox
                     checked={selectedIds.includes(level.id)}
-                    onCheckedChange={(checked) => handleSelectLevel(level.id, !!checked)}
+                    onCheckedChange={() => toggleSelection(level.id)}
                     aria-label={`Select ${level.name}`}
                   />
                 </TableCell>
-                {visibleColumns.includes('name') && <TableCell>{level.name}</TableCell>}
-                {visibleColumns.includes('description') && <TableCell>{level.description}</TableCell>}
+                {visibleColumns.includes('name') && (
+                  <TableCell className="font-medium">{level.name}</TableCell>
+                )}
+                {visibleColumns.includes('description') && (
+                  <TableCell className="max-w-xs truncate">
+                    {level.description}
+                  </TableCell>
+                )}
                 {visibleColumns.includes('permissions') && (
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {level.studentPermissions?.includes('view') && (
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">
-                          Students
-                        </span>
-                      )}
-                      {level.teacherPermissions?.includes('view') && (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">
-                          Teachers
-                        </span>
-                      )}
-                      {level.adminPermissions?.includes('view') && (
-                        <span className="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded">
-                          Admins
-                        </span>
-                      )}
-                      {level.leadPermissions?.includes('view') && (
-                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">
-                          Leads
-                        </span>
-                      )}
-                      {level.coursePermissions?.includes('view') && (
-                        <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded">
-                          Courses
-                        </span>
-                      )}
-                    </div>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {calculateTotalPermissions(level)} permissions
+                    </span>
                   </TableCell>
                 )}
                 <TableCell className="text-right">
@@ -136,27 +146,45 @@ const LevelTable: React.FC<LevelTableProps> = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onViewPermissions(convertLevel(level))}
-                      title="Permissions"
+                      onClick={() => onViewPermissions(level)}
+                      title="View permissions"
                     >
-                      <Shield className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(convertLevel(level))}
-                      title="Edit"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(convertLevel(level))}
-                      title="Delete"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
+                    
+                    {onEditPermissions && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEditPermissions(level)}
+                        title="Edit permissions"
+                      >
+                        <Shield className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {onEdit && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onEdit(level)}
+                        title="Edit level"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {onDelete && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDelete(level)}
+                        title="Delete level"
+                        className="text-red-500"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

@@ -1,90 +1,88 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { LayoutList, LayoutGrid, Grid2x2, Columns } from 'lucide-react';
+import { Grid2X2, LayoutList, Settings } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-export type ViewMode = 'list' | 'grid' | 'tile';
+import { ViewMode } from './hooks/useLevelDisplay';
 
 interface ViewModeControlsProps {
   viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
-  visibleColumns?: Record<string, boolean>;
-  onColumnVisibilityChange?: (column: string, isVisible: boolean) => void;
-  columnOptions?: { field: string, label: string }[];
+  setViewMode: (mode: ViewMode) => void;
+  columns: string[];
+  setColumns: (columns: string[]) => void;
 }
 
 const ViewModeControls: React.FC<ViewModeControlsProps> = ({
   viewMode,
-  onViewModeChange,
-  visibleColumns = {},
-  onColumnVisibilityChange,
-  columnOptions = [],
+  setViewMode,
+  columns,
+  setColumns,
 }) => {
+  const toggleColumn = (column: string) => {
+    const updatedColumns = columns.includes(column)
+      ? columns.filter((col) => col !== column)
+      : [...columns, column];
+    
+    setColumns(updatedColumns);
+  };
+
   return (
-    <div className="flex gap-2 mb-4 items-center">
-      <Button
-        size="sm"
-        variant={viewMode === 'list' ? "secondary" : "outline"}
-        onClick={() => onViewModeChange('list')}
-        title="List view"
-      >
-        <LayoutList className="w-4 h-4" />
-      </Button>
-      <Button
-        size="sm"
-        variant={viewMode === 'grid' ? "secondary" : "outline"}
-        onClick={() => onViewModeChange('grid')}
-        title="Grid view"
-      >
-        <LayoutGrid className="w-4 h-4" />
-      </Button>
-      <Button
-        size="sm"
-        variant={viewMode === 'tile' ? "secondary" : "outline"}
-        onClick={() => onViewModeChange('tile')}
-        title="Tile view"
-      >
-        <Grid2x2 className="w-4 h-4" />
-      </Button>
+    <div className="flex items-center space-x-2">
+      <div className="border rounded-md overflow-hidden flex">
+        <Button
+          variant={viewMode === 'table' ? 'default' : 'ghost'}
+          className="rounded-none"
+          onClick={() => setViewMode('table')}
+          size="sm"
+        >
+          <LayoutList className="h-4 w-4" />
+        </Button>
+        <Button
+          variant={viewMode === 'grid' ? 'default' : 'ghost'}
+          className="rounded-none"
+          onClick={() => setViewMode('grid')}
+          size="sm"
+        >
+          <Grid2X2 className="h-4 w-4" />
+        </Button>
+      </div>
       
-      {onColumnVisibilityChange && columnOptions.length > 0 && (
+      {viewMode === 'table' && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              title="Column visibility"
-              className="ml-2"
-            >
-              <Columns className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-1" />
               Columns
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            className="w-56 bg-background z-50" 
-            sideOffset={5}
-          >
-            {columnOptions.map((column) => (
-              <DropdownMenuCheckboxItem
-                key={column.field}
-                checked={visibleColumns[column.field] !== false} // Default to true if not set
-                onCheckedChange={(checked) => {
-                  if (onColumnVisibilityChange) {
-                    onColumnVisibilityChange(column.field, checked);
-                  }
-                }}
-                disabled={column.field === 'name'} // Name column always visible
-              >
-                {column.label}
-              </DropdownMenuCheckboxItem>
-            ))}
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={columns.includes('name')}
+              onCheckedChange={() => toggleColumn('name')}
+            >
+              Name
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={columns.includes('description')}
+              onCheckedChange={() => toggleColumn('description')}
+            >
+              Description
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={columns.includes('permissions')}
+              onCheckedChange={() => toggleColumn('permissions')}
+            >
+              Permissions
+            </DropdownMenuCheckboxItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}

@@ -3,10 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import ViewModeControls from './ViewModeControls';
+import { ViewMode } from './hooks/useLevelDisplay';
 
 interface LevelHeaderProps {
-  viewMode: 'grid' | 'table';
-  setViewMode: (mode: 'grid' | 'table') => void;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
   columns: string[];
   setColumns: (columns: string[]) => void;
   selectedIds: string[];

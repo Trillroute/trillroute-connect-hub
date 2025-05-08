@@ -20,9 +20,9 @@ interface LevelDialogsProps {
   setIsDeleteDialogOpen: (isOpen: boolean) => void;
   setIsViewPermissionsDialogOpen: (isOpen: boolean) => void;
   setIsEditPermissionsDialogOpen: (isOpen: boolean) => void;
-  handleCreateLevel: (levelData: Omit<AdminLevelDetailed, 'id'>) => void;
-  handleUpdateLevel: (id: number, levelData: Partial<AdminLevelDetailed>) => void;
-  handleDeleteLevel: () => void;
+  handleCreateLevel: (levelData: Omit<AdminLevelDetailed, 'id'>) => Promise<boolean>;
+  handleUpdateLevel: (id: number, levelData: Partial<AdminLevelDetailed>) => Promise<boolean>;
+  handleDeleteLevel: (level: AdminLevelDetailed | null) => Promise<boolean>;
 }
 
 const LevelDialogs: React.FC<LevelDialogsProps> = ({
@@ -44,42 +44,52 @@ const LevelDialogs: React.FC<LevelDialogsProps> = ({
 }) => {
   return (
     <>
-      <CreateLevelDialog
-        isOpen={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onCreateLevel={handleCreateLevel}
-        isLoading={isLoading}
-      />
+      {isCreateDialogOpen && (
+        <CreateLevelDialog
+          isOpen={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          onCreateLevel={handleCreateLevel}
+          isLoading={isLoading}
+        />
+      )}
 
-      <EditLevelDialog
-        level={selectedLevel}
-        isOpen={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        onUpdateLevel={handleUpdateLevel}
-        isLoading={isLoading}
-      />
+      {selectedLevel && isEditDialogOpen && (
+        <EditLevelDialog
+          level={selectedLevel}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onUpdateLevel={handleUpdateLevel}
+          isLoading={isLoading}
+        />
+      )}
 
-      <DeleteLevelDialog
-        level={selectedLevel}
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onDelete={handleDeleteLevel}
-        isLoading={isLoading}
-      />
+      {selectedLevel && isDeleteDialogOpen && (
+        <DeleteLevelDialog
+          level={selectedLevel}
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onDelete={() => handleDeleteLevel(selectedLevel)}
+          isLoading={isLoading}
+        />
+      )}
 
-      <ViewPermissionsDialog
-        level={selectedLevel}
-        isOpen={isViewPermissionsDialogOpen}
-        onOpenChange={setIsViewPermissionsDialogOpen}
-      />
+      {selectedLevel && isViewPermissionsDialogOpen && (
+        <ViewPermissionsDialog
+          level={selectedLevel}
+          isOpen={isViewPermissionsDialogOpen}
+          onOpenChange={setIsViewPermissionsDialogOpen}
+        />
+      )}
 
-      <PermissionsDialog
-        level={selectedLevel}
-        isOpen={isEditPermissionsDialogOpen}
-        onOpenChange={setIsEditPermissionsDialogOpen}
-        onUpdatePermissions={handleUpdateLevel}
-        isLoading={isLoading}
-      />
+      {selectedLevel && isEditPermissionsDialogOpen && (
+        <PermissionsDialog
+          level={selectedLevel}
+          isOpen={isEditPermissionsDialogOpen}
+          onOpenChange={setIsEditPermissionsDialogOpen}
+          onUpdatePermissions={handleUpdateLevel}
+          isLoading={isLoading}
+        />
+      )}
     </>
   );
 };

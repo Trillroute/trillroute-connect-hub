@@ -28,19 +28,19 @@ const formSchema = z.object({
   description: z.string().min(1, { message: 'Description cannot be empty' }),
 });
 
-interface CreateLevelDialogProps {
+export interface CreateLevelDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onCreateLevel: (levelData: Omit<AdminLevelDetailed, 'id'>) => void;
+  onCreateLevel: (levelData: Omit<AdminLevelDetailed, 'id'>) => Promise<boolean>;
   isLoading: boolean;
 }
 
-const CreateLevelDialog = ({
+const CreateLevelDialog: React.FC<CreateLevelDialogProps> = ({
   isOpen,
   onOpenChange,
   onCreateLevel,
   isLoading,
-}: CreateLevelDialogProps) => {
+}) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -51,24 +51,27 @@ const CreateLevelDialog = ({
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     const levelData: Omit<AdminLevelDetailed, 'id'> = {
-      name: values.name, // Ensure name is provided
-      description: values.description, // Ensure description is provided
-      studentPermissions: ['view'],
-      teacherPermissions: ['view'],
-      adminPermissions: ['view'],
-      leadPermissions: ['view'],
-      coursePermissions: ['view'],
-      levelPermissions: ['view'],
+      ...values,
+      studentPermissions: [],
+      teacherPermissions: [],
+      adminPermissions: [],
+      leadPermissions: [],
+      coursePermissions: [],
+      levelPermissions: [],
     };
 
-    onCreateLevel(levelData);
+    const success = await onCreateLevel(levelData);
+    if (success) {
+      form.reset();
+      onOpenChange(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Admin Level</DialogTitle>
+          <DialogTitle>Create Admin Level</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">

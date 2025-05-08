@@ -1,18 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import LevelTable from './LevelTable';
+import LevelTable, { Level } from './LevelTable';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 import CreateLevelDialog from './CreateLevelDialog';
 import EditLevelDialog from './EditLevelDialog';
 import DeleteLevelDialog from './DeleteLevelDialog';
 import ViewPermissionsDialog from './ViewPermissionsDialog';
 import LevelGrid from './LevelGrid';
-import ViewModeControls from './ViewModeControls';
 import LevelHeader from './LevelHeader';
 import { useToast } from '@/hooks/use-toast';
 import { useLevelManagement } from './useLevelManagement';
-import { Level } from './LevelTable';
+import PermissionsDialog from './PermissionsDialog';
+import LevelDialogs from './LevelDialogs';
 
 interface LevelManagementProps {
   canAddLevel: boolean;
@@ -39,10 +39,12 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
     isEditDialogOpen,
     isDeleteDialogOpen,
     isViewPermissionsDialogOpen,
+    isEditPermissionsDialogOpen,
     setIsCreateDialogOpen,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen,
     setIsViewPermissionsDialogOpen,
+    setIsEditPermissionsDialogOpen,
     handleCreateLevel,
     handleUpdateLevel,
     handleDeleteLevel,
@@ -50,6 +52,7 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
     openEditDialog,
     openDeleteDialog,
     openViewPermissionsDialog,
+    openEditPermissionsDialog,
     loadLevels,
     effectiveCanAdd,
     effectiveCanEdit,
@@ -61,7 +64,7 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
   } = useLevelManagement(canAddLevel, canEditLevel, canDeleteLevel);
 
   // State for visible columns
-  const [columns, setColumns] = useState<string[]>(visibleColumns || ['name', 'description', 'permissions']);
+  const [columns, setColumns] = useState<string[]>([]);
 
   // Update columns when visibleColumns changes
   useEffect(() => {
@@ -96,7 +99,7 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
         title: 'Success',
         description: 'Permissions updated successfully',
       });
-      setIsViewPermissionsDialogOpen(false);
+      setIsEditPermissionsDialogOpen(false);
     } catch (error) {
       toast({
         title: 'Error',
@@ -114,7 +117,7 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
         columns={columns}
         setColumns={setColumns}
         selectedIds={selectedIds}
-        onBulkDelete={effectiveCanDelete && selectedIds.length > 0 ? handleBulkDelete : undefined}
+        onBulkDelete={selectedIds.length > 0 ? () => handleBulkDelete(selectedIds) : undefined}
         onCreateClick={effectiveCanAdd ? handleCreateClick : undefined}
       />
 
@@ -123,12 +126,12 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
           <LevelTable
             levels={levelsWithStringIds}
             isLoading={isLoading}
-            onEdit={effectiveCanEdit ? (level) => openEditDialog({...level, id: Number(level.id)}) : () => {}}
-            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({...level, id: Number(level.id)}) : () => {}}
+            onEdit={effectiveCanEdit ? (level) => openEditDialog({...level, id: Number(level.id)}) : undefined}
+            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({...level, id: Number(level.id)}) : undefined}
             onViewPermissions={(level) => openViewPermissionsDialog({...level, id: Number(level.id)})}
+            onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({...level, id: Number(level.id)}) : undefined}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
-            onBulkDelete={effectiveCanDelete ? handleBulkDelete : undefined}
             visibleColumns={columns}
           />
         ) : (
@@ -138,47 +141,31 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
             onEdit={effectiveCanEdit ? (level) => openEditDialog({...level, id: Number(level.id)}) : undefined}
             onDelete={effectiveCanDelete ? (level) => openDeleteDialog({...level, id: Number(level.id)}) : undefined}
             onViewPermissions={(level) => openViewPermissionsDialog({...level, id: Number(level.id)})}
+            onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({...level, id: Number(level.id)}) : undefined}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
-            onBulkDelete={effectiveCanDelete ? handleBulkDelete : undefined}
           />
         )}
       </Card>
 
       {/* Dialogs */}
-      {isCreateDialogOpen && (
-        <CreateLevelDialog
-          isOpen={isCreateDialogOpen}
-          onOpenChange={setIsCreateDialogOpen}
-          onCreateLevel={handleCreateLevel}
-          isLoading={isLoading}
-        />
-      )}
-      {selectedLevel && isEditDialogOpen && (
-        <EditLevelDialog
-          level={selectedLevel}
-          isOpen={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          onUpdateLevel={handleUpdateLevel}
-          isLoading={isLoading}
-        />
-      )}
-      {selectedLevel && isDeleteDialogOpen && (
-        <DeleteLevelDialog
-          level={selectedLevel}
-          isOpen={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          onDelete={() => handleDeleteLevel()}
-          isLoading={isLoading}
-        />
-      )}
-      {selectedLevel && isViewPermissionsDialogOpen && (
-        <ViewPermissionsDialog
-          level={selectedLevel}
-          isOpen={isViewPermissionsDialogOpen}
-          onOpenChange={setIsViewPermissionsDialogOpen}
-        />
-      )}
+      <LevelDialogs 
+        selectedLevel={selectedLevel}
+        isCreateDialogOpen={isCreateDialogOpen}
+        isEditDialogOpen={isEditDialogOpen}
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        isViewPermissionsDialogOpen={isViewPermissionsDialogOpen}
+        isEditPermissionsDialogOpen={isEditPermissionsDialogOpen}
+        isLoading={isLoading}
+        setIsCreateDialogOpen={setIsCreateDialogOpen}
+        setIsEditDialogOpen={setIsEditDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+        setIsViewPermissionsDialogOpen={setIsViewPermissionsDialogOpen}
+        setIsEditPermissionsDialogOpen={setIsEditPermissionsDialogOpen}
+        handleCreateLevel={handleCreateLevel}
+        handleUpdateLevel={handleUpdateLevel}
+        handleDeleteLevel={handleDeleteLevel}
+      />
     </div>
   );
 };

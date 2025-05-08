@@ -4,7 +4,6 @@ import { useLevelSelection } from './hooks/useLevelSelection';
 import { useLevelDisplay } from './hooks/useLevelDisplay';
 import { useLevelDialogs } from './hooks/useLevelDialogs';
 import { useLevelPermissions } from './hooks/useLevelPermissions';
-import { Level } from './LevelTable';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 
 export function useLevelManagement(
@@ -21,7 +20,6 @@ export function useLevelManagement(
     handleUpdateLevel,
     handleDeleteLevel,
     handleBulkDelete,
-    setLevelPermissions,
     findLevelById
   } = useLevelData();
   
@@ -86,7 +84,6 @@ export function useLevelManagement(
     handleUpdateLevel,
     handleDeleteLevel,
     handleBulkDelete,
-    setLevelPermissions,
     openEditDialog,
     openDeleteDialog,
     openViewPermissionsDialog,
@@ -98,6 +95,8 @@ export function useLevelManagement(
     visibleColumns,
     toggleColumnVisibility,
     columnOptions,
-    findLevelById
+    findLevelById,
+    clearSelection,
+    resetDialogStates
   };
 }
