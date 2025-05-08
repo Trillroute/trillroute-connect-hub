@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -114,7 +113,7 @@ const PermissionsDialog = ({
         <ScrollArea className="h-[500px] pr-4">
           <Tabs defaultValue="student">
             <div className="relative mb-4">
-              <ScrollArea orientation="horizontal" className="w-full pb-4">
+              <div className="overflow-x-auto pb-4">
                 <TabsList className="inline-flex w-max">
                   {Object.keys(moduleLabels).map((module) => (
                     <TabsTrigger key={module} value={module}>
@@ -122,7 +121,7 @@ const PermissionsDialog = ({
                     </TabsTrigger>
                   ))}
                 </TabsList>
-              </ScrollArea>
+              </div>
             </div>
 
             {Object.keys(moduleLabels).map((moduleKey) => {
