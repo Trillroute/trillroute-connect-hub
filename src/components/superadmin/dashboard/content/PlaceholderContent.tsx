@@ -21,8 +21,24 @@ const PlaceholderContent: React.FC<PlaceholderContentProps> = ({ tab }) => {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   };
 
-  const title = `${formatTitle(tab)} Module`;
-  const description = `${formatTitle(tab)} management functionality`;
+  // Special case for the access tab
+  if (tab === 'access') {
+    return (
+      <ContentWrapper 
+        title="Access Module"
+        description="Access management functionality"
+      >
+        <Card className="p-6">
+          <div className="flex flex-col items-center justify-center py-8">
+            <h3 className="text-xl font-semibold mb-2">Coming Soon</h3>
+            <p className="text-gray-500 text-center">
+              We're currently working on enhancing this feature.
+            </p>
+          </div>
+        </Card>
+      </ContentWrapper>
+    );
+  }
 
   // If the tab is 'scheduling' or 'calendar', show the calendar
   if (tab === 'scheduling' || tab === 'calendar') {
@@ -42,6 +58,9 @@ const PlaceholderContent: React.FC<PlaceholderContentProps> = ({ tab }) => {
   }
 
   // For other tabs, show a placeholder
+  const title = `${formatTitle(tab)} Module`;
+  const description = `${formatTitle(tab)} management functionality`;
+
   return (
     <ContentWrapper 
       title={title}
