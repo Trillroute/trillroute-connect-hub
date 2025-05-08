@@ -23,6 +23,8 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   
   // Apply filters when filter type or IDs change
   useEffect(() => {
+    console.log("FilteredEventsProvider received:", { filterType, filterId, filterIds });
+    
     if (!filterType) {
       console.log("No filterType specified, refreshing all events");
       refreshEvents();
@@ -52,26 +54,28 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
           case 'teacher':
             await fetchFilteredEvents({ 
               roleFilter: ['teacher'],
-              userIds: ids,
+              userIds: ids.length > 0 ? ids : undefined,
               setEvents 
             });
             break;
           case 'student':
             await fetchFilteredEvents({ 
               roleFilter: ['student'],
-              userIds: ids,
+              userIds: ids.length > 0 ? ids : undefined,
               setEvents 
             });
             break;
           case 'admin':
             await fetchFilteredEvents({ 
               roleFilter: ['admin'], 
+              userIds: ids.length > 0 ? ids : undefined,
               setEvents 
             });
             break;
           case 'staff':
             await fetchFilteredEvents({ 
               roleFilter: ['teacher', 'admin', 'superadmin'], 
+              userIds: ids.length > 0 ? ids : undefined,
               setEvents 
             });
             break;

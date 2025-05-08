@@ -35,63 +35,66 @@ export const fetchFilteredEvents = async ({
       `);
     
     // Process course filtering
-    const coursesToFilter: string[] = [];
-    
-    // Safely add courseIds if they exist
-    if (Array.isArray(courseIds) && courseIds.length > 0) {
-      courseIds.forEach(id => {
-        if (id) coursesToFilter.push(id);
-      });
-    }
-    
-    // Add single courseId if it exists
-    if (courseId) {
-      coursesToFilter.push(courseId);
-    }
-    
-    // Apply course filter if we have any courses
-    if (coursesToFilter.length > 0) {
-      query = query.in('course_id', coursesToFilter);
+    if (courseId || (Array.isArray(courseIds) && courseIds.length > 0)) {
+      const coursesToFilter: string[] = [];
+      
+      // Add single courseId if it exists
+      if (courseId) {
+        coursesToFilter.push(courseId);
+      }
+      
+      // Add courseIds if they exist
+      if (Array.isArray(courseIds) && courseIds.length > 0) {
+        courseIds.forEach(id => {
+          if (id) coursesToFilter.push(id);
+        });
+      }
+      
+      if (coursesToFilter.length > 0) {
+        query = query.in('course_id', coursesToFilter);
+      }
     }
     
     // Process skill filtering
-    const skillsToFilter: string[] = [];
-    
-    // Safely add skillIds if they exist
-    if (Array.isArray(skillIds) && skillIds.length > 0) {
-      skillIds.forEach(id => {
-        if (id) skillsToFilter.push(id);
-      });
-    }
-    
-    // Add single skillId if it exists
-    if (skillId) {
-      skillsToFilter.push(skillId);
-    }
-    
-    // Apply skill filter if we have any skills
-    if (skillsToFilter.length > 0) {
-      query = query.in('skill_id', skillsToFilter);
+    if (skillId || (Array.isArray(skillIds) && skillIds.length > 0)) {
+      const skillsToFilter: string[] = [];
+      
+      // Add single skillId if it exists
+      if (skillId) {
+        skillsToFilter.push(skillId);
+      }
+      
+      // Add skillIds if they exist
+      if (Array.isArray(skillIds) && skillIds.length > 0) {
+        skillIds.forEach(id => {
+          if (id) skillsToFilter.push(id);
+        });
+      }
+      
+      if (skillsToFilter.length > 0) {
+        query = query.in('skill_id', skillsToFilter);
+      }
     }
     
     // Process user filtering
-    const usersToFilter: string[] = [];
-    
-    // Safely add userIds if they exist
-    if (Array.isArray(userIds) && userIds.length > 0) {
-      userIds.forEach(id => {
-        if (id) usersToFilter.push(id);
-      });
-    }
-    
-    // Add single userId if it exists
-    if (userId) {
-      usersToFilter.push(userId);
-    }
-    
-    // Apply user filter if we have any users
-    if (usersToFilter.length > 0) {
-      query = query.in('user_id', usersToFilter);
+    if (userId || (Array.isArray(userIds) && userIds.length > 0)) {
+      const usersToFilter: string[] = [];
+      
+      // Add single userId if it exists
+      if (userId) {
+        usersToFilter.push(userId);
+      }
+      
+      // Add userIds if they exist
+      if (Array.isArray(userIds) && userIds.length > 0) {
+        userIds.forEach(id => {
+          if (id) usersToFilter.push(id);
+        });
+      }
+      
+      if (usersToFilter.length > 0) {
+        query = query.in('user_id', usersToFilter);
+      }
     }
     
     // Process role filtering

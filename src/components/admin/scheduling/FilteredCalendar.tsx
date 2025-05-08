@@ -5,7 +5,7 @@ import CalendarContent from './CalendarContent';
 import { FilteredEventsProvider } from './view-components/FilteredEventsProvider';
 
 interface FilteredCalendarProps {
-  filterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student';
+  filterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'staff';
   filterValues?: string[];
   hasAdminAccess?: boolean;
   title?: string;
@@ -32,8 +32,10 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
         return { filterType: 'teacher' as const, filterIds: filterValues };
       case 'student':
         return { filterType: 'student' as const, filterIds: filterValues };
+      case 'staff':
+        return { filterType: 'staff' as const, filterIds: filterValues };
       default:
-        return { filterType: null, filterIds: [] };
+        return { filterType: null as const, filterIds: [] };
     }
   };
 

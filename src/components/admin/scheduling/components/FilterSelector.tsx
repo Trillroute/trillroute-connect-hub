@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useCourses } from '@/hooks/useCourses';
 import { useSkills } from '@/hooks/useSkills';
 import { useTeachers } from '@/hooks/useTeachers';
@@ -35,20 +35,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   const { students = [], loading: studentsLoading } = useStudents();
   const [allUsers, setAllUsers] = useState<{id: string, name: string}[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [filterOptions, setFilterOptions] = useState<Option[]>([]);
 
-  // Reset selected filters when filter type changes
-  useEffect(() => {
-    setSelectedFilter(null);
-    setSelectedFilters([]);
-    
-    // If filterType is staff, load all staff members from Supabase
-    if (filterType === 'staff') {
-      fetchStaffMembers();
-    }
-  }, [filterType, setSelectedFilter, setSelectedFilters]);
-  
   // Fetch staff members from Supabase
-  const fetchStaffMembers = async () => {
+  const fetchStaffMembers = useCallback(async () => {
     setLoadingUsers(true);
     try {
       const { data, error } = await supabase
@@ -60,62 +50,83 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         throw error;
       }
       
-      const mappedUsers = data.map(user => ({
-        id: user.id,
-        name: `${user.first_name} ${user.last_name} (${user.role})`
-      }));
-      
-      setAllUsers(mappedUsers);
-      console.log('Fetched staff members:', mappedUsers);
+      if (data) {
+        const mappedUsers = data.map(user => ({
+          id: user.id,
+          name: `${user.first_name || ''} ${user.last_name || ''} (${user.role || ''})`
+        }));
+        
+        setAllUsers(mappedUsers);
+        console.log('Fetched staff members:', mappedUsers.length);
+      }
     } catch (error) {
       console.error('Error fetching staff members:', error);
     } finally {
       setLoadingUsers(false);
     }
-  };
+  }, []);
 
-  // Get appropriate options based on filter type
-  const getFilterOptions = (): Option[] => {
+  // Reset selected filters when filter type changes
+  useEffect(() => {
+    setSelectedFilter(null);
+    setSelectedFilters([]);
+    
+    // If filterType is staff, load all staff members from Supabase
+    if (filterType === 'staff') {
+      fetchStaffMembers();
+    }
+    
+    // Update filter options based on the new filter type
+    updateFilterOptions();
+  }, [filterType]);
+  
+  // Update filter options whenever dependencies change
+  const updateFilterOptions = useCallback(() => {
+    let newOptions: Option[] = [];
+    
     switch (filterType) {
       case 'course':
-        return Array.isArray(courses) ? courses.map(course => ({ 
+        newOptions = Array.isArray(courses) ? courses.map(course => ({ 
           value: course.id, 
           label: course.title || 'Unnamed Course'
         })) : [];
+        break;
       case 'skill':
-        return Array.isArray(skills) ? skills.map(skill => ({ 
+        newOptions = Array.isArray(skills) ? skills.map(skill => ({ 
           value: skill.id, 
           label: skill.name || 'Unnamed Skill'
         })) : [];
+        break;
       case 'teacher':
-        return Array.isArray(teachers) ? teachers.map(teacher => ({ 
+        newOptions = Array.isArray(teachers) ? teachers.map(teacher => ({ 
           value: teacher.id, 
           label: `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || 'Unnamed Teacher'
         })) : [];
+        break;
       case 'student':
-        return Array.isArray(students) ? students.map(student => ({ 
+        newOptions = Array.isArray(students) ? students.map(student => ({ 
           value: student.id, 
           label: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Unnamed Student'
         })) : [];
+        break;
       case 'staff':
-        return allUsers.map(user => ({
+        newOptions = allUsers.map(user => ({
           value: user.id,
           label: user.name
         }));
+        break;
       default:
-        return [];
+        newOptions = [];
     }
-  };
-
-  const options = [
-    { type: 'all', label: 'All' },
-    { type: 'teacher', label: 'Teachers' },
-    { type: 'student', label: 'Students' },
-    { type: 'admin', label: 'Admins' },
-    { type: 'staff', label: 'Staff' },
-    { type: 'course', label: 'Course' },
-    { type: 'skill', label: 'Skill' }
-  ];
+    
+    setFilterOptions(newOptions);
+    console.log(`Generated ${newOptions.length} options for ${filterType}`);
+  }, [filterType, courses, skills, teachers, students, allUsers]);
+  
+  // Update filter options when dependencies change
+  useEffect(() => {
+    updateFilterOptions();
+  }, [courses, skills, teachers, students, allUsers, updateFilterOptions]);
 
   const handleMultiSelectChange = (selected: string[]) => {
     console.log("MultiSelect selection changed:", selected);
@@ -133,10 +144,15 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     return false;
   };
 
-  // Get filter options and log information
-  const filterOptions = getFilterOptions();
-  console.log(`Filter options for ${filterType}:`, filterOptions);
-  console.log("Selected filters:", selectedFilters);
+  const options = [
+    { type: 'all', label: 'All' },
+    { type: 'teacher', label: 'Teachers' },
+    { type: 'student', label: 'Students' },
+    { type: 'admin', label: 'Admins' },
+    { type: 'staff', label: 'Staff' },
+    { type: 'course', label: 'Course' },
+    { type: 'skill', label: 'Skill' }
+  ];
 
   return (
     <div className="flex flex-col gap-2 w-full">

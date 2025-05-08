@@ -13,6 +13,13 @@ const SchedulingContent: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
+  console.log("SchedulingContent rendering with:", { 
+    filterType, 
+    selectedFilter, 
+    selectedFilters, 
+    hasAdminAccess 
+  });
+
   return (
     <ContentWrapper
       title="Calendar"
@@ -33,7 +40,7 @@ const SchedulingContent: React.FC = () => {
         <FilteredCalendar
           title="All Events"
           hasAdminAccess={hasAdminAccess}
-          filterType={filterType as 'role' | 'course' | 'skill' | 'teacher' | 'student' | undefined}
+          filterType={filterType as 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'staff' | undefined}
           filterValues={selectedFilters}
         />
       </div>
