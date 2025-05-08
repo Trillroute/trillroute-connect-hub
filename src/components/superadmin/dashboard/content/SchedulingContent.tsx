@@ -36,7 +36,7 @@ const SchedulingContent: React.FC = () => {
           setSelectedFilter={setSelectedFilter}
           selectedFilters={selectedFilters}
           setSelectedFilters={setSelectedFilters}
-          showFilterTypeTabs={true} // Show the filter type tabs in this view only
+          showFilterTypeTabs={true} // Show the filter type tabs in this view
         />
       </div>
       
