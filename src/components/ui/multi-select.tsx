@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Check, ChevronsUpDown } from 'lucide-react';
-import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -31,11 +31,15 @@ export function MultiSelect({
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLDivElement>(null);
 
-  // Ensure options is always an array
+  // Ensure options is always a valid array
   const safeOptions: Option[] = Array.isArray(options) ? options : [];
   
-  // Ensure selected is always an array of strings
+  // Ensure selected is always a valid array
   const safeSelected: string[] = Array.isArray(selected) ? selected : [];
+
+  // Log for debugging
+  console.log("MultiSelect options:", safeOptions);
+  console.log("MultiSelect selected:", safeSelected);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -113,7 +117,7 @@ export function MultiSelect({
         <PopoverContent className="w-full p-0 bg-white" align="start" avoidCollisions>
           <Command>
             <ScrollArea className="max-h-[300px]">
-              <CommandGroup className="overflow-visible">
+              <CommandGroup>
                 {safeOptions.length > 0 ? (
                   safeOptions.map((option) => (
                     <CommandItem
@@ -133,7 +137,7 @@ export function MultiSelect({
                     </CommandItem>
                   ))
                 ) : (
-                  <div className="py-2 px-2 text-center text-sm text-muted-foreground">No options available</div>
+                  <CommandEmpty className="py-2 px-2 text-center text-sm text-muted-foreground">No options available</CommandEmpty>
                 )}
               </CommandGroup>
             </ScrollArea>
