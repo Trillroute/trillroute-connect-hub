@@ -21,6 +21,7 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
 }) => {
   // Process filter props to map to the right properties
   const mapFilterTypeToProvider = () => {
+    // Ensure filterValues is always an array
     const safeFilterValues = Array.isArray(filterValues) ? filterValues : [];
     
     switch(filterType) {
@@ -43,8 +44,6 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
 
   const providerProps = mapFilterTypeToProvider();
   
-  console.log("Rendering FilteredCalendar with:", { filterType, filterValues, hasAdminAccess, title, providerProps });
-
   return (
     <CalendarProvider>
       <FilteredEventsProvider 
@@ -56,7 +55,6 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
             hasAdminAccess={hasAdminAccess}
             title={title}
             description={description}
-            // Pass the initial filter type to CalendarContent
             initialFilterType={filterType || null}
           />
         </div>

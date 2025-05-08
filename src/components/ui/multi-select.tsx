@@ -31,10 +31,10 @@ export function MultiSelect({
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLDivElement>(null);
 
-  // Ensure options is always an array
+  // Always ensure options is an array
   const safeOptions: Option[] = Array.isArray(options) ? options : [];
   
-  // Ensure selected is always an array of strings
+  // Always ensure selected is an array of strings
   const safeSelected: string[] = Array.isArray(selected) ? selected : [];
 
   useEffect(() => {

@@ -6,7 +6,14 @@ import { useTeachers } from '@/hooks/useTeachers';
 import { useStudents } from '@/hooks/useStudents';
 
 export const useLayersDropdown = () => {
-  const { activeLayers = [], toggleLayer, selectedUsers = [], toggleUser } = useCalendar();
+  // Ensure activeLayers and selectedUsers are always arrays
+  const { 
+    activeLayers = [], 
+    toggleLayer, 
+    selectedUsers = [], 
+    toggleUser 
+  } = useCalendar();
+  
   const { teachers = [], loading: loadingTeachers } = useTeachers();
   const { students = [], loading: loadingStudents } = useStudents();
 

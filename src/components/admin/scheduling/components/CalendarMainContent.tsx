@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import CalendarHeader from '../CalendarHeader';
@@ -8,12 +9,14 @@ import LayersDropdown from '../LayersDropdown';
 import useEventHandlers from './EventHandlers';
 import { CalendarViewMode } from '../context/calendarTypes';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 interface CalendarMainContentProps {
   hasAdminAccess: boolean;
   title?: string;
   description?: string;
   initialFilterType?: string | null;
 }
+
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   hasAdminAccess,
   title = "Calendar",
@@ -26,6 +29,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     currentDate,
     setIsCreateEventOpen
   } = useCalendar();
+  
   const [filterType, setFilterType] = useState<string | null>(initialFilterType);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
@@ -36,6 +40,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     hasAdminAccess,
     setIsCreateEventOpen
   });
+  
   const viewOptions = [{
     value: 'day',
     label: 'Day'
@@ -46,11 +51,13 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     value: 'month',
     label: 'Month'
   }];
+  
   const handleFilterTypeChange = (type: string | null) => {
     setFilterType(type);
     setSelectedFilter(null);
     setSelectedFilters([]);
   };
+  
   return <div className="flex flex-col h-full">
       <div className="border-b pb-4 px-4">
         <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -70,26 +77,63 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         </div>
         
         <div className="mt-4">
-          {/* Only show filter type tabs if this isn't a pre-filtered view */}
-          {!initialFilterType && <Tabs defaultValue={filterType || "all"} onValueChange={value => handleFilterTypeChange(value === "all" ? null : value)}>
-              
-            </Tabs>}
+          {/* Filter selection area */}
+          {!initialFilterType && (
+            <Tabs defaultValue={filterType || "all"} onValueChange={value => handleFilterTypeChange(value === "all" ? null : value)}>
+              <TabsList className="flex rounded-md bg-gray-100 p-1">
+                <TabsTrigger value="all" className="flex-1 px-3 py-1.5 text-sm font-medium">All</TabsTrigger>
+                <TabsTrigger value="teacher" className="flex-1 px-3 py-1.5 text-sm font-medium">Teachers</TabsTrigger>
+                <TabsTrigger value="student" className="flex-1 px-3 py-1.5 text-sm font-medium">Students</TabsTrigger>
+                <TabsTrigger value="admin" className="flex-1 px-3 py-1.5 text-sm font-medium">Admins</TabsTrigger>
+                <TabsTrigger value="staff" className="flex-1 px-3 py-1.5 text-sm font-medium">Staff</TabsTrigger>
+                <TabsTrigger value="course" className="flex-1 px-3 py-1.5 text-sm font-medium">Course</TabsTrigger>
+                <TabsTrigger value="skill" className="flex-1 px-3 py-1.5 text-sm font-medium">Skill</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
 
           {/* Only show the multi-select when a filter type is selected */}
-          {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && <div className="mt-2">
-              <FilterSelector filterType={filterType} setFilterType={setFilterType} selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} selectedFilters={selectedFilters} setSelectedFilters={setSelectedFilters} showFilterTypeTabs={false} // Hide duplicate filter tabs
-          />
-            </div>}
+          {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
+            <div className="mt-2">
+              <FilterSelector 
+                filterType={filterType} 
+                setFilterType={setFilterType} 
+                selectedFilter={selectedFilter} 
+                setSelectedFilter={setSelectedFilter} 
+                selectedFilters={selectedFilters} 
+                setSelectedFilters={setSelectedFilters} 
+                showFilterTypeTabs={false} // Hide duplicate filter tabs
+              />
+            </div>
+          )}
         </div>
 
         <div className="mt-4">
-          <CalendarHeader title={<div className="text-xl font-semibold">{filterType ? `${title} (${filterType})` : title}</div>} hasAdminAccess={hasAdminAccess} onCreateEvent={eventHandlers.handleCreateEvent} showEventListToggle={true} onToggleEventList={() => setShowEventList(!showEventList)} isEventListShown={showEventList} />
+          <CalendarHeader 
+            title={<div className="text-xl font-semibold">{filterType ? `${title} (${filterType})` : title}</div>} 
+            hasAdminAccess={hasAdminAccess} 
+            onCreateEvent={eventHandlers.handleCreateEvent} 
+            showEventListToggle={true} 
+            onToggleEventList={() => setShowEventList(!showEventList)} 
+            isEventListShown={showEventList} 
+          />
         </div>
       </div>
 
       <div className="flex-grow overflow-y-auto">
-        <CalendarViewRenderer viewMode={viewMode as CalendarViewMode} showEventList={showEventList} onCreateEvent={eventHandlers.handleCreateEvent} onEditEvent={eventHandlers.handleEditEvent} onDeleteEvent={eventHandlers.handleDeleteEvent} onDateClick={eventHandlers.handleDateClick} filterType={filterType as any} filterId={selectedFilter} filterIds={selectedFilters} />
+        <CalendarViewRenderer 
+          viewMode={viewMode as CalendarViewMode} 
+          showEventList={showEventList} 
+          onCreateEvent={eventHandlers.handleCreateEvent} 
+          onEditEvent={eventHandlers.handleEditEvent} 
+          onDeleteEvent={eventHandlers.handleDeleteEvent} 
+          onDateClick={eventHandlers.handleDateClick} 
+          filterType={filterType as any} 
+          filterId={selectedFilter} 
+          filterIds={selectedFilters} 
+        />
       </div>
     </div>;
 };
+
 export default CalendarMainContent;

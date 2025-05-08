@@ -143,9 +143,14 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
 
   const handleMultiSelectChange = (selected: string[]) => {
     console.log("MultiSelect selection changed:", selected);
-    setSelectedFilters(selected || []);
+    
+    // Ensure selected is an array
+    const safeSelected = Array.isArray(selected) ? selected : [];
+    
+    setSelectedFilters(safeSelected);
+    
     // Also update the single selection state for backward compatibility
-    setSelectedFilter(selected && selected.length > 0 ? selected[0] : null);
+    setSelectedFilter(safeSelected.length > 0 ? safeSelected[0] : null);
   };
 
   const isLoading = () => {
@@ -156,16 +161,6 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (filterType === 'staff') return loadingUsers;
     return false;
   };
-
-  const options = [
-    { type: 'all', label: 'All' },
-    { type: 'teacher', label: 'Teachers' }, 
-    { type: 'student', label: 'Students' },
-    { type: 'admin', label: 'Admins' },
-    { type: 'staff', label: 'Staff' },
-    { type: 'course', label: 'Course' },
-    { type: 'skill', label: 'Skill' }
-  ];
 
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -188,7 +183,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
         <MultiSelect 
           options={filterOptions || []} 
-          selected={selectedFilters || []} 
+          selected={Array.isArray(selectedFilters) ? selectedFilters : []} 
           onChange={handleMultiSelectChange} 
           placeholder={`Select ${filterType || ''}(s)${isLoading() ? ' (Loading...)' : ''}`} 
           className="w-full bg-white" 

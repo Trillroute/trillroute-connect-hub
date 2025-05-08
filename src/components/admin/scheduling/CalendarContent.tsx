@@ -38,8 +38,8 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   // Use the custom hook to handle event filtering
   useEventFilters({
     userId,
-    userIds,
-    roleFilter,
+    userIds: Array.isArray(userIds) ? userIds : [],
+    roleFilter: Array.isArray(roleFilter) ? roleFilter : [],
     courseId,
     skillId
   });
