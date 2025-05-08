@@ -24,8 +24,8 @@ const PlaceholderContent: React.FC<PlaceholderContentProps> = ({ tab }) => {
   const title = `${formatTitle(tab)} Module`;
   const description = `${formatTitle(tab)} management functionality`;
 
-  // If the tab is 'scheduling', show the calendar
-  if (tab === 'scheduling') {
+  // If the tab is 'scheduling' or 'calendar', show the calendar
+  if (tab === 'scheduling' || tab === 'calendar') {
     return (
       <ContentWrapper 
         title="Calendar"

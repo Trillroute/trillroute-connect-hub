@@ -14,7 +14,7 @@ import { Lead } from "@/types/lead";
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('scheduling'); // Default tab set to 'scheduling'
+  const [activeTab, setActiveTab] = useState<ActiveTab>('calendar'); // Default tab set to 'calendar'
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
 

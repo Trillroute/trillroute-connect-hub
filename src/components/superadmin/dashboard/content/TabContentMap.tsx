@@ -94,6 +94,11 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       // Always render the SchedulingContent component for the scheduling tab
       return <SchedulingContent />;
       
+    case 'calendar':
+      console.log("Rendering SchedulingContent for calendar tab");
+      // Map 'calendar' tab to the SchedulingContent component
+      return <SchedulingContent />;
+      
     case 'user-availability':
       return <UserAvailabilityContent />;
       
