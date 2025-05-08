@@ -23,7 +23,6 @@ export type ActiveTab =
   | "teachers"
   | "intramural"
   | "reports"
-  | "access"
   | "admins"
   | "levels"
   | "courseManagement";
@@ -37,7 +36,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
   // Track open state of each submenu
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
     courses: activeTab === 'classTypes' || activeTab === 'courseManagement',
-    access: activeTab === 'admins' || activeTab === 'levels' || activeTab === 'access',
+    access: activeTab === 'admins' || activeTab === 'levels',
     leads: activeTab === 'leads' || activeTab === 'leads-cards',
     scheduling: activeTab === 'scheduling' || activeTab === 'calendar' || activeTab === 'user-availability',
     students: activeTab === 'students', // Make sure students tab is included

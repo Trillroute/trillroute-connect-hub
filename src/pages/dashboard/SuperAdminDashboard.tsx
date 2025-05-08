@@ -14,7 +14,7 @@ import { Lead } from "@/types/lead";
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('access'); // Default tab set to 'access'
+  const [activeTab, setActiveTab] = useState<ActiveTab>('today'); // Changed default from 'access' to 'today'
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
 
@@ -90,7 +90,7 @@ const SuperAdminDashboard = () => {
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">SuperAdmin Dashboard</h1>
               <p className="text-gray-500">
-                {activeTab === 'access' ? 'Access Module' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + ' Module'}
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + ' Module'}
               </p>
             </div>
           </div>

@@ -7,7 +7,6 @@ import TeacherContent from './TeacherContent';
 import PlaceholderContent from './PlaceholderContent';
 import SchedulingContent from './SchedulingContent';
 import UserAvailabilityContent from './UserAvailabilityContent';
-import AccessContent from './AccessContent';
 import { DashboardStats, UserActivityData } from '@/components/superadmin/hooks/useDashboardData';
 import { Lead } from "@/types/lead";
 import AdminManagement from '@/components/admin/AdminManagement';
@@ -127,9 +126,6 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
         canEditLevel={true}
         canDeleteLevel={true}
       />;
-      
-    case 'access':
-      return <AccessContent />;
       
     default:
       console.log("Default case: Rendering PlaceholderContent for tab:", activeTab);
