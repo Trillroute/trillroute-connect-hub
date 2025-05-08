@@ -8,7 +8,6 @@ import FilterSelector from './FilterSelector';
 import LayersDropdown from '../LayersDropdown';
 import useEventHandlers from './EventHandlers';
 import { CalendarViewMode } from '../context/calendarTypes';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CalendarMainContentProps {
   hasAdminAccess: boolean;
@@ -77,23 +76,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         </div>
         
         <div className="mt-4">
-          {/* Filter selection area */}
-          {!initialFilterType && (
-            <Tabs defaultValue={filterType || "all"} onValueChange={value => handleFilterTypeChange(value === "all" ? null : value)}>
-              <TabsList className="flex rounded-md bg-gray-100 p-1">
-                <TabsTrigger value="all" className="flex-1 px-3 py-1.5 text-sm font-medium">All</TabsTrigger>
-                <TabsTrigger value="teacher" className="flex-1 px-3 py-1.5 text-sm font-medium">Teachers</TabsTrigger>
-                <TabsTrigger value="student" className="flex-1 px-3 py-1.5 text-sm font-medium">Students</TabsTrigger>
-                <TabsTrigger value="admin" className="flex-1 px-3 py-1.5 text-sm font-medium">Admins</TabsTrigger>
-                <TabsTrigger value="staff" className="flex-1 px-3 py-1.5 text-sm font-medium">Staff</TabsTrigger>
-                <TabsTrigger value="course" className="flex-1 px-3 py-1.5 text-sm font-medium">Course</TabsTrigger>
-                <TabsTrigger value="skill" className="flex-1 px-3 py-1.5 text-sm font-medium">Skill</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
-
-          {/* Only show the multi-select when a filter type is selected, without the filter tabs */}
-          {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
+          {/* Only show the multi-select when a filter type is selected from the parent component */}
+          {filterType && (
             <div className="mt-2">
               <FilterSelector 
                 filterType={filterType} 
@@ -102,7 +86,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
                 setSelectedFilter={setSelectedFilter} 
                 selectedFilters={selectedFilters} 
                 setSelectedFilters={setSelectedFilters} 
-                showFilterTypeTabs={false}  // Explicitly set to false to prevent showing tabs
+                showFilterTypeTabs={false}  // Never show filter tabs here
               />
             </div>
           )}
