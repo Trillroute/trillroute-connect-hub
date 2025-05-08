@@ -82,6 +82,33 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     }
   }, []);
 
+  // Fetch admin users from Supabase
+  const fetchAdminUsers = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      const {
+        data,
+        error
+      } = await supabase.from('custom_users').select('id, first_name, last_name, role').in('role', ['admin', 'superadmin']);
+      if (error) {
+        throw error;
+      }
+      if (data) {
+        const mappedUsers = data.map(user => ({
+          id: user.id,
+          name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unnamed User' + ` (${user.role || ''})`
+        }));
+        setAllUsers(mappedUsers);
+        console.log('Fetched admin users:', mappedUsers.length);
+      }
+    } catch (error) {
+      console.error('Error fetching admin users:', error);
+      setAllUsers([]); // Ensure we reset to empty array on error
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, []);
+
   // Reset selected filters when filter type changes
   useEffect(() => {
     setSelectedFilter(null);
@@ -91,7 +118,11 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (filterType === 'staff') {
       fetchStaffMembers();
     }
-  }, [filterType, setSelectedFilter, setSelectedFilters, fetchStaffMembers]);
+    // If filterType is admin, load admin and superadmin users from Supabase
+    else if (filterType === 'admin') {
+      fetchAdminUsers();
+    }
+  }, [filterType, setSelectedFilter, setSelectedFilters, fetchStaffMembers, fetchAdminUsers]);
 
   // Update filter options based on the current filter type
   const updateFilterOptions = useCallback(() => {
@@ -123,6 +154,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         })) : [];
         break;
       case 'staff':
+      case 'admin':
         newOptions = Array.isArray(allUsers) ? allUsers.map(user => ({
           value: user.id,
           label: user.name
@@ -159,6 +191,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (filterType === 'teacher') return teachersLoading;
     if (filterType === 'student') return studentsLoading;
     if (filterType === 'staff') return loadingUsers;
+    if (filterType === 'admin') return loadingUsers;
     return false;
   };
 
@@ -180,7 +213,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       )}
 
       {/* Secondary filter dropdown with multi-select - always show this when a filter type is selected */}
-      {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
+      {['course', 'skill', 'teacher', 'student', 'staff', 'admin'].includes(filterType || '') && (
         <MultiSelect 
           options={filterOptions} 
           selected={Array.isArray(selectedFilters) ? selectedFilters : []} 

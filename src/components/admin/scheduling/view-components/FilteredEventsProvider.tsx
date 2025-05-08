@@ -67,7 +67,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
             break;
           case 'admin':
             await fetchFilteredEvents({ 
-              roleFilter: ['admin'], 
+              roleFilter: ['admin', 'superadmin'], 
               userIds: ids.length > 0 ? ids : undefined,
               setEvents 
             });
