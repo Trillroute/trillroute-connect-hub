@@ -12,6 +12,7 @@ import ViewModeControls from './ViewModeControls';
 import LevelHeader from './LevelHeader';
 import { useToast } from '@/hooks/use-toast';
 import { useLevelManagement } from './useLevelManagement';
+import { Level } from './LevelTable';
 
 interface LevelManagementProps {
   canAddLevel: boolean;
@@ -24,80 +25,73 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
   canEditLevel,
   canDeleteLevel,
 }) => {
-  // State for view mode
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
-  const [columns, setColumns] = useState<string[]>(['name', 'description', 'permissions']);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isViewPermissionsDialogOpen, setIsViewPermissionsDialogOpen] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<AdminLevelDetailed | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
   const { toast } = useToast();
 
   const {
     levels,
     isLoading,
-    fetchLevels,
-    createLevel,
-    updateLevel,
-    deleteLevel,
-    bulkDeleteLevels,
-    setLevelPermissions
-  } = useLevelManagement();
+    selectedIds,
+    setSelectedIds,
+    viewMode,
+    setViewMode,
+    selectedLevel,
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
+    isViewPermissionsDialogOpen,
+    setIsCreateDialogOpen,
+    setIsEditDialogOpen,
+    setIsDeleteDialogOpen,
+    setIsViewPermissionsDialogOpen,
+    handleCreateLevel,
+    handleUpdateLevel,
+    handleDeleteLevel,
+    handleBulkDelete,
+    openEditDialog,
+    openDeleteDialog,
+    openViewPermissionsDialog,
+    loadLevels,
+    effectiveCanAdd,
+    effectiveCanEdit,
+    effectiveCanDelete,
+    visibleColumns,
+    toggleColumnVisibility,
+    columnOptions,
+    findLevelById
+  } = useLevelManagement(canAddLevel, canEditLevel, canDeleteLevel);
+
+  // State for visible columns
+  const [columns, setColumns] = useState<string[]>(visibleColumns || ['name', 'description', 'permissions']);
+
+  // Update columns when visibleColumns changes
+  useEffect(() => {
+    if (visibleColumns) {
+      setColumns(visibleColumns);
+    }
+  }, [visibleColumns]);
 
   // Handle opening create dialog
   const handleCreateClick = () => {
     setIsCreateDialogOpen(true);
   };
 
-  // Handle opening edit dialog
-  const handleEditClick = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
-    setIsEditDialogOpen(true);
-  };
-
-  // Handle opening delete dialog
-  const handleDeleteClick = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // Handle opening view permissions dialog
-  const handleViewPermissionsClick = (level: AdminLevelDetailed) => {
-    setSelectedLevel(level);
-    setIsViewPermissionsDialogOpen(true);
-  };
-
-  // Handle bulk delete
-  const handleBulkDelete = async () => {
-    try {
-      await bulkDeleteLevels(selectedIds);
-      setSelectedIds([]);
-      toast({
-        title: 'Success',
-        description: `${selectedIds.length} levels deleted successfully`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete levels',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Handle permission updates - ensure we're using string[] for permissions
+  // Convert AdminLevelDetailed[] to Level[]
+  const levelsWithStringIds: Level[] = levels.map(level => ({
+    ...level,
+    id: String(level.id)
+  }));
+  
+  // Handle permission updates
   const handlePermissionSave = async (levelId: number, permissions: { 
     studentPermissions: string[];
     teacherPermissions: string[];
     adminPermissions: string[];
     leadPermissions: string[];
     coursePermissions: string[];
+    levelPermissions: string[];
   }) => {
     try {
-      await setLevelPermissions(levelId, permissions);
+      await handleUpdateLevel(levelId, permissions);
       toast({
         title: 'Success',
         description: 'Permissions updated successfully',
@@ -115,37 +109,38 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
   return (
     <div className="space-y-4">
       <LevelHeader
-        onCreateClick={canAddLevel ? handleCreateClick : undefined}
         viewMode={viewMode}
         setViewMode={setViewMode}
         columns={columns}
         setColumns={setColumns}
         selectedIds={selectedIds}
-        onBulkDelete={canDeleteLevel && selectedIds.length > 0 ? handleBulkDelete : undefined}
+        onBulkDelete={effectiveCanDelete && selectedIds.length > 0 ? handleBulkDelete : undefined}
+        onCreateClick={effectiveCanAdd ? handleCreateClick : undefined}
       />
 
       <Card>
         {viewMode === 'table' ? (
           <LevelTable
-            levels={levels}
+            levels={levelsWithStringIds}
             isLoading={isLoading}
-            onEdit={canEditLevel ? handleEditClick : () => {}}
-            onDelete={canDeleteLevel ? handleDeleteClick : () => {}}
-            onViewPermissions={handleViewPermissionsClick}
+            onEdit={effectiveCanEdit ? (level) => openEditDialog({...level, id: Number(level.id)}) : () => {}}
+            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({...level, id: Number(level.id)}) : () => {}}
+            onViewPermissions={(level) => openViewPermissionsDialog({...level, id: Number(level.id)})}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
-            onBulkDelete={canDeleteLevel ? handleBulkDelete : undefined}
+            onBulkDelete={effectiveCanDelete ? handleBulkDelete : undefined}
             visibleColumns={columns}
           />
         ) : (
           <LevelGrid
-            levels={levels}
+            levels={levelsWithStringIds}
             isLoading={isLoading}
-            onEdit={canEditLevel ? handleEditClick : () => {}}
-            onDelete={canDeleteLevel ? handleDeleteClick : () => {}}
+            onEdit={effectiveCanEdit ? (level) => openEditDialog({...level, id: Number(level.id)}) : undefined}
+            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({...level, id: Number(level.id)}) : undefined}
+            onViewPermissions={(level) => openViewPermissionsDialog({...level, id: Number(level.id)})}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
-            onBulkDelete={canDeleteLevel ? handleBulkDelete : undefined}
+            onBulkDelete={effectiveCanDelete ? handleBulkDelete : undefined}
           />
         )}
       </Card>
@@ -153,33 +148,35 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
       {/* Dialogs */}
       {isCreateDialogOpen && (
         <CreateLevelDialog
-          open={isCreateDialogOpen}
+          isOpen={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
-          onLevelCreated={fetchLevels}
+          onCreateLevel={handleCreateLevel}
+          isLoading={isLoading}
         />
       )}
       {selectedLevel && isEditDialogOpen && (
         <EditLevelDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
           level={selectedLevel}
-          onLevelUpdated={fetchLevels}
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onUpdateLevel={handleUpdateLevel}
+          isLoading={isLoading}
         />
       )}
       {selectedLevel && isDeleteDialogOpen && (
         <DeleteLevelDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
           level={selectedLevel}
-          onLevelDeleted={fetchLevels}
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onDelete={() => handleDeleteLevel()}
+          isLoading={isLoading}
         />
       )}
       {selectedLevel && isViewPermissionsDialogOpen && (
         <ViewPermissionsDialog
-          open={isViewPermissionsDialogOpen}
-          onOpenChange={setIsViewPermissionsDialogOpen}
           level={selectedLevel}
-          onSavePermissions={handlePermissionSave}
+          isOpen={isViewPermissionsDialogOpen}
+          onOpenChange={setIsViewPermissionsDialogOpen}
         />
       )}
     </div>

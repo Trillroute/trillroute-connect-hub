@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AdminLevelDetailed } from '@/types/adminLevel';
-import { fetchLevels, deleteLevel as deleteLevelApi, createLevel, updateLevel } from '../LevelService';
+import { fetchLevels as fetchLevelsApi, deleteLevel as deleteLevelApi, createLevel as createLevelApi, updateLevel as updateLevelApi } from '../LevelService';
 import { useToast } from '@/hooks/use-toast';
 import { Level } from '../LevelTable';
 
@@ -11,10 +11,10 @@ export function useLevelData() {
   const { toast } = useToast();
 
   // Fetch levels
-  const loadLevels = async () => {
+  const loadLevels = useCallback(async () => {
     setIsLoading(true);
     try {
-      const levelsData = await fetchLevels();
+      const levelsData = await fetchLevelsApi();
       setLevels(levelsData);
     } catch (error) {
       console.error('Error fetching levels:', error);
@@ -26,18 +26,18 @@ export function useLevelData() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   // Load levels on mount
   useEffect(() => {
     loadLevels();
-  }, []);
+  }, [loadLevels]);
 
   // Handlers for CRUD operations
   const handleCreateLevel = async (levelData: Omit<AdminLevelDetailed, 'id'>) => {
     setIsLoading(true);
     try {
-      await createLevel(levelData);
+      await createLevelApi(levelData);
       toast({
         title: 'Success',
         description: 'Level created successfully',
@@ -60,7 +60,7 @@ export function useLevelData() {
   const handleUpdateLevel = async (id: number, levelData: Partial<AdminLevelDetailed>) => {
     setIsLoading(true);
     try {
-      await updateLevel(id, levelData);
+      await updateLevelApi(id, levelData);
       toast({
         title: 'Success',
         description: 'Level updated successfully',
@@ -134,6 +134,11 @@ export function useLevelData() {
     }
   };
 
+  // Update level permissions
+  const setLevelPermissions = async (levelId: number, permissions: Partial<AdminLevelDetailed>) => {
+    return handleUpdateLevel(levelId, permissions);
+  };
+
   // Find AdminLevelDetailed by Level
   const findLevelById = (levelId: string): AdminLevelDetailed | null => {
     const adminLevel = levels.find(l => String(l.id) === levelId) || null;
@@ -148,6 +153,7 @@ export function useLevelData() {
     handleUpdateLevel,
     handleDeleteLevel,
     handleBulkDelete,
+    setLevelPermissions,
     findLevelById
   };
 }

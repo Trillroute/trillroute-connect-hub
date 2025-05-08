@@ -4,27 +4,27 @@ import { Level } from './LevelTable';
 
 interface LevelGridProps {
   levels: Level[];
-  loading: boolean;
+  isLoading: boolean;
   onEdit?: (level: Level) => void;
   onDelete?: (level: Level) => void;
   onView?: (level: Level) => void;
   onViewPermissions?: (level: Level) => void;
   onBulkDelete?: (ids: string[]) => void;
-  selectedLevelIds?: string[];
-  setSelectedLevelIds?: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedIds?: string[];
+  setSelectedIds?: React.Dispatch<React.SetStateAction<string[]>>;
   visibleColumns?: Record<string, boolean>;
 }
 
 const LevelGrid: React.FC<LevelGridProps> = ({
   levels,
-  loading,
+  isLoading,
   onEdit,
   onDelete,
   onView,
   onViewPermissions,
   onBulkDelete,
-  selectedLevelIds = [],
-  setSelectedLevelIds,
+  selectedIds = [],
+  setSelectedIds,
   visibleColumns = {}
 }) => {
   // Use state to manage column configurations including order
@@ -126,14 +126,6 @@ const LevelGrid: React.FC<LevelGridProps> = ({
     });
   }, [allColumnConfigs, visibleColumns, columnOrder]);
 
-  // Map levels to have string IDs for UnifiedDataGrid
-  const formattedLevels = useMemo(() => {
-    return levels.map(level => ({
-      ...level,
-      id: String(level.id)
-    }));
-  }, [levels]);
-
   // Handle column reordering
   const handleColumnReorder = (draggedField: string, targetField: string) => {
     if (draggedField === targetField) return;
@@ -154,15 +146,15 @@ const LevelGrid: React.FC<LevelGridProps> = ({
 
   return (
     <UnifiedDataGrid
-      data={formattedLevels}
+      data={levels}
       columnConfigs={visibleColumnConfigs}
-      loading={loading}
+      loading={isLoading}
       onEdit={onEdit}
       onDelete={onDelete}
-      onView={onView || onViewPermissions}
+      onView={onViewPermissions || onView}
       onBulkDelete={onBulkDelete}
-      selectedIds={selectedLevelIds}
-      setSelectedIds={setSelectedLevelIds}
+      selectedIds={selectedIds}
+      setSelectedIds={setSelectedIds}
       emptyMessage="No levels found"
       onColumnReorder={handleColumnReorder}
     />

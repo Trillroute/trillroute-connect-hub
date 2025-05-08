@@ -21,6 +21,7 @@ export function useLevelManagement(
     handleUpdateLevel,
     handleDeleteLevel,
     handleBulkDelete,
+    setLevelPermissions,
     findLevelById
   } = useLevelData();
   
@@ -83,8 +84,9 @@ export function useLevelManagement(
     setIsEditPermissionsDialogOpen,
     handleCreateLevel,
     handleUpdateLevel,
-    handleDeleteLevel: () => handleDeleteLevel(selectedLevel),
+    handleDeleteLevel,
     handleBulkDelete,
+    setLevelPermissions,
     openEditDialog,
     openDeleteDialog,
     openViewPermissionsDialog,
