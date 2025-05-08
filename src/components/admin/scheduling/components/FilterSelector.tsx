@@ -110,10 +110,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         })) : [];
         break;
       case 'staff':
-        newOptions = allUsers.map(user => ({
+        newOptions = Array.isArray(allUsers) ? allUsers.map(user => ({
           value: user.id,
           label: user.name
-        }));
+        })) : [];
         break;
       default:
         newOptions = [];
@@ -180,10 +180,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       {/* Secondary filter dropdown with multi-select */}
       {(['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '')) && (
         <MultiSelect
-          options={filterOptions}
+          options={filterOptions || []}
           selected={selectedFilters || []}
           onChange={handleMultiSelectChange}
-          placeholder={`Select ${filterType}(s)${isLoading() ? ' (Loading...)' : ''}`}
+          placeholder={`Select ${filterType || ''}(s)${isLoading() ? ' (Loading...)' : ''}`}
           className="w-full bg-white"
         />
       )}

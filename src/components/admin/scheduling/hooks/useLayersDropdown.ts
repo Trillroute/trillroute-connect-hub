@@ -7,8 +7,8 @@ import { useStudents } from '@/hooks/useStudents';
 
 export const useLayersDropdown = () => {
   const { activeLayers, toggleLayer, selectedUsers, toggleUser } = useCalendar();
-  const { teachers, loading: loadingTeachers } = useTeachers();
-  const { students, loading: loadingStudents } = useStudents();
+  const { teachers = [], loading: loadingTeachers } = useTeachers();
+  const { students = [], loading: loadingStudents } = useStudents();
 
   // Define layer configurations
   const layers = [
@@ -28,16 +28,16 @@ export const useLayersDropdown = () => {
 
     switch (layer) {
       case 'teachers':
-        users = teachers.map(teacher => ({
+        users = Array.isArray(teachers) ? teachers.map(teacher => ({
           id: teacher.id,
-          name: `${teacher.first_name} ${teacher.last_name}`,
-        }));
+          name: `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || 'Unnamed Teacher',
+        })) : [];
         break;
       case 'students':
-        users = students.map(student => ({
+        users = Array.isArray(students) ? students.map(student => ({
           id: student.id,
-          name: `${student.first_name} ${student.last_name}`,
-        }));
+          name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Unnamed Student',
+        })) : [];
         break;
       case 'admins':
       case 'superadmins':
@@ -51,7 +51,7 @@ export const useLayersDropdown = () => {
 
   // Check if a user is selected
   const isUserSelected = (userId: string) => {
-    return selectedUsers.some(user => user.id === userId);
+    return Array.isArray(selectedUsers) && selectedUsers.some(user => user.id === userId);
   };
 
   // Handle user toggle
@@ -79,8 +79,8 @@ export const useLayersDropdown = () => {
 
   return {
     layers,
-    activeLayers,
-    selectedUsers,
+    activeLayers: Array.isArray(activeLayers) ? activeLayers : [],
+    selectedUsers: Array.isArray(selectedUsers) ? selectedUsers : [],
     searchQuery,
     activeLayerForSearch,
     loadingTeachers,

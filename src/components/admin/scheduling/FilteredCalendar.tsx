@@ -21,19 +21,21 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
 }) => {
   // Process filter props to map to the right properties
   const mapFilterTypeToProvider = () => {
+    const safeFilterValues = Array.isArray(filterValues) ? filterValues : [];
+    
     switch(filterType) {
       case 'role':
-        return { filterType: 'staff' as const, filterIds: filterValues };
+        return { filterType: 'staff' as const, filterIds: safeFilterValues };
       case 'course':
-        return { filterType: 'course' as const, filterIds: filterValues };
+        return { filterType: 'course' as const, filterIds: safeFilterValues };
       case 'skill':
-        return { filterType: 'skill' as const, filterIds: filterValues };
+        return { filterType: 'skill' as const, filterIds: safeFilterValues };
       case 'teacher':
-        return { filterType: 'teacher' as const, filterIds: filterValues };
+        return { filterType: 'teacher' as const, filterIds: safeFilterValues };
       case 'student':
-        return { filterType: 'student' as const, filterIds: filterValues };
+        return { filterType: 'student' as const, filterIds: safeFilterValues };
       case 'staff':
-        return { filterType: 'staff' as const, filterIds: filterValues };
+        return { filterType: 'staff' as const, filterIds: safeFilterValues };
       default:
         return { filterType: null, filterIds: [] };
     }
