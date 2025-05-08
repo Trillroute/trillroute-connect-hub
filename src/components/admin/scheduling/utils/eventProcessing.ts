@@ -10,7 +10,7 @@ type FilterOptions = {
   userId?: string | null;
   userIds?: string[];
   roleFilter?: string[];
-  setEvents: (events: CalendarEvent[]) => void;
+  setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
 };
 
 export const fetchFilteredEvents = async ({

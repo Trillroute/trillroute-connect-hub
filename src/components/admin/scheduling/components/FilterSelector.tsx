@@ -5,6 +5,7 @@ import { useSkills } from '@/hooks/useSkills';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useStudents } from '@/hooks/useStudents';
 import { MultiSelect, Option } from '@/components/ui/multi-select';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface FilterOption {
   value: string;
@@ -32,12 +33,46 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   const { skills = [], loading: skillsLoading } = useSkills();
   const { teachers = [], loading: teachersLoading } = useTeachers();
   const { students = [], loading: studentsLoading } = useStudents();
+  const [allUsers, setAllUsers] = useState<{id: string, name: string}[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Reset selected filters when filter type changes
   useEffect(() => {
     setSelectedFilter(null);
     setSelectedFilters([]);
+    
+    // If filterType is staff, load all staff members from Supabase
+    if (filterType === 'staff') {
+      fetchStaffMembers();
+    }
   }, [filterType, setSelectedFilter, setSelectedFilters]);
+  
+  // Fetch staff members from Supabase
+  const fetchStaffMembers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from('custom_users')
+        .select('id, first_name, last_name, role')
+        .in('role', ['teacher', 'admin', 'superadmin']);
+        
+      if (error) {
+        throw error;
+      }
+      
+      const mappedUsers = data.map(user => ({
+        id: user.id,
+        name: `${user.first_name} ${user.last_name} (${user.role})`
+      }));
+      
+      setAllUsers(mappedUsers);
+      console.log('Fetched staff members:', mappedUsers);
+    } catch (error) {
+      console.error('Error fetching staff members:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   // Get appropriate options based on filter type
   const getFilterOptions = (): Option[] => {
@@ -62,6 +97,11 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
           value: student.id, 
           label: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Unnamed Student'
         })) : [];
+      case 'staff':
+        return allUsers.map(user => ({
+          value: user.id,
+          label: user.name
+        }));
       default:
         return [];
     }
@@ -89,6 +129,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     if (filterType === 'skill') return skillsLoading;
     if (filterType === 'teacher') return teachersLoading;
     if (filterType === 'student') return studentsLoading;
+    if (filterType === 'staff') return loadingUsers;
     return false;
   };
 
@@ -100,7 +141,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   return (
     <div className="flex flex-col gap-2 w-full">
       {/* Segmented control for primary filter types */}
-      <div className="flex rounded-md bg-gray-100 p-1">
+      <div className="flex rounded-md bg-gray-100 p-1 overflow-x-auto">
         {options.map((option) => (
           <button
             key={option.type}
@@ -121,7 +162,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       </div>
 
       {/* Secondary filter dropdown with multi-select */}
-      {(['course', 'skill', 'teacher', 'student'].includes(filterType || '')) && (
+      {(['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '')) && (
         <MultiSelect
           options={filterOptions}
           selected={selectedFilters}

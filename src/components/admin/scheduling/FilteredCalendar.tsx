@@ -23,15 +23,15 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
   const mapFilterTypeToProvider = () => {
     switch(filterType) {
       case 'role':
-        return { filterType: 'staff', filterIds: filterValues };
+        return { filterType: 'staff' as const, filterIds: filterValues };
       case 'course':
-        return { filterType: 'course', filterIds: filterValues };
+        return { filterType: 'course' as const, filterIds: filterValues };
       case 'skill':
-        return { filterType: 'skill', filterIds: filterValues };
+        return { filterType: 'skill' as const, filterIds: filterValues };
       case 'teacher':
-        return { filterType: 'teacher', filterIds: filterValues };
+        return { filterType: 'teacher' as const, filterIds: filterValues };
       case 'student':
-        return { filterType: 'student', filterIds: filterValues };
+        return { filterType: 'student' as const, filterIds: filterValues };
       default:
         return { filterType: null, filterIds: [] };
     }
