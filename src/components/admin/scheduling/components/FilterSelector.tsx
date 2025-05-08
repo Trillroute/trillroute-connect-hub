@@ -182,7 +182,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       {/* Secondary filter dropdown with multi-select - always show this when a filter type is selected */}
       {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
         <MultiSelect 
-          options={filterOptions || []} 
+          options={filterOptions} 
           selected={Array.isArray(selectedFilters) ? selectedFilters : []} 
           onChange={handleMultiSelectChange} 
           placeholder={`Select ${filterType || ''}(s)${isLoading() ? ' (Loading...)' : ''}`} 

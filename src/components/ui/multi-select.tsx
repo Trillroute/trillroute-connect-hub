@@ -1,12 +1,14 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Check, ChevronsUpDown } from 'lucide-react';
-import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 export type Option = {
   label: string;
@@ -110,34 +112,33 @@ export function MultiSelect({
             <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0 bg-white" align="start" avoidCollisions>
-          <Command>
-            <ScrollArea className="max-h-[300px]">
-              <CommandGroup className="overflow-visible">
-                {safeOptions.length > 0 ? (
-                  safeOptions.map((option) => (
-                    <CommandItem
-                      key={option.value}
-                      onSelect={() => handleSelect(option.value)}
-                      className="cursor-pointer flex items-center gap-2"
-                    >
-                      <div
-                        className={cn(
-                          "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                          safeSelected.includes(option.value) ? "bg-primary text-primary-foreground" : "opacity-50"
-                        )}
-                      >
-                        {safeSelected.includes(option.value) && <Check className="h-3 w-3" />}
-                      </div>
-                      {option.label}
-                    </CommandItem>
-                  ))
-                ) : (
-                  <div className="py-2 px-2 text-center text-sm text-muted-foreground">No options available</div>
-                )}
-              </CommandGroup>
-            </ScrollArea>
-          </Command>
+        <PopoverContent className="w-full p-0 bg-white" align="start">
+          <div className="max-h-[300px] overflow-auto p-1">
+            {safeOptions.length > 0 ? (
+              safeOptions.map((option) => (
+                <div
+                  key={option.value}
+                  className={cn(
+                    "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                    safeSelected.includes(option.value) ? "bg-accent/50" : ""
+                  )}
+                  onClick={() => handleSelect(option.value)}
+                >
+                  <div
+                    className={cn(
+                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                      safeSelected.includes(option.value) ? "bg-primary text-primary-foreground" : "opacity-50"
+                    )}
+                  >
+                    {safeSelected.includes(option.value) && <Check className="h-3 w-3" />}
+                  </div>
+                  <span>{option.label}</span>
+                </div>
+              ))
+            ) : (
+              <div className="py-2 px-2 text-center text-sm text-muted-foreground">No options available</div>
+            )}
+          </div>
         </PopoverContent>
       </Popover>
     </div>
