@@ -26,6 +26,7 @@ export const fetchFilteredEvents = async ({
   try {
     console.log('Fetching filtered events with options:', { courseId, courseIds, skillId, skillIds, userId, userIds, roleFilter });
     
+    // Start building the query
     let query = supabase
       .from('user_events')
       .select(`
@@ -37,7 +38,7 @@ export const fetchFilteredEvents = async ({
     const coursesToFilter: string[] = [];
     
     // Safely add courseIds if they exist
-    if (courseIds && Array.isArray(courseIds)) {
+    if (Array.isArray(courseIds) && courseIds.length > 0) {
       courseIds.forEach(id => {
         if (id) coursesToFilter.push(id);
       });
@@ -57,7 +58,7 @@ export const fetchFilteredEvents = async ({
     const skillsToFilter: string[] = [];
     
     // Safely add skillIds if they exist
-    if (skillIds && Array.isArray(skillIds)) {
+    if (Array.isArray(skillIds) && skillIds.length > 0) {
       skillIds.forEach(id => {
         if (id) skillsToFilter.push(id);
       });
@@ -77,7 +78,7 @@ export const fetchFilteredEvents = async ({
     const usersToFilter: string[] = [];
     
     // Safely add userIds if they exist
-    if (userIds && Array.isArray(userIds)) {
+    if (Array.isArray(userIds) && userIds.length > 0) {
       userIds.forEach(id => {
         if (id) usersToFilter.push(id);
       });
@@ -95,17 +96,22 @@ export const fetchFilteredEvents = async ({
     
     // Process role filtering
     if (roleFilter && Array.isArray(roleFilter) && roleFilter.length > 0) {
-      const { data: userIds } = await supabase
-        .from('custom_users')
-        .select('id')
-        .in('role', roleFilter);
-      
-      if (userIds && userIds.length > 0) {
-        const filteredUserIds = userIds.map(u => u.id);
-        query = query.in('user_id', filteredUserIds);
+      try {
+        const { data: userIds } = await supabase
+          .from('custom_users')
+          .select('id')
+          .in('role', roleFilter);
+        
+        if (userIds && userIds.length > 0) {
+          const filteredUserIds = userIds.map(u => u.id);
+          query = query.in('user_id', filteredUserIds);
+        }
+      } catch (error) {
+        console.error("Error fetching users by role:", error);
       }
     }
     
+    // Execute the query
     const { data, error } = await query;
     
     if (error) {
@@ -113,7 +119,7 @@ export const fetchFilteredEvents = async ({
       return;
     }
     
-    // Map to calendar events format - adding null checks
+    // Map to calendar events format
     const mappedEvents = Array.isArray(data) ? data.map(event => ({
       id: event.id,
       title: event.title || '',

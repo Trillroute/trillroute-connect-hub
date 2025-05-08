@@ -2,6 +2,7 @@
 import React from 'react';
 import { CalendarProvider } from './context/CalendarContext';
 import CalendarContent from './CalendarContent';
+import { FilteredEventsProvider } from './view-components/FilteredEventsProvider';
 
 interface FilteredCalendarProps {
   filterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student';
@@ -19,34 +20,41 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
   description
 }) => {
   // Process filter props to map to the right properties
-  const filterProps = () => {
+  const mapFilterTypeToProvider = () => {
     switch(filterType) {
       case 'role':
-        return { roleFilter: filterValues };
+        return { filterType: 'staff', filterIds: filterValues };
       case 'course':
-        return { courseId: filterValues[0] };
+        return { filterType: 'course', filterIds: filterValues };
       case 'skill':
-        return { skillId: filterValues[0] };
+        return { filterType: 'skill', filterIds: filterValues };
       case 'teacher':
+        return { filterType: 'teacher', filterIds: filterValues };
       case 'student':
-        return { userId: filterValues[0] };
+        return { filterType: 'student', filterIds: filterValues };
       default:
-        return {};
+        return { filterType: null, filterIds: [] };
     }
   };
 
-  console.log("Rendering FilteredCalendar with:", { filterType, filterValues, hasAdminAccess, title });
+  const providerProps = mapFilterTypeToProvider();
+  
+  console.log("Rendering FilteredCalendar with:", { filterType, filterValues, hasAdminAccess, title, providerProps });
 
   return (
     <CalendarProvider>
-      <div className="h-full flex flex-col">
-        <CalendarContent 
-          hasAdminAccess={hasAdminAccess}
-          title={title}
-          description={description}
-          {...filterProps()}
-        />
-      </div>
+      <FilteredEventsProvider 
+        filterType={providerProps.filterType}
+        filterIds={providerProps.filterIds}
+      >
+        <div className="h-full flex flex-col">
+          <CalendarContent 
+            hasAdminAccess={hasAdminAccess}
+            title={title}
+            description={description}
+          />
+        </div>
+      </FilteredEventsProvider>
     </CalendarProvider>
   );
 };

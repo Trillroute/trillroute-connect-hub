@@ -78,10 +78,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   ];
 
   const handleMultiSelectChange = (selected: string[]) => {
-    const safeSelected = Array.isArray(selected) ? selected : [];
-    setSelectedFilters(safeSelected);
+    console.log("MultiSelect selection changed:", selected);
+    setSelectedFilters(selected || []);
     // Also update the single selection state for backward compatibility
-    setSelectedFilter(safeSelected.length > 0 ? safeSelected[0] : null);
+    setSelectedFilter(selected && selected.length > 0 ? selected[0] : null);
   };
 
   const isLoading = () => {
@@ -92,7 +92,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     return false;
   };
 
-  // Ensure we have valid options and log what's happening
+  // Get filter options and log information
   const filterOptions = getFilterOptions();
   console.log(`Filter options for ${filterType}:`, filterOptions);
   console.log("Selected filters:", selectedFilters);
@@ -120,11 +120,11 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         ))}
       </div>
 
-      {/* Secondary filter dropdown with multi-select (appears only when Course/Skill/etc is selected) */}
-      {(['course', 'skill', 'teacher', 'student'].includes(filterType || '') && getFilterOptions().length > 0) && (
+      {/* Secondary filter dropdown with multi-select */}
+      {(['course', 'skill', 'teacher', 'student'].includes(filterType || '')) && (
         <MultiSelect
           options={filterOptions}
-          selected={selectedFilters || []}
+          selected={selectedFilters}
           onChange={handleMultiSelectChange}
           placeholder={`Select ${filterType}(s)${isLoading() ? ' (Loading...)' : ''}`}
           className="w-full bg-white"
