@@ -19,6 +19,7 @@ interface FilterSelectorProps {
   setSelectedFilter: (id: string | null) => void;
   selectedFilters?: string[];
   setSelectedFilters?: (ids: string[]) => void;
+  showFilterTypeTabs?: boolean; // New prop to control filter type tabs visibility
 }
 
 const FilterSelector: React.FC<FilterSelectorProps> = ({
@@ -27,7 +28,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   selectedFilter,
   setSelectedFilter,
   selectedFilters = [],
-  setSelectedFilters = () => {}
+  setSelectedFilters = () => {},
+  showFilterTypeTabs = true // Default to true for backward compatibility
 }) => {
   const { courses = [], loading: coursesLoading } = useCourses();
   const { skills = [], loading: skillsLoading } = useSkills();
@@ -156,26 +158,28 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      {/* Segmented control for primary filter types */}
-      <div className="flex rounded-md bg-gray-100 p-1 overflow-x-auto">
-        {options.map((option) => (
-          <button
-            key={option.type}
-            onClick={() => {
-              setFilterType(option.type === 'all' ? null : option.type);
-              setSelectedFilter(null);
-              setSelectedFilters([]);
-            }}
-            className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-              (option.type === 'all' && !filterType) || filterType === option.type
-                ? 'bg-white shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      {/* Segmented control for primary filter types - only show if showFilterTypeTabs is true */}
+      {showFilterTypeTabs && (
+        <div className="flex rounded-md bg-gray-100 p-1 overflow-x-auto">
+          {options.map((option) => (
+            <button
+              key={option.type}
+              onClick={() => {
+                setFilterType(option.type === 'all' ? null : option.type);
+                setSelectedFilter(null);
+                setSelectedFilters([]);
+              }}
+              className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                (option.type === 'all' && !filterType) || filterType === option.type
+                  ? 'bg-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Secondary filter dropdown with multi-select */}
       {(['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '')) && (

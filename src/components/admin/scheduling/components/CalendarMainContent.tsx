@@ -8,6 +8,7 @@ import FilterSelector from './FilterSelector';
 import LayersDropdown from '../LayersDropdown';
 import useEventHandlers from './EventHandlers';
 import { CalendarViewMode } from '../context/calendarTypes';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CalendarMainContentProps {
   hasAdminAccess: boolean;
@@ -38,6 +39,12 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     { value: 'month', label: 'Month' }
   ];
 
+  const handleFilterTypeChange = (type: string | null) => {
+    setFilterType(type);
+    setSelectedFilter(null);
+    setSelectedFilters([]);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b pb-4 px-4">
@@ -67,18 +74,44 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
         </div>
         
         <div className="mt-4">
-          <FilterSelector 
-            filterType={filterType} 
-            setFilterType={setFilterType}
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-            selectedFilters={selectedFilters}
-            setSelectedFilters={setSelectedFilters}
-          />
+          {/* Filter tabs using shadcn UI Tabs component */}
+          <Tabs defaultValue={filterType || "all"} onValueChange={(value) => handleFilterTypeChange(value === "all" ? null : value)}>
+            <TabsList className="flex rounded-md bg-gray-100 p-1 overflow-x-auto">
+              <TabsTrigger value="all" className="flex-1 px-3 py-1.5 text-sm font-medium">All</TabsTrigger>
+              <TabsTrigger value="teacher" className="flex-1 px-3 py-1.5 text-sm font-medium">Teachers</TabsTrigger>
+              <TabsTrigger value="student" className="flex-1 px-3 py-1.5 text-sm font-medium">Students</TabsTrigger>
+              <TabsTrigger value="admin" className="flex-1 px-3 py-1.5 text-sm font-medium">Admins</TabsTrigger>
+              <TabsTrigger value="staff" className="flex-1 px-3 py-1.5 text-sm font-medium">Staff</TabsTrigger>
+              <TabsTrigger value="course" className="flex-1 px-3 py-1.5 text-sm font-medium">Course</TabsTrigger>
+              <TabsTrigger value="skill" className="flex-1 px-3 py-1.5 text-sm font-medium">Skill</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Only show the multi-select when a filter type is selected */}
+          {(['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '')) && (
+            <div className="mt-2">
+              <FilterSelector 
+                filterType={filterType} 
+                setFilterType={setFilterType}
+                selectedFilter={selectedFilter}
+                setSelectedFilter={setSelectedFilter}
+                selectedFilters={selectedFilters}
+                setSelectedFilters={setSelectedFilters}
+                showFilterTypeTabs={false} // Add this prop to control filter tabs visibility
+              />
+            </div>
+          )}
         </div>
 
         <div className="mt-4">
-          <CalendarHeader title={title} />
+          <CalendarHeader 
+            title={<div className="text-xl font-semibold">{filterType ? `${title} (${filterType})` : title}</div>} 
+            hasAdminAccess={hasAdminAccess}
+            onCreateEvent={eventHandlers.handleCreateEvent}
+            showEventListToggle={true}
+            onToggleEventList={() => setShowEventList(!showEventList)}
+            isEventListShown={showEventList}
+          />
         </div>
       </div>
 
