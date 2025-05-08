@@ -41,41 +41,27 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
 
   // Get appropriate options based on filter type
   const getFilterOptions = (): Option[] => {
-    console.log(`Getting filter options for ${filterType}`);
-    
     switch (filterType) {
       case 'course':
-        const courseOptions = Array.isArray(courses) ? courses.map(course => ({
-          value: course.id || '',
+        return Array.isArray(courses) ? courses.map(course => ({ 
+          value: course.id, 
           label: course.title || 'Unnamed Course'
         })) : [];
-        console.log("Course options:", courseOptions);
-        return courseOptions;
-        
       case 'skill':
-        const skillOptions = Array.isArray(skills) ? skills.map(skill => ({
-          value: skill.id || '',
+        return Array.isArray(skills) ? skills.map(skill => ({ 
+          value: skill.id, 
           label: skill.name || 'Unnamed Skill'
         })) : [];
-        console.log("Skill options:", skillOptions);
-        return skillOptions;
-        
       case 'teacher':
-        const teacherOptions = Array.isArray(teachers) ? teachers.map(teacher => ({
-          value: teacher.id || '',
+        return Array.isArray(teachers) ? teachers.map(teacher => ({ 
+          value: teacher.id, 
           label: `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || 'Unnamed Teacher'
         })) : [];
-        console.log("Teacher options:", teacherOptions);
-        return teacherOptions;
-        
       case 'student':
-        const studentOptions = Array.isArray(students) ? students.map(student => ({
-          value: student.id || '',
+        return Array.isArray(students) ? students.map(student => ({ 
+          value: student.id, 
           label: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Unnamed Student'
         })) : [];
-        console.log("Student options:", studentOptions);
-        return studentOptions;
-        
       default:
         return [];
     }
@@ -92,8 +78,6 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   ];
 
   const handleMultiSelectChange = (selected: string[]) => {
-    console.log("MultiSelect change:", selected);
-    // Ensure selected is an array
     const safeSelected = Array.isArray(selected) ? selected : [];
     setSelectedFilters(safeSelected);
     // Also update the single selection state for backward compatibility
@@ -108,10 +92,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     return false;
   };
 
-  // Get filter options
+  // Ensure we have valid options and log what's happening
   const filterOptions = getFilterOptions();
-  
-  // Ensure we have valid options
   console.log(`Filter options for ${filterType}:`, filterOptions);
   console.log("Selected filters:", selectedFilters);
 
@@ -138,24 +120,15 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         ))}
       </div>
 
-      {/* Secondary filter dropdown with multi-select */}
-      {(['course', 'skill', 'teacher', 'student'].includes(filterType || '') && filterOptions.length > 0) && (
+      {/* Secondary filter dropdown with multi-select (appears only when Course/Skill/etc is selected) */}
+      {(['course', 'skill', 'teacher', 'student'].includes(filterType || '') && getFilterOptions().length > 0) && (
         <MultiSelect
           options={filterOptions}
-          selected={Array.isArray(selectedFilters) ? selectedFilters : []}
+          selected={selectedFilters || []}
           onChange={handleMultiSelectChange}
           placeholder={`Select ${filterType}(s)${isLoading() ? ' (Loading...)' : ''}`}
           className="w-full bg-white"
         />
-      )}
-
-      {/* Show loading or empty state when needed */}
-      {(['course', 'skill', 'teacher', 'student'].includes(filterType || '') && filterOptions.length === 0) && (
-        <div className="p-2 bg-white border rounded text-center text-sm text-gray-600">
-          {isLoading() 
-            ? `Loading ${filterType} options...` 
-            : `No ${filterType} options available`}
-        </div>
       )}
     </div>
   );

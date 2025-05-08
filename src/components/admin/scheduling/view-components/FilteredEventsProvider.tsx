@@ -30,48 +30,34 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
 
     // Apply the appropriate filter
     const applyFilter = async () => {
-      // Make sure filterIds is a valid array
+      // Make sure filterIds is an array
       const safeFilterIds = Array.isArray(filterIds) ? filterIds : [];
       
-      // If we have both filterIds array and a single filterId, combine them safely
-      const combinedIds: string[] = [];
+      // If we have both filterIds array and a single filterId, combine them
+      const ids = filterId 
+        ? [...safeFilterIds, filterId].filter(Boolean) 
+        : safeFilterIds.filter(Boolean);
       
-      // Add filterId if it's a valid string
-      if (filterId && typeof filterId === 'string') {
-        combinedIds.push(filterId);
-      }
-      
-      // Add all valid items from safeFilterIds
-      for (let i = 0; i < safeFilterIds.length; i++) {
-        const id = safeFilterIds[i];
-        if (id && typeof id === 'string') {
-          combinedIds.push(id);
-        }
-      }
-      
-      // Filter out any duplicate IDs
-      const uniqueIds = [...new Set(combinedIds)];
-      
-      console.log(`Applying ${filterType} filter with IDs:`, uniqueIds);
+      console.log(`Applying ${filterType} filter with IDs:`, ids);
       
       switch (filterType) {
         case 'course':
-          await fetchFilteredEvents({ courseIds: uniqueIds, setEvents });
+          await fetchFilteredEvents({ courseIds: ids, setEvents });
           break;
         case 'skill':
-          await fetchFilteredEvents({ skillIds: uniqueIds, setEvents });
+          await fetchFilteredEvents({ skillIds: ids, setEvents });
           break;
         case 'teacher':
           await fetchFilteredEvents({ 
             roleFilter: ['teacher'],
-            userIds: uniqueIds,
+            userIds: ids,
             setEvents 
           });
           break;
         case 'student':
           await fetchFilteredEvents({ 
             roleFilter: ['student'],
-            userIds: uniqueIds,
+            userIds: ids,
             setEvents 
           });
           break;

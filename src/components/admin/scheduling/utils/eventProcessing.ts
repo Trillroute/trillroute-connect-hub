@@ -31,53 +31,76 @@ export const fetchFilteredEvents = async ({
         custom_users!user_id (first_name, last_name, role)
       `);
     
-    // Process course filtering - simplified approach to avoid deep type instantiation
-    if (courseId && typeof courseId === 'string') {
-      query = query.eq('course_id', courseId);
-    } else if (Array.isArray(courseIds) && courseIds.length > 0) {
-      // Filter out null and undefined values
-      const validCourseIds = courseIds.filter(id => id !== null && id !== undefined);
-      if (validCourseIds.length > 0) {
-        query = query.in('course_id', validCourseIds);
+    // Process course filtering
+    const coursesToFilter: string[] = [];
+    
+    // Add courseIds if they exist
+    if (courseIds && Array.isArray(courseIds)) {
+      for (const id of courseIds) {
+        if (id) coursesToFilter.push(id);
       }
     }
     
-    // Process skill filtering - simplified approach to avoid deep type instantiation
-    if (skillId && typeof skillId === 'string') {
-      query = query.eq('skill_id', skillId);
-    } else if (Array.isArray(skillIds) && skillIds.length > 0) {
-      // Filter out null and undefined values
-      const validSkillIds = skillIds.filter(id => id !== null && id !== undefined);
-      if (validSkillIds.length > 0) {
-        query = query.in('skill_id', validSkillIds);
+    // Add single courseId if it exists
+    if (courseId) {
+      coursesToFilter.push(courseId);
+    }
+    
+    // Apply course filter if we have any courses
+    if (coursesToFilter.length > 0) {
+      query = query.in('course_id', coursesToFilter);
+    }
+    
+    // Process skill filtering
+    const skillsToFilter: string[] = [];
+    
+    // Add skillIds if they exist
+    if (skillIds && Array.isArray(skillIds)) {
+      for (const id of skillIds) {
+        if (id) skillsToFilter.push(id);
       }
     }
     
-    // Process user filtering - simplified approach to avoid deep type instantiation
-    if (userId && typeof userId === 'string') {
-      query = query.eq('user_id', userId);
-    } else if (Array.isArray(userIds) && userIds.length > 0) {
-      // Filter out null and undefined values
-      const validUserIds = userIds.filter(id => id !== null && id !== undefined);
-      if (validUserIds.length > 0) {
-        query = query.in('user_id', validUserIds);
+    // Add single skillId if it exists
+    if (skillId) {
+      skillsToFilter.push(skillId);
+    }
+    
+    // Apply skill filter if we have any skills
+    if (skillsToFilter.length > 0) {
+      query = query.in('skill_id', skillsToFilter);
+    }
+    
+    // Process user filtering
+    const usersToFilter: string[] = [];
+    
+    // Add userIds if they exist
+    if (userIds && Array.isArray(userIds)) {
+      for (const id of userIds) {
+        if (id) usersToFilter.push(id);
       }
+    }
+    
+    // Add single userId if it exists
+    if (userId) {
+      usersToFilter.push(userId);
+    }
+    
+    // Apply user filter if we have any users
+    if (usersToFilter.length > 0) {
+      query = query.in('user_id', usersToFilter);
     }
     
     // Process role filtering
-    if (Array.isArray(roleFilter) && roleFilter.length > 0) {
-      try {
-        const { data: filteredUserIds } = await supabase
-          .from('custom_users')
-          .select('id')
-          .in('role', roleFilter);
-        
-        if (filteredUserIds && filteredUserIds.length > 0) {
-          const userIdsArray = filteredUserIds.map(u => u.id);
-          query = query.in('user_id', userIdsArray);
-        }
-      } catch (err) {
-        console.error("Failed to fetch users by role:", err);
+    if (roleFilter && Array.isArray(roleFilter) && roleFilter.length > 0) {
+      const { data: userIds } = await supabase
+        .from('custom_users')
+        .select('id')
+        .in('role', roleFilter);
+      
+      if (userIds && userIds.length > 0) {
+        const filteredUserIds = userIds.map(u => u.id);
+        query = query.in('user_id', filteredUserIds);
       }
     }
     
@@ -88,14 +111,14 @@ export const fetchFilteredEvents = async ({
       return;
     }
     
-    // Map to calendar events format with proper null checking
+    // Map to calendar events format - adding null checks
     const mappedEvents = Array.isArray(data) ? data.map(event => ({
       id: event.id,
-      title: event.title || 'Untitled Event',
+      title: event.title || '',
       start: new Date(event.start_time),
       end: new Date(event.end_time),
       description: event.description || '',
-      color: event.custom_users?.role ? getEventColorByRole(event.custom_users.role) : '#6b7280'
+      color: getEventColorByRole(event.custom_users?.role)
     })) : [];
     
     setEvents(mappedEvents);
