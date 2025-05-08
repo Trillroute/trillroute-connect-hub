@@ -28,10 +28,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   selectedFilters = [],
   setSelectedFilters = () => {}
 }) => {
-  const { courses, loading: coursesLoading } = useCourses();
-  const { skills, loading: skillsLoading } = useSkills();
-  const { teachers, loading: teachersLoading } = useTeachers();
-  const { students, loading: studentsLoading } = useStudents();
+  const { courses = [], loading: coursesLoading } = useCourses();
+  const { skills = [], loading: skillsLoading } = useSkills();
+  const { teachers = [], loading: teachersLoading } = useTeachers();
+  const { students = [], loading: studentsLoading } = useStudents();
 
   // Reset selected filters when filter type changes
   useEffect(() => {
@@ -78,9 +78,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   ];
 
   const handleMultiSelectChange = (selected: string[]) => {
-    setSelectedFilters(selected);
+    const safeSelected = Array.isArray(selected) ? selected : [];
+    setSelectedFilters(safeSelected);
     // Also update the single selection state for backward compatibility
-    setSelectedFilter(selected.length > 0 ? selected[0] : null);
+    setSelectedFilter(safeSelected.length > 0 ? safeSelected[0] : null);
   };
 
   const isLoading = () => {
@@ -91,8 +92,9 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     return false;
   };
 
-  const options2 = getFilterOptions();
-  console.log(`Filter options for ${filterType}:`, options2);
+  // Ensure we have valid options and log what's happening
+  const filterOptions = getFilterOptions();
+  console.log(`Filter options for ${filterType}:`, filterOptions);
   console.log("Selected filters:", selectedFilters);
 
   return (
@@ -121,8 +123,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       {/* Secondary filter dropdown with multi-select (appears only when Course/Skill/etc is selected) */}
       {(['course', 'skill', 'teacher', 'student'].includes(filterType || '') && getFilterOptions().length > 0) && (
         <MultiSelect
-          options={getFilterOptions()}
-          selected={selectedFilters}
+          options={filterOptions}
+          selected={selectedFilters || []}
           onChange={handleMultiSelectChange}
           placeholder={`Select ${filterType}(s)${isLoading() ? ' (Loading...)' : ''}`}
           className="w-full bg-white"

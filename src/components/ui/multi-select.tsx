@@ -32,10 +32,10 @@ export function MultiSelect({
   const inputRef = useRef<HTMLDivElement>(null);
 
   // Ensure options is always an array
-  const safeOptions = Array.isArray(options) ? options : [];
+  const safeOptions: Option[] = Array.isArray(options) ? options : [];
   
-  // Ensure selected is always an array
-  const safeSelected = Array.isArray(selected) ? selected : [];
+  // Ensure selected is always an array of strings
+  const safeSelected: string[] = Array.isArray(selected) ? selected : [];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

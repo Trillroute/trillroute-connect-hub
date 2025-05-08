@@ -32,72 +32,63 @@ export const fetchFilteredEvents = async ({
       `);
     
     // Process course filtering
-    if ((courseIds && Array.isArray(courseIds) && courseIds.length > 0) || courseId) {
-      const coursesToFilter: string[] = [];
-      
-      // Add courseIds if it exists and has items
-      if (courseIds && Array.isArray(courseIds)) {
-        for (let i = 0; i < courseIds.length; i++) {
-          const id = courseIds[i];
-          if (id) coursesToFilter.push(id);
-        }
+    const coursesToFilter: string[] = [];
+    
+    // Add courseIds if they exist
+    if (courseIds && Array.isArray(courseIds)) {
+      for (const id of courseIds) {
+        if (id) coursesToFilter.push(id);
       }
-      
-      // Add courseId if it exists
-      if (courseId) {
-        coursesToFilter.push(courseId);
-      }
-      
-      // Apply filter only if we have courses to filter
-      if (coursesToFilter.length > 0) {
-        query = query.in('course_id', coursesToFilter);
-      }
+    }
+    
+    // Add single courseId if it exists
+    if (courseId) {
+      coursesToFilter.push(courseId);
+    }
+    
+    // Apply course filter if we have any courses
+    if (coursesToFilter.length > 0) {
+      query = query.in('course_id', coursesToFilter);
     }
     
     // Process skill filtering
-    if ((skillIds && Array.isArray(skillIds) && skillIds.length > 0) || skillId) {
-      const skillsToFilter: string[] = [];
-      
-      // Add skillIds if it exists and has items
-      if (skillIds && Array.isArray(skillIds)) {
-        for (let i = 0; i < skillIds.length; i++) {
-          const id = skillIds[i];
-          if (id) skillsToFilter.push(id);
-        }
-      }
-      
-      // Add skillId if it exists
-      if (skillId) {
-        skillsToFilter.push(skillId);
-      }
-      
-      // Apply filter only if we have skills to filter
-      if (skillsToFilter.length > 0) {
-        query = query.in('skill_id', skillsToFilter);
+    const skillsToFilter: string[] = [];
+    
+    // Add skillIds if they exist
+    if (skillIds && Array.isArray(skillIds)) {
+      for (const id of skillIds) {
+        if (id) skillsToFilter.push(id);
       }
     }
     
+    // Add single skillId if it exists
+    if (skillId) {
+      skillsToFilter.push(skillId);
+    }
+    
+    // Apply skill filter if we have any skills
+    if (skillsToFilter.length > 0) {
+      query = query.in('skill_id', skillsToFilter);
+    }
+    
     // Process user filtering
-    if ((userIds && Array.isArray(userIds) && userIds.length > 0) || userId) {
-      const usersToFilter: string[] = [];
-      
-      // Add userIds if it exists and has items
-      if (userIds && Array.isArray(userIds)) {
-        for (let i = 0; i < userIds.length; i++) {
-          const id = userIds[i];
-          if (id) usersToFilter.push(id);
-        }
+    const usersToFilter: string[] = [];
+    
+    // Add userIds if they exist
+    if (userIds && Array.isArray(userIds)) {
+      for (const id of userIds) {
+        if (id) usersToFilter.push(id);
       }
-      
-      // Add userId if it exists
-      if (userId) {
-        usersToFilter.push(userId);
-      }
-      
-      // Apply filter only if we have users to filter
-      if (usersToFilter.length > 0) {
-        query = query.in('user_id', usersToFilter);
-      }
+    }
+    
+    // Add single userId if it exists
+    if (userId) {
+      usersToFilter.push(userId);
+    }
+    
+    // Apply user filter if we have any users
+    if (usersToFilter.length > 0) {
+      query = query.in('user_id', usersToFilter);
     }
     
     // Process role filtering
@@ -121,9 +112,9 @@ export const fetchFilteredEvents = async ({
     }
     
     // Map to calendar events format - adding null checks
-    const mappedEvents = data ? data.map(event => ({
+    const mappedEvents = Array.isArray(data) ? data.map(event => ({
       id: event.id,
-      title: event.title,
+      title: event.title || '',
       start: new Date(event.start_time),
       end: new Date(event.end_time),
       description: event.description || '',

@@ -30,9 +30,15 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
 
     // Apply the appropriate filter
     const applyFilter = async () => {
-      // Make sure filterIds is an array before checking its length
+      // Make sure filterIds is an array
       const safeFilterIds = Array.isArray(filterIds) ? filterIds : [];
-      const ids = safeFilterIds.length > 0 ? safeFilterIds : (filterId ? [filterId] : []);
+      
+      // If we have both filterIds array and a single filterId, combine them
+      const ids = filterId 
+        ? [...safeFilterIds, filterId].filter(Boolean) 
+        : safeFilterIds.filter(Boolean);
+      
+      console.log(`Applying ${filterType} filter with IDs:`, ids);
       
       switch (filterType) {
         case 'course':
