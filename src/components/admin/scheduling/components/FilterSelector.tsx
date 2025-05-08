@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useCourses } from '@/hooks/useCourses';
 import { useSkills } from '@/hooks/useSkills';
@@ -54,6 +53,17 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   }[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [filterOptions, setFilterOptions] = useState<Option[]>([]);
+
+  // Log current state for debugging
+  useEffect(() => {
+    console.log('FilterSelector current state:', { 
+      filterType, 
+      selectedFilter, 
+      selectedFilters,
+      showFilterTypeTabs,
+      filterOptions: filterOptions.length
+    });
+  }, [filterType, selectedFilter, selectedFilters, showFilterTypeTabs, filterOptions]);
 
   // Fetch staff members from Supabase
   const fetchStaffMembers = useCallback(async () => {
@@ -213,12 +223,12 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       )}
 
       {/* Secondary filter dropdown with multi-select - always show this when a filter type is selected */}
-      {['course', 'skill', 'teacher', 'student', 'staff', 'admin'].includes(filterType || '') && (
+      {filterType && (
         <MultiSelect 
           options={filterOptions} 
-          selected={Array.isArray(selectedFilters) ? selectedFilters : []} 
+          selected={selectedFilters} 
           onChange={handleMultiSelectChange} 
-          placeholder={`Select ${filterType || ''}(s)${isLoading() ? ' (Loading...)' : ''}`} 
+          placeholder={`Select ${filterType}(s)${isLoading() ? ' (Loading...)' : ''}`} 
           className="w-full bg-white" 
         />
       )}

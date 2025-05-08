@@ -38,6 +38,15 @@ export function MultiSelect({
   
   // Always ensure selected is an array of strings
   const safeSelected: string[] = Array.isArray(selected) ? selected : [];
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('MultiSelect props:', { 
+      optionsCount: safeOptions.length, 
+      selectedCount: safeSelected.length,
+      open
+    });
+  }, [safeOptions, safeSelected, open]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

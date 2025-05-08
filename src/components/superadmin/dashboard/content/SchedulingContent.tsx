@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ContentWrapper from './ContentWrapper';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,12 +13,15 @@ const SchedulingContent: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
-  console.log("SchedulingContent rendering with:", { 
-    filterType, 
-    selectedFilter, 
-    selectedFilters, 
-    hasAdminAccess 
-  });
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log("SchedulingContent state:", { 
+      filterType, 
+      selectedFilter, 
+      selectedFilters, 
+      hasAdminAccess 
+    });
+  }, [filterType, selectedFilter, selectedFilters, hasAdminAccess]);
 
   return (
     <ContentWrapper
@@ -33,7 +36,7 @@ const SchedulingContent: React.FC = () => {
           setSelectedFilter={setSelectedFilter}
           selectedFilters={selectedFilters}
           setSelectedFilters={setSelectedFilters}
-          showFilterTypeTabs={false}
+          showFilterTypeTabs={true} // Show the filter type tabs in this view
         />
       </div>
       
@@ -41,7 +44,7 @@ const SchedulingContent: React.FC = () => {
         <FilteredCalendar
           title="All Events"
           hasAdminAccess={hasAdminAccess}
-          filterType={filterType as 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'staff' | undefined}
+          filterType={filterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | undefined}
           filterValues={selectedFilters}
         />
       </div>
