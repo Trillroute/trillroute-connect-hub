@@ -142,11 +142,7 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
         value: "levels",
         requiredPermission: AdminPermission.VIEW_LEVELS
       },
-      {
-        id: "access",
-        label: "Access Control",
-        value: "access",
-      },
+      // Removed the "Access Control" option here
     ],
   },
 ];
