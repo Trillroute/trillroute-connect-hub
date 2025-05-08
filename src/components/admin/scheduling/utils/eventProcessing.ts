@@ -36,7 +36,7 @@ export const fetchFilteredEvents = async ({
       const coursesToFilter: string[] = [];
       
       // Add courseIds if it exists and has items
-      if (Array.isArray(courseIds) && courseIds.length > 0) {
+      if (courseIds && Array.isArray(courseIds) && courseIds.length > 0) {
         // Using standard for loop to avoid TypeScript infinite instantiation
         for (let i = 0; i < courseIds.length; i++) {
           const id = courseIds[i];
@@ -60,7 +60,7 @@ export const fetchFilteredEvents = async ({
       const skillsToFilter: string[] = [];
       
       // Add skillIds if it exists and has items
-      if (Array.isArray(skillIds) && skillIds.length > 0) {
+      if (skillIds && Array.isArray(skillIds) && skillIds.length > 0) {
         // Using standard for loop to avoid TypeScript infinite instantiation
         for (let i = 0; i < skillIds.length; i++) {
           const id = skillIds[i];
@@ -84,7 +84,7 @@ export const fetchFilteredEvents = async ({
       const usersToFilter: string[] = [];
       
       // Add userIds if it exists and has items
-      if (Array.isArray(userIds) && userIds.length > 0) {
+      if (userIds && Array.isArray(userIds) && userIds.length > 0) {
         // Using standard for loop to avoid TypeScript infinite instantiation
         for (let i = 0; i < userIds.length; i++) {
           const id = userIds[i];
@@ -123,15 +123,15 @@ export const fetchFilteredEvents = async ({
       return;
     }
     
-    // Map to calendar events format
-    const mappedEvents = data.map(event => ({
+    // Map to calendar events format - adding null checks
+    const mappedEvents = data ? data.map(event => ({
       id: event.id,
       title: event.title,
       start: new Date(event.start_time),
       end: new Date(event.end_time),
       description: event.description || '',
       color: getEventColorByRole(event.custom_users?.role)
-    }));
+    })) : [];
     
     setEvents(mappedEvents);
   } catch (err) {
