@@ -92,7 +92,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
             </Tabs>
           )}
 
-          {/* Only show the multi-select when a filter type is selected */}
+          {/* Only show the multi-select when a filter type is selected, without the filter tabs */}
           {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
             <div className="mt-2">
               <FilterSelector 
@@ -102,7 +102,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
                 setSelectedFilter={setSelectedFilter} 
                 selectedFilters={selectedFilters} 
                 setSelectedFilters={setSelectedFilters} 
-                showFilterTypeTabs={false} // Hide duplicate filter tabs
+                showFilterTypeTabs={false}  // Explicitly set to false to prevent showing tabs
               />
             </div>
           )}

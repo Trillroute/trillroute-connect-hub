@@ -164,7 +164,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      {/* Only show filter type tabs if showFilterTypeTabs is true */}
+      {/* Only render filter type tabs if showFilterTypeTabs is true */}
       {showFilterTypeTabs && (
         <Tabs defaultValue={filterType || "all"} onValueChange={(value) => setFilterType(value === "all" ? null : value)}>
           <TabsList className="flex rounded-md bg-gray-100 p-1">
@@ -179,7 +179,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         </Tabs>
       )}
 
-      {/* Secondary filter dropdown with multi-select */}
+      {/* Secondary filter dropdown with multi-select - always show this when a filter type is selected */}
       {['course', 'skill', 'teacher', 'student', 'staff'].includes(filterType || '') && (
         <MultiSelect 
           options={filterOptions || []} 
