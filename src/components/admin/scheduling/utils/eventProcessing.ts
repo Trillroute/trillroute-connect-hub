@@ -66,17 +66,13 @@ export const fetchFilteredEvents = async ({
       }
     }
 
-    // Start query builder
-    let query = supabase.from('calendar_events').select('*');
+    // Prepare filter conditions for the query
+    const filterConditions: Record<string, any> = {};
+    let filteredUserIds: string[] | undefined = userIds;
     
-    // Apply filters if provided
-    if (userIds && userIds.length > 0) {
-      query = query.in('user_id', userIds);
-    }
-    
-    // Process role filter - simplified approach to avoid deep type instantiation
+    // Process role filter - completely separated from the main query to avoid deep type instantiation
     if (roleFilter && roleFilter.length > 0) {
-      // First fetch the users with the specified roles
+      // First fetch users with the specified roles
       const { data: roleUsers, error: roleError } = await supabase
         .from('custom_users')
         .select('id')
@@ -88,31 +84,36 @@ export const fetchFilteredEvents = async ({
         return;
       }
       
-      // If we got users with the specified roles
       if (roleUsers && roleUsers.length > 0) {
         const roleUserIds = roleUsers.map(user => user.id);
         
-        // If we also have specific user IDs, we need to find the intersection
-        if (userIds && userIds.length > 0) {
-          const filteredUserIds = userIds.filter(id => roleUserIds.includes(id));
+        // If we also have specific user IDs, find their intersection
+        if (filteredUserIds && filteredUserIds.length > 0) {
+          filteredUserIds = filteredUserIds.filter(id => roleUserIds.includes(id));
           
           if (filteredUserIds.length === 0) {
-            // No matching users between roles and specific users
+            // No overlap between specified users and role users
             setEvents([]);
             return;
           }
-          
-          // Apply the filtered user IDs to the query
-          query = query.in('user_id', filteredUserIds);
         } else {
-          // No specific user IDs, just filter by role user IDs
-          query = query.in('user_id', roleUserIds);
+          // No specific user IDs provided, use all users with the specified roles
+          filteredUserIds = roleUserIds;
         }
       } else {
-        // No users found with the specified roles
+        // No users with the specified roles
         setEvents([]);
         return;
       }
+    }
+    
+    // Build and execute query separately to avoid complex type chains
+    // This approach separates the query construction steps to prevent TypeScript from creating deep nested types
+    let query = supabase.from('calendar_events').select('*');
+    
+    // Apply user ID filter if we have any
+    if (filteredUserIds && filteredUserIds.length > 0) {
+      query = query.in('user_id', filteredUserIds);
     }
     
     // Apply course filter
@@ -125,7 +126,7 @@ export const fetchFilteredEvents = async ({
       query = query.in('skill_id', skillIds);
     }
 
-    // Execute query - detached from the conditional blocks to simplify the type flow
+    // Execute the final query
     const { data, error } = await query;
     
     if (error) {
