@@ -12,7 +12,8 @@ export interface AdminLevelDetailed extends AdminLevelBasic {
   leadPermissions: string[];
   coursePermissions: string[];
   levelPermissions: string[];
+  eventsPermissions: string[];
 }
 
-export type PermissionModuleType = 'student' | 'teacher' | 'admin' | 'lead' | 'course' | 'level';
+export type PermissionModuleType = 'student' | 'teacher' | 'admin' | 'lead' | 'course' | 'level' | 'event';
 export type PermissionActionType = 'view' | 'add' | 'edit' | 'delete';

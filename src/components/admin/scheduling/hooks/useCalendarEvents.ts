@@ -48,7 +48,8 @@ export const useCalendarEvents = () => {
 
     setIsLoading(true);
     try {
-      const newEvent = await createEvent(eventData, user.id);
+      // Pass the full user object to check permissions
+      const newEvent = await createEvent(eventData, user.id, user);
       if (newEvent) {
         setEvents(prev => [...prev, newEvent]);
         toast({
@@ -57,10 +58,10 @@ export const useCalendarEvents = () => {
         });
         return true;
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error creating event",
-        description: "Could not save your event",
+        description: error.message || "Could not save your event",
         variant: "destructive"
       });
     } finally {
@@ -74,7 +75,8 @@ export const useCalendarEvents = () => {
     
     setIsLoading(true);
     try {
-      const updatedEvent = await updateEvent(id, eventData, user.id);
+      // Pass the full user object to check permissions
+      const updatedEvent = await updateEvent(id, eventData, user.id, user);
       if (updatedEvent) {
         setEvents(prev => prev.map(event => event.id === id ? updatedEvent : event));
         toast({
@@ -83,10 +85,10 @@ export const useCalendarEvents = () => {
         });
         return true;
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error updating event",
-        description: "Could not update your event",
+        description: error.message || "Could not update your event",
         variant: "destructive"
       });
     } finally {
@@ -100,7 +102,8 @@ export const useCalendarEvents = () => {
     
     setIsLoading(true);
     try {
-      const success = await deleteEvent(id, user.id);
+      // Pass the full user object to check permissions
+      const success = await deleteEvent(id, user.id, user);
       if (success) {
         setEvents(prev => prev.filter(event => event.id !== id));
         toast({
@@ -109,10 +112,10 @@ export const useCalendarEvents = () => {
         });
         return true;
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error deleting event",
-        description: "Could not delete your event",
+        description: error.message || "Could not delete your event",
         variant: "destructive"
       });
     } finally {

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLevel } from '@/utils/permissions/types';
 
@@ -45,6 +44,9 @@ export const fetchAdminRoles = async (): Promise<AdminLevel[]> => {
       : [],
     levelPermissions: Array.isArray(level.level_permissions)
       ? level.level_permissions
+      : [],
+    eventsPermissions: Array.isArray(level.events_permissions)
+      ? level.events_permissions
       : []
   }));
 };

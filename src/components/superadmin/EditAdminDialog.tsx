@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -160,6 +159,7 @@ const EditAdminDialog = ({
                               {renderPermissionBadges(level.studentPermissions, 'Students')}
                               {renderPermissionBadges(level.teacherPermissions, 'Teachers')}
                               {renderPermissionBadges(level.adminPermissions, 'Admins')}
+                              {renderPermissionBadges(level.eventsPermissions || [], 'Events')}
                             </div>
                             <div>
                               {renderPermissionBadges(level.coursePermissions, 'Courses')}

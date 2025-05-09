@@ -1,4 +1,3 @@
-
 import { UserManagementUser } from "@/types/student";
 import { PermissionUser } from "./types";
 import { AdminPermission } from "./types";
@@ -158,5 +157,29 @@ export const canManageLevels = (
     return hasPermission(user, AdminPermission.EDIT_LEVELS);
   } else {
     return hasPermission(user, AdminPermission.DELETE_LEVELS);
+  }
+};
+
+/**
+ * Helper function to determine if a specific user can perform actions on events
+ */
+export const canManageEvents = (
+  user: UserManagementUser | PermissionUser | null, 
+  action: 'view' | 'add' | 'edit' | 'delete'
+): boolean => {
+  if (!user) return false;
+  
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
+  if (action === 'view') {
+    return hasPermission(user, AdminPermission.VIEW_EVENTS);
+  } else if (action === 'add') {
+    return hasPermission(user, AdminPermission.ADD_EVENTS);
+  } else if (action === 'edit') {
+    return hasPermission(user, AdminPermission.EDIT_EVENTS);
+  } else {
+    return hasPermission(user, AdminPermission.DELETE_EVENTS);
   }
 };

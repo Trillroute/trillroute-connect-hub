@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLevelDetailed, AdminLevelBasic } from '@/types/adminLevel';
 
@@ -14,6 +13,7 @@ const mapToAdminLevel = (level: any): AdminLevelDetailed => {
     leadPermissions: level.lead_permissions || [],
     coursePermissions: level.course_permissions || [],
     levelPermissions: level.level_permissions || [],
+    eventsPermissions: level.events_permissions || [],
   };
 };
 
@@ -28,6 +28,7 @@ const mapToSupabaseLevel = (level: Omit<AdminLevelDetailed, 'id'>): any => {
     lead_permissions: level.leadPermissions,
     course_permissions: level.coursePermissions,
     level_permissions: level.levelPermissions,
+    events_permissions: level.eventsPermissions,
   };
 };
 

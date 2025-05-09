@@ -14,6 +14,7 @@ export type Database = {
           admin_permissions: string[] | null
           course_permissions: string[] | null
           description: string
+          events_permissions: string[] | null
           id: number
           lead_permissions: string[] | null
           level_permissions: string[] | null
@@ -25,6 +26,7 @@ export type Database = {
           admin_permissions?: string[] | null
           course_permissions?: string[] | null
           description: string
+          events_permissions?: string[] | null
           id: number
           lead_permissions?: string[] | null
           level_permissions?: string[] | null
@@ -36,6 +38,7 @@ export type Database = {
           admin_permissions?: string[] | null
           course_permissions?: string[] | null
           description?: string
+          events_permissions?: string[] | null
           id?: number
           lead_permissions?: string[] | null
           level_permissions?: string[] | null

@@ -35,6 +35,7 @@ const PermissionsDialog = ({
     leadPermissions: string[];
     coursePermissions: string[];
     levelPermissions: string[];
+    eventsPermissions: string[];
   }>({
     studentPermissions: level?.studentPermissions || [],
     teacherPermissions: level?.teacherPermissions || [],
@@ -42,6 +43,7 @@ const PermissionsDialog = ({
     leadPermissions: level?.leadPermissions || [],
     coursePermissions: level?.coursePermissions || [],
     levelPermissions: level?.levelPermissions || [],
+    eventsPermissions: level?.eventsPermissions || [],
   });
 
   React.useEffect(() => {
@@ -53,6 +55,7 @@ const PermissionsDialog = ({
         leadPermissions: [...level.leadPermissions],
         coursePermissions: [...level.coursePermissions],
         levelPermissions: [...level.levelPermissions],
+        eventsPermissions: [...(level.eventsPermissions || [])],
       });
     }
   }, [level]);
@@ -64,6 +67,7 @@ const PermissionsDialog = ({
     lead: 'Lead Management',
     course: 'Course Management',
     level: 'Level Management',
+    event: 'Calendar Events',
   };
 
   const permissionOptions = ['view', 'add', 'edit', 'delete'];

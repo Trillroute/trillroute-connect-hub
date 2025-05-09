@@ -50,6 +50,12 @@ export enum AdminPermission {
   ADD_LEVELS = "ADD_LEVELS",
   EDIT_LEVELS = "EDIT_LEVELS",
   DELETE_LEVELS = "DELETE_LEVELS",
+  
+  // Events
+  VIEW_EVENTS = "VIEW_EVENTS",
+  ADD_EVENTS = "ADD_EVENTS",
+  EDIT_EVENTS = "EDIT_EVENTS",
+  DELETE_EVENTS = "DELETE_EVENTS",
 }
 
 /**
@@ -66,6 +72,7 @@ export interface AdminLevel {
   leadPermissions: string[];
   coursePermissions: string[];
   levelPermissions?: string[];
+  eventsPermissions?: string[];
   created_at?: string;
   updated_at?: string;
 }
