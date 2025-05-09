@@ -170,6 +170,7 @@ export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
   try {
     // Map our frontend model to the database schema
     const dbRole = {
+      id: role.id, // Include id field
       name: role.name,
       description: role.description,
       student_permissions: role.studentPermissions,
@@ -179,8 +180,7 @@ export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
       course_permissions: role.coursePermissions,
       level_permissions: role.levelPermissions,
       events_permissions: role.eventsPermissions,
-      class_types_permissions: role.classTypesPermissions || [],
-      user_availability_permissions: role.userAvailabilityPermissions || []
+      // Remove fields that don't exist in the database schema
     };
 
     // Add the optional fields only if they exist in the database schema
@@ -218,8 +218,7 @@ export const updateAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
       course_permissions: role.coursePermissions,
       level_permissions: role.levelPermissions,
       events_permissions: role.eventsPermissions,
-      class_types_permissions: role.classTypesPermissions || [],
-      user_availability_permissions: role.userAvailabilityPermissions || []
+      // Remove fields that don't exist in the database schema
     };
 
     const { data, error } = await supabase
@@ -319,8 +318,9 @@ export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promis
 
     // Then insert the new roles
     for (const role of roles) {
-      // Create database-compatible object
+      // Create database-compatible object, removing any fields not in the schema
       const dbRole = {
+        id: Math.floor(Math.random() * 1000) + 1, // Generate an ID since it's required
         name: role.roleName,
         description: '',
         student_permissions: role.permissions.students,
@@ -330,8 +330,7 @@ export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promis
         course_permissions: role.permissions.courses,
         level_permissions: role.permissions.levels || [],
         events_permissions: role.permissions.events || [],
-        class_types_permissions: role.permissions.classTypes || [],
-        user_availability_permissions: role.permissions.userAvailability || []
+        // Remove fields not in the database schema
       };
 
       const { error: insertError } = await supabase
@@ -375,8 +374,7 @@ export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> 
           course_permissions: role.coursePermissions,
           level_permissions: role.levelPermissions || [],
           events_permissions: role.eventsPermissions || [],
-          class_types_permissions: role.classTypesPermissions || [],
-          user_availability_permissions: role.userAvailabilityPermissions || []
+          // Remove fields that don't exist in the database schema
         };
 
         await supabase

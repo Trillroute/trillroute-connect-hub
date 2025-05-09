@@ -110,7 +110,7 @@ export const useAdminManagement = () => {
       });
       
       loadAdmins();
-      return true;
+      // Returning void instead of boolean to match expected type
     } catch (error: any) {
       console.error('Error updating admin level:', error);
       toast({
@@ -118,7 +118,6 @@ export const useAdminManagement = () => {
         description: error.message || 'Failed to update permission level. Please try again.',
         variant: 'destructive',
       });
-      return false;
     } finally {
       setIsLoading(false);
     }
