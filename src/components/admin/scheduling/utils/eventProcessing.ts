@@ -89,8 +89,8 @@ export const fetchFilteredEvents = async ({
         }
           
         if (usersWithRole && usersWithRole.length > 0) {
-          const userIds = usersWithRole.map(user => user.id);
-          query = query.in('user_id', userIds);
+          const roleUserIds = usersWithRole.map(user => user.id);
+          query = query.in('user_id', roleUserIds);
         } else {
           // If no users match the role filter, return empty array
           setEvents([]);
