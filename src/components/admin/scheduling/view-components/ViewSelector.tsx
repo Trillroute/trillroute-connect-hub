@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,8 +8,7 @@ import { MonthViewComponent } from './MonthViewComponent';
 import { EventListViewComponent } from './EventListViewComponent';
 
 interface ViewSelectorProps {
-  viewMode: 'day' | 'week' | 'month';
-  showEventList: boolean;
+  viewMode: 'day' | 'week' | 'month' | 'list';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -17,7 +17,6 @@ interface ViewSelectorProps {
 
 export const ViewSelector: React.FC<ViewSelectorProps> = ({
   viewMode,
-  showEventList,
   onCreateEvent,
   onEditEvent,
   onDeleteEvent,
@@ -26,17 +25,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   const { role } = useAuth();
   const isAdminOrHigher = role === 'admin' || role === 'superadmin';
   
-  // Always show the event list if showEventList is true, regardless of view mode
-  if (showEventList) {
-    return (
-      <EventListViewComponent 
-        onEditEvent={onEditEvent}
-        onDeleteEvent={onDeleteEvent}
-      />
-    );
-  }
-  
-  // Otherwise, show the regular calendar view based on viewMode
+  // Show the appropriate view based on viewMode
   switch (viewMode) {
     case 'week':
       return (
@@ -55,6 +44,13 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
     case 'month':
       return (
         <MonthViewComponent onDateClick={onDateClick} />
+      );
+    case 'list':
+      return (
+        <EventListViewComponent 
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
+        />
       );
     default:
       return null;

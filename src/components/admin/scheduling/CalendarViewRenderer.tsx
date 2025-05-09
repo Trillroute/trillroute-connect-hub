@@ -5,8 +5,7 @@ import { FilteredEventsProvider } from './view-components/FilteredEventsProvider
 import { ViewSelector } from './view-components/ViewSelector';
 
 interface CalendarViewRendererProps {
-  viewMode: 'day' | 'week' | 'month';
-  showEventList: boolean;
+  viewMode: 'day' | 'week' | 'month' | 'list';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -18,7 +17,6 @@ interface CalendarViewRendererProps {
 
 const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   viewMode,
-  showEventList,
   onCreateEvent,
   onEditEvent,
   onDeleteEvent,
@@ -31,7 +29,6 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
     <FilteredEventsProvider filterType={filterType} filterId={filterId} filterIds={filterIds}>
       <ViewSelector 
         viewMode={viewMode}
-        showEventList={showEventList}
         onCreateEvent={onCreateEvent}
         onEditEvent={onEditEvent}
         onDeleteEvent={onDeleteEvent}

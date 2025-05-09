@@ -30,7 +30,8 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   const options = Array.isArray(viewOptions) ? viewOptions : [
     { value: 'day', label: 'Day' },
     { value: 'week', label: 'Week' },
-    { value: 'month', label: 'Month' }
+    { value: 'month', label: 'Month' },
+    { value: 'list', label: 'List View' }
   ];
   
   const currentView = options.find(opt => opt.value === viewMode)?.label || 'Select View';
