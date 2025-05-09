@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import FilterTypeTabs from './FilterTypeTabs';
 import FilterDropdown from './FilterDropdown';
 import { useFilterOptions } from '../hooks/useFilterOptions';
@@ -16,7 +16,8 @@ interface FilterSelectorProps {
   setSelectedFilter: (id: string | null) => void;
   selectedFilters?: string[];
   setSelectedFilters?: (ids: string[]) => void;
-  showFilterTypeTabs?: boolean; // Prop to control filter type tabs visibility
+  showFilterTypeTabs?: boolean;
+  showFilterDropdown?: boolean; // New prop to control dropdown visibility
 }
 
 const FilterSelector: React.FC<FilterSelectorProps> = ({
@@ -26,21 +27,11 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   setSelectedFilter,
   selectedFilters = [],
   setSelectedFilters = () => {},
-  showFilterTypeTabs = true // Default to true for backward compatibility
+  showFilterTypeTabs = true,
+  showFilterDropdown = false // Default to false to hide the dropdown
 }) => {
   // Use our custom hook to get filter options
   const { filterOptions, isLoading } = useFilterOptions({ filterType });
-
-  // Log current state for debugging
-  useEffect(() => {
-    console.log('FilterSelector current state:', { 
-      filterType, 
-      selectedFilter, 
-      selectedFilters,
-      showFilterTypeTabs,
-      filterOptions: filterOptions.length
-    });
-  }, [filterType, selectedFilter, selectedFilters, showFilterTypeTabs, filterOptions]);
 
   // Reset selected filters when filter type changes
   useEffect(() => {
@@ -70,8 +61,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         />
       )}
 
-      {/* Secondary filter dropdown with multi-select - always show this when a filter type is selected */}
-      {filterType && (
+      {/* Only show filter dropdown if specifically requested */}
+      {showFilterDropdown && filterType && (
         <FilterDropdown
           filterOptions={filterOptions}
           selectedFilters={selectedFilters}

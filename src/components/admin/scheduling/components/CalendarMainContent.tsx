@@ -94,7 +94,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
       <CalendarHeader onCreateEvent={handleCreateEvent} />
       <FilterTypeTabs 
         filterType={filterType} 
-        setFilterType={handleFilterTypeChange}
+        setFilterType={handleFilterTypeChange} 
       />
       <div className="flex-grow overflow-auto">
         <CalendarViewRenderer 
