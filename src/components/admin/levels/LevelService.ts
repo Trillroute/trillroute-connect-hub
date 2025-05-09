@@ -1,7 +1,7 @@
 
 import { AdminLevelDetailed } from '@/types/adminLevel';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchAdminRoles, saveAdminLevel, deleteAdminLevel as deleteAdminLevelApi } from '@/components/superadmin/AdminRoleService';
+import { fetchAdminRoles, saveAdminLevel, deleteAdminRole } from '@/components/superadmin/AdminRoleService';
 
 /**
  * Fetches all levels from the database
@@ -54,7 +54,7 @@ export const updateLevel = async (id: number, level: Partial<AdminLevelDetailed>
 export const deleteLevel = async (id: number): Promise<void> => {
   console.log('[LevelService] Deleting level:', id);
   try {
-    await deleteAdminLevelApi(id);
+    await deleteAdminRole(id);
     console.log('[LevelService] Level deleted:', id);
   } catch (error) {
     console.error('[LevelService] Error deleting level:', error);

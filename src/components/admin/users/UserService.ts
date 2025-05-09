@@ -63,6 +63,20 @@ export const deleteUser = async (userId: string) => {
   }
 };
 
-// This function is now imported from AdminRoleService
-import { updateAdminLevel as updateAdminLevelDb } from '@/components/superadmin/AdminRoleService';
-export const updateAdminLevel = updateAdminLevelDb;
+// Import the correct function name and re-export it
+import { updateAdminRole } from '@/components/superadmin/AdminRoleService';
+
+// Create an updateAdminLevel function that calls updateAdminRole
+export const updateAdminLevel = async (userId: string, levelName: string): Promise<void> => {
+  console.log(`Updating admin level for user ${userId} to ${levelName}`);
+  
+  // Update the user's admin_level_name in custom_users table
+  const { error } = await supabase
+    .from('custom_users')
+    .update({ admin_level_name: levelName })
+    .eq('id', userId);
+
+  if (error) {
+    throw error;
+  }
+};

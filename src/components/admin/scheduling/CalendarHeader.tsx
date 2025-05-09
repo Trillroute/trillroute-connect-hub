@@ -12,15 +12,25 @@ interface CalendarHeaderProps {
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
-  const { viewMode, setViewMode } = useCalendar();
+  const { viewMode, setViewMode, currentDate } = useCalendar();
 
   return (
     <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 py-2">
-      <CalendarTitle />
+      <CalendarTitle viewMode={viewMode} currentDate={currentDate} />
       
       <div className="flex items-center gap-2">
-        <FilterDropdown />
-        <ViewModeSelector viewMode={viewMode} setViewMode={setViewMode} />
+        <FilterDropdown 
+          filterOptions={[]} 
+          selectedFilters={[]} 
+          isLoading={false} 
+          onChange={() => {}} 
+          filterType="all"
+        />
+        <ViewModeSelector 
+          viewMode={viewMode} 
+          setViewMode={setViewMode} 
+          viewOptions={['day', 'week', 'month', 'list']}
+        />
         <Button 
           onClick={onCreateEvent}
           className="bg-primary text-white hover:bg-primary-darker"

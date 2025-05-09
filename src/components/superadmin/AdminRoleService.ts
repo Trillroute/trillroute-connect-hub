@@ -113,10 +113,11 @@ const transformDbRoleToAdminLevelDetailed = (dbRole: any): AdminLevelDetailed =>
  */
 export const fetchAdminRoles = async (): Promise<AdminLevelDetailed[]> => {
   try {
+    // Using the correct table name 'admin_levels' instead of 'admin_roles'
     const { data, error } = await supabase
-      .from('admin_roles')
+      .from('admin_levels')
       .select('*')
-      .order('level', { ascending: true });
+      .order('id', { ascending: true });
 
     if (error) {
       console.error('Error fetching admin roles:', error);
@@ -142,7 +143,7 @@ export const fetchAdminRoles = async (): Promise<AdminLevelDetailed[]> => {
 export const fetchAdminRoleById = async (id: number): Promise<AdminLevelDetailed | null> => {
   try {
     const { data, error } = await supabase
-      .from('admin_roles')
+      .from('admin_levels')
       .select('*')
       .eq('id', id)
       .single();
@@ -169,7 +170,7 @@ export const fetchAdminRoleById = async (id: number): Promise<AdminLevelDetailed
 export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLevelDetailed | null> => {
   try {
     const { data, error } = await supabase
-      .from('admin_roles')
+      .from('admin_levels')
       .insert({
         name: role.name,
         description: role.description,
@@ -181,8 +182,8 @@ export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
         course_permissions: role.coursePermissions,
         level_permissions: role.levelPermissions,
         events_permissions: role.eventsPermissions,
-        class_types_permissions: role.classTypesPermissions,
-        user_availability_permissions: role.userAvailabilityPermissions
+        class_types_permissions: role.classTypesPermissions || [],
+        user_availability_permissions: role.userAvailabilityPermissions || []
       })
       .select()
       .single();
@@ -205,7 +206,7 @@ export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
 export const updateAdminRole = async (role: AdminLevelDetailed): Promise<AdminLevelDetailed | null> => {
   try {
     const { data, error } = await supabase
-      .from('admin_roles')
+      .from('admin_levels')
       .update({
         name: role.name,
         description: role.description,
@@ -217,8 +218,8 @@ export const updateAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
         course_permissions: role.coursePermissions,
         level_permissions: role.levelPermissions,
         events_permissions: role.eventsPermissions,
-        class_types_permissions: role.classTypesPermissions,
-        user_availability_permissions: role.userAvailabilityPermissions
+        class_types_permissions: role.classTypesPermissions || [],
+        user_availability_permissions: role.userAvailabilityPermissions || []
       })
       .eq('id', role.id)
       .select()
@@ -242,17 +243,9 @@ export const updateAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
 export const deleteAdminRole = async (id: number): Promise<boolean> => {
   try {
     // Check if this is the only admin role
-    const { data: countData, error: countError } = await supabase
-      .from('admin_roles')
-      .select('count');
-
-    if (countError) {
-      console.error('Error counting admin roles:', countError);
-      return false;
-    }
-
-    // Parse the count result
-    const count = countData.length > 0 ? Number(countData[0].count) : 0;
+    const { count } = await supabase
+      .from('admin_levels')
+      .select('*', { count: 'exact', head: true });
 
     // Don't allow deleting the last admin role
     if (count <= 1) {
@@ -261,7 +254,7 @@ export const deleteAdminRole = async (id: number): Promise<boolean> => {
     }
 
     const { error } = await supabase
-      .from('admin_roles')
+      .from('admin_levels')
       .delete()
       .eq('id', id);
 
@@ -292,10 +285,10 @@ export const exportAdminRolesToJson = async (): Promise<AdminRoleExport[]> => {
         admins: role.adminPermissions,
         leads: role.leadPermissions,
         courses: role.coursePermissions,
-        levels: role.levelPermissions,
-        events: role.eventsPermissions,
-        classTypes: role.classTypesPermissions,
-        userAvailability: role.userAvailabilityPermissions
+        levels: role.levelPermissions || [],
+        events: role.eventsPermissions || [],
+        classTypes: role.classTypesPermissions || [],
+        userAvailability: role.userAvailabilityPermissions || []
       }
     }));
   } catch (error) {
@@ -311,7 +304,7 @@ export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promis
   try {
     // First delete all existing roles
     const { error: deleteError } = await supabase
-      .from('admin_roles')
+      .from('admin_levels')
       .delete()
       .neq('id', 0); // Delete all rows
 
@@ -323,7 +316,7 @@ export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promis
     // Then insert the new roles
     for (const role of roles) {
       const { error: insertError } = await supabase
-        .from('admin_roles')
+        .from('admin_levels')
         .insert({
           name: role.roleName,
           description: '',
@@ -332,10 +325,10 @@ export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promis
           admin_permissions: role.permissions.admins,
           lead_permissions: role.permissions.leads,
           course_permissions: role.permissions.courses,
-          level_permissions: role.permissions.levels,
-          events_permissions: role.permissions.events,
-          class_types_permissions: role.permissions.classTypes,
-          user_availability_permissions: role.permissions.userAvailability
+          level_permissions: role.permissions.levels || [],
+          events_permissions: role.permissions.events || [],
+          class_types_permissions: role.permissions.classTypes || [],
+          user_availability_permissions: role.permissions.userAvailability || []
         });
 
       if (insertError) {
@@ -348,5 +341,67 @@ export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promis
   } catch (error) {
     console.error('Error importing admin roles:', error);
     return false;
+  }
+};
+
+// Add this function to create default admin levels if none exist
+export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> => {
+  try {
+    console.log('Creating default admin roles');
+    
+    // First check if there are any existing admin roles
+    const { count } = await supabase
+      .from('admin_levels')
+      .select('*', { count: 'exact', head: true });
+    
+    // Only create defaults if there are no existing roles
+    if (count === 0) {
+      for (const role of DEFAULT_ADMIN_ROLES) {
+        await supabase
+          .from('admin_levels')
+          .insert({
+            id: role.id,
+            name: role.name,
+            description: role.description,
+            level: role.level,
+            student_permissions: role.studentPermissions,
+            teacher_permissions: role.teacherPermissions,
+            admin_permissions: role.adminPermissions,
+            lead_permissions: role.leadPermissions,
+            course_permissions: role.coursePermissions,
+            level_permissions: role.levelPermissions || [],
+            events_permissions: role.eventsPermissions || [],
+            class_types_permissions: role.classTypesPermissions || [],
+            user_availability_permissions: role.userAvailabilityPermissions || []
+          });
+      }
+
+      // Return the default roles after creating them
+      return DEFAULT_ADMIN_ROLES;
+    }
+    
+    // If roles exist, fetch and return them
+    return fetchAdminRoles();
+  } catch (error) {
+    console.error('Error creating default admin roles:', error);
+    return DEFAULT_ADMIN_ROLES;
+  }
+};
+
+// Add a function to save admin level that handles both create and update
+export const saveAdminLevel = async (level: Partial<AdminLevelDetailed> & {id?: number}): Promise<AdminLevelDetailed> => {
+  try {
+    if (level.id) {
+      const updated = await updateAdminRole(level as AdminLevelDetailed);
+      if (updated) return updated;
+      throw new Error('Failed to update admin level');
+    } else {
+      const created = await createAdminRole(level as AdminLevelDetailed);
+      if (created) return created;
+      throw new Error('Failed to create admin level');
+    }
+  } catch (error) {
+    console.error('Error in saveAdminLevel:', error);
+    throw error;
   }
 };
