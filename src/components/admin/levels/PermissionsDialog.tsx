@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -112,16 +113,18 @@ const PermissionsDialog = ({
 
         <ScrollArea className="h-[500px] pr-4">
           <Tabs defaultValue="student">
-            <div className="relative mb-4">
-              <div className="overflow-x-auto pb-4">
-                <TabsList className="inline-flex w-max">
-                  {Object.keys(moduleLabels).map((module) => (
-                    <TabsTrigger key={module} value={module}>
-                      {moduleLabels[module as PermissionModuleType]}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
+            <div className="overflow-x-auto mb-4">
+              <TabsList className="w-full flex flex-wrap bg-gray-100 p-1">
+                {Object.keys(moduleLabels).map((module) => (
+                  <TabsTrigger
+                    key={module}
+                    value={module}
+                    className="flex-1 min-w-[180px] py-2 text-sm whitespace-nowrap"
+                  >
+                    {moduleLabels[module as PermissionModuleType]}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
             </div>
 
             {Object.keys(moduleLabels).map((moduleKey) => {
