@@ -74,10 +74,7 @@ export const fetchFilteredEvents = async ({
       query = query.in('user_id', userIds);
     }
     
-    let shouldProcessRoleFilter = false;
-    let usersWithRoleIds: string[] = [];
-    
-    // Process role filter first to get user IDs
+    // Process role filter to get user IDs
     if (roleFilter && roleFilter.length > 0) {
       try {
         const { data: usersWithRole, error: userError } = await supabase
@@ -92,8 +89,8 @@ export const fetchFilteredEvents = async ({
         }
           
         if (usersWithRole && usersWithRole.length > 0) {
-          usersWithRoleIds = usersWithRole.map(user => user.id);
-          shouldProcessRoleFilter = true;
+          const userIds = usersWithRole.map(user => user.id);
+          query = query.in('user_id', userIds);
         } else {
           // If no users match the role filter, return empty array
           setEvents([]);
@@ -114,11 +111,6 @@ export const fetchFilteredEvents = async ({
     // Apply skill filter
     if (skillIds && skillIds.length > 0) {
       query = query.in('skill_id', skillIds);
-    }
-    
-    // Apply role filter (using user IDs gathered earlier)
-    if (shouldProcessRoleFilter && usersWithRoleIds.length > 0) {
-      query = query.in('user_id', usersWithRoleIds);
     }
 
     // Execute query
