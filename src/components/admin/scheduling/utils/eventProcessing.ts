@@ -74,40 +74,42 @@ export const fetchFilteredEvents = async ({
       query = query.in('user_id', userIds);
     }
     
-    // Process role filter
+    // Process role filter - simplified approach to avoid deep type instantiation
     if (roleFilter && roleFilter.length > 0) {
-      // Get user IDs with the specified roles
-      const { data: usersWithRole, error: userError } = await supabase
+      // First fetch the users with the specified roles
+      const { data: roleUsers, error: roleError } = await supabase
         .from('custom_users')
         .select('id')
         .in('role', roleFilter);
-        
-      if (userError) {
-        console.error("Error fetching users by role:", userError);
+      
+      if (roleError) {
+        console.error("Error fetching users by role:", roleError);
         setEvents([]);
         return;
       }
+      
+      // If we got users with the specified roles
+      if (roleUsers && roleUsers.length > 0) {
+        const roleUserIds = roleUsers.map(user => user.id);
         
-      if (usersWithRole && usersWithRole.length > 0) {
-        const roleUserIds = usersWithRole.map(user => user.id);
-        
-        // If we already have specific user IDs, find the intersection
+        // If we also have specific user IDs, we need to find the intersection
         if (userIds && userIds.length > 0) {
-          const filteredIds = roleUserIds.filter(id => userIds.includes(id));
+          const filteredUserIds = userIds.filter(id => roleUserIds.includes(id));
           
-          if (filteredIds.length > 0) {
-            query = query.in('user_id', filteredIds);
-          } else {
-            // No matching users, return empty
+          if (filteredUserIds.length === 0) {
+            // No matching users between roles and specific users
             setEvents([]);
             return;
           }
+          
+          // Apply the filtered user IDs to the query
+          query = query.in('user_id', filteredUserIds);
         } else {
-          // Just filter by the role user IDs
+          // No specific user IDs, just filter by role user IDs
           query = query.in('user_id', roleUserIds);
         }
       } else {
-        // No users found with this role
+        // No users found with the specified roles
         setEvents([]);
         return;
       }
@@ -123,7 +125,7 @@ export const fetchFilteredEvents = async ({
       query = query.in('skill_id', skillIds);
     }
 
-    // Execute query
+    // Execute query - detached from the conditional blocks to simplify the type flow
     const { data, error } = await query;
     
     if (error) {
