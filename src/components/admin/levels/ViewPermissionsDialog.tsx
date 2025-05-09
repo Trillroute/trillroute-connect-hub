@@ -31,6 +31,8 @@ const ViewPermissionsDialog = ({
     course: 'Course Management',
     level: 'Level Management',
     event: 'Calendar Events',
+    classType: 'Class Types',
+    userAvailability: 'User Availability'
   };
 
   if (!level) return null;
@@ -87,10 +89,20 @@ const ViewPermissionsDialog = ({
 
             {Object.keys(moduleLabels).map((moduleKey) => {
               const module = moduleKey as PermissionModuleType;
-              const permissionKey = `${module}Permissions` as keyof typeof level;
-              const permissions = module === 'event' 
-                ? (level.eventsPermissions || []) 
-                : (level[permissionKey] as string[] || []);
+              let permissionKey: keyof typeof level;
+              
+              // Map module types to their respective permission keys
+              if (module === 'event') {
+                permissionKey = 'eventsPermissions';
+              } else if (module === 'classType') {
+                permissionKey = 'classTypesPermissions';
+              } else if (module === 'userAvailability') {
+                permissionKey = 'userAvailabilityPermissions';
+              } else {
+                permissionKey = `${module}Permissions` as keyof typeof level;
+              }
+              
+              const permissions = level[permissionKey] as string[] || [];
               
               return (
                 <TabsContent key={module} value={module}>

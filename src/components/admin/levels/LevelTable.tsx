@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -21,7 +21,9 @@ export interface Level {
   leadPermissions: string[];
   coursePermissions: string[];
   levelPermissions: string[];
-  eventsPermissions: string[]; // Add this property
+  eventsPermissions: string[];
+  classTypesPermissions: string[];
+  userAvailabilityPermissions: string[];
 }
 
 interface LevelTableProps {
@@ -74,7 +76,9 @@ const LevelTable: React.FC<LevelTableProps> = ({
       level.leadPermissions.length +
       level.coursePermissions.length +
       level.levelPermissions.length +
-      level.eventsPermissions.length
+      level.eventsPermissions.length +
+      level.classTypesPermissions.length +
+      level.userAvailabilityPermissions.length
     );
   };
 

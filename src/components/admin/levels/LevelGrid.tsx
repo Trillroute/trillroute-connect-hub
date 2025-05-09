@@ -51,7 +51,10 @@ const LevelGrid: React.FC<LevelGridProps> = ({
       level.adminPermissions.length +
       level.leadPermissions.length +
       level.coursePermissions.length +
-      level.levelPermissions.length
+      level.levelPermissions.length +
+      level.eventsPermissions.length +
+      level.classTypesPermissions.length +
+      level.userAvailabilityPermissions.length
     );
   };
 

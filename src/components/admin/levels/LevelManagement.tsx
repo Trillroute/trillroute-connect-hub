@@ -92,7 +92,9 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
     leadPermissions: string[];
     coursePermissions: string[];
     levelPermissions: string[];
-    eventsPermissions: string[]; // Make sure this is included
+    eventsPermissions: string[];
+    classTypesPermissions: string[];
+    userAvailabilityPermissions: string[];
   }) => {
     try {
       await handleUpdateLevel(levelId, permissions);
@@ -130,22 +132,30 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
             onEdit={effectiveCanEdit ? (level) => openEditDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             }) : undefined}
             onDelete={effectiveCanDelete ? (level) => openDeleteDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             }) : undefined}
             onViewPermissions={(level) => openViewPermissionsDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             })}
             onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             }) : undefined}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
@@ -158,22 +168,30 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
             onEdit={effectiveCanEdit ? (level) => openEditDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             }) : undefined}
             onDelete={effectiveCanDelete ? (level) => openDeleteDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             }) : undefined}
             onViewPermissions={(level) => openViewPermissionsDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             })}
             onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({
               ...level,
               id: Number(level.id),
-              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+              eventsPermissions: level.eventsPermissions || [],
+              classTypesPermissions: level.classTypesPermissions || [],
+              userAvailabilityPermissions: level.userAvailabilityPermissions || []
             }) : undefined}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
