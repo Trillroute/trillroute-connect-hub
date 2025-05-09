@@ -14,6 +14,8 @@ type PermissionMap = {
   courses: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
   levels: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
   events: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
+  classTypes: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
+  userAvailability: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
 };
 
 export const useAdminDashboardPermissions = () => {
@@ -25,7 +27,9 @@ export const useAdminDashboardPermissions = () => {
     leads: { view: false, add: false, edit: false, delete: false },
     courses: { view: false, add: false, edit: false, delete: false },
     levels: { view: false, add: false, edit: false, delete: false },
-    events: { view: false, add: false, edit: false, delete: false }
+    events: { view: false, add: false, edit: false, delete: false },
+    classTypes: { view: false, add: false, edit: false, delete: false },
+    userAvailability: { view: false, add: false, edit: false, delete: false }
   });
   const [adminRoles, setAdminRoles] = useState<AdminLevel[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
@@ -79,7 +83,9 @@ export const useAdminDashboardPermissions = () => {
         leads: { view: true, add: true, edit: true, delete: true },
         courses: { view: true, add: true, edit: true, delete: true },
         levels: { view: true, add: true, edit: true, delete: true },
-        events: { view: true, add: true, edit: true, delete: true }
+        events: { view: true, add: true, edit: true, delete: true },
+        classTypes: { view: true, add: true, edit: true, delete: true },
+        userAvailability: { view: true, add: true, edit: true, delete: true }
       });
       
       return;
@@ -136,6 +142,18 @@ export const useAdminDashboardPermissions = () => {
           add: userRole.eventsPermissions?.includes('add') || false,
           edit: userRole.eventsPermissions?.includes('edit') || false,
           delete: userRole.eventsPermissions?.includes('delete') || false
+        },
+        classTypes: {
+          view: userRole.classTypesPermissions?.includes('view') || false,
+          add: userRole.classTypesPermissions?.includes('add') || false,
+          edit: userRole.classTypesPermissions?.includes('edit') || false,
+          delete: userRole.classTypesPermissions?.includes('delete') || false
+        },
+        userAvailability: {
+          view: userRole.userAvailabilityPermissions?.includes('view') || false,
+          add: userRole.userAvailabilityPermissions?.includes('add') || false,
+          edit: userRole.userAvailabilityPermissions?.includes('edit') || false,
+          delete: userRole.userAvailabilityPermissions?.includes('delete') || false
         }
       });
     } else {
@@ -149,7 +167,9 @@ export const useAdminDashboardPermissions = () => {
         leads: { view: false, add: false, edit: false, delete: false },
         courses: { view: true, add: false, edit: false, delete: false },
         levels: { view: false, add: false, edit: false, delete: false },
-        events: { view: false, add: false, edit: false, delete: false }
+        events: { view: false, add: false, edit: false, delete: false },
+        classTypes: { view: false, add: false, edit: false, delete: false },
+        userAvailability: { view: false, add: false, edit: false, delete: false }
       });
     }
   };
@@ -168,6 +188,8 @@ export const useAdminDashboardPermissions = () => {
     permissionMap.leads.view && 'leads',
     permissionMap.levels.view && 'levels',
     permissionMap.events.view && 'events',
+    permissionMap.classTypes.view && 'classTypes',
+    permissionMap.userAvailability.view && 'userAvailability',
   ].filter(Boolean) as string[];
 
   const hasAnyAccess = permissionMap.courses.view || 
@@ -176,7 +198,9 @@ export const useAdminDashboardPermissions = () => {
                        permissionMap.admins.view || 
                        permissionMap.leads.view ||
                        permissionMap.levels.view ||
-                       permissionMap.events.view;
+                       permissionMap.events.view ||
+                       permissionMap.classTypes.view ||
+                       permissionMap.userAvailability.view;
 
   return {
     permissionMap,

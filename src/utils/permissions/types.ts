@@ -56,6 +56,18 @@ export enum AdminPermission {
   ADD_EVENTS = "ADD_EVENTS",
   EDIT_EVENTS = "EDIT_EVENTS",
   DELETE_EVENTS = "DELETE_EVENTS",
+  
+  // Class Types
+  VIEW_CLASS_TYPES = "VIEW_CLASS_TYPES",
+  ADD_CLASS_TYPES = "ADD_CLASS_TYPES",
+  EDIT_CLASS_TYPES = "EDIT_CLASS_TYPES",
+  DELETE_CLASS_TYPES = "DELETE_CLASS_TYPES",
+  
+  // User Availability
+  VIEW_USER_AVAILABILITY = "VIEW_USER_AVAILABILITY",
+  ADD_USER_AVAILABILITY = "ADD_USER_AVAILABILITY",
+  EDIT_USER_AVAILABILITY = "EDIT_USER_AVAILABILITY",
+  DELETE_USER_AVAILABILITY = "DELETE_USER_AVAILABILITY",
 }
 
 /**
@@ -73,6 +85,8 @@ export interface AdminLevel {
   coursePermissions: string[];
   levelPermissions?: string[];
   eventsPermissions?: string[];
+  classTypesPermissions?: string[];
+  userAvailabilityPermissions?: string[];
   created_at?: string;
   updated_at?: string;
 }
@@ -103,5 +117,8 @@ export interface AdminRoleExport {
     leads: string[];
     courses: string[];
     levels?: string[];
+    events?: string[];
+    classTypes?: string[];
+    userAvailability?: string[];
   };
 }

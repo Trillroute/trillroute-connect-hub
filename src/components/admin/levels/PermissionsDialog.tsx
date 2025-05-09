@@ -36,6 +36,8 @@ const PermissionsDialog = ({
     coursePermissions: string[];
     levelPermissions: string[];
     eventsPermissions: string[];
+    classTypesPermissions: string[];
+    userAvailabilityPermissions: string[];
   }>({
     studentPermissions: [],
     teacherPermissions: [],
@@ -44,6 +46,8 @@ const PermissionsDialog = ({
     coursePermissions: [],
     levelPermissions: [],
     eventsPermissions: [],
+    classTypesPermissions: [],
+    userAvailabilityPermissions: [],
   });
 
   React.useEffect(() => {
@@ -56,6 +60,8 @@ const PermissionsDialog = ({
         coursePermissions: [...(level.coursePermissions || [])],
         levelPermissions: [...(level.levelPermissions || [])],
         eventsPermissions: [...(level.eventsPermissions || [])],
+        classTypesPermissions: [...(level.classTypesPermissions || [])],
+        userAvailabilityPermissions: [...(level.userAvailabilityPermissions || [])],
       });
     }
   }, [level]);
@@ -68,12 +74,26 @@ const PermissionsDialog = ({
     course: 'Course Management',
     level: 'Level Management',
     event: 'Calendar Events',
+    classType: 'Class Types',
+    userAvailability: 'User Availability',
   };
 
   const permissionOptions = ['view', 'add', 'edit', 'delete'];
 
   const togglePermission = (module: PermissionModuleType, permission: string) => {
-    const permissionKey = `${module}Permissions` as keyof typeof permissions;
+    let permissionKey: keyof typeof permissions;
+    
+    // Map module types to their respective permission keys
+    if (module === 'event') {
+      permissionKey = 'eventsPermissions';
+    } else if (module === 'classType') {
+      permissionKey = 'classTypesPermissions';
+    } else if (module === 'userAvailability') {
+      permissionKey = 'userAvailabilityPermissions';
+    } else {
+      permissionKey = `${module}Permissions` as keyof typeof permissions;
+    }
+    
     const currentPermissions = [...permissions[permissionKey]];
     
     if (currentPermissions.includes(permission)) {
@@ -135,9 +155,13 @@ const PermissionsDialog = ({
               const module = moduleKey as PermissionModuleType;
               let permissionKey: keyof typeof permissions;
               
-              // Map the 'event' module to 'eventsPermissions' key
+              // Map the module to the appropriate permissions key
               if (module === 'event') {
                 permissionKey = 'eventsPermissions';
+              } else if (module === 'classType') {
+                permissionKey = 'classTypesPermissions';
+              } else if (module === 'userAvailability') {
+                permissionKey = 'userAvailabilityPermissions';
               } else {
                 permissionKey = `${module}Permissions` as keyof typeof permissions;
               }

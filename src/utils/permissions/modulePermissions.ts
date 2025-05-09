@@ -1,3 +1,4 @@
+
 import { UserManagementUser } from "@/types/student";
 import { PermissionUser } from "./types";
 import { AdminPermission } from "./types";
@@ -181,5 +182,53 @@ export const canManageEvents = (
     return hasPermission(user, AdminPermission.EDIT_EVENTS);
   } else {
     return hasPermission(user, AdminPermission.DELETE_EVENTS);
+  }
+};
+
+/**
+ * Helper function to determine if a specific user can perform actions on class types
+ */
+export const canManageClassTypes = (
+  user: UserManagementUser | PermissionUser | null, 
+  action: 'view' | 'add' | 'edit' | 'delete'
+): boolean => {
+  if (!user) return false;
+  
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
+  if (action === 'view') {
+    return hasPermission(user, AdminPermission.VIEW_CLASS_TYPES);
+  } else if (action === 'add') {
+    return hasPermission(user, AdminPermission.ADD_CLASS_TYPES);
+  } else if (action === 'edit') {
+    return hasPermission(user, AdminPermission.EDIT_CLASS_TYPES);
+  } else {
+    return hasPermission(user, AdminPermission.DELETE_CLASS_TYPES);
+  }
+};
+
+/**
+ * Helper function to determine if a specific user can perform actions on user availability
+ */
+export const canManageUserAvailability = (
+  user: UserManagementUser | PermissionUser | null, 
+  action: 'view' | 'add' | 'edit' | 'delete'
+): boolean => {
+  if (!user) return false;
+  
+  if (user?.role === 'superadmin') {
+    return true;
+  }
+  
+  if (action === 'view') {
+    return hasPermission(user, AdminPermission.VIEW_USER_AVAILABILITY);
+  } else if (action === 'add') {
+    return hasPermission(user, AdminPermission.ADD_USER_AVAILABILITY);
+  } else if (action === 'edit') {
+    return hasPermission(user, AdminPermission.EDIT_USER_AVAILABILITY);
+  } else {
+    return hasPermission(user, AdminPermission.DELETE_USER_AVAILABILITY);
   }
 };

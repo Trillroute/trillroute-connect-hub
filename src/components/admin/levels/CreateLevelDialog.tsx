@@ -60,7 +60,9 @@ const CreateLevelDialog: React.FC<CreateLevelDialogProps> = ({
       leadPermissions: [],
       coursePermissions: [],
       levelPermissions: [],
-      eventsPermissions: [], // Add the missing property
+      eventsPermissions: [], 
+      classTypesPermissions: [],
+      userAvailabilityPermissions: [],
     };
 
     const success = await onCreateLevel(levelData);
