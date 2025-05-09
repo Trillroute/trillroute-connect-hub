@@ -6,8 +6,9 @@ import { useFilteredEvents } from './FilteredEventsProvider';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import FilterSelector from '../components/FilterSelector';
 
-// Import existing components instead of missing ones
+// Import existing components instead of the missing ones
 import WeekDayHeader from '../week-view/WeekDayHeader';
 
 interface WeekViewComponentProps {
@@ -58,7 +59,16 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   
   return (
     <div className="flex flex-col h-full">
-      {/* Removed the filter tabs section that was here */}
+      {showFilterTabs && (
+        <div className="p-2 border-b">
+          <FilterSelector
+            filterType={filterType}
+            setFilterType={setFilterType}
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+          />
+        </div>
+      )}
       
       <div className="flex justify-between items-center p-2 border-b">
         <div className="flex items-center space-x-2">
