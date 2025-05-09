@@ -1,3 +1,4 @@
+
 export type CalendarEvent = {
   id: string;
   title: string;
@@ -8,4 +9,4 @@ export type CalendarEvent = {
   color?: string;
 };
 
-export type CalendarViewMode = 'day' | 'week' | 'month';
+export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';

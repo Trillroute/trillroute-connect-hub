@@ -1,5 +1,5 @@
 
-export type CalendarViewMode = 'day' | 'week' | 'month';
+export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
 
 // Define layer types for filtering
 export type EventLayer = 'teachers' | 'students' | 'admins' | 'superadmins';

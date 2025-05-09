@@ -32,7 +32,6 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   const [filterType, setFilterType] = useState<string | null>(initialFilterType);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [showEventList, setShowEventList] = useState(false);
 
   // Get event handlers from the hook
   const eventHandlers = useEventHandlers({
@@ -49,6 +48,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   }, {
     value: 'month',
     label: 'Month'
+  }, {
+    value: 'list',
+    label: 'List View'
   }];
   
   const handleFilterTypeChange = (type: string | null) => {
@@ -66,11 +68,6 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           </div>
           <div className="flex flex-col md:flex-row gap-2 md:items-center">
             <ViewModeSelector viewMode={viewMode as CalendarViewMode} setViewMode={mode => setViewMode(mode as CalendarViewMode)} viewOptions={viewOptions} />
-            <div className="flex items-center">
-              <button onClick={() => setShowEventList(!showEventList)} className={`px-3 py-1 text-sm border rounded-md ml-2 ${showEventList ? "bg-blue-600 text-white" : "bg-white"}`}>
-                List View
-              </button>
-            </div>
             <LayersDropdown />
           </div>
         </div>
@@ -97,9 +94,6 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
             title={<div className="text-xl font-semibold">{filterType ? `${title} (${filterType})` : title}</div>} 
             hasAdminAccess={hasAdminAccess} 
             onCreateEvent={eventHandlers.handleCreateEvent} 
-            showEventListToggle={true} 
-            onToggleEventList={() => setShowEventList(!showEventList)} 
-            isEventListShown={showEventList} 
           />
         </div>
       </div>
@@ -107,7 +101,6 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
       <div className="flex-grow overflow-y-auto">
         <CalendarViewRenderer 
           viewMode={viewMode as CalendarViewMode} 
-          showEventList={showEventList} 
           onCreateEvent={eventHandlers.handleCreateEvent} 
           onEditEvent={eventHandlers.handleEditEvent} 
           onDeleteEvent={eventHandlers.handleDeleteEvent} 
