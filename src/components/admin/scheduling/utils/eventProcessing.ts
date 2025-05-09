@@ -1,82 +1,96 @@
-
-// Importing the necessary modules
 import { supabase } from '@/integrations/supabase/client';
 import { CalendarEvent } from '../context/calendarTypes';
 
-// Define filter parameters interface
-interface EventFilterParams {
+interface FetchFilteredEventsOptions {
+  userIds?: string[];
   courseIds?: string[];
   skillIds?: string[];
-  userIds?: string[];
+  unitIds?: string[];
   roleFilter?: string[];
   setEvents: (events: CalendarEvent[]) => void;
 }
 
-// Function to fetch events filtered by various parameters
 export const fetchFilteredEvents = async ({
-  courseIds = [],
-  skillIds = [],
-  userIds = [],
-  roleFilter = [],
+  userIds,
+  courseIds,
+  skillIds,
+  unitIds,
+  roleFilter,
   setEvents
-}: EventFilterParams) => {
+}: FetchFilteredEventsOptions) => {
   try {
-    console.log('Fetching filtered events with params:', { courseIds, skillIds, userIds, roleFilter });
-
-    // Start with the basic query
-    let query = supabase.from('user_events').select(`
-      *,
-      custom_users!user_id (
-        id,
-        first_name,
-        last_name,
-        role
-      )
-    `);
-
+    // Start query builder
+    let query = supabase.from('calendar_events').select('*');
+    
     // Apply filters if provided
     if (userIds && userIds.length > 0) {
       query = query.in('user_id', userIds);
     }
+    
+    // If we have course IDs, filter events related to these courses
+    if (courseIds && courseIds.length > 0) {
+      // This depends on how course relationships are stored
+      // Example assumes there's a course_id field or relation
+      query = query.in('course_id', courseIds);
+    }
+    
+    // If we have skill IDs, filter events related to these skills  
+    if (skillIds && skillIds.length > 0) {
+      // This depends on how skill relationships are stored
+      // Example assumes there's a skill_id field or relation
+      query = query.in('skill_id', skillIds);
+    }
+    
+    // If we have unit IDs, filter events related to these units
+    if (unitIds && unitIds.length > 0) {
+      // This depends on how unit relationships are stored
+      // Example assumes there's a unit_id field or relation
+      query = query.in('unit_id', unitIds);
+    }
 
-    // Execute the query
+    // If we have role filters, we'd need to join with users table
+    // This implementation would depend on your database structure
+    if (roleFilter && roleFilter.length > 0) {
+      // For simplicity in this example, we'd fetch users with these roles first
+      // and then filter events by those user IDs
+      const { data: usersWithRole } = await supabase
+        .from('custom_users')
+        .select('id')
+        .in('role', roleFilter);
+        
+      if (usersWithRole && usersWithRole.length > 0) {
+        const roleUserIds = usersWithRole.map(user => user.id);
+        query = query.in('user_id', roleUserIds);
+      } else {
+        // If no users match the role filter, return empty array
+        setEvents([]);
+        return;
+      }
+    }
+
+    // Execute query
     const { data, error } = await query;
     
     if (error) {
-      console.error('Error fetching events:', error);
-      throw error;
+      console.error('Error fetching filtered events:', error);
+      setEvents([]);
+      return;
     }
-
-    // Filter by role if needed
-    let filteredData = data;
-    if (roleFilter && roleFilter.length > 0) {
-      filteredData = data.filter(event => {
-        const userRole = event.custom_users?.role;
-        return userRole && roleFilter.includes(userRole);
-      });
-    }
-
-    // Map to calendar events format
-    const events: CalendarEvent[] = filteredData.map(event => ({
+    
+    // Map to calendar events
+    const mappedEvents: CalendarEvent[] = data.map(event => ({
       id: event.id,
       title: event.title,
       start: new Date(event.start_time),
       end: new Date(event.end_time),
-      description: event.description,
-      // Apply color based on role
-      color: event.custom_users?.role === 'teacher' ? '#4f46e5' : 
-             event.custom_users?.role === 'admin' ? '#0891b2' : 
-             event.custom_users?.role === 'student' ? '#16a34a' : 
-             event.custom_users?.role === 'superadmin' ? '#9333ea' : '#6b7280',
+      description: event.description || '',
+      location: event.location || '',
+      color: event.color || '#3b82f6',
     }));
-
-    console.log(`Fetched ${events.length} events.`);
-    setEvents(events);
-    return events;
-  } catch (err) {
-    console.error('Failed to fetch filtered events:', err);
-    // Return empty array to avoid breaking the UI
+    
+    setEvents(mappedEvents);
+  } catch (error) {
+    console.error('Failed to fetch filtered events:', error);
     setEvents([]);
-    return [];
   }
 };

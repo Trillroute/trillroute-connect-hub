@@ -10,7 +10,7 @@ import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/ca
 
 interface FilteredEventsProviderProps {
   children: React.ReactNode;
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'unit' | null;
   filterId?: string | null;
   filterIds?: string[];
 }
@@ -70,6 +70,9 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
         // For direct staff selection, just use the provided IDs
         const ids = filterId ? [...filterIds, filterId].filter(Boolean) : filterIds.filter(Boolean);
         setStaffUserIds(ids);
+      } else if (filterType === 'unit') {
+        // For unit filtering, we'll handle this separately in the apply filter logic
+        setStaffUserIds([]);
       }
     };
     
@@ -101,6 +104,12 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       try {
         // Fetch events based on filter type
         switch (filterType) {
+          case 'unit':
+            // For unit filtering, we'll interpret the IDs as specific unit identifiers
+            await fetchFilteredEvents({ unitIds: ids, setEvents });
+            setAvailabilities({}); // No availability data for unit filtering
+            break;
+            
           case 'course':
             await fetchFilteredEvents({ courseIds: ids, setEvents });
             
