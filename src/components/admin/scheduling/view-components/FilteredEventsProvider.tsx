@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import { fetchFilteredEvents } from '../utils/eventProcessing';

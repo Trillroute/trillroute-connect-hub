@@ -20,14 +20,6 @@ export const fetchFilteredEvents = async ({
   setEvents
 }: FetchFilteredEventsOptions) => {
   try {
-    // Start query builder
-    let query = supabase.from('calendar_events').select('*');
-    
-    // Apply filters if provided
-    if (userIds && userIds.length > 0) {
-      query = query.in('user_id', userIds);
-    }
-    
     // If we have unit IDs, we'll handle them with mock data since they're not in the database
     if (unitIds && unitIds.length > 0) {
       // Mock filtering for unit IDs since there's no direct database relation
@@ -73,41 +65,60 @@ export const fetchFilteredEvents = async ({
         return;
       }
     }
+
+    // Start query builder
+    let query = supabase.from('calendar_events').select('*');
     
-    // If we have course IDs, filter events related to these courses
+    // Apply filters if provided
+    if (userIds && userIds.length > 0) {
+      query = query.in('user_id', userIds);
+    }
+    
+    let shouldProcessRoleFilter = false;
+    let usersWithRoleIds: string[] = [];
+    
+    // Process role filter first to get user IDs
+    if (roleFilter && roleFilter.length > 0) {
+      try {
+        const { data: usersWithRole, error: userError } = await supabase
+          .from('custom_users')
+          .select('id')
+          .in('role', roleFilter);
+          
+        if (userError) {
+          console.error("Error fetching users by role:", userError);
+          setEvents([]);
+          return;
+        }
+          
+        if (usersWithRole && usersWithRole.length > 0) {
+          usersWithRoleIds = usersWithRole.map(user => user.id);
+          shouldProcessRoleFilter = true;
+        } else {
+          // If no users match the role filter, return empty array
+          setEvents([]);
+          return;
+        }
+      } catch (err) {
+        console.error("Error processing role filter:", err);
+        setEvents([]);
+        return;
+      }
+    }
+    
+    // Apply course filter
     if (courseIds && courseIds.length > 0) {
-      // Handle course filtering separately to avoid deep type issues
       query = query.in('course_id', courseIds);
     }
     
-    // If we have skill IDs, filter events related to these skills  
+    // Apply skill filter
     if (skillIds && skillIds.length > 0) {
-      // Handle skill filtering separately to avoid deep type issues
       query = query.in('skill_id', skillIds);
     }
-
-    // If we have role filters, handle separately to avoid deep type issues
-    if (roleFilter && roleFilter.length > 0) {
-      // Fetch users with these roles
-      const { data: usersWithRole, error: userError } = await supabase
-        .from('custom_users')
-        .select('id')
-        .in('role', roleFilter);
-        
-      if (userError) {
-        console.error("Error fetching users by role:", userError);
-        setEvents([]);
-        return;
-      }
-        
-      if (usersWithRole && usersWithRole.length > 0) {
-        const roleUserIds = usersWithRole.map(user => user.id);
-        query = query.in('user_id', roleUserIds);
-      } else {
-        // If no users match the role filter, return empty array
-        setEvents([]);
-        return;
-      }
+    
+    // Apply role filter (using user IDs gathered earlier)
+    if (shouldProcessRoleFilter && usersWithRoleIds.length > 0) {
+      query = query.in('user_id', usersWithRoleIds);
     }
 
     // Execute query
