@@ -1,17 +1,34 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import ContentWrapper from './ContentWrapper';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import FilterSelector from '@/components/admin/scheduling/components/FilterSelector';
+import { useFilterPersistence } from '@/components/admin/scheduling/hooks/useFilterPersistence';
 
 const SchedulingContent: React.FC = () => {
   const { role, isAdmin, isSuperAdmin } = useAuth();
   const hasAdminAccess = isAdmin() || isSuperAdmin();
   
-  const [filterType, setFilterType] = useState<string | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const { filterState, updateFilterState } = useFilterPersistence();
+  const { filterType, selectedFilter, selectedFilters } = filterState;
+
+  // Handle filter type changes
+  const handleFilterTypeChange = (newType: string | null) => {
+    updateFilterState({ 
+      filterType: newType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
+    });
+  };
+
+  // Handle filter selection changes
+  const handleSelectedFilterChange = (newFilter: string | null) => {
+    updateFilterState({ selectedFilter: newFilter });
+  };
+
+  // Handle multi-filter selection changes
+  const handleSelectedFiltersChange = (newFilters: string[]) => {
+    updateFilterState({ selectedFilters: newFilters });
+  };
 
   return (
     <ContentWrapper
@@ -21,12 +38,12 @@ const SchedulingContent: React.FC = () => {
       <div className="mb-4">
         <FilterSelector
           filterType={filterType}
-          setFilterType={setFilterType}
+          setFilterType={handleFilterTypeChange}
           selectedFilter={selectedFilter}
-          setSelectedFilter={setSelectedFilter}
+          setSelectedFilter={handleSelectedFilterChange}
           selectedFilters={selectedFilters}
-          setSelectedFilters={setSelectedFilters}
-          showFilterTypeTabs={true} // Show the filter type tabs in this view
+          setSelectedFilters={handleSelectedFiltersChange}
+          showFilterTypeTabs={true}
         />
       </div>
       
