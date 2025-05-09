@@ -1,10 +1,11 @@
 
 import React from 'react';
+import { CalendarEvent } from '../context/calendarTypes';
+import { useAuth } from '@/hooks/useAuth';
 import { DayViewComponent } from './DayViewComponent';
 import { WeekViewComponent } from './WeekViewComponent';
 import { MonthViewComponent } from './MonthViewComponent';
 import { EventListViewComponent } from './EventListViewComponent';
-import { CalendarEvent } from '../context/calendarTypes';
 
 interface ViewSelectorProps {
   viewMode: 'day' | 'week' | 'month' | 'list';
@@ -12,35 +13,46 @@ interface ViewSelectorProps {
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
   onDateClick: (date: Date) => void;
-  showFilterTabs?: boolean; // Not used anymore - we're removing the duplicate tabs
 }
 
-export const ViewSelector: React.FC<ViewSelectorProps> = ({ 
-  viewMode, 
-  onCreateEvent, 
-  onEditEvent, 
+export const ViewSelector: React.FC<ViewSelectorProps> = ({
+  viewMode,
+  onCreateEvent,
+  onEditEvent,
   onDeleteEvent,
-  onDateClick
+  onDateClick,
 }) => {
-  // Common props to pass to all view components
-  const viewProps = {
-    onCreateEvent,
-    onEditEvent,
-    onDeleteEvent,
-    onDateClick
-  };
-
-  // Render appropriate view based on viewMode
+  const { role } = useAuth();
+  const isAdminOrHigher = role === 'admin' || role === 'superadmin';
+  
+  // Show the appropriate view based on viewMode
   switch (viewMode) {
-    case 'day':
-      return <DayViewComponent {...viewProps} />;
     case 'week':
-      return <WeekViewComponent {...viewProps} />;
+      return (
+        <WeekViewComponent 
+          onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
+        />
+      );
+    case 'day':
+      return (
+        <DayViewComponent 
+          onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
+          onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
+          onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
+        />
+      );
     case 'month':
-      return <MonthViewComponent {...viewProps} />;
+      return (
+        <MonthViewComponent onDateClick={onDateClick} />
+      );
     case 'list':
-      return <EventListViewComponent {...viewProps} />;
+      return (
+        <EventListViewComponent 
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
+        />
+      );
     default:
-      return <WeekViewComponent {...viewProps} />;
+      return null;
   }
 };

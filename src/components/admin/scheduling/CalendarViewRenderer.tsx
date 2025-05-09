@@ -13,7 +13,6 @@ interface CalendarViewRendererProps {
   filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterId?: string | null;
   filterIds?: string[];
-  showFilterTabs?: boolean; // New prop to control whether to show filter tabs
 }
 
 const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
@@ -24,8 +23,7 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   onDateClick,
   filterType,
   filterId,
-  filterIds = [],
-  showFilterTabs = true // Default to true for backward compatibility
+  filterIds = []
 }) => {
   return (
     <FilteredEventsProvider 
@@ -39,7 +37,6 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
         onEditEvent={onEditEvent}
         onDeleteEvent={onDeleteEvent}
         onDateClick={onDateClick}
-        showFilterTabs={showFilterTabs}
       />
     </FilteredEventsProvider>
   );

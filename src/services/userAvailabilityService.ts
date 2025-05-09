@@ -4,13 +4,13 @@
 import { UserAvailability, UserAvailabilityMap } from './availability/types';
 import { mapDbAvailability } from './availability/types';
 import { 
+  fetchUserAvailability,
   fetchUserAvailabilityForDate,
   fetchUserAvailabilityForWeek,
-  fetchUserAvailabilityForUsers,
   createAvailabilitySlot,
   updateAvailabilitySlot,
   deleteAvailabilitySlot,
-  fetchUserAvailability
+  fetchUserAvailabilityForUsers
 } from './availability/availabilityApi';
 import { fetchAllStaffAvailability } from './availability/staffAvailabilityApi';
 import { copyDayAvailability } from './availability/availabilityManagement';
@@ -21,13 +21,13 @@ export type { UserAvailability, UserAvailabilityMap };
 // Export all functions
 export {
   mapDbAvailability,
+  fetchUserAvailability,
   fetchUserAvailabilityForDate,
   fetchUserAvailabilityForWeek,
-  fetchUserAvailabilityForUsers,
-  fetchAllStaffAvailability,
-  copyDayAvailability,
   createAvailabilitySlot,
   updateAvailabilitySlot,
   deleteAvailabilitySlot,
-  fetchUserAvailability
+  fetchUserAvailabilityForUsers,
+  fetchAllStaffAvailability,
+  copyDayAvailability
 };

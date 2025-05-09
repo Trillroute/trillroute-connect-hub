@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import CalendarTitle from './components/CalendarTitle';
 import ViewModeSelector, { ViewOption } from './components/ViewModeSelector';
+import FilterDropdown from './components/FilterDropdown';
 import { useCalendar } from './context/CalendarContext';
 
 interface CalendarHeaderProps {
@@ -25,6 +26,13 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
       <CalendarTitle viewMode={viewMode} currentDate={currentDate} />
       
       <div className="flex items-center gap-2">
+        <FilterDropdown 
+          filterOptions={[]} 
+          selectedFilters={[]} 
+          isLoading={false} 
+          onChange={() => {}} 
+          filterType="all"
+        />
         <ViewModeSelector 
           viewMode={viewMode} 
           setViewMode={setViewMode} 

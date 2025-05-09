@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserAvailabilityForDate } from "./availabilityApi";
+import { fetchUserAvailability, createAvailabilitySlot } from "./availabilityApi";
 
 /**
  * Copy availability slots from one day to another
@@ -13,8 +13,11 @@ export const copyDayAvailability = async (
   try {
     console.log(`Copying availability from day ${fromDay} to day ${toDay} for user ${userId}`);
     
-    // Get all availability slots for the user's source day
-    const sourceDaySlots = await fetchUserAvailabilityForDate(userId, fromDay);
+    // Get all availability slots for the user
+    const allSlots = await fetchUserAvailability(userId);
+    
+    // Filter slots for the source day
+    const sourceDaySlots = allSlots.filter(slot => slot.dayOfWeek === fromDay);
     
     if (sourceDaySlots.length === 0) {
       console.log(`No slots found for day ${fromDay} to copy`);
@@ -37,15 +40,13 @@ export const copyDayAvailability = async (
     
     // Create new slots for the target day based on source day slots
     for (const slot of sourceDaySlots) {
-      await supabase
-        .from("user_availability")
-        .insert({
-          user_id: userId,
-          day_of_week: toDay,
-          start_time: slot.startTime,
-          end_time: slot.endTime,
-          category: slot.category
-        });
+      await createAvailabilitySlot(
+        userId,
+        toDay,
+        slot.startTime,
+        slot.endTime,
+        slot.category
+      );
     }
     
     console.log(`Successfully copied ${sourceDaySlots.length} slots from day ${fromDay} to day ${toDay}`);

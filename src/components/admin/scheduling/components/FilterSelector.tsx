@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import FilterTypeTabs from './FilterTypeTabs';
 import FilterDropdown from './FilterDropdown';
 import { useFilterOptions } from '../hooks/useFilterOptions';
@@ -16,8 +16,7 @@ interface FilterSelectorProps {
   setSelectedFilter: (id: string | null) => void;
   selectedFilters?: string[];
   setSelectedFilters?: (ids: string[]) => void;
-  showFilterTypeTabs?: boolean; // Control whether to show the filter tabs
-  showFilterDropdown?: boolean;
+  showFilterTypeTabs?: boolean; // Prop to control filter type tabs visibility
 }
 
 const FilterSelector: React.FC<FilterSelectorProps> = ({
@@ -27,11 +26,21 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   setSelectedFilter,
   selectedFilters = [],
   setSelectedFilters = () => {},
-  showFilterTypeTabs = false, // Changed default to false to prevent duplicate tabs
-  showFilterDropdown = false
+  showFilterTypeTabs = true // Default to true for backward compatibility
 }) => {
   // Use our custom hook to get filter options
   const { filterOptions, isLoading } = useFilterOptions({ filterType });
+
+  // Log current state for debugging
+  useEffect(() => {
+    console.log('FilterSelector current state:', { 
+      filterType, 
+      selectedFilter, 
+      selectedFilters,
+      showFilterTypeTabs,
+      filterOptions: filterOptions.length
+    });
+  }, [filterType, selectedFilter, selectedFilters, showFilterTypeTabs, filterOptions]);
 
   // Reset selected filters when filter type changes
   useEffect(() => {
@@ -61,8 +70,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
         />
       )}
 
-      {/* Only show filter dropdown if specifically requested */}
-      {showFilterDropdown && filterType && (
+      {/* Secondary filter dropdown with multi-select - always show this when a filter type is selected */}
+      {filterType && (
         <FilterDropdown
           filterOptions={filterOptions}
           selectedFilters={selectedFilters}
