@@ -8,10 +8,10 @@ import { convertAvailabilityMap } from '../utils/availabilityUtils';
  * Hook to apply event filters and fetch corresponding data
  */
 export const useApplyEventFilters = (
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null,
-  filterId?: string | null,
-  filterIds: string[] = [],
-  staffUserIds: string[] = [],
+  filterType: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null | undefined,
+  filterId: string | null | undefined,
+  filterIds: string[],
+  staffUserIds: string[],
   refreshEvents: () => void,
   setEvents: (events: any[]) => void,
   setAvailabilities: (availabilities: any) => void
