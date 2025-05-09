@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { UserAvailability, mapDbAvailability } from "./types";
+import { format } from 'date-fns';
 
 // Get all availability slots for a user
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
@@ -153,6 +153,68 @@ export const deleteAvailabilitySlot = async (id: string): Promise<boolean> => {
     return true;
   } catch (err) {
     console.error("Failed to delete availability slot:", err);
+    throw err;
+  }
+};
+
+// New function to fetch availability for a specific date (by day of week)
+export const fetchUserAvailabilityForDate = async (userId: string, date: Date): Promise<UserAvailability[]> => {
+  try {
+    const dayOfWeek = date.getDay(); // 0 for Sunday, 6 for Saturday
+    console.log(`Fetching availability for user ${userId} on day ${dayOfWeek}`);
+    
+    const { data, error } = await supabase
+      .from("user_availability")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("day_of_week", dayOfWeek);
+    
+    if (error) {
+      console.error("Error fetching user availability for date:", error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log(`No availability found for user ${userId} on day ${dayOfWeek}`);
+      return [];
+    }
+    
+    const mappedData = data.map(mapDbAvailability);
+    console.log(`Found ${mappedData.length} availability slots for day ${dayOfWeek}`);
+    return mappedData;
+  } catch (err) {
+    console.error("Failed to fetch user availability for date:", err);
+    throw err;
+  }
+};
+
+// Function to fetch all availability for the week
+export const fetchUserAvailabilityForWeek = async (userId: string): Promise<UserAvailability[]> => {
+  try {
+    console.log(`Fetching week availability for user ${userId}`);
+    
+    const { data, error } = await supabase
+      .from("user_availability")
+      .select("*")
+      .eq("user_id", userId)
+      .order("day_of_week", { ascending: true })
+      .order("start_time", { ascending: true });
+    
+    if (error) {
+      console.error("Error fetching user availability for week:", error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log(`No weekly availability found for user ${userId}`);
+      return [];
+    }
+    
+    const mappedData = data.map(mapDbAvailability);
+    console.log(`Found ${mappedData.length} availability slots for the week`);
+    return mappedData;
+  } catch (err) {
+    console.error("Failed to fetch user availability for week:", err);
     throw err;
   }
 };
