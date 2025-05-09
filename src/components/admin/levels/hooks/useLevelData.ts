@@ -4,6 +4,7 @@ import { AdminLevelDetailed } from '@/types/adminLevel';
 import { fetchLevels as fetchLevelsApi, deleteLevel as deleteLevelApi, createLevel as createLevelApi, updateLevel as updateLevelApi } from '../LevelService';
 import { useToast } from '@/hooks/use-toast';
 import { Level } from '../LevelTable';
+import { createDefaultAdminLevels } from '@/components/superadmin/AdminRoleService';
 
 export function useLevelData() {
   const [levels, setLevels] = useState<AdminLevelDetailed[]>([]);
@@ -14,7 +15,14 @@ export function useLevelData() {
   const loadLevels = useCallback(async () => {
     setIsLoading(true);
     try {
-      const levelsData = await fetchLevelsApi();
+      let levelsData = await fetchLevelsApi();
+      
+      // If no levels found, create default admin levels
+      if (levelsData.length === 0) {
+        console.log('[useLevelData] No levels found, creating defaults');
+        levelsData = await createDefaultAdminLevels();
+      }
+      
       setLevels(levelsData);
     } catch (error) {
       console.error('Error fetching levels:', error);

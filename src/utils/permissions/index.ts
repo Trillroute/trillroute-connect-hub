@@ -13,3 +13,6 @@ export * from './accessControl';
 export * from './roleHelpers';
 export * from './permissionCache';
 export * from './fallbackRoles';
+
+// Admin levels
+export * from '../permissions/types';

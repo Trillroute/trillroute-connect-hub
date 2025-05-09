@@ -1,127 +1,63 @@
 
+import { AdminLevelDetailed } from '@/types/adminLevel';
 import { supabase } from '@/integrations/supabase/client';
-import { AdminLevelDetailed, AdminLevelBasic } from '@/types/adminLevel';
+import { fetchAdminRoles, saveAdminLevel, deleteAdminLevel as deleteAdminLevelApi } from '@/components/superadmin/AdminRoleService';
 
-// Mapper function to convert from Supabase data format to our app's format
-const mapToAdminLevel = (level: any): AdminLevelDetailed => {
-  return {
-    id: level.id,
-    name: level.name,
-    description: level.description,
-    studentPermissions: level.student_permissions || [],
-    teacherPermissions: level.teacher_permissions || [],
-    adminPermissions: level.admin_permissions || [],
-    leadPermissions: level.lead_permissions || [],
-    coursePermissions: level.course_permissions || [],
-    levelPermissions: level.level_permissions || [],
-    eventsPermissions: level.events_permissions || [],
-    classTypesPermissions: level.class_types_permissions || [],
-    userAvailabilityPermissions: level.user_availability_permissions || [],
-  };
-};
-
-// Mapper function to convert from our app's format to Supabase data format
-const mapToSupabaseLevel = (level: Omit<AdminLevelDetailed, 'id'>): any => {
-  return {
-    name: level.name,
-    description: level.description,
-    student_permissions: level.studentPermissions,
-    teacher_permissions: level.teacherPermissions,
-    admin_permissions: level.adminPermissions,
-    lead_permissions: level.leadPermissions,
-    course_permissions: level.coursePermissions,
-    level_permissions: level.levelPermissions,
-    events_permissions: level.eventsPermissions,
-    class_types_permissions: level.classTypesPermissions,
-    user_availability_permissions: level.userAvailabilityPermissions,
-  };
-};
-
-export const createAdminLevel = async (level: Omit<AdminLevelDetailed, 'id'>): Promise<AdminLevelDetailed | null> => {
+/**
+ * Fetches all levels from the database
+ */
+export const fetchLevels = async (): Promise<AdminLevelDetailed[]> => {
+  console.log('[LevelService] Fetching levels');
   try {
-    const supabaseLevel = mapToSupabaseLevel(level);
-    
-    const { data, error } = await supabase
-      .from('admin_levels')
-      .insert(supabaseLevel)
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error creating admin level:', error);
-      return null;
-    }
-
-    return mapToAdminLevel(data);
+    const levels = await fetchAdminRoles();
+    console.log('[LevelService] Fetched levels:', levels);
+    return levels;
   } catch (error) {
-    console.error('Error creating admin level:', error);
-    return null;
+    console.error('[LevelService] Error fetching levels:', error);
+    throw error;
   }
 };
 
-// Export with different names for backward compatibility
-export const fetchAdminLevels = async (): Promise<AdminLevelDetailed[]> => {
+/**
+ * Creates a new level
+ */
+export const createLevel = async (level: Omit<AdminLevelDetailed, 'id'>): Promise<AdminLevelDetailed> => {
+  console.log('[LevelService] Creating level:', level);
   try {
-    const { data, error } = await supabase
-      .from('admin_levels')
-      .select('*');
-
-    if (error) {
-      console.error('Error fetching admin levels:', error);
-      return [];
-    }
-
-    return data.map(mapToAdminLevel);
+    const newLevel = await saveAdminLevel(level);
+    console.log('[LevelService] Level created:', newLevel);
+    return newLevel;
   } catch (error) {
-    console.error('Error fetching admin levels:', error);
-    return [];
+    console.error('[LevelService] Error creating level:', error);
+    throw error;
   }
 };
 
-export const updateAdminLevel = async (id: number, updates: Partial<Omit<AdminLevelDetailed, 'id'>>): Promise<AdminLevelDetailed | null> => {
+/**
+ * Updates an existing level
+ */
+export const updateLevel = async (id: number, level: Partial<AdminLevelDetailed>): Promise<AdminLevelDetailed> => {
+  console.log('[LevelService] Updating level:', id, level);
   try {
-    const supabaseUpdates = mapToSupabaseLevel(updates as Omit<AdminLevelDetailed, 'id'>);
-
-    const { data, error } = await supabase
-      .from('admin_levels')
-      .update(supabaseUpdates)
-      .eq('id', id)
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error updating admin level:', error);
-      return null;
-    }
-
-    return mapToAdminLevel(data);
+    const updatedLevel = await saveAdminLevel({ ...level, id });
+    console.log('[LevelService] Level updated:', updatedLevel);
+    return updatedLevel;
   } catch (error) {
-    console.error('Error updating admin level:', error);
-    return null;
+    console.error('[LevelService] Error updating level:', error);
+    throw error;
   }
 };
 
-export const deleteAdminLevel = async (id: number): Promise<boolean> => {
+/**
+ * Deletes a level
+ */
+export const deleteLevel = async (id: number): Promise<void> => {
+  console.log('[LevelService] Deleting level:', id);
   try {
-    const { error } = await supabase
-      .from('admin_levels')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting admin level:', error);
-      return false;
-    }
-
-    return true;
+    await deleteAdminLevelApi(id);
+    console.log('[LevelService] Level deleted:', id);
   } catch (error) {
-    console.error('Error deleting admin level:', error);
-    return false;
+    console.error('[LevelService] Error deleting level:', error);
+    throw error;
   }
 };
-
-// Add the function aliases needed by LevelManagement.tsx
-export const fetchLevels = fetchAdminLevels;
-export const createLevel = createAdminLevel;
-export const updateLevel = updateAdminLevel;
-export const deleteLevel = deleteAdminLevel;

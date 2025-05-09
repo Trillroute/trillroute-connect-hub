@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -12,8 +13,8 @@ import { UserManagementUser } from '@/types/student';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
-import { AdminLevel, updateCachedAdminRoles } from '@/utils/adminPermissions';
+import { fetchAdminRoles, createDefaultAdminLevels } from '@/components/superadmin/AdminRoleService';
+import { AdminLevelDetailed } from '@/types/adminLevel';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,39 +27,48 @@ interface EditAdminLevelDialogProps {
 }
 
 // Default admin levels as fallback - only used if DB fetch fails
-export const DEFAULT_ADMIN_LEVELS: AdminLevel[] = [
+export const DEFAULT_ADMIN_LEVELS: AdminLevelDetailed[] = [
   {
+    id: 10,
     name: "Limited View",
-    level: 10,
     description: "View-only administrator",
     studentPermissions: ["view"],
     teacherPermissions: ["view"],
     adminPermissions: [],
     leadPermissions: [],
     coursePermissions: ["view"],
-    levelPermissions: []
+    levelPermissions: [],
+    eventsPermissions: [],
+    classTypesPermissions: [],
+    userAvailabilityPermissions: []
   },
   {
+    id: 50,
     name: "Standard Admin",
-    level: 50,
     description: "Regular administrator permissions",
     studentPermissions: ["view", "add", "edit"],
     teacherPermissions: ["view", "add"],
     adminPermissions: [],
     leadPermissions: ["view", "add", "edit"],
     coursePermissions: ["view", "edit"],
-    levelPermissions: ["view"]
+    levelPermissions: ["view"],
+    eventsPermissions: [],
+    classTypesPermissions: [],
+    userAvailabilityPermissions: []
   },
   {
+    id: 90,
     name: "Full Access",
-    level: 90,
     description: "Complete administrative access",
     studentPermissions: ["view", "add", "edit", "delete"],
     teacherPermissions: ["view", "add", "edit", "delete"],
     adminPermissions: ["view"],
     leadPermissions: ["view", "add", "edit", "delete"],
     coursePermissions: ["view", "add", "edit", "delete"],
-    levelPermissions: ["view", "add", "edit", "delete"]
+    levelPermissions: ["view", "add", "edit", "delete"],
+    eventsPermissions: ["view", "add", "edit", "delete"],
+    classTypesPermissions: ["view", "add", "edit", "delete"],
+    userAvailabilityPermissions: ["view", "add", "edit", "delete"]
   }
 ];
 
@@ -70,7 +80,7 @@ const EditAdminLevelDialog = ({
   isLoading,
 }: EditAdminLevelDialogProps) => {
   const [selectedLevelName, setSelectedLevelName] = useState<string>("Limited View");
-  const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
+  const [adminLevels, setAdminLevels] = useState<AdminLevelDetailed[]>([]);
   const [isLoadingLevels, setIsLoadingLevels] = useState<boolean>(false);
   const { user, isSuperAdmin } = useAuth();
   const { toast } = useToast();
@@ -91,22 +101,29 @@ const EditAdminLevelDialog = ({
     try {
       setIsLoadingLevels(true);
       console.log('[EditAdminLevelDialog] Loading admin levels from database');
-      const levels = await fetchAdminRoles();
+      let levels = await fetchAdminRoles();
       console.log('[EditAdminLevelDialog] Received admin levels:', levels);
+      
+      if (levels.length === 0) {
+        console.log('[EditAdminLevelDialog] No levels found, creating defaults');
+        levels = await createDefaultAdminLevels();
+      }
       
       if (levels && levels.length > 0) {
         setAdminLevels(levels);
-        updateCachedAdminRoles(levels);
       } else {
         console.log('[EditAdminLevelDialog] No admin levels received, using defaults');
         setAdminLevels(DEFAULT_ADMIN_LEVELS);
-        updateCachedAdminRoles(DEFAULT_ADMIN_LEVELS);
       }
     } catch (error) {
       console.error('[EditAdminLevelDialog] Error loading admin levels:', error);
       // Fallback to default levels if the fetch fails
       setAdminLevels(DEFAULT_ADMIN_LEVELS);
-      updateCachedAdminRoles(DEFAULT_ADMIN_LEVELS);
+      toast({
+        variant: 'destructive',
+        title: 'Error loading admin levels',
+        description: 'Failed to load admin levels from database. Using default levels instead.'
+      });
     } finally {
       setIsLoadingLevels(false);
     }
