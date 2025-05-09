@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EventForm } from './EventForm';
+import EventForm from './EventForm';  // Changed from { EventForm } to EventForm
 import { CalendarEvent } from './context/calendarTypes';
 import { addMinutes } from 'date-fns';
 
@@ -87,8 +87,8 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <EventForm 
-          initialEvent={initialEvent} 
-          onSave={onSave} 
+          initialData={initialEvent} 
+          onSubmit={onSave} 
           onCancel={() => onOpenChange(false)} 
         />
       </DialogContent>
