@@ -26,7 +26,11 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   filterIds = []
 }) => {
   return (
-    <FilteredEventsProvider filterType={filterType} filterId={filterId} filterIds={filterIds}>
+    <FilteredEventsProvider 
+      filterType={filterType} 
+      filterId={filterId} 
+      filterIds={filterIds}
+    >
       <ViewSelector 
         viewMode={viewMode}
         onCreateEvent={onCreateEvent}

@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser } from './calendarTypes';
+import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { useCalendarFilters } from './useCalendarFilters';
@@ -41,6 +41,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
   } = useCalendarFilters(setEvents);
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
   
   // Load events when component mounts
   useEffect(() => {
@@ -58,12 +59,14 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         isLoading,
         activeLayers,
         selectedUsers,
+        availabilities,
         setCurrentDate,
         setViewMode,
         setEvents,
         setIsCreateEventOpen,
         setActiveLayers,
         setSelectedUsers,
+        setAvailabilities,
         toggleLayer,
         toggleUser,
         goToToday,

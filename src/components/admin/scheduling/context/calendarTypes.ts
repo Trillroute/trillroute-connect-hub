@@ -1,4 +1,3 @@
-
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
 
 // Define layer types for filtering
@@ -11,7 +10,27 @@ export type SelectedUser = {
   layer: EventLayer;
 };
 
-export type CalendarContextType = {
+// Add the UserAvailability interface
+export interface UserAvailability {
+  id: string;
+  userId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  category: string;
+}
+
+// Add the UserAvailabilityMap interface
+export interface UserAvailabilityMap {
+  [userId: string]: {
+    slots: UserAvailability[];
+    name: string;
+    role: string;
+  };
+}
+
+// Update the CalendarContextType to include availability data
+export interface CalendarContextType {
   currentDate: Date;
   viewMode: CalendarViewMode;
   events: CalendarEvent[];
@@ -19,6 +38,7 @@ export type CalendarContextType = {
   isLoading: boolean;
   activeLayers: EventLayer[];
   selectedUsers: SelectedUser[];
+  availabilities: UserAvailabilityMap;
   setCurrentDate: (date: Date) => void;
   setViewMode: (mode: CalendarViewMode) => void;
   setEvents: (events: CalendarEvent[]) => void;
@@ -37,7 +57,8 @@ export type CalendarContextType = {
   refreshEvents: () => Promise<void>;
   filterEventsByRole: (roles: string[]) => Promise<void>;
   filterEventsByUser: (userId: string) => Promise<void>;
-};
+  setAvailabilities: (availabilities: UserAvailabilityMap) => void;
+}
 
 export interface CalendarEvent {
   id: string;

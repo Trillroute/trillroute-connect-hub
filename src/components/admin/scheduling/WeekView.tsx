@@ -19,8 +19,6 @@ import WeekViewEvent from './week-view/WeekViewEvent';
 import WeekTimeGrid from './week-view/WeekTimeGrid';
 import WeekDayHeader from './week-view/WeekDayHeader';
 import { calculateEventPosition } from './week-view/weekViewUtils';
-import { fetchUserAvailabilityForWeek } from '@/services/availability/availabilityApi';
-import { useAuth } from '@/hooks/useAuth';
 
 interface WeekViewProps {
   onCreateEvent?: () => void;
@@ -38,8 +36,7 @@ interface AvailabilitySlot {
 }
 
 const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
-  const { currentDate, events, handleUpdateEvent, handleDeleteEvent } = useCalendar();
-  const { user } = useAuth();
+  const { currentDate, events, handleUpdateEvent, handleDeleteEvent, availabilities } = useCalendar();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -49,35 +46,35 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   const weekDays = getWeekDays(currentDate);
   const hours = getHourCells();
 
-  // Fetch availability data for the week
+  // Process availability data for the week
   useEffect(() => {
-    const fetchWeekAvailability = async () => {
-      try {
-        if (user?.id) {
-          const weekAvailability = await fetchUserAvailabilityForWeek(user.id);
-          setAvailabilitySlots(weekAvailability.map(slot => {
-            const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-            const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-            
-            return {
-              dayOfWeek: slot.dayOfWeek,
-              startHour,
-              startMinute,
-              endHour,
-              endMinute,
-              userId: slot.userId,
-              userName: user.firstName + ' ' + user.lastName,
-              category: slot.category
-            };
-          }));
-        }
-      } catch (error) {
-        console.error('Failed to fetch week availability:', error);
-      }
+    const processAvailabilities = () => {
+      const processedSlots: AvailabilitySlot[] = [];
+      
+      // Process all user availabilities
+      Object.entries(availabilities).forEach(([userId, userData]) => {
+        userData.slots.forEach(slot => {
+          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+          
+          processedSlots.push({
+            dayOfWeek: slot.dayOfWeek,
+            startHour,
+            startMinute,
+            endHour,
+            endMinute,
+            userId: slot.userId,
+            userName: userData.name,
+            category: slot.category
+          });
+        });
+      });
+      
+      setAvailabilitySlots(processedSlots);
     };
     
-    fetchWeekAvailability();
-  }, [currentDate, user]);
+    processAvailabilities();
+  }, [availabilities]);
   
   // Getting events for each day
   const getEventsForDay = (date: Date) => {
@@ -141,7 +138,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
     
     return (
       <div
-        key={`avail-${dayIndex}-${slot.startHour}-${slot.startMinute}`}
+        key={`avail-${dayIndex}-${slot.startHour}-${slot.startMinute}-${slot.userId}`}
         className="absolute left-1 right-1 rounded px-2 py-1 bg-green-100 border border-green-300 text-green-800 overflow-hidden text-sm group cursor-pointer hover:bg-green-200 z-10"
         style={{
           top: `${startPercentage}px`,
@@ -149,7 +146,9 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
         }}
         onClick={() => handleAvailabilityClick(slot)}
       >
-        <div className="font-semibold group-hover:underline">Available</div>
+        <div className="font-semibold group-hover:underline">
+          {slot.userName ? `${slot.userName}` : 'Available'}
+        </div>
         <div className="text-xs opacity-90">
           {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
         </div>

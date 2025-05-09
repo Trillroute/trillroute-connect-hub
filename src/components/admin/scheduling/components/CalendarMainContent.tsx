@@ -23,7 +23,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   initialFilterType = null
 }) => {
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
-  const [filterType, setFilterType] = useState<string | null>(initialFilterType);
+  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(
+    initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
+  );
 
   const handleCreateEvent = () => {
     setIsCreateEventDialogOpen(true);
@@ -41,6 +43,47 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     // Implement date click logic here
   };
 
+  // Determine filter type and IDs based on props
+  const getFilterParams = () => {
+    // If we have a userId, it's a user-specific filter
+    if (userId) {
+      return {
+        filterType: 'teacher' as const,
+        filterIds: [userId]
+      };
+    }
+    
+    // If we have roleFilter, it's a role-based filter
+    if (roleFilter && roleFilter.length > 0) {
+      let type: 'teacher' | 'student' | 'admin' | 'staff' | null = null;
+      
+      if (roleFilter.includes('teacher')) {
+        type = 'teacher';
+      } else if (roleFilter.includes('admin') || roleFilter.includes('superadmin')) {
+        type = 'admin';
+      } else if (roleFilter.includes('student')) {
+        type = 'student';
+      }
+      
+      if (roleFilter.includes('teacher') && (roleFilter.includes('admin') || roleFilter.includes('superadmin'))) {
+        type = 'staff';
+      }
+      
+      return {
+        filterType: type,
+        filterIds: [] // No specific IDs, just filter by role
+      };
+    }
+    
+    // Use the filter set via UI
+    return {
+      filterType,
+      filterIds: []
+    };
+  };
+  
+  const { filterType: effectiveFilterType, filterIds } = getFilterParams();
+
   return (
     <div className="flex flex-col h-full">
       <CalendarHeader onCreateEvent={handleCreateEvent} />
@@ -52,6 +95,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           onEditEvent={handleEventEdit}
           onDeleteEvent={handleEventDelete}
           onDateClick={handleDateClick}
+          filterType={effectiveFilterType}
+          filterIds={filterIds}
         />
       </div>
       <EventFormDialog 

@@ -1,220 +1,156 @@
-import { supabase } from "@/integrations/supabase/client";
-import { UserAvailability, mapDbAvailability } from "./types";
-import { format } from 'date-fns';
 
-// Get all availability slots for a user
-export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
+import { supabase } from '@/integrations/supabase/client';
+import { UserAvailability, UserAvailabilityMap } from '../userAvailabilityService';
+import { format, addDays, startOfWeek } from 'date-fns';
+
+/**
+ * Fetch user availability for a specific date
+ */
+export const fetchUserAvailabilityForDate = async (userId: string, date: Date): Promise<UserAvailability[]> => {
   try {
-    console.log(`API call: fetching availability for user ${userId}`);
+    // Get day of week (0 = Sunday, 1 = Monday, etc.)
+    const dayOfWeek = date.getDay();
     
-    // Add robust retry mechanism with exponential backoff
-    const maxRetries = 3;
-    let retries = 0;
-    let lastError = null;
+    const { data, error } = await supabase
+      .from('user_availability')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('day_of_week', dayOfWeek);
+      
+    if (error) {
+      console.error('Error fetching user availability:', error);
+      throw error;
+    }
     
-    while (retries <= maxRetries) {
-      try {
-        const { data, error } = await supabase
-          .from("user_availability")
-          .select("*")
-          .eq("user_id", userId)
-          .order("day_of_week", { ascending: true })
-          .order("start_time", { ascending: true });
+    return data.map(slot => ({
+      id: slot.id,
+      userId: slot.user_id,
+      dayOfWeek: slot.day_of_week,
+      startTime: slot.start_time,
+      endTime: slot.end_time,
+      category: slot.category || 'Session'
+    }));
+  } catch (error) {
+    console.error('Failed to fetch availability for date:', error);
+    return [];
+  }
+};
 
-        if (error) {
-          throw error;
-        }
+/**
+ * Fetch user availability for the entire week
+ */
+export const fetchUserAvailabilityForWeek = async (userId: string): Promise<UserAvailability[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_availability')
+      .select('*')
+      .eq('user_id', userId);
+      
+    if (error) {
+      console.error('Error fetching user weekly availability:', error);
+      throw error;
+    }
+    
+    return data.map(slot => ({
+      id: slot.id,
+      userId: slot.user_id,
+      dayOfWeek: slot.day_of_week,
+      startTime: slot.start_time,
+      endTime: slot.end_time,
+      category: slot.category || 'Session'
+    }));
+  } catch (error) {
+    console.error('Failed to fetch weekly availability:', error);
+    return [];
+  }
+};
 
-        if (!data) {
-          console.log(`No availability data returned for user ${userId}`);
-          return [];
-        }
+/**
+ * Fetch availability for multiple users by their IDs and/or roles
+ */
+export const fetchUserAvailabilityForUsers = async (
+  userIds: string[] = [], 
+  roles: string[] = []
+): Promise<UserAvailabilityMap> => {
+  try {
+    // Prepare the user availability map
+    const availabilityMap: UserAvailabilityMap = {};
+    let userQuery = supabase.from('custom_users').select('id, first_name, last_name, role');
 
-        const mappedData = data.map(mapDbAvailability);
-        console.log(`Successfully fetched ${mappedData.length} availability slots for user ${userId}`);
-        
-        return mappedData;
-      } catch (err) {
-        lastError = err;
-        retries++;
-        if (retries <= maxRetries) {
-          // Exponential backoff with jitter
-          const delay = Math.min(1000 * Math.pow(2, retries - 1) + Math.random() * 1000, 8000);
-          console.log(`Retry ${retries}/${maxRetries} after ${delay}ms for user ${userId}`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+    // Add user filters
+    if (userIds.length > 0) {
+      userQuery = userQuery.in('id', userIds);
+    }
+    
+    // Add role filters
+    if (roles.length > 0) {
+      if (userIds.length > 0) {
+        userQuery = userQuery.or(`role.in.(${roles.join(',')})`);
+      } else {
+        userQuery = userQuery.in('role', roles);
       }
     }
     
-    console.error(`All ${maxRetries} retries failed for user ${userId}`);
-    throw lastError || new Error("Maximum retries exceeded");
-  } catch (err) {
-    console.error("Failed to fetch user availability:", err);
-    throw err;
-  }
-};
-
-// Create a new availability slot for a user
-export const createAvailabilitySlot = async (
-  userId: string,
-  dayOfWeek: number,
-  startTime: string,
-  endTime: string,
-  category: string = 'Session'
-): Promise<UserAvailability> => {
-  try {
-    console.log(`Creating availability slot: user=${userId}, day=${dayOfWeek}, ${startTime}-${endTime}, category=${category}`);
-    
-    // Format startTime and endTime to ensure consistent format (HH:MM)
-    const formattedStartTime = startTime.includes(':') ? startTime : `${startTime}:00`;
-    const formattedEndTime = endTime.includes(':') ? endTime : `${endTime}:00`;
-
-    const { data, error } = await supabase
-      .from("user_availability")
-      .insert({
-        user_id: userId,
-        day_of_week: dayOfWeek,
-        start_time: formattedStartTime,
-        end_time: formattedEndTime,
-        category: category
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creating availability slot:", error);
-      throw error;
+    // If no filters, return empty map
+    if (userIds.length === 0 && roles.length === 0) {
+      return availabilityMap;
     }
 
-    console.log("Availability slot created successfully:", data);
-    return mapDbAvailability(data);
-  } catch (err) {
-    console.error("Failed to create availability slot:", err);
-    throw err;
-  }
-};
-
-// Update an existing availability slot
-export const updateAvailabilitySlot = async (
-  id: string,
-  startTime: string,
-  endTime: string,
-  category?: string
-): Promise<boolean> => {
-  try {
-    // Format startTime and endTime to ensure consistent format (HH:MM)
-    const formattedStartTime = startTime.includes(':') ? startTime : `${startTime}:00`;
-    const formattedEndTime = endTime.includes(':') ? endTime : `${endTime}:00`;
-
-    const updateData: any = {
-      start_time: formattedStartTime,
-      end_time: formattedEndTime,
-      updated_at: new Date().toISOString()
-    };
-    
-    // Only include category if it's provided
-    if (category !== undefined) {
-      updateData.category = category;
-    }
-
-    const { error } = await supabase
-      .from("user_availability")
-      .update(updateData)
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error updating availability slot:", error);
-      throw error;
-    }
-
-    return true;
-  } catch (err) {
-    console.error("Failed to update availability slot:", err);
-    throw err;
-  }
-};
-
-// Delete an availability slot
-export const deleteAvailabilitySlot = async (id: string): Promise<boolean> => {
-  try {
-    console.log(`Deleting availability slot with ID: ${id}`);
-    
-    const { error } = await supabase
-      .from("user_availability")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error deleting availability slot:", error);
-      throw error;
-    }
-
-    console.log("Availability slot deleted successfully");
-    return true;
-  } catch (err) {
-    console.error("Failed to delete availability slot:", err);
-    throw err;
-  }
-};
-
-// New function to fetch availability for a specific date (by day of week)
-export const fetchUserAvailabilityForDate = async (userId: string, date: Date): Promise<UserAvailability[]> => {
-  try {
-    const dayOfWeek = date.getDay(); // 0 for Sunday, 6 for Saturday
-    console.log(`Fetching availability for user ${userId} on day ${dayOfWeek}`);
-    
-    const { data, error } = await supabase
-      .from("user_availability")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("day_of_week", dayOfWeek);
-    
-    if (error) {
-      console.error("Error fetching user availability for date:", error);
-      throw error;
+    // Fetch users
+    const { data: users, error: userError } = await userQuery;
+    if (userError) {
+      console.error('Error fetching users:', userError);
+      throw userError;
     }
     
-    if (!data || data.length === 0) {
-      console.log(`No availability found for user ${userId} on day ${dayOfWeek}`);
-      return [];
+    if (!users || users.length === 0) {
+      console.log('No users found for availability');
+      return availabilityMap;
     }
     
-    const mappedData = data.map(mapDbAvailability);
-    console.log(`Found ${mappedData.length} availability slots for day ${dayOfWeek}`);
-    return mappedData;
-  } catch (err) {
-    console.error("Failed to fetch user availability for date:", err);
-    throw err;
-  }
-};
-
-// Function to fetch all availability for the week
-export const fetchUserAvailabilityForWeek = async (userId: string): Promise<UserAvailability[]> => {
-  try {
-    console.log(`Fetching week availability for user ${userId}`);
+    // Create a list of user IDs to fetch availability for
+    const userIdList = users.map(user => user.id);
     
-    const { data, error } = await supabase
-      .from("user_availability")
-      .select("*")
-      .eq("user_id", userId)
-      .order("day_of_week", { ascending: true })
-      .order("start_time", { ascending: true });
-    
-    if (error) {
-      console.error("Error fetching user availability for week:", error);
-      throw error;
+    // Fetch availability for all users
+    const { data: availabilityData, error: availabilityError } = await supabase
+      .from('user_availability')
+      .select('*')
+      .in('user_id', userIdList);
+      
+    if (availabilityError) {
+      console.error('Error fetching user availability:', availabilityError);
+      throw availabilityError;
     }
     
-    if (!data || data.length === 0) {
-      console.log(`No weekly availability found for user ${userId}`);
-      return [];
+    // Initialize map with user info
+    users.forEach(user => {
+      availabilityMap[user.id] = {
+        slots: [],
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        role: user.role
+      };
+    });
+    
+    // Add availability slots to the map
+    if (availabilityData && availabilityData.length > 0) {
+      availabilityData.forEach(slot => {
+        const userId = slot.user_id;
+        if (availabilityMap[userId]) {
+          availabilityMap[userId].slots.push({
+            id: slot.id,
+            userId: slot.user_id,
+            dayOfWeek: slot.day_of_week,
+            startTime: slot.start_time,
+            endTime: slot.end_time,
+            category: slot.category || 'Session'
+          });
+        }
+      });
     }
     
-    const mappedData = data.map(mapDbAvailability);
-    console.log(`Found ${mappedData.length} availability slots for the week`);
-    return mappedData;
-  } catch (err) {
-    console.error("Failed to fetch user availability for week:", err);
-    throw err;
+    return availabilityMap;
+  } catch (error) {
+    console.error('Failed to fetch user availability:', error);
+    return {};
   }
 };

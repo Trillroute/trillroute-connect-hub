@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
@@ -5,9 +6,7 @@ import { getHourCells } from './calendarUtils';
 import { CalendarEvent } from './context/calendarTypes';
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from 'lucide-react';
-import { fetchUserAvailabilityForDate } from '@/services/availability/availabilityApi';
 import { UserAvailability } from '@/services/availability/types';
-import { useAuth } from '@/hooks/useAuth';
 
 interface DayViewProps {
   onCreateEvent?: () => void;
@@ -26,44 +25,43 @@ interface AvailabilitySlot {
 }
 
 const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteEvent }) => {
-  const { currentDate, events } = useCalendar();
-  const { user } = useAuth();
+  const { currentDate, events, availabilities } = useCalendar();
   const hours = getHourCells();
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   
-  // Fetch availability data for the current date
+  // Process availability data for the current day
   useEffect(() => {
-    const fetchAvailability = async () => {
-      try {
-        if (user?.id) {
-          const userAvailability = await fetchUserAvailabilityForDate(user.id, currentDate);
+    const processAvailabilities = () => {
+      // Get day of week (0 = Sunday, 1 = Monday, etc.)
+      const dayOfWeek = currentDate.getDay();
+      const processedSlots: AvailabilitySlot[] = [];
+      
+      // Process all user availabilities
+      Object.entries(availabilities).forEach(([userId, userData]) => {
+        // Filter slots for current day of week
+        const userSlots = userData.slots.filter(slot => slot.dayOfWeek === dayOfWeek);
+        
+        userSlots.forEach(slot => {
+          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
           
-          // Map DB format to our internal format
-          const mappedSlots = userAvailability.map(slot => {
-            const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-            const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-            
-            return {
-              startHour,
-              startMinute,
-              endHour,
-              endMinute,
-              userId: slot.userId,
-              userName: user.firstName + ' ' + user.lastName,
-              category: slot.category
-            };
+          processedSlots.push({
+            startHour,
+            startMinute,
+            endHour,
+            endMinute,
+            userId: slot.userId,
+            userName: userData.name,
+            category: slot.category
           });
-          
-          setAvailabilitySlots(mappedSlots);
-          console.log('Fetched availability slots:', mappedSlots);
-        }
-      } catch (error) {
-        console.error('Failed to fetch availability:', error);
-      }
+        });
+      });
+      
+      setAvailabilitySlots(processedSlots);
     };
     
-    fetchAvailability();
-  }, [currentDate, user]);
+    processAvailabilities();
+  }, [currentDate, availabilities]);
   
   // Filter events for the current day
   const todayEvents = events.filter(event => 
@@ -182,7 +180,9 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
                 style={calculateAvailabilityPosition(slot)}
                 onClick={() => handleAvailabilityClick(slot)}
               >
-                <div className="font-semibold group-hover:underline">Available Slot</div>
+                <div className="font-semibold group-hover:underline">
+                  {slot.userName ? `${slot.userName}'s Availability` : 'Available Slot'}
+                </div>
                 <div className="text-xs opacity-90">
                   {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
                 </div>
