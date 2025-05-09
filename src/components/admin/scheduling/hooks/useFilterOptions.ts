@@ -117,31 +117,16 @@ export function useFilterOptions({ filterType }: UseFilterOptionsProps) {
             break;
 
           case 'unit':
-            // Assuming 'units' could be departments, classrooms, or other organizational units
-            const { data: units, error: unitsError } = await supabase
-              .from('units') // Replace with your actual table name if different
-              .select('id, name')
-              .order('name');
-
-            if (unitsError) {
-              // If the units table doesn't exist, provide some mock data
-              console.warn("Could not fetch units, using sample data:", unitsError);
-              setFilterOptions([
-                { value: 'unit1', label: 'Math Department' },
-                { value: 'unit2', label: 'Science Department' },
-                { value: 'unit3', label: 'Arts Department' },
-                { value: 'unit4', label: 'Music Department' },
-                { value: 'unit5', label: 'Physical Education' },
-                { value: 'unit6', label: 'Languages' },
-              ]);
-            } else {
-              setFilterOptions(
-                units.map(unit => ({
-                  value: unit.id,
-                  label: unit.name,
-                }))
-              );
-            }
+            // Since we don't have a 'units' table, we'll provide static mock data
+            // This avoids the database query error
+            setFilterOptions([
+              { value: 'unit1', label: 'Math Department' },
+              { value: 'unit2', label: 'Science Department' },
+              { value: 'unit3', label: 'Arts Department' },
+              { value: 'unit4', label: 'Music Department' },
+              { value: 'unit5', label: 'Physical Education' },
+              { value: 'unit6', label: 'Languages' },
+            ]);
             break;
 
           default:

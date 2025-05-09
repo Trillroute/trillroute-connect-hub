@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CalendarViewMode } from '../context/calendarTypes';
 
 export interface ViewOption {
   value: string;
@@ -17,13 +18,13 @@ export interface ViewOption {
 
 interface ViewModeSelectorProps {
   viewMode: string;
-  setViewMode: (mode: string) => void;
-  viewOptions: ViewOption[];
+  onChange: (mode: CalendarViewMode) => void;
+  viewOptions?: ViewOption[];
 }
 
 const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   viewMode,
-  setViewMode,
+  onChange,
   viewOptions
 }) => {
   // Add a safety check to make sure viewOptions is an array
@@ -48,7 +49,7 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
         {options.map((option) => (
           <DropdownMenuItem
             key={option.value}
-            onClick={() => setViewMode(option.value)}
+            onClick={() => onChange(option.value as CalendarViewMode)}
             className={cn(
               "cursor-pointer", 
               viewMode === option.value ? "bg-gray-100" : ""

@@ -216,3 +216,5 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
 
   return <>{children}</>;
 };
+
+export default FilteredEventsProvider;

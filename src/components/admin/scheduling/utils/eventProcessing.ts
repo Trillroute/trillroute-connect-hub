@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { CalendarEvent } from '../context/calendarTypes';
 
@@ -30,29 +31,65 @@ export const fetchFilteredEvents = async ({
     // If we have course IDs, filter events related to these courses
     if (courseIds && courseIds.length > 0) {
       // This depends on how course relationships are stored
-      // Example assumes there's a course_id field or relation
       query = query.in('course_id', courseIds);
     }
     
     // If we have skill IDs, filter events related to these skills  
     if (skillIds && skillIds.length > 0) {
       // This depends on how skill relationships are stored
-      // Example assumes there's a skill_id field or relation
       query = query.in('skill_id', skillIds);
     }
     
     // If we have unit IDs, filter events related to these units
     if (unitIds && unitIds.length > 0) {
-      // This depends on how unit relationships are stored
-      // Example assumes there's a unit_id field or relation
-      query = query.in('unit_id', unitIds);
+      // Mock filtering for unit IDs since there's no direct database relation
+      // For now, just return mock data
+      if (unitIds.includes('unit1')) {
+        // Math Department events
+        const mockEvents: CalendarEvent[] = [
+          {
+            id: 'math-event-1',
+            title: 'Math Department Meeting',
+            start: new Date(new Date().setDate(new Date().getDate() + 1)),
+            end: new Date(new Date().setDate(new Date().getDate() + 1) + 2 * 60 * 60 * 1000),
+            description: 'Weekly math department meeting',
+            color: '#4f46e5',
+          },
+          {
+            id: 'math-event-2',
+            title: 'Math Competition Prep',
+            start: new Date(new Date().setDate(new Date().getDate() + 3)),
+            end: new Date(new Date().setDate(new Date().getDate() + 3) + 3 * 60 * 60 * 1000),
+            description: 'Preparation for upcoming math competition',
+            color: '#4f46e5',
+          }
+        ];
+        setEvents(mockEvents);
+        return;
+      } else if (unitIds.includes('unit2')) {
+        // Science Department events
+        const mockEvents: CalendarEvent[] = [
+          {
+            id: 'science-event-1',
+            title: 'Science Lab Session',
+            start: new Date(new Date().setDate(new Date().getDate() + 2)),
+            end: new Date(new Date().setDate(new Date().getDate() + 2) + 4 * 60 * 60 * 1000),
+            description: 'Hands-on lab session',
+            color: '#16a34a',
+          }
+        ];
+        setEvents(mockEvents);
+        return;
+      } else {
+        // For other units, return empty for now
+        setEvents([]);
+        return;
+      }
     }
 
     // If we have role filters, we'd need to join with users table
-    // This implementation would depend on your database structure
     if (roleFilter && roleFilter.length > 0) {
-      // For simplicity in this example, we'd fetch users with these roles first
-      // and then filter events by those user IDs
+      // Fetch users with these roles
       const { data: usersWithRole } = await supabase
         .from('custom_users')
         .select('id')
@@ -77,7 +114,7 @@ export const fetchFilteredEvents = async ({
       return;
     }
     
-    // Map to calendar events
+    // Map to calendar events format
     const mappedEvents: CalendarEvent[] = data.map(event => ({
       id: event.id,
       title: event.title,
