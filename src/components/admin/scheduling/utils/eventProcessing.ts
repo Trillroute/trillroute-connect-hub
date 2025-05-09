@@ -28,22 +28,9 @@ export const fetchFilteredEvents = async ({
       query = query.in('user_id', userIds);
     }
     
-    // If we have course IDs, filter events related to these courses
-    if (courseIds && courseIds.length > 0) {
-      // This depends on how course relationships are stored
-      query = query.in('course_id', courseIds);
-    }
-    
-    // If we have skill IDs, filter events related to these skills  
-    if (skillIds && skillIds.length > 0) {
-      // This depends on how skill relationships are stored
-      query = query.in('skill_id', skillIds);
-    }
-    
-    // If we have unit IDs, filter events related to these units
+    // If we have unit IDs, we'll handle them with mock data since they're not in the database
     if (unitIds && unitIds.length > 0) {
       // Mock filtering for unit IDs since there's no direct database relation
-      // For now, just return mock data
       if (unitIds.includes('unit1')) {
         // Math Department events
         const mockEvents: CalendarEvent[] = [
@@ -86,14 +73,32 @@ export const fetchFilteredEvents = async ({
         return;
       }
     }
+    
+    // If we have course IDs, filter events related to these courses
+    if (courseIds && courseIds.length > 0) {
+      // Handle course filtering separately to avoid deep type issues
+      query = query.in('course_id', courseIds);
+    }
+    
+    // If we have skill IDs, filter events related to these skills  
+    if (skillIds && skillIds.length > 0) {
+      // Handle skill filtering separately to avoid deep type issues
+      query = query.in('skill_id', skillIds);
+    }
 
-    // If we have role filters, we'd need to join with users table
+    // If we have role filters, handle separately to avoid deep type issues
     if (roleFilter && roleFilter.length > 0) {
       // Fetch users with these roles
-      const { data: usersWithRole } = await supabase
+      const { data: usersWithRole, error: userError } = await supabase
         .from('custom_users')
         .select('id')
         .in('role', roleFilter);
+        
+      if (userError) {
+        console.error("Error fetching users by role:", userError);
+        setEvents([]);
+        return;
+      }
         
       if (usersWithRole && usersWithRole.length > 0) {
         const roleUserIds = usersWithRole.map(user => user.id);
