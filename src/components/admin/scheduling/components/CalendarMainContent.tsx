@@ -1,10 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import CalendarHeader from '../CalendarHeader';
 import CalendarViewRenderer from '../CalendarViewRenderer';
 import EventFormDialog from '../EventFormDialog';
 import FilterTypeTabs from './FilterTypeTabs';
-import { useFilterPersistence } from '../hooks/useFilterPersistence';
 
 interface CalendarMainContentProps {
   hasAdminAccess?: boolean;
@@ -24,18 +23,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   initialFilterType = null
 }) => {
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
-  
-  // Use the persistence hook with initialFilterType as the starting value
-  const { filterState, updateFilterState } = useFilterPersistence({
-    filterType: initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
-  });
-  
-  // Initialize from props (only on component mount)
-  useEffect(() => {
-    if (initialFilterType) {
-      updateFilterState({ filterType: initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null });
-    }
-  }, []);
+  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(
+    initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
+  );
 
   const handleCreateEvent = () => {
     setIsCreateEventDialogOpen(true);
@@ -55,9 +45,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   
   // Handle filter type change with correct type casting
   const handleFilterTypeChange = (type: string | null) => {
-    updateFilterState({ 
-      filterType: type as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null 
-    });
+    setFilterType(type as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null);
   };
 
   // Determine filter type and IDs based on props
@@ -94,8 +82,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     
     // Use the filter set via UI
     return {
-      filterType: filterState.filterType,
-      filterIds: filterState.selectedFilters
+      filterType,
+      filterIds: []
     };
   };
   
@@ -105,7 +93,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     <div className="flex flex-col h-full">
       <CalendarHeader onCreateEvent={handleCreateEvent} />
       <FilterTypeTabs 
-        filterType={filterState.filterType} 
+        filterType={filterType} 
         setFilterType={handleFilterTypeChange}
       />
       <div className="flex-grow overflow-auto">
