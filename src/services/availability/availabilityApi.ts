@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvailability, UserAvailabilityMap } from '../userAvailabilityService';
 import { format, addDays, startOfWeek } from 'date-fns';
@@ -6,11 +5,8 @@ import { format, addDays, startOfWeek } from 'date-fns';
 /**
  * Fetch user availability for a specific date
  */
-export const fetchUserAvailabilityForDate = async (userId: string, date: Date): Promise<UserAvailability[]> => {
+export const fetchUserAvailabilityForDate = async (userId: string, dayOfWeek: number): Promise<UserAvailability[]> => {
   try {
-    // Get day of week (0 = Sunday, 1 = Monday, etc.)
-    const dayOfWeek = date.getDay();
-    
     const { data, error } = await supabase
       .from('user_availability')
       .select('*')
