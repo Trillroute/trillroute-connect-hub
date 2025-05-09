@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
@@ -100,8 +99,8 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
     };
   };
   
-  const handleCellClick = () => {
-    if (onCreateEvent) {
+  const handleCellClick = (hour: number) => {
+    if (onCreateEvent && isTimeAvailable(hour)) {
       onCreateEvent();
     }
   };
@@ -160,15 +159,19 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
 
         {/* Hour cells */}
         <div className="relative">
-          {hours.map(hour => (
-            <div
-              key={hour}
-              className={`h-[60px] border-b border-r border-gray-200 ${
-                isTimeAvailable(hour) ? 'cursor-pointer hover:bg-blue-50' : 'bg-gray-100'
-              }`}
-              onClick={handleCellClick}
-            ></div>
-          ))}
+          {hours.map(hour => {
+            const available = isTimeAvailable(hour);
+            
+            return (
+              <div
+                key={hour}
+                className={`h-[60px] border-b border-r border-gray-200 
+                  ${available ? 'cursor-pointer hover:bg-blue-50' : 'bg-gray-300 cursor-not-allowed'}`}
+                onClick={() => handleCellClick(hour)}
+                aria-disabled={!available}
+              ></div>
+            );
+          })}
           
           {/* Availability slots */}
           <div className="absolute top-0 left-0 right-0">

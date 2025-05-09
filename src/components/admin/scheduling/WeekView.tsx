@@ -118,8 +118,9 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
     setSelectedEvent(null);
   };
   
-  const handleCellClick = () => {
-    if (onCreateEvent) {
+  const handleCellClick = (dayIndex: number, hour: number) => {
+    // Only create event if the time slot is available
+    if (onCreateEvent && isTimeAvailable(hour, dayIndex)) {
       onCreateEvent();
     }
   };
@@ -202,15 +203,18 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
             key={dayIndex} 
             className="flex-1 relative"
           >
-            {/* Hour cells - now with availability indication */}
+            {/* Hour cells - with improved availability indication */}
             <div>
               {hours.map(hour => (
                 <div
                   key={hour}
                   className={`h-[60px] border-b border-r border-gray-200 ${
-                    isTimeAvailable(hour, dayIndex) ? 'cursor-pointer hover:bg-blue-50' : 'bg-gray-100'
+                    isTimeAvailable(hour, dayIndex) 
+                      ? 'cursor-pointer hover:bg-blue-50' 
+                      : 'bg-gray-300 cursor-not-allowed'
                   } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''}`}
-                  onClick={handleCellClick}
+                  onClick={() => handleCellClick(dayIndex, hour)}
+                  aria-disabled={!isTimeAvailable(hour, dayIndex)}
                 ></div>
               ))}
             </div>
