@@ -74,30 +74,40 @@ export const fetchFilteredEvents = async ({
       query = query.in('user_id', userIds);
     }
     
-    // Process role filter to get user IDs
+    // Process role filter
     if (roleFilter && roleFilter.length > 0) {
-      try {
-        const { data: usersWithRole, error: userError } = await supabase
-          .from('custom_users')
-          .select('id')
-          .in('role', roleFilter);
+      // Get user IDs with the specified roles
+      const { data: usersWithRole, error: userError } = await supabase
+        .from('custom_users')
+        .select('id')
+        .in('role', roleFilter);
+        
+      if (userError) {
+        console.error("Error fetching users by role:", userError);
+        setEvents([]);
+        return;
+      }
+        
+      if (usersWithRole && usersWithRole.length > 0) {
+        const roleUserIds = usersWithRole.map(user => user.id);
+        
+        // If we already have specific user IDs, find the intersection
+        if (userIds && userIds.length > 0) {
+          const filteredIds = roleUserIds.filter(id => userIds.includes(id));
           
-        if (userError) {
-          console.error("Error fetching users by role:", userError);
-          setEvents([]);
-          return;
-        }
-          
-        if (usersWithRole && usersWithRole.length > 0) {
-          const roleUserIds = usersWithRole.map(user => user.id);
-          query = query.in('user_id', roleUserIds);
+          if (filteredIds.length > 0) {
+            query = query.in('user_id', filteredIds);
+          } else {
+            // No matching users, return empty
+            setEvents([]);
+            return;
+          }
         } else {
-          // If no users match the role filter, return empty array
-          setEvents([]);
-          return;
+          // Just filter by the role user IDs
+          query = query.in('user_id', roleUserIds);
         }
-      } catch (err) {
-        console.error("Error processing role filter:", err);
+      } else {
+        // No users found with this role
         setEvents([]);
         return;
       }
