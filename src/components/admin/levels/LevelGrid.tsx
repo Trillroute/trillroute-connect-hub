@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Eye, Pencil, Shield, Trash } from 'lucide-react';
 import { Level } from './LevelTable';
+import { Badge } from '@/components/ui/badge';
 
 interface LevelGridProps {
   levels: Level[];
@@ -75,73 +76,83 @@ const LevelGrid: React.FC<LevelGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 p-4">
       {levels.map((level) => (
-        <Card key={level.id} className={selectedIds.includes(level.id) ? 'border-primary' : ''}>
-          <CardHeader className="pb-2">
+        <Card 
+          key={level.id} 
+          className={`${selectedIds.includes(level.id) ? 'border-primary ring-1 ring-primary' : ''} 
+                     transition-all hover:shadow-md`}
+        >
+          <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <CardTitle className="text-lg">{level.name}</CardTitle>
-                <CardDescription className="mt-1">
+                <CardTitle className="text-xl mb-1">{level.name}</CardTitle>
+                <Badge variant="secondary" className="font-normal">
                   {calculateTotalPermissions(level)} permissions
-                </CardDescription>
+                </Badge>
               </div>
               <Checkbox
                 checked={selectedIds.includes(level.id)}
                 onCheckedChange={() => toggleSelection(level.id)}
                 aria-label={`Select ${level.name}`}
+                className="mt-1"
               />
             </div>
           </CardHeader>
-          <CardContent className="pb-2">
-            <p className="text-sm text-gray-500 line-clamp-2">{level.description}</p>
+          
+          <CardContent className="pb-3">
+            <p className="text-sm text-muted-foreground line-clamp-2">{level.description}</p>
           </CardContent>
-          <CardFooter className="flex justify-end pt-2 gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewPermissions(level)}
-              className="h-8 px-2"
-            >
-              <Eye className="h-4 w-4 mr-1" />
-              View
-            </Button>
-            
-            {onEditPermissions && (
+          
+          <CardFooter className="flex justify-between items-center pt-3 border-t">
+            <div className="text-sm text-muted-foreground">Role</div>
+            <div className="flex space-x-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onEditPermissions(level)}
-                className="h-8 px-2"
+                onClick={() => onViewPermissions(level)}
+                className="h-8 w-8 p-0"
+                title="View permissions"
               >
-                <Shield className="h-4 w-4 mr-1" />
-                Permissions
+                <Eye className="h-4 w-4" />
               </Button>
-            )}
-            
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(level)}
-                className="h-8 px-2"
-              >
-                <Pencil className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-            )}
-            
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete(level)}
-                className="h-8 px-2 text-red-500 hover:text-red-600"
-              >
-                <Trash className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-            )}
+              
+              {onEditPermissions && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEditPermissions(level)}
+                  className="h-8 w-8 p-0"
+                  title="Edit permissions"
+                >
+                  <Shield className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(level)}
+                  className="h-8 w-8 p-0"
+                  title="Edit level"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(level)}
+                  className="h-8 w-8 p-0 hover:text-destructive"
+                  title="Delete level"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </CardFooter>
         </Card>
       ))}
