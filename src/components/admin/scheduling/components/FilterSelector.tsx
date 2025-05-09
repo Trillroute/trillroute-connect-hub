@@ -16,8 +16,8 @@ interface FilterSelectorProps {
   setSelectedFilter: (id: string | null) => void;
   selectedFilters?: string[];
   setSelectedFilters?: (ids: string[]) => void;
-  showFilterTypeTabs?: boolean;
-  showFilterDropdown?: boolean; // New prop to control dropdown visibility
+  showFilterTypeTabs?: boolean; // Control whether to show the filter tabs
+  showFilterDropdown?: boolean;
 }
 
 const FilterSelector: React.FC<FilterSelectorProps> = ({
@@ -27,8 +27,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   setSelectedFilter,
   selectedFilters = [],
   setSelectedFilters = () => {},
-  showFilterTypeTabs = true,
-  showFilterDropdown = false // Default to false to hide the dropdown
+  showFilterTypeTabs = false, // Changed default to false to prevent duplicate tabs
+  showFilterDropdown = false
 }) => {
   // Use our custom hook to get filter options
   const { filterOptions, isLoading } = useFilterOptions({ filterType });

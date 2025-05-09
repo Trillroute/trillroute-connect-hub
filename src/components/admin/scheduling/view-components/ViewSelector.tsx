@@ -12,7 +12,7 @@ interface ViewSelectorProps {
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
   onDateClick: (date: Date) => void;
-  showFilterTabs?: boolean; // Add this prop to control filter tabs visibility
+  showFilterTabs?: boolean; // Not used anymore - we're removing the duplicate tabs
 }
 
 export const ViewSelector: React.FC<ViewSelectorProps> = ({ 
@@ -20,16 +20,14 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   onCreateEvent, 
   onEditEvent, 
   onDeleteEvent,
-  onDateClick,
-  showFilterTabs = true // Default to true for backward compatibility
+  onDateClick
 }) => {
   // Common props to pass to all view components
   const viewProps = {
     onCreateEvent,
     onEditEvent,
     onDeleteEvent,
-    onDateClick,
-    showFilterTabs // Pass this prop to all view components
+    onDateClick
   };
 
   // Render appropriate view based on viewMode

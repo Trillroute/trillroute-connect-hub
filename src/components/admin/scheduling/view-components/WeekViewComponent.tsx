@@ -6,7 +6,6 @@ import { useFilteredEvents } from './FilteredEventsProvider';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, isSameDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import FilterSelector from '../components/FilterSelector';
 
 // Import existing components instead of the missing ones
 import WeekDayHeader from '../week-view/WeekDayHeader';
@@ -16,18 +15,17 @@ interface WeekViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
   onDateClick: (date: Date) => void;
-  showFilterTabs?: boolean;
+  showFilterTabs?: boolean; // We'll keep this prop but not use it since we're removing filter tabs
 }
 
 export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({ 
   onCreateEvent, 
   onEditEvent, 
   onDeleteEvent, 
-  onDateClick,
-  showFilterTabs = true
+  onDateClick
 }) => {
   const { currentDate, setCurrentDate } = useCalendar();
-  const { filteredEvents, filterType, setFilterType, selectedFilter, setSelectedFilter } = useFilteredEvents();
+  const { filteredEvents } = useFilteredEvents();
   
   // Get the start and end of the week for the current date
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Start on Monday
@@ -59,16 +57,7 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   
   return (
     <div className="flex flex-col h-full">
-      {showFilterTabs && (
-        <div className="p-2 border-b">
-          <FilterSelector
-            filterType={filterType}
-            setFilterType={setFilterType}
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-          />
-        </div>
-      )}
+      {/* Removed the filter tabs section that was causing duplication */}
       
       <div className="flex justify-between items-center p-2 border-b">
         <div className="flex items-center space-x-2">
