@@ -1,78 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { CalendarProvider } from './context/CalendarContext';
+import { FilteredEventsProvider } from './view-components/FilteredEventsProvider';
 import CalendarMainContent from './components/CalendarMainContent';
-import CreateEventDialog from './CreateEventDialog';
-import { useCalendar } from './context/CalendarContext';
-import { useEventFilters } from './hooks/useEventFilters';
 
-interface CalendarContentProps {
-  hasAdminAccess?: boolean;
-  userId?: string;
-  userIds?: string[];
-  roleFilter?: string[];
-  courseId?: string;
-  skillId?: string;
-  title?: string;
-  description?: string;
-  initialFilterType?: string | null;
-}
-
-const CalendarContent: React.FC<CalendarContentProps> = ({ 
-  hasAdminAccess = false,
-  userId,
-  userIds,
-  roleFilter,
-  courseId,
-  skillId,
-  title,
-  description,
-  initialFilterType = null
-}) => {
-  const { 
-    currentDate,
-    isCreateEventOpen, 
-    setIsCreateEventOpen, 
-    handleCreateEvent
-  } = useCalendar();
-  
-  // Use the custom hook to handle event filtering
-  useEventFilters({
-    userId,
-    userIds: Array.isArray(userIds) ? userIds : [],
-    roleFilter: Array.isArray(roleFilter) ? roleFilter : [],
-    courseId,
-    skillId
-  });
-
-  // Handle dialog close
-  const handleCloseCreateDialog = () => {
-    setIsCreateEventOpen(false);
-  };
-
-  // Handle save event
-  const handleSaveEvent = (eventData: any) => {
-    handleCreateEvent(eventData);
-    setIsCreateEventOpen(false);
-  };
-
+const CalendarContent: React.FC = () => {
   return (
-    <div className="flex flex-col h-full">
-      <CalendarMainContent 
-        hasAdminAccess={hasAdminAccess}
-        title={title}
-        description={description}
-        initialFilterType={initialFilterType}
-      />
-      
-      {isCreateEventOpen && (
-        <CreateEventDialog
-          open={isCreateEventOpen}
-          onOpenChange={handleCloseCreateDialog}
-          onSave={handleSaveEvent}
-          startDate={currentDate}
-        />
-      )}
-    </div>
+    <CalendarProvider>
+      <FilteredEventsProvider>
+        <div className="flex flex-col h-full">
+          <CalendarMainContent />
+        </div>
+      </FilteredEventsProvider>
+    </CalendarProvider>
   );
 };
 

@@ -11,15 +11,15 @@ export const convertToAdminLevel = (levelDetailed: AdminLevelDetailed): AdminLev
     name: levelDetailed.name,
     level: levelDetailed.level || levelDetailed.id, // Use level if available, otherwise use id
     description: levelDetailed.description,
-    studentPermissions: levelDetailed.studentPermissions,
-    teacherPermissions: levelDetailed.teacherPermissions,
-    adminPermissions: levelDetailed.adminPermissions,
-    leadPermissions: levelDetailed.leadPermissions,
-    coursePermissions: levelDetailed.coursePermissions,
-    levelPermissions: levelDetailed.levelPermissions,
-    eventsPermissions: levelDetailed.eventsPermissions,
-    classTypesPermissions: levelDetailed.classTypesPermissions,
-    userAvailabilityPermissions: levelDetailed.userAvailabilityPermissions
+    studentPermissions: levelDetailed.studentPermissions || [],
+    teacherPermissions: levelDetailed.teacherPermissions || [],
+    adminPermissions: levelDetailed.adminPermissions || [],
+    leadPermissions: levelDetailed.leadPermissions || [],
+    coursePermissions: levelDetailed.coursePermissions || [],
+    levelPermissions: levelDetailed.levelPermissions || [],
+    eventsPermissions: levelDetailed.eventsPermissions || [],
+    classTypesPermissions: levelDetailed.classTypesPermissions || [],
+    userAvailabilityPermissions: levelDetailed.userAvailabilityPermissions || []
   };
 };
 

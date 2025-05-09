@@ -1,305 +1,352 @@
 
+import { AdminLevel, AdminRoleExport } from '@/utils/permissions/types';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLevelDetailed } from '@/types/adminLevel';
 
+// Default admin roles to use if the database is empty
+export const DEFAULT_ADMIN_ROLES: AdminLevelDetailed[] = [
+  {
+    id: 1,
+    name: 'Student Manager',
+    description: 'Can manage student data',
+    level: 1,
+    studentPermissions: ['VIEW_STUDENTS', 'ADD_STUDENTS', 'EDIT_STUDENTS', 'DELETE_STUDENTS'],
+    teacherPermissions: ['VIEW_TEACHERS'],
+    adminPermissions: [],
+    leadPermissions: [],
+    coursePermissions: ['VIEW_COURSES'],
+    levelPermissions: [],
+    eventsPermissions: [],
+    classTypesPermissions: [],
+    userAvailabilityPermissions: []
+  },
+  {
+    id: 2,
+    name: 'Teacher Manager',
+    description: 'Can manage teacher data',
+    level: 2,
+    studentPermissions: ['VIEW_STUDENTS'],
+    teacherPermissions: ['VIEW_TEACHERS', 'ADD_TEACHERS', 'EDIT_TEACHERS', 'DELETE_TEACHERS'],
+    adminPermissions: [],
+    leadPermissions: [],
+    coursePermissions: ['VIEW_COURSES'],
+    levelPermissions: [],
+    eventsPermissions: [],
+    classTypesPermissions: [],
+    userAvailabilityPermissions: []
+  },
+  {
+    id: 3,
+    name: 'Course Manager',
+    description: 'Can manage courses',
+    level: 3,
+    studentPermissions: ['VIEW_STUDENTS'],
+    teacherPermissions: ['VIEW_TEACHERS'],
+    adminPermissions: [],
+    leadPermissions: [],
+    coursePermissions: ['VIEW_COURSES', 'ADD_COURSES', 'EDIT_COURSES', 'DELETE_COURSES'],
+    levelPermissions: [],
+    eventsPermissions: [],
+    classTypesPermissions: [],
+    userAvailabilityPermissions: []
+  },
+  {
+    id: 4,
+    name: 'Admin Manager',
+    description: 'Can manage other admins',
+    level: 4,
+    studentPermissions: ['VIEW_STUDENTS', 'ADD_STUDENTS', 'EDIT_STUDENTS', 'DELETE_STUDENTS'],
+    teacherPermissions: ['VIEW_TEACHERS', 'ADD_TEACHERS', 'EDIT_TEACHERS', 'DELETE_TEACHERS'],
+    adminPermissions: ['VIEW_ADMINS', 'ADD_ADMINS', 'EDIT_ADMINS', 'DELETE_ADMINS'],
+    leadPermissions: ['VIEW_LEADS', 'ADD_LEADS', 'EDIT_LEADS', 'DELETE_LEADS'],
+    coursePermissions: ['VIEW_COURSES', 'ADD_COURSES', 'EDIT_COURSES', 'DELETE_COURSES'],
+    levelPermissions: ['VIEW_LEVELS'],
+    eventsPermissions: ['VIEW_EVENTS', 'ADD_EVENTS', 'EDIT_EVENTS', 'DELETE_EVENTS'],
+    classTypesPermissions: ['VIEW_CLASS_TYPES', 'ADD_CLASS_TYPES', 'EDIT_CLASS_TYPES', 'DELETE_CLASS_TYPES'],
+    userAvailabilityPermissions: ['VIEW_USER_AVAILABILITY', 'ADD_USER_AVAILABILITY', 'EDIT_USER_AVAILABILITY', 'DELETE_USER_AVAILABILITY']
+  }
+];
+
 /**
- * Fetches all admin roles/levels from the database
+ * Transforms database admin role data to AdminLevelDetailed format
+ */
+const transformDbRoleToAdminLevelDetailed = (dbRole: any): AdminLevelDetailed => {
+  try {
+    return {
+      id: dbRole.id,
+      name: dbRole.name || '',
+      description: dbRole.description || '',
+      level: dbRole.level || dbRole.id,
+      studentPermissions: dbRole.student_permissions || [],
+      teacherPermissions: dbRole.teacher_permissions || [],
+      adminPermissions: dbRole.admin_permissions || [],
+      leadPermissions: dbRole.lead_permissions || [],
+      coursePermissions: dbRole.course_permissions || [],
+      levelPermissions: dbRole.level_permissions || [],
+      eventsPermissions: dbRole.events_permissions || [],
+      classTypesPermissions: dbRole.class_types_permissions || [],
+      userAvailabilityPermissions: dbRole.user_availability_permissions || []
+    };
+  } catch (error) {
+    console.error('Error transforming admin role:', error);
+    return {
+      id: 0,
+      name: 'Error',
+      description: 'Error loading role',
+      level: 0,
+      studentPermissions: [],
+      teacherPermissions: [],
+      adminPermissions: [],
+      leadPermissions: [],
+      coursePermissions: [],
+      levelPermissions: [],
+      eventsPermissions: [],
+      classTypesPermissions: [],
+      userAvailabilityPermissions: []
+    };
+  }
+};
+
+/**
+ * Fetches all admin roles from the database
+ * @returns {Promise<AdminLevelDetailed[]>} Array of admin roles
  */
 export const fetchAdminRoles = async (): Promise<AdminLevelDetailed[]> => {
-  console.log('[AdminRoleService] Fetching admin roles from database');
-  const { data, error } = await supabase
-    .from('admin_levels')
-    .select('*')
-    .order('id', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('admin_roles')
+      .select('*')
+      .order('level', { ascending: true });
 
-  if (error) {
-    console.error('[AdminRoleService] Error fetching admin roles:', error);
-    throw error;
+    if (error) {
+      console.error('Error fetching admin roles:', error);
+      return DEFAULT_ADMIN_ROLES;
+    }
+
+    if (!data || data.length === 0) {
+      console.log('No admin roles found, using defaults');
+      return DEFAULT_ADMIN_ROLES;
+    }
+
+    // Transform the data to AdminLevelDetailed format
+    return data.map(transformDbRoleToAdminLevelDetailed);
+  } catch (error) {
+    console.error('Error in fetchAdminRoles:', error);
+    return DEFAULT_ADMIN_ROLES;
   }
+};
 
-  if (!data || data.length === 0) {
-    console.warn('[AdminRoleService] No admin roles found in database');
+/**
+ * Fetches a specific admin role by ID
+ */
+export const fetchAdminRoleById = async (id: number): Promise<AdminLevelDetailed | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('admin_roles')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching admin role:', error);
+      return null;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return transformDbRoleToAdminLevelDetailed(data);
+  } catch (error) {
+    console.error('Error in fetchAdminRoleById:', error);
+    return null;
+  }
+};
+
+/**
+ * Creates a new admin role
+ */
+export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLevelDetailed | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('admin_roles')
+      .insert({
+        name: role.name,
+        description: role.description,
+        level: role.level,
+        student_permissions: role.studentPermissions,
+        teacher_permissions: role.teacherPermissions,
+        admin_permissions: role.adminPermissions,
+        lead_permissions: role.leadPermissions,
+        course_permissions: role.coursePermissions,
+        level_permissions: role.levelPermissions,
+        events_permissions: role.eventsPermissions,
+        class_types_permissions: role.classTypesPermissions,
+        user_availability_permissions: role.userAvailabilityPermissions
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating admin role:', error);
+      return null;
+    }
+
+    return transformDbRoleToAdminLevelDetailed(data);
+  } catch (error) {
+    console.error('Error in createAdminRole:', error);
+    return null;
+  }
+};
+
+/**
+ * Updates an existing admin role
+ */
+export const updateAdminRole = async (role: AdminLevelDetailed): Promise<AdminLevelDetailed | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('admin_roles')
+      .update({
+        name: role.name,
+        description: role.description,
+        level: role.level,
+        student_permissions: role.studentPermissions,
+        teacher_permissions: role.teacherPermissions,
+        admin_permissions: role.adminPermissions,
+        lead_permissions: role.leadPermissions,
+        course_permissions: role.coursePermissions,
+        level_permissions: role.levelPermissions,
+        events_permissions: role.eventsPermissions,
+        class_types_permissions: role.classTypesPermissions,
+        user_availability_permissions: role.userAvailabilityPermissions
+      })
+      .eq('id', role.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating admin role:', error);
+      return null;
+    }
+
+    return transformDbRoleToAdminLevelDetailed(data);
+  } catch (error) {
+    console.error('Error in updateAdminRole:', error);
+    return null;
+  }
+};
+
+/**
+ * Deletes an admin role
+ */
+export const deleteAdminRole = async (id: number): Promise<boolean> => {
+  try {
+    // Check if this is the only admin role
+    const { data: countData, error: countError } = await supabase
+      .from('admin_roles')
+      .select('count');
+
+    if (countError) {
+      console.error('Error counting admin roles:', countError);
+      return false;
+    }
+
+    // Parse the count result
+    const count = countData.length > 0 ? Number(countData[0].count) : 0;
+
+    // Don't allow deleting the last admin role
+    if (count <= 1) {
+      console.error('Cannot delete the last admin role');
+      return false;
+    }
+
+    const { error } = await supabase
+      .from('admin_roles')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting admin role:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteAdminRole:', error);
+    return false;
+  }
+};
+
+/**
+ * Exports admin roles to JSON format
+ */
+export const exportAdminRolesToJson = async (): Promise<AdminRoleExport[]> => {
+  try {
+    const roles = await fetchAdminRoles();
+    
+    return roles.map(role => ({
+      roleName: role.name,
+      permissions: {
+        students: role.studentPermissions,
+        teachers: role.teacherPermissions,
+        admins: role.adminPermissions,
+        leads: role.leadPermissions,
+        courses: role.coursePermissions,
+        levels: role.levelPermissions,
+        events: role.eventsPermissions,
+        classTypes: role.classTypesPermissions,
+        userAvailability: role.userAvailabilityPermissions
+      }
+    }));
+  } catch (error) {
+    console.error('Error exporting admin roles:', error);
     return [];
   }
-
-  console.log('[AdminRoleService] Received admin roles from database:', data);
-
-  return data.map(level => ({
-    id: Number(level.id),
-    name: level.name,
-    description: level.description || '',
-    // Set level based on the id
-    level: Number(level.id),
-    studentPermissions: Array.isArray(level.student_permissions) 
-      ? level.student_permissions 
-      : [],
-    teacherPermissions: Array.isArray(level.teacher_permissions) 
-      ? level.teacher_permissions 
-      : [],
-    adminPermissions: Array.isArray(level.admin_permissions) 
-      ? level.admin_permissions 
-      : [],
-    leadPermissions: Array.isArray(level.lead_permissions) 
-      ? level.lead_permissions 
-      : [],
-    coursePermissions: Array.isArray(level.course_permissions) 
-      ? level.course_permissions 
-      : [],
-    levelPermissions: Array.isArray(level.level_permissions)
-      ? level.level_permissions
-      : [],
-    eventsPermissions: Array.isArray(level.events_permissions)
-      ? level.events_permissions
-      : [],
-    // Handle potentially missing properties safely
-    classTypesPermissions: Array.isArray(level.class_types_permissions)
-      ? level.class_types_permissions
-      : [],
-    userAvailabilityPermissions: Array.isArray(level.user_availability_permissions)
-      ? level.user_availability_permissions
-      : []
-  }));
 };
 
 /**
- * Updates an admin's role level by name
+ * Imports admin roles from JSON format
  */
-export const updateAdminLevel = async (userId: string, levelName: string): Promise<void> => {
-  console.log(`[AdminRoleService] Updating admin level for user ${userId} to ${levelName}`);
-  
-  // First fetch the user to ensure they are an admin
-  const { data: user, error: userError } = await supabase
-    .from('custom_users')
-    .select('role')
-    .eq('id', userId)
-    .single();
-    
-  if (userError) {
-    console.error('[AdminRoleService] Error fetching user:', userError);
-    throw new Error('User not found');
-  }
-  
-  if (user.role !== 'admin') {
-    console.error('[AdminRoleService] Cannot update admin level for non-admin user');
-    throw new Error('User is not an admin');
-  }
-  
-  // Now update the admin level
-  const { error } = await supabase
-    .from('custom_users')
-    .update({ admin_level_name: levelName })
-    .eq('id', userId);
+export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promise<boolean> => {
+  try {
+    // First delete all existing roles
+    const { error: deleteError } = await supabase
+      .from('admin_roles')
+      .delete()
+      .neq('id', 0); // Delete all rows
 
-  if (error) {
-    console.error('[AdminRoleService] Error updating admin level:', error);
-    throw error;
-  }
-  
-  console.log(`[AdminRoleService] Successfully updated admin level for user ${userId}`);
-};
-
-/**
- * Creates or updates an admin level in the database
- */
-export const saveAdminLevel = async (level: Partial<AdminLevelDetailed>): Promise<AdminLevelDetailed> => {
-  console.log('[AdminRoleService] Saving admin level:', level);
-  
-  // Map our frontend model to database column names
-  const dbLevel = {
-    id: level.id,
-    name: level.name,
-    description: level.description,
-    student_permissions: level.studentPermissions,
-    teacher_permissions: level.teacherPermissions,
-    admin_permissions: level.adminPermissions,
-    lead_permissions: level.leadPermissions,
-    course_permissions: level.coursePermissions,
-    level_permissions: level.levelPermissions,
-    events_permissions: level.eventsPermissions,
-    class_types_permissions: level.classTypesPermissions,
-    user_availability_permissions: level.userAvailabilityPermissions
-  };
-  
-  // Check if we're updating an existing level or creating a new one
-  if (level.id) {
-    // Update existing level
-    const { data, error } = await supabase
-      .from('admin_levels')
-      .update(dbLevel)
-      .eq('id', level.id)
-      .select('*')
-      .single();
-      
-    if (error) {
-      console.error('[AdminRoleService] Error updating admin level:', error);
-      throw error;
+    if (deleteError) {
+      console.error('Error deleting existing admin roles:', deleteError);
+      return false;
     }
-    
-    return await fetchAdminLevelById(level.id);
-  } else {
-    // Create new level
-    // First get the max id and increment by 1
-    const { data: maxIdData, error: maxIdError } = await supabase
-      .from('admin_levels')
-      .select('id')
-      .order('id', { ascending: false })
-      .limit(1);
-      
-    if (maxIdError) {
-      console.error('[AdminRoleService] Error fetching max id:', maxIdError);
-      throw maxIdError;
-    }
-    
-    const nextId = (maxIdData && maxIdData.length > 0) ? maxIdData[0].id + 1 : 1;
-    dbLevel.id = nextId;
-    
-    const { data, error } = await supabase
-      .from('admin_levels')
-      .insert(dbLevel)
-      .select('*')
-      .single();
-      
-    if (error) {
-      console.error('[AdminRoleService] Error creating admin level:', error);
-      throw error;
-    }
-    
-    return await fetchAdminLevelById(nextId);
-  }
-};
 
-/**
- * Fetches a single admin level by ID
- */
-export const fetchAdminLevelById = async (id: number): Promise<AdminLevelDetailed> => {
-  console.log(`[AdminRoleService] Fetching admin level by id: ${id}`);
-  const { data, error } = await supabase
-    .from('admin_levels')
-    .select('*')
-    .eq('id', id)
-    .single();
-    
-  if (error) {
-    console.error('[AdminRoleService] Error fetching admin level:', error);
-    throw error;
-  }
-  
-  return {
-    id: Number(data.id),
-    name: data.name,
-    level: Number(data.id), // Set level based on id
-    description: data.description || '',
-    studentPermissions: Array.isArray(data.student_permissions) ? data.student_permissions : [],
-    teacherPermissions: Array.isArray(data.teacher_permissions) ? data.teacher_permissions : [],
-    adminPermissions: Array.isArray(data.admin_permissions) ? data.admin_permissions : [],
-    leadPermissions: Array.isArray(data.lead_permissions) ? data.lead_permissions : [],
-    coursePermissions: Array.isArray(data.course_permissions) ? data.course_permissions : [],
-    levelPermissions: Array.isArray(data.level_permissions) ? data.level_permissions : [],
-    eventsPermissions: Array.isArray(data.events_permissions) ? data.events_permissions : [],
-    classTypesPermissions: Array.isArray(data.class_types_permissions) ? data.class_types_permissions : [],
-    userAvailabilityPermissions: Array.isArray(data.user_availability_permissions) ? data.user_availability_permissions : []
-  };
-};
+    // Then insert the new roles
+    for (const role of roles) {
+      const { error: insertError } = await supabase
+        .from('admin_roles')
+        .insert({
+          name: role.roleName,
+          description: '',
+          student_permissions: role.permissions.students,
+          teacher_permissions: role.permissions.teachers,
+          admin_permissions: role.permissions.admins,
+          lead_permissions: role.permissions.leads,
+          course_permissions: role.permissions.courses,
+          level_permissions: role.permissions.levels,
+          events_permissions: role.permissions.events,
+          class_types_permissions: role.permissions.classTypes,
+          user_availability_permissions: role.permissions.userAvailability
+        });
 
-/**
- * Deletes an admin level by ID
- */
-export const deleteAdminLevel = async (id: number): Promise<void> => {
-  console.log(`[AdminRoleService] Deleting admin level: ${id}`);
-  
-  const { error } = await supabase
-    .from('admin_levels')
-    .delete()
-    .eq('id', id);
-    
-  if (error) {
-    console.error('[AdminRoleService] Error deleting admin level:', error);
-    throw error;
-  }
-  
-  console.log(`[AdminRoleService] Successfully deleted admin level: ${id}`);
-};
-
-/**
- * Creates default admin levels in the database if none exist
- */
-export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> => {
-  console.log('[AdminRoleService] Checking if default admin levels need to be created');
-  
-  // Check if there are any admin levels
-  const { data, error } = await supabase
-    .from('admin_levels')
-    .select('count', { count: 'exact', head: true });
-    
-  if (error) {
-    console.error('[AdminRoleService] Error checking admin levels count:', error);
-    throw error;
-  }
-  
-  // Fix the count check - data is an object with count property
-  if (data && data.count && data.count > 0) {
-    console.log('[AdminRoleService] Admin levels already exist, not creating defaults');
-    return fetchAdminRoles();
-  }
-  
-  console.log('[AdminRoleService] No admin levels found, creating defaults');
-  
-  // Default admin levels
-  const defaultLevels = [
-    {
-      id: 10,
-      name: "Limited View",
-      description: "View-only administrator",
-      student_permissions: ["view"],
-      teacher_permissions: ["view"],
-      admin_permissions: [],
-      lead_permissions: [],
-      course_permissions: ["view"],
-      level_permissions: [],
-      events_permissions: [],
-      class_types_permissions: [],
-      user_availability_permissions: []
-    },
-    {
-      id: 50,
-      name: "Standard Admin",
-      description: "Regular administrator permissions",
-      student_permissions: ["view", "add", "edit"],
-      teacher_permissions: ["view", "add"],
-      admin_permissions: [],
-      lead_permissions: ["view", "add", "edit"],
-      course_permissions: ["view", "edit"],
-      level_permissions: ["view"],
-      events_permissions: [],
-      class_types_permissions: [],
-      user_availability_permissions: []
-    },
-    {
-      id: 90,
-      name: "Full Access",
-      description: "Complete administrative access",
-      student_permissions: ["view", "add", "edit", "delete"],
-      teacher_permissions: ["view", "add", "edit", "delete"],
-      admin_permissions: ["view"],
-      lead_permissions: ["view", "add", "edit", "delete"],
-      course_permissions: ["view", "add", "edit", "delete"],
-      level_permissions: ["view", "add", "edit", "delete"],
-      events_permissions: ["view", "add", "edit", "delete"],
-      class_types_permissions: ["view", "add", "edit", "delete"],
-      user_availability_permissions: ["view", "add", "edit", "delete"]
+      if (insertError) {
+        console.error('Error inserting admin role:', insertError);
+        return false;
+      }
     }
-  ];
-  
-  // Insert the default levels
-  const { error: insertError } = await supabase
-    .from('admin_levels')
-    .insert(defaultLevels);
-    
-  if (insertError) {
-    console.error('[AdminRoleService] Error creating default admin levels:', insertError);
-    throw insertError;
+
+    return true;
+  } catch (error) {
+    console.error('Error importing admin roles:', error);
+    return false;
   }
-  
-  console.log('[AdminRoleService] Successfully created default admin levels');
-  return fetchAdminRoles();
 };
