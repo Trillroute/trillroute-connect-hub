@@ -92,6 +92,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   return (
     <div className="flex flex-col h-full">
       <CalendarHeader onCreateEvent={handleCreateEvent} />
+      {/* FilterTypeTabs is now only displayed once here */}
       <FilterTypeTabs 
         filterType={filterType} 
         setFilterType={handleFilterTypeChange} 
@@ -105,6 +106,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           onDateClick={handleDateClick}
           filterType={effectiveFilterType}
           filterIds={filterIds}
+          // Remove the need to show filter tabs inside the CalendarViewRenderer
+          showFilterTabs={false}
         />
       </div>
       <EventFormDialog 
