@@ -92,6 +92,7 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
     leadPermissions: string[];
     coursePermissions: string[];
     levelPermissions: string[];
+    eventsPermissions: string[]; // Make sure this is included
   }) => {
     try {
       await handleUpdateLevel(levelId, permissions);
@@ -126,10 +127,26 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
           <LevelTable
             levels={levelsWithStringIds}
             isLoading={isLoading}
-            onEdit={effectiveCanEdit ? (level) => openEditDialog({...level, id: Number(level.id)}) : undefined}
-            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({...level, id: Number(level.id)}) : undefined}
-            onViewPermissions={(level) => openViewPermissionsDialog({...level, id: Number(level.id)})}
-            onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({...level, id: Number(level.id)}) : undefined}
+            onEdit={effectiveCanEdit ? (level) => openEditDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            }) : undefined}
+            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            }) : undefined}
+            onViewPermissions={(level) => openViewPermissionsDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            })}
+            onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            }) : undefined}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
             visibleColumns={columns}
@@ -138,10 +155,26 @@ const LevelManagement: React.FC<LevelManagementProps> = ({
           <LevelGrid
             levels={levelsWithStringIds}
             isLoading={isLoading}
-            onEdit={effectiveCanEdit ? (level) => openEditDialog({...level, id: Number(level.id)}) : undefined}
-            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({...level, id: Number(level.id)}) : undefined}
-            onViewPermissions={(level) => openViewPermissionsDialog({...level, id: Number(level.id)})}
-            onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({...level, id: Number(level.id)}) : undefined}
+            onEdit={effectiveCanEdit ? (level) => openEditDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            }) : undefined}
+            onDelete={effectiveCanDelete ? (level) => openDeleteDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            }) : undefined}
+            onViewPermissions={(level) => openViewPermissionsDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            })}
+            onEditPermissions={effectiveCanEdit ? (level) => openEditPermissionsDialog({
+              ...level,
+              id: Number(level.id),
+              eventsPermissions: level.eventsPermissions || [] // Ensure eventsPermissions is included
+            }) : undefined}
             selectedIds={selectedIds}
             setSelectedIds={setSelectedIds}
           />
