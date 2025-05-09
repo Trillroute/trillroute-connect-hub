@@ -26,7 +26,7 @@ export interface EventFormValues {
 }
 
 interface EventFormProps {
-  initialData?: CalendarEvent;
+  initialData?: Partial<CalendarEvent> | Omit<CalendarEvent, 'id'>;
   onSubmit: (data: Omit<CalendarEvent, 'id'>) => void;
   onCancel?: () => void;
   submitLabel?: string;

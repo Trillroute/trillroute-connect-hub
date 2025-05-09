@@ -87,7 +87,7 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <EventForm 
-          initialData={initialEvent} 
+          initialData={initialEvent as any} // Temporary type cast to fix the type error
           onSubmit={onSave} 
           onCancel={() => onOpenChange(false)} 
         />
