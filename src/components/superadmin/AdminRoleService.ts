@@ -28,6 +28,8 @@ export const fetchAdminRoles = async (): Promise<AdminLevelDetailed[]> => {
     id: Number(level.id),
     name: level.name,
     description: level.description || '',
+    // Set level based on the id
+    level: Number(level.id),
     studentPermissions: Array.isArray(level.student_permissions) 
       ? level.student_permissions 
       : [],
@@ -49,6 +51,7 @@ export const fetchAdminRoles = async (): Promise<AdminLevelDetailed[]> => {
     eventsPermissions: Array.isArray(level.events_permissions)
       ? level.events_permissions
       : [],
+    // Handle potentially missing properties safely
     classTypesPermissions: Array.isArray(level.class_types_permissions)
       ? level.class_types_permissions
       : [],
@@ -184,6 +187,7 @@ export const fetchAdminLevelById = async (id: number): Promise<AdminLevelDetaile
   return {
     id: Number(data.id),
     name: data.name,
+    level: Number(data.id), // Set level based on id
     description: data.description || '',
     studentPermissions: Array.isArray(data.student_permissions) ? data.student_permissions : [],
     teacherPermissions: Array.isArray(data.teacher_permissions) ? data.teacher_permissions : [],
@@ -232,7 +236,7 @@ export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> 
     throw error;
   }
   
-  // If we have admin levels, don't create defaults
+  // Fix the count check - data is an object with count property
   if (data && data.count && data.count > 0) {
     console.log('[AdminRoleService] Admin levels already exist, not creating defaults');
     return fetchAdminRoles();
@@ -251,7 +255,10 @@ export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> 
       admin_permissions: [],
       lead_permissions: [],
       course_permissions: ["view"],
-      level_permissions: []
+      level_permissions: [],
+      events_permissions: [],
+      class_types_permissions: [],
+      user_availability_permissions: []
     },
     {
       id: 50,
@@ -262,7 +269,10 @@ export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> 
       admin_permissions: [],
       lead_permissions: ["view", "add", "edit"],
       course_permissions: ["view", "edit"],
-      level_permissions: ["view"]
+      level_permissions: ["view"],
+      events_permissions: [],
+      class_types_permissions: [],
+      user_availability_permissions: []
     },
     {
       id: 90,
@@ -273,7 +283,10 @@ export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> 
       admin_permissions: ["view"],
       lead_permissions: ["view", "add", "edit", "delete"],
       course_permissions: ["view", "add", "edit", "delete"],
-      level_permissions: ["view", "add", "edit", "delete"]
+      level_permissions: ["view", "add", "edit", "delete"],
+      events_permissions: ["view", "add", "edit", "delete"],
+      class_types_permissions: ["view", "add", "edit", "delete"],
+      user_availability_permissions: ["view", "add", "edit", "delete"]
     }
   ];
   

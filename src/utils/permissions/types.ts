@@ -72,9 +72,10 @@ export enum AdminPermission {
 
 /**
  * Admin role level definition - used for both API and UI
+ * Compatible with AdminLevelDetailed
  */
 export interface AdminLevel {
-  id?: string;
+  id?: string | number;
   name: string;
   level: number;
   description: string;

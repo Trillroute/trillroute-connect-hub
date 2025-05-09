@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -16,6 +15,7 @@ import AdminHeader from './admin/AdminHeader';
 import AdminGridView from '@/components/superadmin/admin/AdminGridView';
 import AdminTileView from '@/components/superadmin/admin/AdminTileView';
 import AccessDeniedCard from '@/components/superadmin/admin/AccessDeniedCard';
+import { convertToAdminLevels } from '@/utils/permissions/typeConverters';
 
 interface AdminManagementProps {
   canAddAdmin?: boolean;
@@ -74,7 +74,8 @@ const AdminManagement = ({
       try {
         const roles = await fetchAdminRoles();
         if (roles && roles.length > 0) {
-          updateCachedAdminRoles(roles);
+          // Convert AdminLevelDetailed[] to AdminLevel[] before updating cached roles
+          updateCachedAdminRoles(convertToAdminLevels(roles));
         }
       } catch (error) {
         console.error('Error loading admin roles:', error);

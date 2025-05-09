@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { AdminLevel } from '@/utils/permissions/types';
 import { toast } from '@/hooks/use-toast';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { clearPermissionsCache, updateCachedAdminRoles } from '@/utils/permissions';
+import { convertToAdminLevels } from '@/utils/permissions/typeConverters';
 
 type PermissionMap = {
   students: { view: boolean; add: boolean; edit: boolean; delete: boolean; };
@@ -51,10 +51,13 @@ export const useAdminDashboardPermissions = () => {
       console.log('[AdminDashboardPermissions] Loading admin roles from database');
       const roles = await fetchAdminRoles();
       console.log('[AdminDashboardPermissions] Received admin roles:', roles);
-      setAdminRoles(roles);
-      updateCachedAdminRoles(roles);
       
-      updateUserPermissions(roles);
+      // Convert AdminLevelDetailed[] to AdminLevel[]
+      const convertedRoles = convertToAdminLevels(roles);
+      setAdminRoles(convertedRoles);
+      updateCachedAdminRoles(convertedRoles);
+      
+      updateUserPermissions(convertedRoles);
     } catch (error) {
       console.error('[AdminDashboardPermissions] Error loading admin roles:', error);
       toast({

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -16,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { AdminLevel } from '@/utils/adminPermissions';
+import { convertToAdminLevels } from '@/utils/permissions/typeConverters';
 
 interface EditUserDialogProps {
   user: UserManagementUser | null;
@@ -146,7 +146,8 @@ const EditUserDialog = ({
       console.log('[EditUserDialog] Received admin levels:', levels);
       
       if (levels && levels.length > 0) {
-        setAdminLevels(levels);
+        // Convert AdminLevelDetailed[] to AdminLevel[]
+        setAdminLevels(convertToAdminLevels(levels));
       } else {
         console.log('[EditUserDialog] No admin levels received, using defaults');
         setAdminLevels(DEFAULT_ADMIN_LEVELS);

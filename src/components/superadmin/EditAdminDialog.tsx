@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { fetchAdminRoles } from './AdminRoleService';
 import { AdminLevel } from '@/utils/permissions/types';
+import { convertToAdminLevels } from '@/utils/permissions/typeConverters';
 
 interface EditAdminDialogProps {
   admin: UserManagementUser | null;
@@ -53,9 +54,10 @@ const EditAdminDialog = ({
   const loadAdminLevels = async () => {
     try {
       setIsLoadingLevels(true);
-      const levels = await fetchAdminRoles();
-      console.log('Loaded admin levels:', levels);
-      setAdminLevels(levels);
+      const levelsDetailed = await fetchAdminRoles();
+      console.log('Loaded admin levels:', levelsDetailed);
+      // Convert AdminLevelDetailed[] to AdminLevel[]
+      setAdminLevels(convertToAdminLevels(levelsDetailed));
     } catch (error) {
       console.error('Error loading admin levels:', error);
     } finally {

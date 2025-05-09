@@ -6,6 +6,7 @@ export interface AdminLevelBasic {
 }
 
 export interface AdminLevelDetailed extends AdminLevelBasic {
+  level?: number; // Added level property, made optional for compatibility
   studentPermissions: string[];
   teacherPermissions: string[];
   adminPermissions: string[];
