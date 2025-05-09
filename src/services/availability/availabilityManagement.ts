@@ -44,7 +44,8 @@ export const copyDayAvailability = async (
         userId,
         toDay,
         slot.startTime,
-        slot.endTime
+        slot.endTime,
+        slot.category
       );
     }
     

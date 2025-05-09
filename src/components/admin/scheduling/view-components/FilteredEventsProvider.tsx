@@ -5,6 +5,8 @@ import { fetchFilteredEvents } from '../utils/eventProcessing';
 import { fetchUserAvailabilityForUsers } from '@/services/availability/availabilityApi';
 import { fetchStaffForCourse } from '@/services/courses/courseStaffService';
 import { fetchStaffForSkill } from '@/services/skills/skillStaffService';
+import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
+import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 
 interface FilteredEventsProviderProps {
   children: React.ReactNode;
@@ -24,6 +26,22 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
 }) => {
   const { refreshEvents, setEvents, setAvailabilities } = useCalendar();
   const [staffUserIds, setStaffUserIds] = useState<string[]>([]);
+  
+  // Helper function to convert from service type to context type
+  const convertAvailabilityMap = (serviceMap: ServiceUserAvailabilityMap): ContextUserAvailabilityMap => {
+    const contextMap: ContextUserAvailabilityMap = {};
+    
+    Object.keys(serviceMap).forEach(userId => {
+      const userInfo = serviceMap[userId];
+      contextMap[userId] = {
+        slots: userInfo.slots,
+        name: userInfo.name,
+        role: userInfo.role || 'teacher' // Default to teacher if role is not provided
+      };
+    });
+    
+    return contextMap;
+  };
   
   // Get user IDs based on filter type and values
   useEffect(() => {
@@ -88,8 +106,8 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
             
             // Also fetch availabilities for staff teaching these courses
             if (staffUserIds.length > 0) {
-              const availabilities = await fetchUserAvailabilityForUsers(staffUserIds);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers(staffUserIds);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             } else {
               setAvailabilities({}); // Clear availabilities if no staff
             }
@@ -100,8 +118,8 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
             
             // Also fetch availabilities for staff teaching these skills
             if (staffUserIds.length > 0) {
-              const availabilities = await fetchUserAvailabilityForUsers(staffUserIds);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers(staffUserIds);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             } else {
               setAvailabilities({}); // Clear availabilities if no staff
             }
@@ -116,12 +134,12 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
             
             // Fetch availabilities for these specific teachers
             if (ids.length > 0) {
-              const availabilities = await fetchUserAvailabilityForUsers(ids);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers(ids);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             } else {
               // If no specific teachers, fetch all teacher availabilities
-              const availabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             }
             break;
             
@@ -144,12 +162,12 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
             
             // Fetch availabilities for these specific admins
             if (ids.length > 0) {
-              const availabilities = await fetchUserAvailabilityForUsers(ids);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers(ids);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             } else {
               // If no specific admins, fetch all admin availabilities
-              const availabilities = await fetchUserAvailabilityForUsers([], ['admin', 'superadmin']);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['admin', 'superadmin']);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             }
             break;
             
@@ -162,12 +180,12 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
             
             // Fetch availabilities for these specific staff members
             if (ids.length > 0) {
-              const availabilities = await fetchUserAvailabilityForUsers(ids);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers(ids);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             } else {
               // If no specific staff, fetch all staff availabilities
-              const availabilities = await fetchUserAvailabilityForUsers([], ['teacher', 'admin', 'superadmin']);
-              setAvailabilities(availabilities);
+              const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher', 'admin', 'superadmin']);
+              setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
             }
             break;
             

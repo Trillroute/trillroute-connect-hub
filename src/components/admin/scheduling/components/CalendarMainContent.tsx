@@ -42,6 +42,11 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   const handleDateClick = () => {
     // Implement date click logic here
   };
+  
+  // Handle filter type change with correct type casting
+  const handleFilterTypeChange = (type: string | null) => {
+    setFilterType(type as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null);
+  };
 
   // Determine filter type and IDs based on props
   const getFilterParams = () => {
@@ -87,7 +92,10 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   return (
     <div className="flex flex-col h-full">
       <CalendarHeader onCreateEvent={handleCreateEvent} />
-      <FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
+      <FilterTypeTabs 
+        filterType={filterType} 
+        setFilterType={handleFilterTypeChange}
+      />
       <div className="flex-grow overflow-auto">
         <CalendarViewRenderer 
           viewMode="week" 

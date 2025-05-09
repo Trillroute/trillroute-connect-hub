@@ -42,7 +42,7 @@ export const mapDbAvailability = (dbItem: any): UserAvailability => {
 export interface UserAvailabilityInfo {
   slots: UserAvailability[];
   name: string;
-  role?: string;
+  role: string; // Making role required to match CalendarContextType.UserAvailabilityMap
 }
 
 // Group of availability slots by user ID

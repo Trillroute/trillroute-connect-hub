@@ -1,12 +1,16 @@
 
 // Re-export all availability functionality through the main service file
 
-import { UserAvailability, UserAvailabilityMap, mapDbAvailability } from './availability/types';
+import { UserAvailability, UserAvailabilityMap } from './availability/types';
+import { mapDbAvailability } from './availability/types';
 import { 
   fetchUserAvailability,
+  fetchUserAvailabilityForDate,
+  fetchUserAvailabilityForWeek,
   createAvailabilitySlot,
   updateAvailabilitySlot,
-  deleteAvailabilitySlot
+  deleteAvailabilitySlot,
+  fetchUserAvailabilityForUsers
 } from './availability/availabilityApi';
 import { fetchAllStaffAvailability } from './availability/staffAvailabilityApi';
 import { copyDayAvailability } from './availability/availabilityManagement';
@@ -18,9 +22,12 @@ export type { UserAvailability, UserAvailabilityMap };
 export {
   mapDbAvailability,
   fetchUserAvailability,
+  fetchUserAvailabilityForDate,
+  fetchUserAvailabilityForWeek,
   createAvailabilitySlot,
   updateAvailabilitySlot,
   deleteAvailabilitySlot,
+  fetchUserAvailabilityForUsers,
   fetchAllStaffAvailability,
   copyDayAvailability
 };
