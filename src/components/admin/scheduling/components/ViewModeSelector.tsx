@@ -28,9 +28,9 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
 }) => {
   // Add a safety check to make sure viewOptions is an array
   const options = Array.isArray(viewOptions) ? viewOptions : [
-    { value: 'day', label: 'Day' },
-    { value: 'week', label: 'Week' },
-    { value: 'month', label: 'Month' },
+    { value: 'day', label: 'Day View' },
+    { value: 'week', label: 'Week View' },
+    { value: 'month', label: 'Month View' },
     { value: 'list', label: 'List View' }
   ];
   

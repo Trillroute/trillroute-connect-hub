@@ -41,13 +41,13 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   
   const viewOptions = [{
     value: 'day',
-    label: 'Day'
+    label: 'Day View'
   }, {
     value: 'week',
-    label: 'Week'
+    label: 'Week View'
   }, {
     value: 'month',
-    label: 'Month'
+    label: 'Month View'
   }, {
     value: 'list',
     label: 'List View'
