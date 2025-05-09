@@ -8,7 +8,7 @@ interface CalendarContentProps {
   roleFilter?: string[];
   title?: string;
   description?: string;
-  initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'unit' | null;
+  initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({

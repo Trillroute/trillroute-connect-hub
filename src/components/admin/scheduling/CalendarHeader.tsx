@@ -1,58 +1,42 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import ViewModeSelector from './components/ViewModeSelector';
-import { CalendarViewMode } from './context/calendarTypes';
+import { PlusCircle } from 'lucide-react';
+import CalendarTitle from './components/CalendarTitle';
+import ViewModeSelector, { ViewOption } from './components/ViewModeSelector';
 import { useCalendar } from './context/CalendarContext';
-import FilterSelector from './components/FilterSelector';
-import { PlusIcon } from 'lucide-react';
 
 interface CalendarHeaderProps {
-  onCreateEvent?: () => void;
+  onCreateEvent: () => void;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
-  const { viewMode, setViewMode, goToToday, goToPrevious, goToNext } = useCalendar();
-  const [filterType, setFilterType] = useState<string | null>('unit');
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const { viewMode, setViewMode, currentDate } = useCalendar();
 
-  const handleViewModeChange = (mode: CalendarViewMode) => {
-    setViewMode(mode);
-  };
+  const viewOptions: ViewOption[] = [
+    { value: 'day', label: 'Day View' },
+    { value: 'week', label: 'Week View' },
+    { value: 'month', label: 'Month View' },
+    { value: 'list', label: 'List View' }
+  ];
 
   return (
-    <div className="flex flex-col space-y-4">
-      <div className="flex justify-between items-center flex-wrap gap-2">
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={goToPrevious}>Previous</Button>
-          <Button variant="outline" onClick={goToToday}>Today</Button>
-          <Button variant="outline" onClick={goToNext}>Next</Button>
-        </div>
-        
-        <ViewModeSelector viewMode={viewMode} onChange={handleViewModeChange} />
-        
-        {onCreateEvent && (
-          <Button onClick={onCreateEvent}>
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Create Event
-          </Button>
-        )}
-      </div>
+    <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 py-2">
+      <CalendarTitle viewMode={viewMode} currentDate={currentDate} />
       
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="w-full md:w-64">
-          <FilterSelector
-            filterType={filterType}
-            setFilterType={setFilterType}
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-            selectedFilters={selectedFilters}
-            setSelectedFilters={setSelectedFilters}
-            showFilterTypeTabs={false}
-            showFilterDropdown={true}
-          />
-        </div>
+      <div className="flex items-center gap-2">
+        <ViewModeSelector 
+          viewMode={viewMode} 
+          setViewMode={setViewMode} 
+          viewOptions={viewOptions}
+        />
+        <Button 
+          onClick={onCreateEvent}
+          className="bg-primary text-white hover:bg-primary-darker"
+        >
+          <PlusCircle className="h-4 w-4 mr-1" />
+          Add Event
+        </Button>
       </div>
     </div>
   );

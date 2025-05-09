@@ -3,14 +3,19 @@ import React, { useState } from 'react';
 import ContentWrapper from './ContentWrapper';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
-import { CheckboxMultiSelect } from '@/components/ui/checkbox-multi-select';
-import { useFilterOptions } from '@/components/admin/scheduling/hooks/useFilterOptions';
+import FilterTypeTabs from '@/components/admin/scheduling/components/FilterTypeTabs';
 
 const SchedulingContent: React.FC = () => {
   const { role, isAdmin, isSuperAdmin } = useAuth();
   const hasAdminAccess = isAdmin() || isSuperAdmin();
+  
+  const [filterType, setFilterType] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const { filterOptions, isLoading } = useFilterOptions({ filterType: 'unit' });
+
+  const handleFilterTypeChange = (type: string | null) => {
+    setFilterType(type);
+    setSelectedFilters([]); // Reset selected filters when filter type changes
+  };
 
   return (
     <ContentWrapper
@@ -18,13 +23,9 @@ const SchedulingContent: React.FC = () => {
       description="View and manage all calendar events"
     >
       <div className="mb-4">
-        <CheckboxMultiSelect
-          options={filterOptions}
-          selected={selectedFilters}
-          onChange={setSelectedFilters}
-          placeholder={`Select units${isLoading ? ' (Loading...)' : ''}`}
-          className="w-full bg-white" 
-          label="Filter by department unit"
+        <FilterTypeTabs
+          filterType={filterType}
+          setFilterType={handleFilterTypeChange}
         />
       </div>
       
@@ -32,7 +33,7 @@ const SchedulingContent: React.FC = () => {
         <FilteredCalendar
           title="All Events"
           hasAdminAccess={hasAdminAccess}
-          filterType="unit"
+          filterType={filterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | undefined}
           filterValues={selectedFilters}
         />
       </div>

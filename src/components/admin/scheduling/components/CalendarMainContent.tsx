@@ -11,7 +11,7 @@ interface CalendarMainContentProps {
   roleFilter?: string[];
   title?: string;
   description?: string;
-  initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'unit' | null;
+  initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
@@ -23,8 +23,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   initialFilterType = null
 }) => {
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
-  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'unit' | null>(
-    initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'unit' | null
+  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(
+    initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
   );
 
   const handleCreateEvent = () => {
@@ -45,7 +45,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   
   // Handle filter type change with correct type casting
   const handleFilterTypeChange = (type: string | null) => {
-    setFilterType(type as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'unit' | null);
+    setFilterType(type as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null);
   };
 
   // Determine filter type and IDs based on props
