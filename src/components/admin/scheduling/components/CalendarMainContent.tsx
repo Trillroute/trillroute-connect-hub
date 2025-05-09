@@ -4,11 +4,26 @@ import CalendarHeader from '../CalendarHeader';
 import CalendarViewRenderer from '../CalendarViewRenderer';
 import EventFormDialog from '../EventFormDialog';
 import FilterTypeTabs from './FilterTypeTabs';
-import { useCalendar } from '../context/CalendarContext';
 
-const CalendarMainContent: React.FC = () => {
+interface CalendarMainContentProps {
+  hasAdminAccess?: boolean;
+  userId?: string;
+  roleFilter?: string[];
+  title?: string;
+  description?: string;
+  initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+}
+
+const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
+  hasAdminAccess = false,
+  userId,
+  roleFilter,
+  title,
+  description,
+  initialFilterType = null
+}) => {
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
-  const { filterType, setFilterType } = useCalendar();
+  const [filterType, setFilterType] = useState<string | null>(initialFilterType);
 
   const handleCreateEvent = () => {
     setIsCreateEventDialogOpen(true);
@@ -42,7 +57,11 @@ const CalendarMainContent: React.FC = () => {
       <EventFormDialog 
         open={isCreateEventDialogOpen} 
         onOpenChange={setIsCreateEventDialogOpen} 
-        mode="create" 
+        mode="create"
+        onSave={() => {
+          // Handle event creation
+          setIsCreateEventDialogOpen(false);
+        }} 
       />
     </div>
   );

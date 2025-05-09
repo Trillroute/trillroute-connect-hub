@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import CalendarTitle from './components/CalendarTitle';
-import ViewModeSelector from './components/ViewModeSelector';
+import ViewModeSelector, { ViewOption } from './components/ViewModeSelector';
 import FilterDropdown from './components/FilterDropdown';
 import { useCalendar } from './context/CalendarContext';
 
@@ -13,6 +13,13 @@ interface CalendarHeaderProps {
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
   const { viewMode, setViewMode, currentDate } = useCalendar();
+
+  const viewOptions: ViewOption[] = [
+    { value: 'day', label: 'Day View' },
+    { value: 'week', label: 'Week View' },
+    { value: 'month', label: 'Month View' },
+    { value: 'list', label: 'List View' }
+  ];
 
   return (
     <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 py-2">
@@ -29,7 +36,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
         <ViewModeSelector 
           viewMode={viewMode} 
           setViewMode={setViewMode} 
-          viewOptions={['day', 'week', 'month', 'list']}
+          viewOptions={viewOptions}
         />
         <Button 
           onClick={onCreateEvent}

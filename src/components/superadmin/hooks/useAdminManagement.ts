@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { UserManagementUser } from '@/types/student';
 import { useToast } from '@/hooks/use-toast';
 import { fetchAdmins, updateUserRole, deleteUser } from '@/components/superadmin/AdminService';
 import { updateUser } from '@/components/admin/users/UserServiceExtended';
-import { updateAdminLevel } from '@/components/superadmin/AdminRoleService';
+import { updateAdminRole } from '@/components/superadmin/AdminRoleService';
 
 type ViewMode = 'list' | 'grid' | 'tile';
 
@@ -93,7 +92,16 @@ export const useAdminManagement = () => {
     try {
       setIsLoading(true);
       console.log(`[SuperadminAdminManagement] Updating admin level for ${userId} to ${newLevelName}`);
-      await updateAdminLevel(userId, newLevelName);
+      
+      // Update the user's admin level in the database
+      const { error } = await supabase
+        .from('custom_users')
+        .update({ admin_level_name: newLevelName })
+        .eq('id', userId);
+
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: 'Success',

@@ -1,4 +1,3 @@
-
 import { AdminLevel, AdminRoleExport } from '@/utils/permissions/types';
 import { supabase } from '@/integrations/supabase/client';
 import { AdminLevelDetailed } from '@/types/adminLevel';
@@ -174,7 +173,6 @@ export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
       .insert({
         name: role.name,
         description: role.description,
-        level: role.level,
         student_permissions: role.studentPermissions,
         teacher_permissions: role.teacherPermissions,
         admin_permissions: role.adminPermissions,
@@ -210,7 +208,6 @@ export const updateAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
       .update({
         name: role.name,
         description: role.description,
-        level: role.level,
         student_permissions: role.studentPermissions,
         teacher_permissions: role.teacherPermissions,
         admin_permissions: role.adminPermissions,
@@ -363,7 +360,6 @@ export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> 
             id: role.id,
             name: role.name,
             description: role.description,
-            level: role.level,
             student_permissions: role.studentPermissions,
             teacher_permissions: role.teacherPermissions,
             admin_permissions: role.adminPermissions,
@@ -405,3 +401,6 @@ export const saveAdminLevel = async (level: Partial<AdminLevelDetailed> & {id?: 
     throw error;
   }
 };
+
+// Export updateAdminRole as updateAdminLevel for compatibility with other modules
+export { updateAdminRole as updateAdminLevel };

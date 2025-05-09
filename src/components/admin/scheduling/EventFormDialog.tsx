@@ -1,15 +1,13 @@
 
 import React from 'react';
-import { CalendarEvent } from './types';
+import { CalendarEvent } from './context/calendarTypes';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import EventForm, { EventFormValues } from './EventForm';
+import EventForm from './EventForm';
 
 interface EventFormDialogProps {
   open: boolean;
@@ -26,51 +24,6 @@ const EventFormDialog: React.FC<EventFormDialogProps> = ({
   initialEvent,
   mode
 }) => {
-  const defaultValues: EventFormValues = {
-    title: '',
-    description: '',
-    location: '',
-    date: new Date(),
-    startTime: '09:00',
-    endTime: '10:00',
-    color: '#4285F4',
-  };
-
-  const initialValues = initialEvent 
-    ? {
-        title: initialEvent.title,
-        description: initialEvent.description || '',
-        location: initialEvent.location || '',
-        date: initialEvent.start,
-        startTime: `${initialEvent.start.getHours().toString().padStart(2, '0')}:${initialEvent.start.getMinutes().toString().padStart(2, '0')}`,
-        endTime: `${initialEvent.end.getHours().toString().padStart(2, '0')}:${initialEvent.end.getMinutes().toString().padStart(2, '0')}`,
-        color: initialEvent.color || '#4285F4',
-      }
-    : defaultValues;
-  
-  const handleSubmit = (values: EventFormValues) => {
-    // Create start and end date objects from date and times
-    const [startHour, startMinute] = values.startTime.split(':').map(Number);
-    const [endHour, endMinute] = values.endTime.split(':').map(Number);
-    
-    const start = new Date(values.date);
-    start.setHours(startHour, startMinute);
-    
-    const end = new Date(values.date);
-    end.setHours(endHour, endMinute);
-    
-    const eventData: Omit<CalendarEvent, 'id'> = {
-      title: values.title,
-      description: values.description,
-      location: values.location,
-      start,
-      end,
-      color: values.color,
-    };
-    
-    onSave(eventData);
-  };
-  
   const handleCancel = () => {
     onOpenChange(false);
   };

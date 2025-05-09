@@ -1,9 +1,10 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserManagementUser } from '@/types/student';
 import { hashPassword } from '@/integrations/supabase/client';
 import { NewUserData } from './AddUserDialog';
 import { mapDatabaseUserToUserModel } from '@/utils/userMappers';
+// Import the updateAdminRole function and rename it to updateAdminLevel
+import { updateAdminRole } from '@/components/superadmin/AdminRoleService';
 
 export const fetchAllUsers = async (): Promise<UserManagementUser[]> => {
   const { data, error } = await supabase
@@ -63,10 +64,7 @@ export const deleteUser = async (userId: string) => {
   }
 };
 
-// Import the correct function name and re-export it
-import { updateAdminRole } from '@/components/superadmin/AdminRoleService';
-
-// Create an updateAdminLevel function that calls updateAdminRole
+// Create an updateAdminLevel function that updates the user's admin_level_name
 export const updateAdminLevel = async (userId: string, levelName: string): Promise<void> => {
   console.log(`Updating admin level for user ${userId} to ${levelName}`);
   
