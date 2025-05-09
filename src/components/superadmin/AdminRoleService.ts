@@ -168,21 +168,25 @@ export const fetchAdminRoleById = async (id: number): Promise<AdminLevelDetailed
  */
 export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLevelDetailed | null> => {
   try {
+    // Map our frontend model to the database schema
+    const dbRole = {
+      name: role.name,
+      description: role.description,
+      student_permissions: role.studentPermissions,
+      teacher_permissions: role.teacherPermissions,
+      admin_permissions: role.adminPermissions,
+      lead_permissions: role.leadPermissions,
+      course_permissions: role.coursePermissions,
+      level_permissions: role.levelPermissions,
+      events_permissions: role.eventsPermissions,
+      class_types_permissions: role.classTypesPermissions || [],
+      user_availability_permissions: role.userAvailabilityPermissions || []
+    };
+
+    // Add the optional fields only if they exist in the database schema
     const { data, error } = await supabase
       .from('admin_levels')
-      .insert({
-        name: role.name,
-        description: role.description,
-        student_permissions: role.studentPermissions,
-        teacher_permissions: role.teacherPermissions,
-        admin_permissions: role.adminPermissions,
-        lead_permissions: role.leadPermissions,
-        course_permissions: role.coursePermissions,
-        level_permissions: role.levelPermissions,
-        events_permissions: role.eventsPermissions,
-        class_types_permissions: role.classTypesPermissions || [],
-        user_availability_permissions: role.userAvailabilityPermissions || []
-      })
+      .insert(dbRole)
       .select()
       .single();
 
@@ -203,21 +207,24 @@ export const createAdminRole = async (role: AdminLevelDetailed): Promise<AdminLe
  */
 export const updateAdminRole = async (role: AdminLevelDetailed): Promise<AdminLevelDetailed | null> => {
   try {
+    // Map our frontend model to the database schema
+    const dbRole = {
+      name: role.name,
+      description: role.description,
+      student_permissions: role.studentPermissions,
+      teacher_permissions: role.teacherPermissions,
+      admin_permissions: role.adminPermissions,
+      lead_permissions: role.leadPermissions,
+      course_permissions: role.coursePermissions,
+      level_permissions: role.levelPermissions,
+      events_permissions: role.eventsPermissions,
+      class_types_permissions: role.classTypesPermissions || [],
+      user_availability_permissions: role.userAvailabilityPermissions || []
+    };
+
     const { data, error } = await supabase
       .from('admin_levels')
-      .update({
-        name: role.name,
-        description: role.description,
-        student_permissions: role.studentPermissions,
-        teacher_permissions: role.teacherPermissions,
-        admin_permissions: role.adminPermissions,
-        lead_permissions: role.leadPermissions,
-        course_permissions: role.coursePermissions,
-        level_permissions: role.levelPermissions,
-        events_permissions: role.eventsPermissions,
-        class_types_permissions: role.classTypesPermissions || [],
-        user_availability_permissions: role.userAvailabilityPermissions || []
-      })
+      .update(dbRole)
       .eq('id', role.id)
       .select()
       .single();
@@ -312,21 +319,24 @@ export const importAdminRolesFromJson = async (roles: AdminRoleExport[]): Promis
 
     // Then insert the new roles
     for (const role of roles) {
+      // Create database-compatible object
+      const dbRole = {
+        name: role.roleName,
+        description: '',
+        student_permissions: role.permissions.students,
+        teacher_permissions: role.permissions.teachers,
+        admin_permissions: role.permissions.admins,
+        lead_permissions: role.permissions.leads,
+        course_permissions: role.permissions.courses,
+        level_permissions: role.permissions.levels || [],
+        events_permissions: role.permissions.events || [],
+        class_types_permissions: role.permissions.classTypes || [],
+        user_availability_permissions: role.permissions.userAvailability || []
+      };
+
       const { error: insertError } = await supabase
         .from('admin_levels')
-        .insert({
-          name: role.roleName,
-          description: '',
-          student_permissions: role.permissions.students,
-          teacher_permissions: role.permissions.teachers,
-          admin_permissions: role.permissions.admins,
-          lead_permissions: role.permissions.leads,
-          course_permissions: role.permissions.courses,
-          level_permissions: role.permissions.levels || [],
-          events_permissions: role.permissions.events || [],
-          class_types_permissions: role.permissions.classTypes || [],
-          user_availability_permissions: role.permissions.userAvailability || []
-        });
+        .insert(dbRole);
 
       if (insertError) {
         console.error('Error inserting admin role:', insertError);
@@ -354,22 +364,24 @@ export const createDefaultAdminLevels = async (): Promise<AdminLevelDetailed[]> 
     // Only create defaults if there are no existing roles
     if (count === 0) {
       for (const role of DEFAULT_ADMIN_ROLES) {
+        const dbRole = {
+          id: role.id,
+          name: role.name,
+          description: role.description,
+          student_permissions: role.studentPermissions,
+          teacher_permissions: role.teacherPermissions,
+          admin_permissions: role.adminPermissions,
+          lead_permissions: role.leadPermissions,
+          course_permissions: role.coursePermissions,
+          level_permissions: role.levelPermissions || [],
+          events_permissions: role.eventsPermissions || [],
+          class_types_permissions: role.classTypesPermissions || [],
+          user_availability_permissions: role.userAvailabilityPermissions || []
+        };
+
         await supabase
           .from('admin_levels')
-          .insert({
-            id: role.id,
-            name: role.name,
-            description: role.description,
-            student_permissions: role.studentPermissions,
-            teacher_permissions: role.teacherPermissions,
-            admin_permissions: role.adminPermissions,
-            lead_permissions: role.leadPermissions,
-            course_permissions: role.coursePermissions,
-            level_permissions: role.levelPermissions || [],
-            events_permissions: role.eventsPermissions || [],
-            class_types_permissions: role.classTypesPermissions || [],
-            user_availability_permissions: role.userAvailabilityPermissions || []
-          });
+          .insert(dbRole);
       }
 
       // Return the default roles after creating them

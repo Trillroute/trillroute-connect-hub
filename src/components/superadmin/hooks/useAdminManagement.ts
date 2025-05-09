@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchAdmins, updateUserRole, deleteUser } from '@/components/superadmin/AdminService';
 import { updateUser } from '@/components/admin/users/UserServiceExtended';
 import { updateAdminRole } from '@/components/superadmin/AdminRoleService';
+import { supabase } from '@/integrations/supabase/client';
 
 type ViewMode = 'list' | 'grid' | 'tile';
 
@@ -109,6 +110,7 @@ export const useAdminManagement = () => {
       });
       
       loadAdmins();
+      return true;
     } catch (error: any) {
       console.error('Error updating admin level:', error);
       toast({
@@ -116,6 +118,7 @@ export const useAdminManagement = () => {
         description: error.message || 'Failed to update permission level. Please try again.',
         variant: 'destructive',
       });
+      return false;
     } finally {
       setIsLoading(false);
     }
