@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
 
 interface Day {
@@ -16,50 +16,87 @@ interface CellInfo {
 }
 
 export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailabilityMap) => {
-  const getCellInfo = useCallback((day: Day, timeSlot: string): CellInfo | null => {
-    // Check availabilities first
-    const availabilityEntries = Object.entries(availabilities);
-    for (const [userId, userData] of availabilityEntries) {
-      const slot = userData.slots.find(s => 
-        s.dayOfWeek === day.dayOfWeek && 
-        s.startTime.startsWith(timeSlot)
-      );
+  // Memoize availability lookup map for O(1) access by day and time
+  const availabilityLookup = useMemo(() => {
+    const lookup: Record<number, Record<string, { userData: any, slot: any }>> = {};
+    
+    // Initialize the data structure for each day of week
+    for (let day = 1; day <= 7; day++) {
+      lookup[day] = {};
+    }
+
+    // Populate the lookup structure
+    Object.entries(availabilities).forEach(([userId, userData]) => {
+      if (!userData.slots || !Array.isArray(userData.slots)) return;
       
-      if (slot) {
-        return {
-          name: userData.name,
-          status: 'available',
-          category: slot.category || 'Regular slot'
-        };
+      userData.slots.forEach(slot => {
+        if (!slot.dayOfWeek || !slot.startTime) return;
+        
+        const dayOfWeek = slot.dayOfWeek;
+        const startTime = slot.startTime;
+        
+        if (!lookup[dayOfWeek][startTime]) {
+          lookup[dayOfWeek][startTime] = { userData, slot };
+        }
+      });
+    });
+    
+    return lookup;
+  }, [availabilities]);
+
+  // Memoize events by day and time for faster lookups
+  const eventsByDayAndTime = useMemo(() => {
+    const eventMap: Record<string, CalendarEvent[]> = {};
+    
+    events.forEach(event => {
+      if (!event.start || !event.end) return;
+      
+      const eventStart = new Date(event.start);
+      const dateKey = eventStart.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      if (!eventMap[dateKey]) {
+        eventMap[dateKey] = [];
       }
+      
+      eventMap[dateKey].push(event);
+    });
+    
+    return eventMap;
+  }, [events]);
+
+  // Improved getCellInfo with stable reference and optimized lookups
+  const getCellInfo = useCallback((day: Day, timeSlot: string): CellInfo | null => {
+    // First check availabilities using our optimized lookup
+    if (availabilityLookup[day.dayOfWeek] && availabilityLookup[day.dayOfWeek][timeSlot]) {
+      const { userData, slot } = availabilityLookup[day.dayOfWeek][timeSlot];
+      return {
+        name: userData.name || 'Staff',
+        status: 'available',
+        category: slot.category || 'Regular slot'
+      };
     }
     
-    // Then check events
+    // Check for events
     const dayDate = new Date(day.date);
+    const dateKey = dayDate.toISOString().split('T')[0];
+    
+    // If no events for this day, return early
+    if (!eventsByDayAndTime[dateKey]) return null;
+    
     const [hours, minutes] = timeSlot.split(':').map(Number);
-    dayDate.setHours(hours, minutes, 0, 0);
+    dayDate.setHours(hours, minutes || 0, 0, 0);
+    
+    // Create time range for slot
+    const slotStart = new Date(dayDate);
+    const slotEnd = new Date(slotStart);
+    slotEnd.setHours(slotStart.getHours() + 1); // Assuming 1 hour slots
     
     // Find events that overlap with this time slot
-    const matchingEvents = events.filter(event => {
+    const matchingEvents = eventsByDayAndTime[dateKey].filter(event => {
       const eventStartDate = new Date(event.start);
       const eventEndDate = new Date(event.end);
       
-      // Check if day is the same
-      const isSameDay = 
-        eventStartDate.getDate() === dayDate.getDate() &&
-        eventStartDate.getMonth() === dayDate.getMonth() &&
-        eventStartDate.getFullYear() === dayDate.getFullYear();
-        
-      if (!isSameDay) return false;
-      
-      // Check if time overlaps
-      const slotStart = new Date(dayDate);
-      const slotEnd = new Date(slotStart);
-      slotEnd.setHours(slotStart.getHours() + 1); // Assuming 1 hour slots
-      
-      return (
-        (eventStartDate <= slotEnd && eventEndDate >= slotStart)
-      );
+      return (eventStartDate <= slotEnd && eventEndDate >= slotStart);
     });
     
     if (matchingEvents.length > 0) {
@@ -72,7 +109,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     }
     
     return null;
-  }, [events, availabilities]);
+  }, [availabilityLookup, eventsByDayAndTime]);
 
   return { getCellInfo };
 };
