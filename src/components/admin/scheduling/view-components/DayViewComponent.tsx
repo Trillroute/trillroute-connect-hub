@@ -43,7 +43,6 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
     
     const filtered = events.filter(event => {
       const eventStart = new Date(event.start);
-      const eventEnd = new Date(event.end);
       return eventStart >= start && eventStart <= end;
     });
     
@@ -120,7 +119,7 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
                   key={hour} 
                   hour={hour} 
                   isAvailable={true}
-                  onClick={() => {}}
+                  onClick={() => onCreateEvent && onCreateEvent()}
                 />
               ))}
               
@@ -145,9 +144,9 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
               })}
               
               {/* Display events */}
-              {filteredEvents.map(event => (
+              {filteredEvents.map((event, index) => (
                 <CalendarEventComponent
-                  key={event.id}
+                  key={`event-${index}`}
                   event={event}
                   onEditClick={onEditEvent ? () => onEditEvent(event) : undefined}
                   onDeleteClick={onDeleteEvent ? () => onDeleteEvent(event) : undefined}
