@@ -1,5 +1,5 @@
 
-import { CalendarEvent } from '../types';
+import { CalendarEvent } from '../context/calendarTypes';
 
 // Position calculation for events
 export const calculateEventPosition = (event: CalendarEvent) => {
