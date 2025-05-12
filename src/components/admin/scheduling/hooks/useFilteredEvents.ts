@@ -2,9 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import { CalendarEvent } from '../context/calendarTypes';
+import { fetchFilteredEvents } from '../utils/eventProcessing';
+import { fetchUserAvailabilityForUsers } from '@/services/availability/availabilityApi';
+import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
+import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 
 interface UseFilteredEventsProps {
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'role' | null;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterId?: string | null;
   filterIds?: string[];
 }
@@ -14,15 +18,36 @@ export const useFilteredEvents = ({
   filterId,
   filterIds = []
 }: UseFilteredEventsProps = {}) => {
-  const { setEvents, events, refreshEvents, availabilities } = useCalendar();
+  const { events: contextEvents, refreshEvents } = useCalendar();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [availabilities, setAvailabilities] = useState<ContextUserAvailabilityMap>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Helper function to convert from service availability to context availability
+  const convertAvailabilityMap = (serviceMap: ServiceUserAvailabilityMap): ContextUserAvailabilityMap => {
+    const contextMap: ContextUserAvailabilityMap = {};
+    
+    Object.keys(serviceMap).forEach(userId => {
+      const userInfo = serviceMap[userId];
+      contextMap[userId] = {
+        slots: userInfo.slots,
+        name: userInfo.name,
+        role: userInfo.role || 'teacher'
+      };
+    });
+    
+    return contextMap;
+  };
 
   // Combination of filterId and filterIds
-  const allFilterIds = filterId ? [...filterIds, filterId] : filterIds;
+  const allFilterIds = filterId ? 
+    [...filterIds.filter(id => id !== filterId), filterId] : 
+    [...filterIds];
   
   // Log the input parameters for debugging
-  console.log('useFilteredEvents received:', { filterType, filterId, filterIds, allFilterIds });
+  useEffect(() => {
+    console.log('useFilteredEvents received:', { filterType, filterId, filterIds, allFilterIds });
+  }, [filterType, filterId, filterIds, allFilterIds]);
 
   // Effect to filter events or fetch new ones based on filter parameters
   useEffect(() => {
@@ -31,65 +56,76 @@ export const useFilteredEvents = ({
       try {
         // If no filter type is specified, just refresh all events
         if (!filterType) {
-          console.log('No filterType specified, refreshing all events');
+          console.log('No filterType specified, using context events');
           await refreshEvents();
+          setEvents(contextEvents);
           return;
         }
 
-        // If we have filter IDs, filter events by role or fetch filtered events
-        if (filterType === 'role') {
-          console.log('Filtering events by role:', allFilterIds);
-          await refreshEvents();
-          // Server-side filtering already applied by fetchEvents based on role
-        } else if (filterType && allFilterIds.length > 0) {
-          // For other filter types with IDs (course, teacher, etc.)
-          console.log(`Filtering events by ${filterType}:`, allFilterIds);
-          await refreshEvents();
+        // For specific filter types with IDs
+        if (allFilterIds.length > 0) {
+          console.log(`Filtering events by ${filterType} with IDs:`, allFilterIds);
           
-          // Apply client-side filtering after refresh
-          if (events.length > 0) {
-            const filteredEvents = filterEventsByType(events, filterType, allFilterIds);
-            console.log(`Found ${filteredEvents.length} events after filtering by ${filterType}`);
-            setEvents(filteredEvents);
+          // Fetch filtered events
+          const result = await fetchFilteredEvents({ 
+            userIds: (filterType === 'teacher' || filterType === 'student' || 
+                     filterType === 'admin' || filterType === 'staff') ? allFilterIds : undefined,
+            courseIds: filterType === 'course' ? allFilterIds : undefined,
+            skillIds: filterType === 'skill' ? allFilterIds : undefined,
+            roleFilter: getRoleFilterForType(filterType),
+            setEvents: (fetchedEvents) => setEvents(fetchedEvents)
+          });
+          
+          // Also fetch availabilities for staff-type filters
+          if (isStaffFilterType(filterType) && allFilterIds.length > 0) {
+            const serviceAvailabilities = await fetchUserAvailabilityForUsers(allFilterIds);
+            setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
+          }
+        } else if (filterType) {
+          // If we have a filter type but no specific IDs, filter by role only
+          console.log(`Filtering events by ${filterType} type without specific IDs`);
+          
+          await fetchFilteredEvents({ 
+            roleFilter: getRoleFilterForType(filterType),
+            setEvents: (fetchedEvents) => setEvents(fetchedEvents)
+          });
+          
+          // For staff-type filters, fetch all staff availabilities
+          if (isStaffFilterType(filterType)) {
+            const roles = getRoleFilterForType(filterType);
+            const serviceAvailabilities = await fetchUserAvailabilityForUsers([], roles);
+            setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
           }
         } else {
-          // Just refresh without filtering
-          console.log('No specific filters applied, refreshing all events');
-          await refreshEvents();
+          // Fallback to context events if no filters
+          setEvents(contextEvents);
         }
       } catch (error) {
         console.error("Error applying filters:", error);
+        setEvents(contextEvents); // Fallback to context events on error
       } finally {
         setIsLoading(false);
-        setIsInitialized(true);
       }
     };
 
     applyFilters();
-  }, [filterType, JSON.stringify(allFilterIds)]);
+  }, [filterType, JSON.stringify(allFilterIds), contextEvents, refreshEvents]);
 
-  // Function to filter events by type and ID
-  const filterEventsByType = (
-    allEvents: CalendarEvent[],
-    type: string,
-    ids: string[]
-  ): CalendarEvent[] => {
-    if (!ids.length) return allEvents;
-    
-    console.log(`Filtering ${allEvents.length} events by ${type} with IDs:`, ids);
-    
-    // Implementation will depend on how event metadata is structured
-    // For now, we'll check for IDs in the description as a basic implementation
-    return allEvents.filter(event => {
-      if (!event.description) return false;
-      
-      // Check if any of the IDs are mentioned in the description
-      return ids.some(id => {
-        const pattern = new RegExp(`${type}_id:${id}\\b`);
-        return pattern.test(event.description);
-      });
-    });
+  // Helper function to get role filter values based on filter type
+  const getRoleFilterForType = (type: string): string[] => {
+    switch (type) {
+      case 'teacher': return ['teacher'];
+      case 'student': return ['student'];
+      case 'admin': return ['admin', 'superadmin'];
+      case 'staff': return ['teacher', 'admin', 'superadmin'];
+      default: return [];
+    }
+  };
+  
+  // Helper function to check if filter type is related to staff
+  const isStaffFilterType = (type: string): boolean => {
+    return ['teacher', 'admin', 'staff'].includes(type);
   };
 
-  return { events, isLoading, isInitialized, availabilities };
+  return { events, isLoading, availabilities };
 };

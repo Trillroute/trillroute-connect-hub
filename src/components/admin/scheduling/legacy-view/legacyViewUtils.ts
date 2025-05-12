@@ -1,6 +1,6 @@
 
 import { UserAvailability } from '../context/calendarTypes';
-import { format, isValid } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 
 // Function to format time for display
 export const formatTimeDisplay = (timeStr: string): string => {
@@ -10,39 +10,53 @@ export const formatTimeDisplay = (timeStr: string): string => {
   return `${displayHours}:${minutes === 0 ? '00' : minutes.toString().padStart(2, '0')} ${period}`;
 };
 
+// Helper function to safely parse date objects
+const safelyGetDate = (date: Date | string): Date | null => {
+  if (date instanceof Date) {
+    return isValid(date) ? date : null;
+  }
+  
+  if (typeof date === 'string') {
+    try {
+      const parsedDate = parseISO(date);
+      return isValid(parsedDate) ? parsedDate : null;
+    } catch (error) {
+      console.error("Invalid date string:", date);
+      return null;
+    }
+  }
+  
+  return null;
+};
+
 // Get time slots from events and availabilities
 export const getTimeSlots = (events: any[], availabilities: any) => {
   const slots = new Set<string>();
   
+  console.log(`Getting time slots from ${events.length} events and ${Object.keys(availabilities).length} availability sets`);
+  
   // Add times from events
   events.forEach(event => {
-    if (event.start instanceof Date && isValid(event.start)) {
-      const hours = event.start.getHours();
-      const minutes = event.start.getMinutes();
+    if (!event) return;
+    
+    const startDate = safelyGetDate(event.start);
+    if (startDate) {
+      const hours = startDate.getHours();
+      const minutes = startDate.getMinutes();
       const formattedTime = `${hours}:${minutes === 0 ? '00' : minutes}`;
       slots.add(formattedTime);
-    } else if (typeof event.start === 'string') {
-      try {
-        const date = new Date(event.start);
-        if (isValid(date)) {
-          const hours = date.getHours();
-          const minutes = date.getMinutes();
-          const formattedTime = `${hours}:${minutes === 0 ? '00' : minutes}`;
-          slots.add(formattedTime);
-        }
-      } catch (error) {
-        console.error("Invalid date format in event:", event);
-      }
     }
   });
   
   // Add times from availabilities
   Object.values(availabilities).forEach((userData: any) => {
-    if (userData.slots && Array.isArray(userData.slots)) {
+    if (userData && userData.slots && Array.isArray(userData.slots)) {
       userData.slots.forEach((slot: UserAvailability) => {
-        if (slot.startTime) {
+        if (slot && slot.startTime) {
           const [hours, minutes] = slot.startTime.split(':');
-          slots.add(`${parseInt(hours)}:${minutes}`);
+          if (hours && minutes) {
+            slots.add(`${parseInt(hours)}:${minutes}`);
+          }
         }
       });
     }
@@ -66,13 +80,10 @@ export const getTimeSlots = (events: any[], availabilities: any) => {
 // Get days of the week starting from current date
 export const getDaysOfWeek = (currentDate: Date) => {
   const days = [];
-  const startDate = new Date(currentDate);
-  
-  // Ensure we have a valid date
-  if (!isValid(startDate)) {
-    console.error("Invalid currentDate provided to getDaysOfWeek:", currentDate);
-    return [];
-  }
+  // Ensure we have a valid date object
+  const startDate = currentDate instanceof Date && isValid(currentDate) ? 
+                    new Date(currentDate) : 
+                    new Date();
   
   // Start from Monday of current week
   const day = startDate.getDay();

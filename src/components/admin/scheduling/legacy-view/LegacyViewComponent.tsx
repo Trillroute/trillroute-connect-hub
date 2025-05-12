@@ -14,8 +14,13 @@ const LegacyViewComponent: React.FC = () => {
   // Ensure we have the latest events and availability data
   useEffect(() => {
     console.log("Legacy view mounted, refreshing data...");
-    refreshEvents();
-    refreshAvailability();
+    const loadData = async () => {
+      await refreshEvents();
+      await refreshAvailability();
+      console.log("Legacy view data refreshed");
+    };
+    
+    loadData();
   }, [refreshEvents, refreshAvailability]);
   
   // Get all time slots from events and availabilities
@@ -34,8 +39,9 @@ const LegacyViewComponent: React.FC = () => {
   useEffect(() => {
     console.log("Legacy view data:", {
       events: events.length,
+      timeSlotCount: timeSlots.length,
       timeSlots,
-      availabilityByUser: Object.keys(availabilityByUser).length,
+      availabilityByUserCount: Object.keys(availabilityByUser).length,
       daysOfWeek
     });
   }, [events, timeSlots, availabilityByUser, daysOfWeek]);

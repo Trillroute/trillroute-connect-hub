@@ -34,6 +34,16 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
     setViewMode(viewMode);
   }, [viewMode, setViewMode]);
 
+  // Log current filter settings
+  useEffect(() => {
+    console.log('CalendarViewRenderer applying filters:', {
+      filterType,
+      filterId,
+      filterIds,
+      viewMode
+    });
+  }, [filterType, filterId, filterIds, viewMode]);
+
   return (
     <FilteredEventsProvider 
       filterType={filterType} 

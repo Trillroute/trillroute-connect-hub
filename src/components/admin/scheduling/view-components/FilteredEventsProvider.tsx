@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useFilteredEvents } from '../hooks/useFilteredEvents';
 import { useCalendar } from '../context/CalendarContext';
@@ -20,7 +21,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   filterIds = []
 }) => {
   // Get events from the FilteredEvents hook
-  const { events: filteredEvents, isLoading } = useFilteredEvents({
+  const { events: filteredEvents, isLoading, availabilities } = useFilteredEvents({
     filterType,
     filterId,
     filterIds
@@ -29,36 +30,21 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   // Access the calendar context to update events
   const { setEvents, setAvailabilities } = useCalendar();
   
-  // Fetch staff availability
-  const { availabilityByUser, loading: availabilityLoading, refetch } = useStaffAvailability();
-  
   // Effect to update the events in the calendar context when they change
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && filteredEvents && filteredEvents.length >= 0) {
+      console.log(`FilteredEventsProvider: Setting ${filteredEvents.length} events for ${filterType || 'all'} filter`);
       setEvents(filteredEvents);
     }
   }, [filteredEvents, isLoading, setEvents]);
   
   // Effect to update the availabilities in the calendar context
   useEffect(() => {
-    if (!availabilityLoading) {
-      // If we have a specific filterType and filterIds for users, we can filter the availabilities
-      if ((filterType === 'teacher' || filterType === 'staff' || filterType === 'admin') && filterIds.length > 0) {
-        const filteredAvailabilities = Object.fromEntries(
-          Object.entries(availabilityByUser).filter(([userId]) => filterIds.includes(userId))
-        );
-        setAvailabilities(filteredAvailabilities);
-      } else {
-        // Otherwise just set all availabilities
-        setAvailabilities(availabilityByUser);
-      }
+    if (availabilities) {
+      console.log(`FilteredEventsProvider: Setting availabilities for ${filterType || 'all'} filter`);
+      setAvailabilities(availabilities);
     }
-  }, [availabilityByUser, availabilityLoading, filterType, filterIds, setAvailabilities]);
-  
-  // Force reload data when filter changes
-  useEffect(() => {
-    refetch();
-  }, [filterType, filterIds, refetch]);
+  }, [availabilities, setAvailabilities]);
   
   return <>{children}</>;
 };
