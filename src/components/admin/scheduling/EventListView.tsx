@@ -1,18 +1,19 @@
 
 import React from 'react';
-import { format, isSameDay, isSameMonth, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { CalendarEvent } from './context/calendarTypes';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
 
 interface EventListViewProps {
+  events: CalendarEvent[];
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
 }
 
-const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEvent }) => {
-  const { currentDate, events, viewMode } = useCalendar();
+const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDeleteEvent }) => {
+  const { currentDate } = useCalendar();
   
   // Filter events based on the current date
   const filteredEvents = React.useMemo(() => {

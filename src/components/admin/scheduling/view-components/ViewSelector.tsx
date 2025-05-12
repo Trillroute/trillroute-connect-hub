@@ -48,10 +48,11 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
         <MonthViewComponent onDateClick={onDateClick} />
       );
     case 'list':
+      console.log('Rendering list view component');
       return (
         <EventListViewComponent 
-          onEditEvent={onEditEvent}
-          onDeleteEvent={onDeleteEvent}
+          onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
+          onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
         />
       );
     default:

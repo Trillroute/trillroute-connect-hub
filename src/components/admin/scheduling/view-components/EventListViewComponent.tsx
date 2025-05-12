@@ -20,6 +20,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   return (
     <div className="h-full overflow-auto">
       <EventListView 
+        events={events}
         onEditEvent={onEditEvent} 
         onDeleteEvent={onDeleteEvent} 
       />
