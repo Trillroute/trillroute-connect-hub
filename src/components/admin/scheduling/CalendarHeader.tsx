@@ -19,6 +19,11 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
     { value: 'month', label: 'Month View' },
     { value: 'list', label: 'List View' }
   ];
+  
+  const handleViewModeChange = (mode: string) => {
+    console.log('Setting view mode from header:', mode);
+    setViewMode(mode as 'day' | 'week' | 'month' | 'list');
+  };
 
   return (
     <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 py-2">
@@ -27,7 +32,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
       <div className="flex items-center gap-2">
         <ViewModeSelector 
           viewMode={viewMode} 
-          setViewMode={setViewMode} 
+          setViewMode={handleViewModeChange} 
           viewOptions={viewOptions}
         />
         <Button 

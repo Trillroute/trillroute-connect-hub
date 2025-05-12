@@ -36,6 +36,11 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   
   const currentView = options.find(opt => opt.value === viewMode)?.label || 'Select View';
   
+  const handleViewModeChange = (mode: string) => {
+    console.log('View mode selected:', mode);
+    setViewMode(mode);
+  };
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -48,7 +53,7 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
         {options.map((option) => (
           <DropdownMenuItem
             key={option.value}
-            onClick={() => setViewMode(option.value)}
+            onClick={() => handleViewModeChange(option.value)}
             className={cn(
               "cursor-pointer", 
               viewMode === option.value ? "bg-gray-100" : ""

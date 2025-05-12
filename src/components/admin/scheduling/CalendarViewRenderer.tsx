@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CalendarEvent } from './context/calendarTypes';
 import { FilteredEventsProvider } from './view-components/FilteredEventsProvider';
 import { ViewSelector } from './view-components/ViewSelector';
+import { useCalendar } from './context/CalendarContext';
 
 interface CalendarViewRendererProps {
   viewMode: 'day' | 'week' | 'month' | 'list';
@@ -25,6 +26,14 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   filterId,
   filterIds = []
 }) => {
+  const { setViewMode } = useCalendar();
+  
+  // Ensure the CalendarContext's viewMode stays in sync with the prop
+  useEffect(() => {
+    setViewMode(viewMode);
+    console.log('Setting view mode to:', viewMode);
+  }, [viewMode, setViewMode]);
+
   return (
     <FilteredEventsProvider 
       filterType={filterType} 

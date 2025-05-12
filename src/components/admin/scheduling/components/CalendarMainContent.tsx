@@ -4,6 +4,7 @@ import CalendarHeader from '../CalendarHeader';
 import CalendarViewRenderer from '../CalendarViewRenderer';
 import EventFormDialog from '../EventFormDialog';
 import FilterTypeTabs from './FilterTypeTabs';
+import { useCalendar } from '../context/CalendarContext';
 
 interface CalendarMainContentProps {
   hasAdminAccess?: boolean;
@@ -12,7 +13,7 @@ interface CalendarMainContentProps {
   title?: string;
   description?: string;
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
-  showFilterTabs?: boolean; // Added prop to control filter tabs visibility
+  showFilterTabs?: boolean;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
@@ -22,8 +23,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   title,
   description,
   initialFilterType = null,
-  showFilterTabs = true // Default to true for backward compatibility
+  showFilterTabs = true
 }) => {
+  const { viewMode } = useCalendar();
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
   const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(
     initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
@@ -103,7 +105,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
       
       <div className="flex-grow overflow-auto">
         <CalendarViewRenderer 
-          viewMode="week" 
+          viewMode={viewMode}
           onCreateEvent={handleCreateEvent}
           onEditEvent={handleEventEdit}
           onDeleteEvent={handleEventDelete}

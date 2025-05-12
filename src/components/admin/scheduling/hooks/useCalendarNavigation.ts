@@ -5,7 +5,7 @@ export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
 
 export const useCalendarNavigation = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<CalendarViewMode>('day');
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('week');
 
   // Navigation functions
   const goToToday = useCallback(() => setCurrentDate(new Date()), []);

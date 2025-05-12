@@ -25,6 +25,8 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   const { role } = useAuth();
   const isAdminOrHigher = role === 'admin' || role === 'superadmin';
   
+  console.log('Current view mode:', viewMode);
+  
   // Show the appropriate view based on viewMode
   switch (viewMode) {
     case 'day':
@@ -53,6 +55,12 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
         />
       );
     default:
-      return null;
+      console.error(`Unknown view mode: ${viewMode}`);
+      // Fallback to week view
+      return (
+        <WeekViewComponent 
+          onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
+        />
+      );
   }
 };
