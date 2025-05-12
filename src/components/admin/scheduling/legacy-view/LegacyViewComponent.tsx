@@ -9,7 +9,7 @@ import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 const LegacyViewComponent: React.FC = () => {
   // Directly use the calendar context for events
   const { currentDate, events, refreshEvents } = useCalendar();
-  const { availabilityByUser, loading: availabilityLoading, refreshAvailability } = useStaffAvailability();
+  const { availabilityByUser, loading: availabilityLoading, refetch: refreshAvailability } = useStaffAvailability();
   
   // Ensure we have the latest events and availability data
   useEffect(() => {
