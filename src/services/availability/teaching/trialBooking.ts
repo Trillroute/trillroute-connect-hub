@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Define types for the RPC function parameters
+// Define a proper interface for the RPC function parameters
 interface TrialClassParams {
   user_id: string;
   course_id: string;
