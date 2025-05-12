@@ -36,6 +36,7 @@ const SchedulingContent: React.FC = () => {
           hasAdminAccess={hasAdminAccess}
           filterType={filterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | undefined}
           filterValues={selectedFilters}
+          showFilterTabs={false} // Don't show duplicate tabs here as we're using the FilterSelector above
         />
       </div>
     </ContentWrapper>

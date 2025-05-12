@@ -19,6 +19,7 @@ const TeacherCalendarContent: React.FC = () => {
           filterType="role"
           filterValues={['teacher']}
           hasAdminAccess={hasAdminAccess}
+          showFilterTabs={false} // Don't show filter tabs here as we're using a fixed filter
         />
       </div>
     </ContentWrapper>

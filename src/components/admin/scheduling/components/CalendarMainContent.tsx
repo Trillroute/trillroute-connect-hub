@@ -12,6 +12,7 @@ interface CalendarMainContentProps {
   title?: string;
   description?: string;
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  showFilterTabs?: boolean; // Added prop to control filter tabs visibility
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
@@ -20,7 +21,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   roleFilter,
   title,
   description,
-  initialFilterType = null
+  initialFilterType = null,
+  showFilterTabs = true // Default to true for backward compatibility
 }) => {
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
   const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(
@@ -58,7 +60,6 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
       };
     }
     
-    // If we have roleFilter, it's a role-based filter
     if (roleFilter && roleFilter.length > 0) {
       let type: 'teacher' | 'student' | 'admin' | 'staff' | null = null;
       
@@ -80,7 +81,6 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
       };
     }
     
-    // Use the filter set via UI
     return {
       filterType,
       filterIds: []
@@ -92,10 +92,15 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   return (
     <div className="flex flex-col h-full">
       <CalendarHeader onCreateEvent={handleCreateEvent} />
-      <FilterTypeTabs 
-        filterType={filterType} 
-        setFilterType={handleFilterTypeChange}
-      />
+      
+      {/* Only render FilterTypeTabs if showFilterTabs is true */}
+      {showFilterTabs && (
+        <FilterTypeTabs 
+          filterType={filterType} 
+          setFilterType={handleFilterTypeChange}
+        />
+      )}
+      
       <div className="flex-grow overflow-auto">
         <CalendarViewRenderer 
           viewMode="week" 
