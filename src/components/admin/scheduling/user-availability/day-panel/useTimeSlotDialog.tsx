@@ -24,17 +24,17 @@ export function useTimeSlotDialog({ onAddSlot, onUpdateSlot }: UseTimeSlotDialog
       const startTime = `${String(clickedHour).padStart(2, '0')}:${String(clickedMinute || 0).padStart(2, '0')}:00`;
       const endTime = `${String(clickedHour + 1).padStart(2, '0')}:${String(clickedMinute || 0).padStart(2, '0')}:00`;
       
-      // Create a new UserAvailability object with the correct types for all fields
+      // Create a new slot with proper type conversion
       setEditingSlot({
         id: '', // Empty ID for new slots
         userId: '',
         dayOfWeek: 0, // Will be set elsewhere
-        startTime, // String type as defined in UserAvailability
-        endTime,   // String type as defined in UserAvailability
+        startTime, // String type for time fields
+        endTime,   // String type for time fields
         category: 'Session',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      } as UserAvailability); // Add type assertion to ensure compliance with UserAvailability
+        createdAt: new Date(), // Using Date object to match UserAvailability type
+        updatedAt: new Date()  // Using Date object to match UserAvailability type
+      } as unknown as UserAvailability); // Double type assertion to avoid type mismatch
     } else {
       setEditingSlot(null);
     }
