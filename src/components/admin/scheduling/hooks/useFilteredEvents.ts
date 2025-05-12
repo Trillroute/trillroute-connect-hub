@@ -4,7 +4,7 @@ import { useCalendar } from '../context/CalendarContext';
 import { CalendarEvent } from '../context/calendarTypes';
 
 interface UseFilteredEventsProps {
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | 'role' | null;
   filterId?: string | null;
   filterIds?: string[];
 }
