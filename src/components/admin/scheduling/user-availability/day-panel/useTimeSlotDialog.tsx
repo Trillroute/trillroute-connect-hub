@@ -28,8 +28,8 @@ export function useTimeSlotDialog({ onAddSlot, onUpdateSlot }: UseTimeSlotDialog
         id: '', // Empty ID for new slots
         userId: '',
         dayOfWeek: 0, // Will be set elsewhere
-        startTime,
-        endTime,
+        startTime, // This is a string which is correct for UserAvailability
+        endTime,   // This is a string which is correct for UserAvailability
         category: 'Session',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
