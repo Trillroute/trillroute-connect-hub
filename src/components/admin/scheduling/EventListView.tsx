@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { CalendarEvent } from './context/calendarTypes';
@@ -14,18 +13,34 @@ interface EventListViewProps {
 
 const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDeleteEvent }) => {
   const { currentDate } = useCalendar();
+  const [displayCount, setDisplayCount] = useState<number>(20);
   
-  // Filter events based on the current date
+  // Filter events based on the current date and future events
   const filteredEvents = React.useMemo(() => {
     console.log(`List view processing ${events.length} total events for date ${format(currentDate, 'yyyy-MM-dd')}`);
     
-    // For list view, show events for the current day
-    const todayEvents = events.filter(event => isSameDay(event.start, currentDate))
+    // Get current time for filtering
+    const now = new Date();
+    
+    // For list view, show events for the current day and future events, sorted by start time
+    const relevantEvents = events
+      .filter(event => {
+        // Keep events that are either on the current selected date or in the future
+        return isSameDay(event.start, currentDate) || event.start >= now;
+      })
       .sort((a, b) => a.start.getTime() - b.start.getTime());
     
-    console.log(`Found ${todayEvents.length} events for the current day`);
-    return todayEvents;
+    console.log(`Found ${relevantEvents.length} relevant events from now onwards`);
+    return relevantEvents;
   }, [events, currentDate]);
+  
+  // Get the limited set of events to display based on the displayCount
+  const displayedEvents = filteredEvents.slice(0, displayCount);
+  
+  // Function to load more events
+  const handleShowMore = () => {
+    setDisplayCount(prevCount => prevCount + 20);
+  };
   
   // Get an appropriate title based on current date
   const getViewTitle = () => {
@@ -48,7 +63,7 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredEvents.map((event, index) => (
+            {displayedEvents.map((event, index) => (
               <div 
                 key={index} 
                 className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
@@ -98,6 +113,19 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
                 ></div>
               </div>
             ))}
+            
+            {/* Show more button - only visible if there are more events to show */}
+            {displayedEvents.length < filteredEvents.length && (
+              <div className="flex justify-center mt-4 pb-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleShowMore}
+                  className="w-full max-w-sm"
+                >
+                  Show More ({filteredEvents.length - displayedEvents.length} events remaining)
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

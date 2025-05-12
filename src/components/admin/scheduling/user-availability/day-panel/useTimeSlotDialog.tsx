@@ -25,7 +25,7 @@ export function useTimeSlotDialog({ onAddSlot, onUpdateSlot }: UseTimeSlotDialog
       const endTime = `${String(clickedHour + 1).padStart(2, '0')}:${String(clickedMinute || 0).padStart(2, '0')}:00`;
       
       // Create a new slot with proper type conversion
-      setEditingSlot({
+      const newSlot = {
         id: '', // Empty ID for new slots
         userId: '',
         dayOfWeek: 0, // Will be set elsewhere
@@ -34,7 +34,9 @@ export function useTimeSlotDialog({ onAddSlot, onUpdateSlot }: UseTimeSlotDialog
         category: 'Session',
         createdAt: new Date(), // Using Date object to match UserAvailability type
         updatedAt: new Date()  // Using Date object to match UserAvailability type
-      } as unknown as UserAvailability); // Double type assertion to avoid type mismatch
+      } as UserAvailability;
+      
+      setEditingSlot(newSlot);
     } else {
       setEditingSlot(null);
     }
