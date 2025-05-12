@@ -112,11 +112,16 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
           <TimeColumn hours={hours} />
           
           <div className="flex-1">
-            <DayHeader date={currentDate} />
+            <DayHeader currentDate={currentDate} />
             
             <div className="relative">
               {hours.map(hour => (
-                <HourCell key={hour} hour={hour} />
+                <HourCell 
+                  key={hour} 
+                  hour={hour} 
+                  isAvailable={true}
+                  onClick={() => {}}
+                />
               ))}
               
               {/* Display availability slots */}

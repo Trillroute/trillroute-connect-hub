@@ -83,17 +83,23 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
               key={hour} 
               hour={hour} 
               isAvailable={isTimeAvailable(availabilitySlots, hour)}
-              onClick={handleCellClick} 
+              onClick={() => handleCellClick(hour)} 
             />
           ))}
           
           {/* Availability slots */}
           <div className="absolute top-0 left-0 right-0">
             {availabilitySlots.map((slot, index) => (
-              <AvailabilitySlot 
-                key={`availability-${index}`} 
-                slot={slot} 
-                onClick={handleAvailabilityClick} 
+              <AvailabilitySlot
+                key={`availability-${index}`}
+                top={((slot.startHour - 7) * 60) + slot.startMinute}
+                height={((slot.endHour - slot.startHour) * 60) - slot.startMinute + slot.endMinute}
+                userName={slot.userName || ''}
+                category={slot.category}
+                startHour={slot.startHour}
+                startMinute={slot.startMinute}
+                endHour={slot.endHour}
+                endMinute={slot.endMinute}
               />
             ))}
           </div>
@@ -104,8 +110,8 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
               <CalendarEventComponent 
                 key={eventIndex}
                 event={event}
-                onEditClick={handleEditClick}
-                onDeleteClick={handleDeleteClick}
+                onEditClick={() => handleEditClick(event)}
+                onDeleteClick={() => handleDeleteClick(event)}
               />
             ))}
           </div>

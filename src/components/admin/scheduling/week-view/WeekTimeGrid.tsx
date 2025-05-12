@@ -1,151 +1,147 @@
 
-import React, { useState } from 'react';
-import { getHourLabels } from '../utils/dateUtils';
-import WeekDayHeader from './WeekDayHeader';
-import WeekViewEvent from './WeekViewEvent';
+import React, { useMemo } from 'react';
+import { format, isSameDay } from 'date-fns';
+import { getHourCells } from '../calendarUtils';
 import { CalendarEvent } from '../context/calendarTypes';
-import { calculateEventPosition } from './weekViewUtils';
-import WeekAvailabilitySlots from './WeekAvailabilitySlots';
-import { useStaffAvailability } from '@/hooks/useStaffAvailability';
-import { AvailabilitySlot } from './weekViewUtils';
+import WeekDayHeader from './WeekDayHeader';
+import { useCalendar } from '../context/CalendarContext';
+import HourCell from '../day-view/HourCell';
+import CalendarEventComponent from '../day-view/CalendarEvent';
+import AvailabilitySlotItem from './AvailabilitySlot';
+import { AvailabilitySlot, isTimeAvailable, getCategoryColor } from './weekViewUtils';
 
 interface WeekTimeGridProps {
   days: Date[];
-  events: CalendarEvent[];
-  onEventEdit?: (event: CalendarEvent) => void;
-  onEventDelete?: (event: CalendarEvent) => void;
+  onCreateEvent?: () => void;
+  onEditEvent?: (event: CalendarEvent) => void;
+  onDeleteEvent?: (event: CalendarEvent) => void;
 }
 
-const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
-  days,
-  events,
-  onEventEdit,
-  onEventDelete
+const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({ 
+  days, 
+  onCreateEvent, 
+  onEditEvent,
+  onDeleteEvent 
 }) => {
-  const hourLabels = getHourLabels(7, 21); // 7am to 9pm
-  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+  const { currentDate, events, availabilities } = useCalendar();
+  const hours = getHourCells();
   
-  // Fetch availability data for all staff members
-  const { availabilityByUser, loading } = useStaffAvailability();
-  
-  // Prepare availability slots for display
-  const preparedAvailabilitySlots = React.useMemo(() => {
+  // Processing availability slots for the week
+  const weekAvailabilitySlots = useMemo(() => {
+    if (!availabilities) return [];
+    
     const slots: AvailabilitySlot[] = [];
     
-    if (!loading) {
-      // Process each user's availability
-      Object.entries(availabilityByUser).forEach(([userId, userData]) => {
-        if (userData.slots && Array.isArray(userData.slots)) {
-          userData.slots.forEach(slot => {
-            if (typeof slot.dayOfWeek === 'number' && slot.startTime && slot.endTime) {
-              // Convert time string to hours and minutes
-              const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-              const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-              
-              slots.push({
-                userId,
-                userName: userData.name || 'Staff',
-                dayOfWeek: slot.dayOfWeek,
-                startHour,
-                startMinute,
-                endHour,
-                endMinute,
-                category: slot.category || 'Session'
-              });
-            }
-          });
-        }
-      });
-    }
+    // Process all staff availabilities
+    Object.entries(availabilities).forEach(([userId, userData]) => {
+      if (userData.slots && Array.isArray(userData.slots)) {
+        userData.slots.forEach(slot => {
+          if (slot.dayOfWeek !== undefined && slot.startTime && slot.endTime) {
+            const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+            const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+            
+            slots.push({
+              dayOfWeek: slot.dayOfWeek,
+              startHour,
+              startMinute,
+              endHour,
+              endMinute,
+              userId,
+              userName: userData.name || 'Staff',
+              category: slot.category || 'Session'
+            });
+          }
+        });
+      }
+    });
     
     return slots;
-  }, [availabilityByUser, loading]);
-
-  const handleSelectEvent = (event: CalendarEvent) => {
-    setSelectedEvent(event.id ? event.id : null);
-  };
-
-  const handleEditEvent = () => {
-    if (selectedEvent && onEventEdit) {
-      const event = events.find(e => e.id === selectedEvent);
-      if (event) {
-        onEventEdit(event);
-      }
-    }
-  };
-
-  const handleDeleteEvent = () => {
-    if (selectedEvent && onEventDelete) {
-      const event = events.find(e => e.id === selectedEvent);
-      if (event) {
-        onDeleteEvent(event);
-      }
-    }
-  };
-
+  }, [availabilities]);
+  
+  // Handle availability slot click
   const handleAvailabilityClick = (slot: AvailabilitySlot) => {
-    console.log('Availability slot clicked:', slot);
-    // Future enhancement: Show slot details or allow editing
+    if (onCreateEvent) {
+      sessionStorage.setItem('selectedAvailability', JSON.stringify(slot));
+      onCreateEvent();
+    }
   };
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="flex border-b">
-        <div className="w-16 shrink-0"></div>
-        <div className="flex-1 grid grid-cols-7">
-          {days.map((day, index) => (
-            <WeekDayHeader key={index} date={day} />
-          ))}
-        </div>
+    <div className="flex flex-col h-full overflow-auto">
+      {/* Day headers */}
+      <div className="flex">
+        <div className="w-16 flex-shrink-0 border-b border-gray-200 h-12 bg-white"></div>
+        {days.map((day, index) => (
+          <WeekDayHeader 
+            key={index} 
+            day={day} 
+            currentDate={currentDate} 
+          />
+        ))}
       </div>
       
-      <div className="flex">
-        <div className="w-16 shrink-0">
-          {hourLabels.map((hour, index) => (
-            <div key={index} className="h-15 border-b text-sm text-gray-500 text-center pt-2">
-              {hour}
+      {/* Time grid */}
+      <div className="flex flex-1 overflow-y-auto">
+        {/* Hour labels */}
+        <div className="w-16 flex-shrink-0">
+          {hours.map(hour => (
+            <div 
+              key={hour} 
+              className="h-15 border-b border-gray-200 flex items-center justify-center text-sm text-gray-500"
+              style={{ height: '60px' }}
+            >
+              {hour}:00
             </div>
           ))}
         </div>
         
-        <div className="flex-1 grid grid-cols-7">
-          {days.map((day, dayIndex) => (
-            <div key={dayIndex} className="relative border-l min-h-[800px]">
-              {hourLabels.map((_, hourIndex) => (
-                <div key={hourIndex} className="h-15 border-b"></div>
+        {/* Day columns */}
+        {days.map((day, dayIndex) => (
+          <div key={dayIndex} className="flex-1 border-r border-gray-200 relative">
+            {/* Hour cells */}
+            {hours.map((hour) => (
+              <div 
+                key={hour}
+                className={`border-b border-gray-200 ${
+                  isTimeAvailable(hour, day.getDay(), weekAvailabilitySlots) 
+                    ? 'bg-green-50/20' 
+                    : ''
+                }`}
+                style={{ height: '60px' }}
+                onClick={() => {
+                  if (onCreateEvent && isTimeAvailable(hour, day.getDay(), weekAvailabilitySlots)) {
+                    onCreateEvent();
+                  }
+                }}
+              ></div>
+            ))}
+            
+            {/* Availability slots */}
+            {weekAvailabilitySlots
+              .filter(slot => slot.dayOfWeek === day.getDay())
+              .map((slot, slotIndex) => (
+                <AvailabilitySlotItem
+                  key={`slot-${dayIndex}-${slotIndex}`}
+                  slot={slot}
+                  slotIndex={slotIndex}
+                  dayIndex={dayIndex}
+                  onClick={handleAvailabilityClick}
+                />
               ))}
-              
-              {/* Show user availability slots first as a background layer */}
-              <WeekAvailabilitySlots
-                availabilitySlots={preparedAvailabilitySlots}
-                dayIndex={day.getDay()}
-                onAvailabilityClick={handleAvailabilityClick}
-              />
-              
-              {/* Show events on top */}
-              {events
-                .filter(event => {
-                  const eventDate = new Date(event.start);
-                  return eventDate.toDateString() === day.toDateString();
-                })
-                .map((event) => {
-                  const style = calculateEventPosition(event);
-                  
-                  return (
-                    <WeekViewEvent
-                      key={event.id}
-                      event={event}
-                      isSelected={selectedEvent === event.id}
-                      onSelect={handleSelectEvent}
-                      onEdit={handleEditEvent}
-                      onDelete={handleDeleteEvent}
-                      style={style}
-                    />
-                  );
-                })}
-            </div>
-          ))}
-        </div>
+            
+            {/* Events */}
+            {events
+              .filter(event => isSameDay(new Date(event.start), day))
+              .map((event, eventIndex) => (
+                <CalendarEventComponent
+                  key={`event-${dayIndex}-${eventIndex}`}
+                  event={event}
+                  onEditClick={() => onEditEvent && onEditEvent(event)}
+                  onDeleteClick={() => onDeleteEvent && onDeleteEvent(event)}
+                />
+              ))}
+          </div>
+        ))}
       </div>
     </div>
   );
