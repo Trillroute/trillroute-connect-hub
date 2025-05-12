@@ -21,7 +21,7 @@ export const useFilteredEvents = ({
   const allFilterIds = filterId ? [...filterIds, filterId] : filterIds;
   
   // Log the input parameters for debugging
-  console.log('useFilteredEvents received:', { filterType, filterId, filterIds });
+  console.log('useFilteredEvents received:', { filterType, filterId, filterIds, allFilterIds });
 
   // Effect to filter events or fetch new ones based on filter parameters
   useEffect(() => {
@@ -37,7 +37,7 @@ export const useFilteredEvents = ({
       if (filterType === 'role') {
         console.log('Filtering events by role:', allFilterIds);
         await refreshEvents();
-        // Don't filter here - the events are already filtered by the server
+        // Server-side filtering already applied by fetchEvents based on role
       } else if (filterType && allFilterIds.length > 0) {
         // For other filter types with IDs (course, teacher, etc.)
         console.log(`Filtering events by ${filterType}:`, allFilterIds);
@@ -46,6 +46,7 @@ export const useFilteredEvents = ({
         // Apply client-side filtering after refresh
         if (events.length > 0) {
           const filteredEvents = filterEventsByType(events, filterType, allFilterIds);
+          console.log(`Found ${filteredEvents.length} events after filtering by ${filterType}`);
           setEvents(filteredEvents);
         }
       } else {
@@ -63,10 +64,12 @@ export const useFilteredEvents = ({
   // Function to filter events by type and ID
   const filterEventsByType = (
     allEvents: CalendarEvent[],
-    type: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff',
+    type: string,
     ids: string[]
   ): CalendarEvent[] => {
     if (!ids.length) return allEvents;
+    
+    console.log(`Filtering ${allEvents.length} events by ${type} with IDs:`, ids);
     
     // Implementation will depend on how event metadata is structured
     // For now, we'll check for IDs in the description as a basic implementation

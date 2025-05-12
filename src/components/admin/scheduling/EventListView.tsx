@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { format, isSameDay, isAfter, startOfDay } from 'date-fns';
+import React, { useState, useEffect } from 'react';
+import { format, isSameDay, isAfter, startOfDay, addDays } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { CalendarEvent } from './context/calendarTypes';
 import { Button } from '@/components/ui/button';
@@ -23,17 +23,34 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
     const now = new Date();
     const today = startOfDay(now);
     
-    // For list view, show events for the current selected date or future events, sorted by start time
+    // For list view, show events for the current selected date and future events, sorted by start time
     const relevantEvents = events
       .filter(event => {
         // Keep events that are either on the current selected date or in the future
-        return isSameDay(event.start, currentDate) || isAfter(event.start, today);
+        return isSameDay(event.start, currentDate) || 
+               (isAfter(event.start, today) && isAfter(event.start, addDays(today, -1)));
       })
       .sort((a, b) => a.start.getTime() - b.start.getTime());
     
     console.log(`Found ${relevantEvents.length} relevant events from now onwards`);
     return relevantEvents;
   }, [events, currentDate]);
+  
+  // Debug info to help troubleshoot
+  useEffect(() => {
+    console.log('EventListView - Current events array:', events);
+    console.log('EventListView - Filtered events:', filteredEvents);
+    
+    events.forEach((event, index) => {
+      console.log(`Event ${index}:`, {
+        id: event.id,
+        title: event.title,
+        start: format(event.start, 'yyyy-MM-dd HH:mm'),
+        end: format(event.end, 'yyyy-MM-dd HH:mm'),
+        isSameDay: isSameDay(event.start, currentDate)
+      });
+    });
+  }, [events, filteredEvents, currentDate]);
   
   // Get the limited set of events to display based on the displayCount
   const displayedEvents = filteredEvents.slice(0, displayCount);

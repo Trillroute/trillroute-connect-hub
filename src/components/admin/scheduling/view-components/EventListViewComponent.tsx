@@ -13,15 +13,15 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   onEditEvent,
   onDeleteEvent
 }) => {
-  const { events, refreshEvents } = useCalendar();
+  const { events, refreshEvents, currentDate } = useCalendar();
   
-  // Force refresh events when the component mounts
+  // Force refresh events when the component mounts or when the date changes
   useEffect(() => {
-    console.log(`EventListViewComponent mounting, refreshing events`);
+    console.log(`EventListViewComponent mounting/updating, refreshing events for date: ${currentDate.toDateString()}`);
     refreshEvents();
-  }, [refreshEvents]);
+  }, [refreshEvents, currentDate]);
   
-  console.log(`EventListViewComponent rendering with ${events.length} events`);
+  console.log(`EventListViewComponent rendering with ${events.length} events, current date: ${currentDate.toDateString()}`);
   
   return (
     <div className="h-full overflow-auto">

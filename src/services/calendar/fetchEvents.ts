@@ -6,6 +6,7 @@ import { canManageEvents } from "@/utils/permissions/modulePermissions";
 
 export const fetchEvents = async (userId: string, role: string | null): Promise<CalendarEvent[]> => {
   try {
+    console.log(`Fetching events for user ${userId} with role ${role}`);
     let query = supabase.from("calendar_events").select("*");
     
     // Filter events based on user role
@@ -73,7 +74,12 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
       return [];
     }
     
-    return data ? data.map(mapFromDbEvent) : [];
+    console.log(`Successfully fetched ${data?.length || 0} events from database`);
+    
+    const mappedEvents = data ? data.map(mapFromDbEvent) : [];
+    console.log(`Mapped ${mappedEvents.length} events`);
+    
+    return mappedEvents;
   } catch (err) {
     console.error("Failed to fetch events:", err);
     return [];
