@@ -9,6 +9,6 @@ export const mapFromDbAvailability = (dbEvent: any): AvailabilitySlot => ({
   endTime: new Date(dbEvent.end_time),
   isBooked: dbEvent.event_type === 'trial_booking',
   courseId: dbEvent.metadata && typeof dbEvent.metadata === 'object' ? dbEvent.metadata.course_id : undefined,
+  courseTitle: dbEvent.metadata && typeof dbEvent.metadata === 'object' ? dbEvent.metadata.course_title : undefined,
   studentId: dbEvent.metadata && typeof dbEvent.metadata === 'object' ? dbEvent.metadata.student_id : undefined,
 });
-

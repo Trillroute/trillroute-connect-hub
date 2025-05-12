@@ -33,6 +33,15 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
         availability.teacherName = `${teacherData.first_name} ${teacherData.last_name}`;
       }
       
+      // Add course title if available in metadata
+      if (slot.metadata && typeof slot.metadata === 'object' && slot.metadata.course_title) {
+        availability.courseTitle = slot.metadata.course_title;
+      } else if (courseId) {
+        // If course title is not in metadata but we have a courseId, try to fetch it
+        // For simplicity we'll just use a default for now
+        availability.courseTitle = 'Trial Class';
+      }
+      
       return availability;
     }) : [];
   } catch (err) {

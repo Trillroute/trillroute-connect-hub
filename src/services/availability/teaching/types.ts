@@ -9,6 +9,7 @@ export interface AvailabilitySlot {
   endTime: Date;
   isBooked: boolean;
   courseId?: string;
+  courseTitle?: string;
   studentId?: string;
 }
 
