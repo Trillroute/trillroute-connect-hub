@@ -49,16 +49,10 @@ export const bookTrialClass = async (
     }
 
     // Add this course to the user's trial_classes array
-    // Use explicit type casting with the defined interface
-    const params: TrialClassParams = {
-      user_id: studentId,
-      course_id: courseId
-    };
-    
     // Call the RPC function with the properly typed parameters
     const { error: userUpdateError } = await supabase.rpc(
       'add_trial_class', 
-      params
+      { user_id: studentId, course_id: courseId } as TrialClassParams
     );
 
     if (userUpdateError) {
@@ -123,16 +117,9 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     }
 
     // Remove this course from the user's trial_classes array
-    // Use explicit type casting with the defined interface
-    const params: TrialClassParams = {
-      user_id: studentId,
-      course_id: courseId
-    };
-    
-    // Call the RPC function with the properly typed parameters
     const { error: userUpdateError } = await supabase.rpc(
       'remove_trial_class', 
-      params
+      { user_id: studentId, course_id: courseId } as TrialClassParams
     );
 
     if (userUpdateError) {
