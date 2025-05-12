@@ -10,7 +10,7 @@ interface FilteredCalendarProps {
   hasAdminAccess?: boolean;
   title?: string;
   description?: string;
-  showFilterTabs?: boolean; // New prop to control filter tab visibility
+  showFilterTabs?: boolean;
 }
 
 const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
@@ -19,7 +19,7 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
   hasAdminAccess = false,
   title = "Calendar",
   description,
-  showFilterTabs = true // Default to true for backward compatibility
+  showFilterTabs = true
 }) => {
   // Process filter props to map to the right properties
   const mapFilterTypeToProvider = () => {
@@ -48,8 +48,6 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
 
   const providerProps = mapFilterTypeToProvider();
   
-  console.log('FilteredCalendar props:', { filterType, filterValues, providerProps });
-  
   return (
     <CalendarProvider>
       <FilteredEventsProvider 
@@ -62,7 +60,7 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
             title={title}
             description={description}
             initialFilterType={filterType || null}
-            showFilterTabs={showFilterTabs} // Pass the prop to CalendarContent
+            showFilterTabs={showFilterTabs}
           />
         </div>
       </FilteredEventsProvider>
