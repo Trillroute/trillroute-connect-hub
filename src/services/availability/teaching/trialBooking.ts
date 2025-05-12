@@ -1,6 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Define types for the RPC function parameters
+interface TrialClassParams {
+  user_id: string;
+  course_id: string;
+}
+
 // Book a trial class for a student
 export const bookTrialClass = async (
   slotId: string, 
@@ -43,14 +49,13 @@ export const bookTrialClass = async (
     }
 
     // Add this course to the user's trial_classes array
-    // Fix: Cast the RPC function parameters to explicitly define their types
-    const { error: userUpdateError } = await supabase.rpc('add_trial_class', {
+    // Use explicit type casting with the defined interface
+    const params: TrialClassParams = {
       user_id: studentId,
       course_id: courseId
-    } as {
-      user_id: string;
-      course_id: string;
-    });
+    };
+    
+    const { error: userUpdateError } = await supabase.rpc('add_trial_class', params);
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
@@ -114,14 +119,13 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     }
 
     // Remove this course from the user's trial_classes array
-    // Fix: Cast the RPC function parameters to explicitly define their types
-    const { error: userUpdateError } = await supabase.rpc('remove_trial_class', {
+    // Use explicit type casting with the defined interface
+    const params: TrialClassParams = {
       user_id: studentId,
       course_id: courseId
-    } as {
-      user_id: string;
-      course_id: string;
-    });
+    };
+    
+    const { error: userUpdateError } = await supabase.rpc('remove_trial_class', params);
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
