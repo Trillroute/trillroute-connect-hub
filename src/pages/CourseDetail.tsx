@@ -5,7 +5,7 @@ import { useCourses } from '@/hooks/useCourses';
 import { useTeachers } from '@/hooks/useTeachers';
 import { useAuth } from '@/hooks/useAuth';
 import { CourseNotFound } from '@/components/courses/CourseNotFound';
-import { CourseHeader } from '@/components/courses/CourseHeader';
+import { CourseHeader } from '@/components/courses';
 import { CourseContent } from '@/components/courses/CourseContent';
 import { CourseDetailTabs } from '@/components/courses/CourseDetailTabs';
 import { CourseDetailLoading } from '@/components/courses/CourseDetailLoading';
