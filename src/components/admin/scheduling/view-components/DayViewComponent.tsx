@@ -6,7 +6,7 @@ import { startOfDay, endOfDay, format, addDays, subDays } from 'date-fns';
 import DayHeader from '../day-view/DayHeader';
 import TimeColumn from '../day-view/TimeColumn';
 import HourCell from '../day-view/HourCell';
-import CalendarEvent as DayCalendarEvent from '../day-view/CalendarEvent';
+import CalendarEventComponent from '../day-view/CalendarEvent';
 import AvailabilitySlot from '../day-view/AvailabilitySlot';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -141,11 +141,11 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
               
               {/* Display events */}
               {filteredEvents.map(event => (
-                <DayCalendarEvent
+                <CalendarEventComponent
                   key={event.id}
                   event={event}
-                  onEdit={onEditEvent ? () => onEditEvent(event) : undefined}
-                  onDelete={onDeleteEvent ? () => onDeleteEvent(event) : undefined}
+                  onEditClick={onEditEvent ? () => onEditEvent(event) : undefined}
+                  onDeleteClick={onDeleteEvent ? () => onDeleteEvent(event) : undefined}
                 />
               ))}
             </div>
