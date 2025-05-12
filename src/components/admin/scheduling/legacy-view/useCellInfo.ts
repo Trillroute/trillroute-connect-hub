@@ -1,6 +1,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
+import { isValid } from 'date-fns';
 
 interface Day {
   name: string;
@@ -34,7 +35,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
       if (!userData.slots || !Array.isArray(userData.slots)) return;
       
       userData.slots.forEach(slot => {
-        if (!slot.dayOfWeek || !slot.startTime) return;
+        if (slot.dayOfWeek === undefined || !slot.startTime) return;
         
         const dayOfWeek = slot.dayOfWeek;
         const startTime = slot.startTime;
@@ -55,7 +56,23 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     events.forEach(event => {
       if (!event.start || !event.end) return;
       
-      const eventStart = new Date(event.start);
+      let eventStart: Date;
+      
+      if (event.start instanceof Date) {
+        eventStart = event.start;
+      } else {
+        try {
+          eventStart = new Date(event.start);
+          if (!isValid(eventStart)) {
+            console.error("Invalid event start date:", event);
+            return;
+          }
+        } catch (error) {
+          console.error("Error parsing event date:", error);
+          return;
+        }
+      }
+      
       const dateKey = eventStart.toISOString().split('T')[0]; // YYYY-MM-DD format
       
       if (!eventMap[dateKey]) {
@@ -85,6 +102,11 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     }
     
     // Check for events
+    if (!isValid(day.date)) {
+      console.error("Invalid day.date in getCellInfo:", day);
+      return results;
+    }
+    
     const dayDate = new Date(day.date);
     const dateKey = dayDate.toISOString().split('T')[0];
     
@@ -99,10 +121,10 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
       
       // Find events that overlap with this time slot
       const matchingEvents = eventsByDayAndTime[dateKey].filter(event => {
-        const eventStartDate = new Date(event.start);
-        const eventEndDate = new Date(event.end);
+        const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+        const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
         
-        return (eventStartDate <= slotEnd && eventEndDate >= slotStart);
+        return (eventStart <= slotEnd && eventEnd >= slotStart);
       });
       
       matchingEvents.forEach(event => {

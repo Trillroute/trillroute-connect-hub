@@ -1,5 +1,6 @@
 
 import { UserAvailability } from '../context/calendarTypes';
+import { format, isValid } from 'date-fns';
 
 // Function to format time for display
 export const formatTimeDisplay = (timeStr: string): string => {
@@ -15,18 +16,36 @@ export const getTimeSlots = (events: any[], availabilities: any) => {
   
   // Add times from events
   events.forEach(event => {
-    const hours = event.start.getHours();
-    const minutes = event.start.getMinutes();
-    const formattedTime = `${hours}:${minutes === 0 ? '00' : minutes}`;
-    slots.add(formattedTime);
+    if (event.start instanceof Date && isValid(event.start)) {
+      const hours = event.start.getHours();
+      const minutes = event.start.getMinutes();
+      const formattedTime = `${hours}:${minutes === 0 ? '00' : minutes}`;
+      slots.add(formattedTime);
+    } else if (typeof event.start === 'string') {
+      try {
+        const date = new Date(event.start);
+        if (isValid(date)) {
+          const hours = date.getHours();
+          const minutes = date.getMinutes();
+          const formattedTime = `${hours}:${minutes === 0 ? '00' : minutes}`;
+          slots.add(formattedTime);
+        }
+      } catch (error) {
+        console.error("Invalid date format in event:", event);
+      }
+    }
   });
   
   // Add times from availabilities
   Object.values(availabilities).forEach((userData: any) => {
-    userData.slots.forEach((slot: UserAvailability) => {
-      const [hours, minutes] = slot.startTime.split(':');
-      slots.add(`${parseInt(hours)}:${minutes}`);
-    });
+    if (userData.slots && Array.isArray(userData.slots)) {
+      userData.slots.forEach((slot: UserAvailability) => {
+        if (slot.startTime) {
+          const [hours, minutes] = slot.startTime.split(':');
+          slots.add(`${parseInt(hours)}:${minutes}`);
+        }
+      });
+    }
   });
   
   // If no slots found, add default time slots
@@ -48,6 +67,12 @@ export const getTimeSlots = (events: any[], availabilities: any) => {
 export const getDaysOfWeek = (currentDate: Date) => {
   const days = [];
   const startDate = new Date(currentDate);
+  
+  // Ensure we have a valid date
+  if (!isValid(startDate)) {
+    console.error("Invalid currentDate provided to getDaysOfWeek:", currentDate);
+    return [];
+  }
   
   // Start from Monday of current week
   const day = startDate.getDay();

@@ -10,8 +10,9 @@ interface TableCellProps {
 }
 
 const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired }) => {
-  if (!cellInfos.length) {
-    return <td className="p-2 border bg-gray-100"></td>;
+  // If no infos, render an empty cell
+  if (!cellInfos || cellInfos.length === 0) {
+    return <td className="p-2 border bg-gray-50 h-16"></td>;
   }
   
   return (
@@ -22,15 +23,17 @@ const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired })
             key={idx}
             className={`p-2 rounded ${
               cellInfo.isEvent 
-                ? (isExpired ? 'bg-red-700' : 'bg-blue-700') 
-                : (isExpired ? 'bg-red-800' : 'bg-green-700')
-            } text-white mb-1`}
+                ? (isExpired ? 'bg-gray-500' : 'bg-blue-500') 
+                : (isExpired ? 'bg-green-300' : 'bg-green-500')
+            } text-white mb-1 shadow`}
           >
-            <div className="font-medium">{cellInfo.name}</div>
-            {isExpired && <div className="text-red-300">Expired</div>}
-            <div>{cellInfo.category || (cellInfo.isEvent ? 'Event' : 'Regular slot')}</div>
-            {cellInfo.description && <div className="text-sm">{cellInfo.description}</div>}
-            <div className="mt-1 text-xs">{formatTimeDisplay(timeSlot)}</div>
+            <div className="font-medium truncate">{cellInfo.name}</div>
+            {isExpired && <div className="text-red-100 text-xs">Expired</div>}
+            <div className="text-sm">{cellInfo.category || (cellInfo.isEvent ? 'Event' : 'Regular slot')}</div>
+            {cellInfo.description && (
+              <div className="text-xs line-clamp-2 mt-1 text-white/90">{cellInfo.description}</div>
+            )}
+            <div className="mt-1 text-xs font-light">{formatTimeDisplay(timeSlot)}</div>
           </div>
         ))}
       </div>

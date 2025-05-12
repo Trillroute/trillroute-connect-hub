@@ -1,24 +1,27 @@
 
-import React, { useMemo } from 'react';
-import { useFilteredEvents } from '../hooks/useFilteredEvents';
+import React, { useMemo, useEffect } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import { Loader2 } from 'lucide-react';
 import { getTimeSlots, getDaysOfWeek } from './legacyViewUtils';
 import LegacyViewTable from './LegacyViewTable';
+import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 
 const LegacyViewComponent: React.FC = () => {
-  // Directly use the calendar context for events and availabilities
-  const { currentDate, events, availabilities } = useCalendar();
+  // Directly use the calendar context for events
+  const { currentDate, events, refreshEvents } = useCalendar();
+  const { availabilityByUser, loading: availabilityLoading, refreshAvailability } = useStaffAvailability();
   
-  // We'll still call useFilteredEvents to apply any filters, but we get data from context
-  const { isLoading } = useFilteredEvents({
-    filterType: null
-  });
+  // Ensure we have the latest events and availability data
+  useEffect(() => {
+    console.log("Legacy view mounted, refreshing data...");
+    refreshEvents();
+    refreshAvailability();
+  }, [refreshEvents, refreshAvailability]);
   
   // Get all time slots from events and availabilities
   const timeSlots = useMemo(() => 
-    getTimeSlots(events, availabilities), 
-    [events, availabilities]
+    getTimeSlots(events, availabilityByUser), 
+    [events, availabilityByUser]
   );
   
   // Get days of the week starting from current date
@@ -26,6 +29,18 @@ const LegacyViewComponent: React.FC = () => {
     getDaysOfWeek(currentDate), 
     [currentDate]
   );
+
+  // Log data for debugging
+  useEffect(() => {
+    console.log("Legacy view data:", {
+      events: events.length,
+      timeSlots,
+      availabilityByUser: Object.keys(availabilityByUser).length,
+      daysOfWeek
+    });
+  }, [events, timeSlots, availabilityByUser, daysOfWeek]);
+
+  const isLoading = availabilityLoading;
 
   if (isLoading) {
     return (
@@ -36,10 +51,10 @@ const LegacyViewComponent: React.FC = () => {
   }
 
   return (
-    <div className="w-full overflow-auto">
+    <div className="w-full overflow-auto p-4">
       <LegacyViewTable
         events={events}
-        availabilities={availabilities}
+        availabilities={availabilityByUser}
         timeSlots={timeSlots}
         daysOfWeek={daysOfWeek}
       />
