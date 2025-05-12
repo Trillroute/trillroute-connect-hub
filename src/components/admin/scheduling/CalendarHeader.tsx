@@ -17,12 +17,13 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
     { value: 'day', label: 'Day View' },
     { value: 'week', label: 'Week View' },
     { value: 'month', label: 'Month View' },
-    { value: 'list', label: 'List View' }
+    { value: 'list', label: 'List View' },
+    { value: 'legacy', label: 'Legacy View' }
   ];
   
   const handleViewModeChange = (mode: string) => {
     console.log('Setting view mode from header:', mode);
-    setViewMode(mode as 'day' | 'week' | 'month' | 'list');
+    setViewMode(mode as 'day' | 'week' | 'month' | 'list' | 'legacy');
   };
 
   return (

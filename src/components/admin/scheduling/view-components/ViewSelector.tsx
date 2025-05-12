@@ -6,9 +6,10 @@ import { DayViewComponent } from './DayViewComponent';
 import { WeekViewComponent } from './WeekViewComponent';
 import { MonthViewComponent } from './MonthViewComponent';
 import { EventListViewComponent } from './EventListViewComponent';
+import LegacyViewComponent from '../legacy-view/LegacyViewComponent';
 
 interface ViewSelectorProps {
-  viewMode: 'day' | 'week' | 'month' | 'list';
+  viewMode: 'day' | 'week' | 'month' | 'list' | 'legacy';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -54,6 +55,11 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
           onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
           onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
         />
+      );
+    case 'legacy':
+      console.log('Rendering legacy view component');
+      return (
+        <LegacyViewComponent />
       );
     default:
       console.error(`Unknown view mode: ${viewMode}`);

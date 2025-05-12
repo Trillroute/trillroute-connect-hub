@@ -1,12 +1,12 @@
 
 import React, { useEffect } from 'react';
-import { CalendarEvent } from './context/calendarTypes';
+import { CalendarEvent, CalendarViewMode } from './context/calendarTypes';
 import { FilteredEventsProvider } from './view-components/FilteredEventsProvider';
 import { ViewSelector } from './view-components/ViewSelector';
 import { useCalendar } from './context/CalendarContext';
 
 interface CalendarViewRendererProps {
-  viewMode: 'day' | 'week' | 'month' | 'list';
+  viewMode: CalendarViewMode;
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
