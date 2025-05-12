@@ -3,6 +3,6 @@
 
 export * from './types';
 export * from './mappers';
-export * from './availabilityQuery';
 export * from './availabilityManagement';
-export * from './trialBooking';
+export { hasTrialForCourse } from './availabilityQuery'; 
+export { bookTrialClass, cancelTrialClass, checkTrialForCourse } from './trialBooking';

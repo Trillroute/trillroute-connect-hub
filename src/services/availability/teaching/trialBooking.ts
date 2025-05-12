@@ -54,8 +54,8 @@ export const bookTrialClass = async (
       course_id: courseId 
     };
     
-    // Call the RPC function without explicit type arguments
-    const { error: userUpdateError } = await supabase.rpc<any, TrialClassParams>(
+    // Call the RPC function with proper type parameters
+    const { error: userUpdateError } = await supabase.rpc(
       'add_trial_class', 
       params
     );
@@ -127,8 +127,8 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
       course_id: courseId 
     };
     
-    // Call the RPC function without explicit type arguments
-    const { error: userUpdateError } = await supabase.rpc<any, TrialClassParams>(
+    // Call the RPC function with proper type parameters
+    const { error: userUpdateError } = await supabase.rpc(
       'remove_trial_class', 
       params
     );
@@ -147,7 +147,8 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
 };
 
 // Function to check if a student has already taken a trial for a specific course
-export const hasTrialForCourse = async (
+// Renamed to avoid conflict with the one in availabilityQuery.ts
+export const checkTrialForCourse = async (
   userId: string,
   courseId: string
 ): Promise<boolean> => {
