@@ -4,5 +4,5 @@
 export * from './types';
 export * from './mappers';
 export * from './availabilityManagement';
-export { hasTrialForCourse } from './availabilityQuery'; 
+export { hasTrialForCourse, fetchAvailableSlotsForCourse } from './availabilityQuery'; 
 export { bookTrialClass, cancelTrialClass, checkTrialForCourse } from './trialBooking';

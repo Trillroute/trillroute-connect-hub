@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { AvailabilitySlot, fetchAvailableSlotsForCourse, bookTrialClass } from '@/services/availability/teaching';
+import { AvailabilitySlot, bookTrialClass } from '@/services/availability/teaching';
+import { fetchAvailableSlotsForCourse } from '@/services/availability/teaching';
 
 interface UseBookTrialDialogProps {
   courseId: string;

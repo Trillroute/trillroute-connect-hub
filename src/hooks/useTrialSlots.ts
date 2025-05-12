@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { fetchAvailableSlotsForCourse, hasTrialForCourse, createAvailabilitySlot, bookTrialClass } from '@/services/availability/teaching';
+import { fetchAvailableSlotsForCourse, hasTrialForCourse, createAvailabilitySlot } from '@/services/availability/teaching';
 import { AvailabilitySlot } from '@/services/availability/teaching/types';
 
 interface UseTrialSlotsResult {

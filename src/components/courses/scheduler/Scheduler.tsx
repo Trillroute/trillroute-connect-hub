@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { AvailabilitySlot, fetchAvailableSlotsForCourse } from '@/services/teacherAvailabilityService';
+import { AvailabilitySlot, fetchAvailableSlotsForCourse } from '@/services/availability/teaching';
 
 interface SchedulerProps {
   courseId: string;
