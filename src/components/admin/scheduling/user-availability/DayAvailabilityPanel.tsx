@@ -23,7 +23,8 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
     isDialogOpen, 
     editingSlot, 
     setIsDialogOpen, 
-    handleOpenEditDialog, 
+    handleOpenEditDialog,
+    handleOpenNewDialog, 
     handleCloseDialog, 
     handleSaveSlot 
   } = useTimeSlotDialog({ onAddSlot, onUpdateSlot });
@@ -44,6 +45,7 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
         dayName={day.dayName}
         onEditSlot={handleOpenEditDialog}
         onDeleteSlot={onDeleteSlot}
+        onAddSlot={(hour?: number, minute?: number) => handleOpenNewDialog(hour, minute)}
       />
       
       <TimeSlotDialog 
@@ -53,7 +55,7 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
         initialStartTime={editingSlot?.startTime}
         initialEndTime={editingSlot?.endTime}
         initialCategory={editingSlot?.category}
-        isEditing={!!editingSlot}
+        isEditing={!!editingSlot?.id}
         day={day.dayName}
       />
     </div>
