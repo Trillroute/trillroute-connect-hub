@@ -55,7 +55,11 @@ export const bookTrialClass = async (
       course_id: courseId
     };
     
-    const { error: userUpdateError } = await supabase.rpc('add_trial_class', params);
+    // Use type assertion to tell TypeScript about the expected parameter structure
+    const { error: userUpdateError } = await supabase.rpc(
+      'add_trial_class', 
+      params as any // Force TypeScript to accept our parameters
+    );
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
@@ -125,7 +129,11 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
       course_id: courseId
     };
     
-    const { error: userUpdateError } = await supabase.rpc('remove_trial_class', params);
+    // Use type assertion to tell TypeScript about the expected parameter structure
+    const { error: userUpdateError } = await supabase.rpc(
+      'remove_trial_class', 
+      params as any // Force TypeScript to accept our parameters
+    );
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
