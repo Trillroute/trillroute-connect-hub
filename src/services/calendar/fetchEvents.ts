@@ -66,7 +66,7 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
       // Default case - users only see their own events
       query = query.eq("user_id", userId);
     }
-      
+    
     const { data, error } = await query;
     
     if (error) {

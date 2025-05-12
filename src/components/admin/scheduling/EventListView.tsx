@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { format, isSameDay, isAfter, startOfDay, addDays } from 'date-fns';
-import { useCalendar } from './context/CalendarContext';
-import { CalendarEvent } from './context/calendarTypes';
+
+import React, { useState, useMemo } from 'react';
+import { format, isAfter, startOfDay } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Clock, MapPin, Pencil, Trash2, Calendar } from 'lucide-react';
+import { CalendarEvent } from './context/calendarTypes';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface EventListViewProps {
   events: CalendarEvent[];
@@ -12,145 +14,134 @@ interface EventListViewProps {
 }
 
 const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDeleteEvent }) => {
-  const { currentDate } = useCalendar();
   const [displayCount, setDisplayCount] = useState<number>(20);
   
-  // Filter events based on the current date and future events
-  const filteredEvents = React.useMemo(() => {
-    console.log(`List view processing ${events.length} total events for date ${format(currentDate, 'yyyy-MM-dd')}`);
-    
-    // Get current time for filtering
+  // Filter events to only show future events
+  const upcomingEvents = useMemo(() => {
+    console.log(`Processing ${events.length} total events for list view`);
     const now = new Date();
     const today = startOfDay(now);
     
-    // For list view, show events for the current selected date and future events, sorted by start time
-    const relevantEvents = events
-      .filter(event => {
-        // Keep events that are either on the current selected date or in the future
-        return isSameDay(event.start, currentDate) || 
-               (isAfter(event.start, today) && isAfter(event.start, addDays(today, -1)));
-      })
+    // Filter to only include events that start after now
+    const filteredEvents = events
+      .filter(event => isAfter(event.start, now))
       .sort((a, b) => a.start.getTime() - b.start.getTime());
     
-    console.log(`Found ${relevantEvents.length} relevant events from now onwards`);
-    return relevantEvents;
-  }, [events, currentDate]);
-  
-  // Debug info to help troubleshoot
-  useEffect(() => {
-    console.log('EventListView - Current events array:', events);
-    console.log('EventListView - Filtered events:', filteredEvents);
-    
-    events.forEach((event, index) => {
-      console.log(`Event ${index}:`, {
-        id: event.id,
-        title: event.title,
-        start: format(event.start, 'yyyy-MM-dd HH:mm'),
-        end: format(event.end, 'yyyy-MM-dd HH:mm'),
-        isSameDay: isSameDay(event.start, currentDate)
-      });
-    });
-  }, [events, filteredEvents, currentDate]);
+    console.log(`Found ${filteredEvents.length} upcoming events`);
+    return filteredEvents;
+  }, [events]);
   
   // Get the limited set of events to display based on the displayCount
-  const displayedEvents = filteredEvents.slice(0, displayCount);
+  const displayedEvents = upcomingEvents.slice(0, displayCount);
   
   // Function to load more events
   const handleShowMore = () => {
     setDisplayCount(prevCount => prevCount + 20);
   };
   
-  // Get an appropriate title based on current date
-  const getViewTitle = () => {
-    return `Events for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
-  };
-  
-  return (
-    <div className="h-full flex flex-col">
-      <h2 className="text-lg font-semibold px-6 py-4">
-        {getViewTitle()}
-      </h2>
-      
-      <div className="flex-1 px-6 pb-6 overflow-y-auto">
-        {filteredEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-            <div className="text-gray-500 text-center mb-6">
-              <div className="text-lg mb-2">No events scheduled for today</div>
-              <div className="text-sm">Click on the calendar to add a new event</div>
+  if (events.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <div className="bg-muted rounded-full p-3 mb-4">
+              <Calendar className="h-6 w-6 text-primary" />
             </div>
+            <h3 className="text-xl font-medium mb-2">No events scheduled</h3>
+            <p className="text-muted-foreground text-center">
+              No upcoming events found in your calendar.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 pb-6">
+      {displayedEvents.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+          <div className="text-gray-500 text-center">
+            <div className="text-lg mb-2">No upcoming events</div>
+            <div className="text-sm">All scheduled events have passed</div>
           </div>
-        ) : (
+        </div>
+      ) : (
+        <>
+          {/* Event list */}
           <div className="space-y-4">
-            {displayedEvents.map((event, index) => (
+            {displayedEvents.map((event) => (
               <div 
-                key={event.id || index} 
+                key={event.id} 
                 className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium">{event.title}</h3>
-                    <div className="flex items-center text-gray-500 mt-2">
-                      <Clock className="w-4 h-4 mr-1" />
-                      <span className="text-sm">
-                        {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                      </span>
-                    </div>
-                    {event.location && (
-                      <div className="flex items-center text-gray-500 mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{event.location}</span>
-                      </div>
-                    )}
-                    {event.description && (
-                      <p className="mt-2 text-sm text-gray-600">{event.description}</p>
-                    )}
-                  </div>
-                  <div className="flex space-x-1">
-                    {onEditEvent && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8" 
-                        onClick={() => onEditEvent(event)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {onDeleteEvent && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 text-red-500 hover:text-red-600" 
-                        onClick={() => onDeleteEvent(event)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-lg font-medium">{event.title}</h3>
+                  <Badge variant="outline" className="font-normal">
+                    {format(event.start, 'MMMM d, yyyy')}
+                  </Badge>
                 </div>
                 
-                <div
-                  className="w-full h-1 mt-4"
-                  style={{ backgroundColor: event.color || '#4285F4' }}
-                ></div>
+                <div className="flex items-center text-gray-500 mb-2">
+                  <Clock className="w-4 h-4 mr-2" />
+                  <span className="text-sm">
+                    {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
+                  </span>
+                </div>
+                
+                {event.location && (
+                  <div className="flex items-center text-gray-500 mb-2">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    <span className="text-sm">{event.location}</span>
+                  </div>
+                )}
+                
+                {event.description && (
+                  <p className="mt-2 text-sm text-gray-600 mb-4">{event.description}</p>
+                )}
+                
+                <div className="flex justify-between items-center mt-4">
+                  <div
+                    className="w-1/3 h-2 rounded"
+                    style={{ backgroundColor: event.color || '#4285F4' }}
+                  ></div>
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onEditEvent(event)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-500 hover:text-red-600" 
+                      onClick={() => onDeleteEvent(event)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             ))}
-            
-            {/* Show more button - only visible if there are more events to show */}
-            {displayedEvents.length < filteredEvents.length && (
-              <div className="flex justify-center mt-4 pb-4">
-                <Button 
-                  variant="outline" 
-                  onClick={handleShowMore}
-                  className="w-full max-w-sm"
-                >
-                  Show More ({filteredEvents.length - displayedEvents.length} events remaining)
-                </Button>
-              </div>
-            )}
           </div>
-        )}
-      </div>
+          
+          {/* Show more button */}
+          {displayedEvents.length < upcomingEvents.length && (
+            <div className="flex justify-center mt-6">
+              <Button 
+                variant="outline" 
+                onClick={handleShowMore}
+                className="w-full max-w-sm"
+              >
+                Show More ({upcomingEvents.length - displayedEvents.length} events remaining)
+              </Button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
