@@ -27,18 +27,18 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   
   // Show the appropriate view based on viewMode
   switch (viewMode) {
-    case 'week':
-      return (
-        <WeekViewComponent 
-          onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
-        />
-      );
     case 'day':
       return (
         <DayViewComponent 
           onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
           onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
           onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
+        />
+      );
+    case 'week':
+      return (
+        <WeekViewComponent 
+          onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
         />
       );
     case 'month':

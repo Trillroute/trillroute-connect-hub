@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import CalendarTitle from './components/CalendarTitle';
 import ViewModeSelector, { ViewOption } from './components/ViewModeSelector';
-import FilterDropdown from './components/FilterDropdown';
 import { useCalendar } from './context/CalendarContext';
 
 interface CalendarHeaderProps {
