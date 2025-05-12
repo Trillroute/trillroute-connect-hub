@@ -49,13 +49,16 @@ export const bookTrialClass = async (
     }
 
     // Add this course to the user's trial_classes array
-    const params = { 
+    const params: TrialClassParams = { 
       user_id: studentId, 
       course_id: courseId 
     };
     
-    // Call the RPC function without specifying generic types
-    const { error: userUpdateError } = await supabase.rpc('add_trial_class', params);
+    // Call the RPC function without explicit type arguments
+    const { error: userUpdateError } = await supabase.rpc<any, TrialClassParams>(
+      'add_trial_class', 
+      params
+    );
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
@@ -119,13 +122,16 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     }
 
     // Remove this course from the user's trial_classes array
-    const params = { 
+    const params: TrialClassParams = { 
       user_id: studentId, 
       course_id: courseId 
     };
     
-    // Call the RPC function without specifying generic types
-    const { error: userUpdateError } = await supabase.rpc('remove_trial_class', params);
+    // Call the RPC function without explicit type arguments
+    const { error: userUpdateError } = await supabase.rpc<any, TrialClassParams>(
+      'remove_trial_class', 
+      params
+    );
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
@@ -136,6 +142,31 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     return true;
   } catch (err) {
     console.error("Failed to cancel trial class:", err);
+    return false;
+  }
+};
+
+// Function to check if a student has already taken a trial for a specific course
+export const hasTrialForCourse = async (
+  userId: string,
+  courseId: string
+): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from("custom_users")
+      .select("trial_classes")
+      .eq("id", userId)
+      .single();
+    
+    if (error || !data) {
+      console.error("Error checking trial status:", error);
+      return false;
+    }
+    
+    const trialClasses = data.trial_classes || [];
+    return trialClasses.includes(courseId);
+  } catch (err) {
+    console.error("Failed to check trial status:", err);
     return false;
   }
 };
