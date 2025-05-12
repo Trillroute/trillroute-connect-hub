@@ -1,8 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { useCalendar } from '../context/CalendarContext';
-import { useFilteredEventsData } from '../hooks/useFilteredEventsData';
-import { applyFilter } from '../utils/filterUtils';
+import React from 'react';
+import { useFilteredEvents } from '../hooks/useFilteredEvents';
 
 interface FilteredEventsProviderProps {
   children: React.ReactNode;
@@ -20,50 +18,12 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   filterId,
   filterIds = []
 }) => {
-  const { refreshEvents, setEvents, setAvailabilities } = useCalendar();
-  
-  // Use our custom hook to get staff user IDs and availability conversion utilities
-  const { 
-    staffUserIds, 
-    convertAvailabilityMap 
-  } = useFilteredEventsData({
+  // Use our custom hook to handle all the filtering logic
+  useFilteredEvents({
     filterType,
     filterId,
     filterIds
   });
-
-  // Apply filters when filter type or IDs change
-  useEffect(() => {
-    console.log("FilteredEventsProvider received:", { filterType, filterId, filterIds });
-    
-    if (!filterType) {
-      console.log("No filterType specified, refreshing all events");
-      refreshEvents();
-      return;
-    }
-
-    // Apply the appropriate filter
-    const applyFilters = async () => {
-      // Make sure filterIds is an array
-      const safeFilterIds = Array.isArray(filterIds) ? [...filterIds] : [];
-      
-      // If we have both filterIds array and a single filterId, combine them
-      const ids = filterId 
-        ? [...safeFilterIds, filterId].filter(Boolean) 
-        : safeFilterIds.filter(Boolean);
-      
-      await applyFilter({
-        filterType,
-        ids,
-        staffUserIds,
-        setEvents,
-        setAvailabilities,
-        convertAvailabilityMap
-      });
-    };
-
-    applyFilters();
-  }, [filterType, filterId, filterIds, staffUserIds, refreshEvents, setEvents, setAvailabilities, convertAvailabilityMap]);
 
   return <>{children}</>;
 };
