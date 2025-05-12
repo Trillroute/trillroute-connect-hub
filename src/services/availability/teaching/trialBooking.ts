@@ -7,10 +7,6 @@ interface TrialClassParams {
   course_id: string;
 }
 
-// Define the return type for the RPC functions - we'll use 'unknown' instead of 'null'
-// since the constraint error suggests 'never' isn't accepting 'null'
-type RpcResponse = unknown;
-
 // Book a trial class for a student
 export const bookTrialClass = async (
   slotId: string, 
@@ -58,7 +54,7 @@ export const bookTrialClass = async (
       course_id: courseId 
     };
     
-    // Call the RPC function with proper typing
+    // Call the RPC function without explicit type parameters - let TypeScript infer them
     const { error: userUpdateError } = await supabase.rpc(
       'add_trial_class', 
       params
@@ -131,7 +127,7 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
       course_id: courseId 
     };
     
-    // Call the RPC function with proper typing
+    // Call the RPC function without explicit type parameters - let TypeScript infer them
     const { error: userUpdateError } = await supabase.rpc(
       'remove_trial_class', 
       params
