@@ -30,8 +30,8 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   
   // Ensure the CalendarContext's viewMode stays in sync with the prop
   useEffect(() => {
+    console.log('CalendarViewRenderer: Setting view mode to:', viewMode);
     setViewMode(viewMode);
-    console.log('Setting view mode to:', viewMode);
   }, [viewMode, setViewMode]);
 
   return (

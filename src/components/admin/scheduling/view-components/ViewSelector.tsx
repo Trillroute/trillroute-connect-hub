@@ -25,7 +25,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   const { role } = useAuth();
   const isAdminOrHigher = role === 'admin' || role === 'superadmin';
   
-  console.log('Current view mode:', viewMode);
+  console.log('ViewSelector rendering with viewMode:', viewMode);
   
   // Show the appropriate view based on viewMode
   switch (viewMode) {
