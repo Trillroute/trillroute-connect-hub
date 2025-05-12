@@ -54,8 +54,8 @@ export const bookTrialClass = async (
       course_id: courseId 
     };
     
-    // Call the RPC function using the params object with explicit void return type
-    const { error: userUpdateError } = await supabase.rpc<void>(
+    // Call the RPC function with properly typed parameters
+    const { error: userUpdateError } = await supabase.rpc(
       'add_trial_class', 
       params
     );
@@ -127,8 +127,8 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
       course_id: courseId 
     };
     
-    // Call the RPC function using the params object with explicit void return type
-    const { error: userUpdateError } = await supabase.rpc<void>(
+    // Call the RPC function with properly typed parameters
+    const { error: userUpdateError } = await supabase.rpc(
       'remove_trial_class', 
       params
     );
