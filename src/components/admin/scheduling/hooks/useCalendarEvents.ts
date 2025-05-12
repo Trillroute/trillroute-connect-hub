@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { CalendarEvent } from '../types';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +7,7 @@ import {
   createEvent, 
   updateEvent, 
   deleteEvent 
-} from '@/services/calendarService';
+} from '@/services/calendar';
 
 export const useCalendarEvents = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
