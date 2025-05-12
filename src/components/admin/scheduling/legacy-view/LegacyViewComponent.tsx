@@ -36,7 +36,7 @@ const LegacyViewComponent: React.FC = () => {
     [events, effectiveAvailabilities]
   );
   
-  // Get days of the week starting from current date
+  // Get days of the week starting from current date - correctly typed now
   const daysOfWeek = useMemo(() => 
     getDaysOfWeek(currentDate), 
     [currentDate]

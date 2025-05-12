@@ -32,7 +32,7 @@ const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired })
           
           return (
             <div 
-              key={`${timeSlot}-${idx}-${cellInfo.id || cellInfo.name || idx}`}
+              key={`${timeSlot}-${idx}-${cellInfo?.id || cellInfo.name || idx}`}
               className={`p-2 rounded ${bgColorClass} text-white mb-1 shadow`}
             >
               <div className="font-medium truncate">{cellInfo.name || "Unnamed"}</div>

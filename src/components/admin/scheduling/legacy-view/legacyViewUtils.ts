@@ -11,13 +11,19 @@ export const formatTimeDisplay = (timeSlot: string): string => {
 };
 
 // Get days of the week starting from a given date
-export const getDaysOfWeek = (startDate: Date): Date[] => {
-  const days: Date[] = [];
+export const getDaysOfWeek = (startDate: Date): { name: string; date: Date; dayOfWeek: number }[] => {
+  const days: { name: string; date: Date; dayOfWeek: number }[] = [];
   const start = startOfDay(startDate);
 
   // Add the current day and the next 6 days
   for (let i = 0; i < 7; i++) {
-    days.push(addDays(start, i));
+    const currentDate = addDays(start, i);
+    const dayOfWeek = currentDate.getDay() || 7; // Convert Sunday (0) to 7 for consistency
+    days.push({
+      name: format(currentDate, 'EEEE'), // Full day name
+      date: currentDate,
+      dayOfWeek: dayOfWeek
+    });
   }
 
   return days;

@@ -10,6 +10,7 @@ interface Day {
 }
 
 export interface CellInfo {
+  id?: string; // Add id property as optional since it might not always be available
   name: string;
   status: string;
   category?: string;
