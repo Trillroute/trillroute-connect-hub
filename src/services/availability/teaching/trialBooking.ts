@@ -59,7 +59,7 @@ export const bookTrialClass = async (
     };
     
     // Call the RPC function with proper typing
-    const { error: userUpdateError } = await supabase.rpc<RpcResponse, TrialClassParams>(
+    const { error: userUpdateError } = await supabase.rpc(
       'add_trial_class', 
       params
     );
@@ -132,7 +132,7 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     };
     
     // Call the RPC function with proper typing
-    const { error: userUpdateError } = await supabase.rpc<RpcResponse, TrialClassParams>(
+    const { error: userUpdateError } = await supabase.rpc(
       'remove_trial_class', 
       params
     );
