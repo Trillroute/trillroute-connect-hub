@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import EventListView from '../EventListView';
 import { CalendarEvent } from '../context/calendarTypes';
 import { useCalendar } from '../context/CalendarContext';
@@ -13,7 +13,13 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   onEditEvent,
   onDeleteEvent
 }) => {
-  const { events } = useCalendar();
+  const { events, refreshEvents } = useCalendar();
+  
+  // Force refresh events when the component mounts
+  useEffect(() => {
+    console.log(`EventListViewComponent mounting, refreshing events`);
+    refreshEvents();
+  }, [refreshEvents]);
   
   console.log(`EventListViewComponent rendering with ${events.length} events`);
   

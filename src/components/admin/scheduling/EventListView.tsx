@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, isAfter, startOfDay } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { CalendarEvent } from './context/calendarTypes';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,13 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
     
     // Get current time for filtering
     const now = new Date();
+    const today = startOfDay(now);
     
-    // For list view, show events for the current day and future events, sorted by start time
+    // For list view, show events for the current selected date or future events, sorted by start time
     const relevantEvents = events
       .filter(event => {
         // Keep events that are either on the current selected date or in the future
-        return isSameDay(event.start, currentDate) || event.start >= now;
+        return isSameDay(event.start, currentDate) || isAfter(event.start, today);
       })
       .sort((a, b) => a.start.getTime() - b.start.getTime());
     
@@ -65,7 +66,7 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
           <div className="space-y-4">
             {displayedEvents.map((event, index) => (
               <div 
-                key={index} 
+                key={event.id || index} 
                 className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start">
@@ -88,22 +89,26 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
                     )}
                   </div>
                   <div className="flex space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8" 
-                      onClick={() => onEditEvent(event)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 text-red-500 hover:text-red-600" 
-                      onClick={() => onDeleteEvent(event)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {onEditEvent && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8" 
+                        onClick={() => onEditEvent(event)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDeleteEvent && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 text-red-500 hover:text-red-600" 
+                        onClick={() => onDeleteEvent(event)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
                 
