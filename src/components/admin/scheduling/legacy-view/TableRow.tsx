@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
 import TableCell from './TableCell';
 import { CellInfo } from './useCellInfo';
 
@@ -29,8 +28,7 @@ const TableRow: React.FC<TableRowProps> = ({ day, timeSlots, getCellInfo }) => {
   return (
     <tr className="border-b">
       <td className="p-2 border bg-gray-100">
-        <div className="flex items-center gap-2">
-          <ChevronDown className="h-4 w-4" />
+        <div>
           {day.name}
         </div>
         <div className="text-xs text-gray-500">
