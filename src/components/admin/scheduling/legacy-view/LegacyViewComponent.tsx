@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useFilteredEvents } from '../hooks/useFilteredEvents';
 import { useCalendar } from '../context/CalendarContext';
@@ -10,11 +9,9 @@ const LegacyViewComponent: React.FC = () => {
   const { currentDate, events, availabilities } = useCalendar();
   
   // We'll still call useFilteredEvents to apply any filters, but we get data from context
-  const { staffUserIds } = useFilteredEvents({
+  const { isLoading } = useFilteredEvents({
     filterType: null
   });
-  
-  const isLoading = false; // We can assume data is already loaded since we're using the context
   
   // Get all time slots from events and availabilities
   const timeSlots = useMemo(() => {
