@@ -49,16 +49,13 @@ export const bookTrialClass = async (
     }
 
     // Add this course to the user's trial_classes array
-    // Call the RPC function with explicit parameters
-    const params: TrialClassParams = { 
+    const params = { 
       user_id: studentId, 
       course_id: courseId 
     };
     
-    const { error: userUpdateError } = await supabase.rpc(
-      'add_trial_class', 
-      params
-    );
+    // Call the RPC function without specifying generic types
+    const { error: userUpdateError } = await supabase.rpc('add_trial_class', params);
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
@@ -122,15 +119,13 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     }
 
     // Remove this course from the user's trial_classes array
-    const params: TrialClassParams = { 
+    const params = { 
       user_id: studentId, 
       course_id: courseId 
     };
     
-    const { error: userUpdateError } = await supabase.rpc(
-      'remove_trial_class', 
-      params
-    );
+    // Call the RPC function without specifying generic types
+    const { error: userUpdateError } = await supabase.rpc('remove_trial_class', params);
 
     if (userUpdateError) {
       console.error("Error updating user trial classes:", userUpdateError);
