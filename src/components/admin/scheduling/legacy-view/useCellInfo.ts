@@ -8,11 +8,15 @@ interface Day {
   dayOfWeek: number;
 }
 
-interface CellInfo {
+export interface CellInfo {
   name: string;
   status: string;
   category?: string;
   description?: string;
+  isEvent?: boolean;
+  isAvailability?: boolean;
+  eventData?: CalendarEvent;
+  availabilityData?: any;
 }
 
 export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailabilityMap) => {
@@ -64,51 +68,55 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     return eventMap;
   }, [events]);
 
-  // Improved getCellInfo with stable reference and optimized lookups
-  const getCellInfo = useCallback((day: Day, timeSlot: string): CellInfo | null => {
+  // Updated getCellInfo to return both events and availabilities
+  const getCellInfo = useCallback((day: Day, timeSlot: string): CellInfo[] => {
+    const results: CellInfo[] = [];
+    
     // First check availabilities using our optimized lookup
     if (availabilityLookup[day.dayOfWeek] && availabilityLookup[day.dayOfWeek][timeSlot]) {
       const { userData, slot } = availabilityLookup[day.dayOfWeek][timeSlot];
-      return {
+      results.push({
         name: userData.name || 'Staff',
         status: 'available',
-        category: slot.category || 'Regular slot'
-      };
+        category: slot.category || 'Regular slot',
+        isAvailability: true,
+        availabilityData: { userData, slot }
+      });
     }
     
     // Check for events
     const dayDate = new Date(day.date);
     const dateKey = dayDate.toISOString().split('T')[0];
     
-    // If no events for this day, return early
-    if (!eventsByDayAndTime[dateKey]) return null;
-    
-    const [hours, minutes] = timeSlot.split(':').map(Number);
-    dayDate.setHours(hours, minutes || 0, 0, 0);
-    
-    // Create time range for slot
-    const slotStart = new Date(dayDate);
-    const slotEnd = new Date(slotStart);
-    slotEnd.setHours(slotStart.getHours() + 1); // Assuming 1 hour slots
-    
-    // Find events that overlap with this time slot
-    const matchingEvents = eventsByDayAndTime[dateKey].filter(event => {
-      const eventStartDate = new Date(event.start);
-      const eventEndDate = new Date(event.end);
+    if (eventsByDayAndTime[dateKey]) {
+      const [hours, minutes] = timeSlot.split(':').map(Number);
+      dayDate.setHours(hours, minutes || 0, 0, 0);
       
-      return (eventStartDate <= slotEnd && eventEndDate >= slotStart);
-    });
-    
-    if (matchingEvents.length > 0) {
-      const event = matchingEvents[0]; // Take first matching event if multiple
-      return {
-        name: event.title,
-        status: 'booked',
-        description: event.description
-      };
+      // Create time range for slot
+      const slotStart = new Date(dayDate);
+      const slotEnd = new Date(slotStart);
+      slotEnd.setHours(slotStart.getHours() + 1); // Assuming 1 hour slots
+      
+      // Find events that overlap with this time slot
+      const matchingEvents = eventsByDayAndTime[dateKey].filter(event => {
+        const eventStartDate = new Date(event.start);
+        const eventEndDate = new Date(event.end);
+        
+        return (eventStartDate <= slotEnd && eventEndDate >= slotStart);
+      });
+      
+      matchingEvents.forEach(event => {
+        results.push({
+          name: event.title,
+          status: 'booked',
+          description: event.description,
+          isEvent: true,
+          eventData: event
+        });
+      });
     }
     
-    return null;
+    return results;
   }, [availabilityLookup, eventsByDayAndTime]);
 
   return { getCellInfo };
