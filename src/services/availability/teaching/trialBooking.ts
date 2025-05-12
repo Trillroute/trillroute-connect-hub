@@ -49,10 +49,15 @@ export const bookTrialClass = async (
     }
 
     // Add this course to the user's trial_classes array
-    // Call the RPC function with the properly typed parameters
+    // Call the RPC function with explicit parameters
+    const params: TrialClassParams = { 
+      user_id: studentId, 
+      course_id: courseId 
+    };
+    
     const { error: userUpdateError } = await supabase.rpc(
       'add_trial_class', 
-      { user_id: studentId, course_id: courseId }
+      params
     );
 
     if (userUpdateError) {
@@ -117,9 +122,14 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     }
 
     // Remove this course from the user's trial_classes array
+    const params: TrialClassParams = { 
+      user_id: studentId, 
+      course_id: courseId 
+    };
+    
     const { error: userUpdateError } = await supabase.rpc(
       'remove_trial_class', 
-      { user_id: studentId, course_id: courseId }
+      params
     );
 
     if (userUpdateError) {
