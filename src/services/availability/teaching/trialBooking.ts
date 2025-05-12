@@ -7,8 +7,9 @@ interface TrialClassParams {
   course_id: string;
 }
 
-// Define the return type for the RPC functions
-type RpcResponse = null;
+// Define the return type for the RPC functions - we'll use 'unknown' instead of 'null'
+// since the constraint error suggests 'never' isn't accepting 'null'
+type RpcResponse = unknown;
 
 // Book a trial class for a student
 export const bookTrialClass = async (
