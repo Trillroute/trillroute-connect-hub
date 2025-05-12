@@ -11,7 +11,7 @@ import {
   updateAvailabilitySlot,
   deleteAvailabilitySlot,
   fetchUserAvailabilityForUsers
-} from './availability/availabilityApi';
+} from './availability/api';
 import { fetchAllStaffAvailability } from './availability/staffAvailabilityApi';
 import { copyDayAvailability } from './availability/availabilityManagement';
 
