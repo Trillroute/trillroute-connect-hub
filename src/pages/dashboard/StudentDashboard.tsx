@@ -5,7 +5,7 @@ import { UpcomingLesson, RecommendedCourse } from '@/types/student-dashboard';
 import { DashboardStats } from '@/components/dashboard/student/DashboardStats';
 import { EnrolledCoursesSection } from '@/components/dashboard/student/EnrolledCoursesSection';
 import { UpcomingLessonsCard } from '@/components/dashboard/student/UpcomingLessonsCard';
-import { TrialClassesCard } from '@/components/dashboard/student/TrialClassesCard';
+import TrialClassesCard from '@/components/dashboard/student/TrialClassesCard';
 import { RecommendedCoursesCard } from '@/components/dashboard/student/RecommendedCoursesCard';
 import { useEnrolledCourses } from '@/hooks/useEnrolledCourses';
 import { useLocation, useNavigate } from 'react-router-dom';

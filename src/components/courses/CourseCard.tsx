@@ -73,8 +73,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, getInstructorNames }) =
       
       {isBookTrialOpen && (
         <BookTrialDialog
-          open={isBookTrialOpen}
-          onOpenChange={setIsBookTrialOpen}
+          isOpen={isBookTrialOpen}
+          onClose={() => setIsBookTrialOpen(false)}
           courseId={course.id}
           courseTitle={course.title}
         />

@@ -6,15 +6,18 @@ import { Calendar, Clock, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTrialSlots } from '@/hooks/useTrialSlots';
 import { AvailabilitySlot } from '@/services/availability/teaching/types';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TrialClassesCardProps {
-  courseId: string;
-  userId: string;
-  title: string;
+  courseId?: string;
+  userId?: string;
+  title?: string;
 }
 
 const TrialClassesCard: React.FC<TrialClassesCardProps> = ({ courseId, userId, title }) => {
-  const { availableSlots, hasTrial, loading, error, refresh } = useTrialSlots(courseId, userId);
+  const { user } = useAuth();
+  const effectiveUserId = userId || user?.id;
+  const { availableSlots, hasTrial, loading, error, refresh } = useTrialSlots(courseId, effectiveUserId);
   
   const handleCancelTrial = async (slotId: string) => {
     // Implementation for canceling a trial would go here
@@ -61,7 +64,11 @@ const TrialClassesCard: React.FC<TrialClassesCardProps> = ({ courseId, userId, t
   }
 
   // Find a booked slot for this course
-  const bookedSlot = availableSlots.find((slot: AvailabilitySlot) => slot.isBooked && slot.courseId === courseId);
+  const bookedSlot = courseId 
+    ? availableSlots.find((slot: AvailabilitySlot) => slot.isBooked && slot.courseId === courseId)
+    : availableSlots.find((slot: AvailabilitySlot) => slot.isBooked);
+
+  const displayTitle = title || (bookedSlot?.courseTitle || 'Trial Class');
 
   return (
     <Card>
@@ -77,7 +84,7 @@ const TrialClassesCard: React.FC<TrialClassesCardProps> = ({ courseId, userId, t
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold">{title}</h3>
+                <h3 className="font-semibold">{displayTitle}</h3>
                 <div className="text-sm text-muted-foreground">
                   <div className="flex items-center mt-1">
                     <Calendar className="h-4 w-4 mr-1" />
