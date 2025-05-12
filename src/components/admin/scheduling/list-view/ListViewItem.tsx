@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Clock, MapPin, Pencil, Trash2, Tag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarEvent } from '../context/calendarTypes';
@@ -39,8 +39,9 @@ const ListViewItem: React.FC<ListViewItemProps> = ({ item, onEditEvent, onDelete
       
       {/* Show category badge for slots only */}
       {item.isSlot && (
-        <div className="text-sm text-gray-600 mb-4">
-          <Badge variant="secondary" className="font-normal">
+        <div className="text-sm text-gray-600 mb-2">
+          <Badge variant="secondary" className="font-normal flex items-center gap-1">
+            <Tag className="h-3 w-3" />
             {(item as SlotItem).category}
           </Badge>
         </div>
