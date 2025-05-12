@@ -2,14 +2,35 @@
 import React, { memo, useCallback } from 'react';
 import { format, parse } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Tag } from 'lucide-react';
 import { UserAvailability } from '@/services/userAvailabilityService';
+import { Badge } from '@/components/ui/badge';
 
 interface AvailabilityListItemProps {
   slot: UserAvailability;
   onEdit: (slot: UserAvailability) => void;
   onDelete: (id: string) => Promise<boolean>;
 }
+
+// Function to get badge variant based on category
+const getCategoryVariant = (category: string) => {
+  switch (category) {
+    case 'Session':
+      return 'success';
+    case 'Break':
+      return 'default';
+    case 'Office':
+      return 'purple';
+    case 'Meeting':
+      return 'yellow';
+    case 'Class Setup':
+      return 'orange';
+    case 'QC':
+      return 'pink';
+    default:
+      return 'secondary';
+  }
+};
 
 const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
   slot,
@@ -47,10 +68,17 @@ const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
 
   return (
     <div className="flex items-center justify-between p-2 border rounded bg-white">
-      <div className="flex-1">
+      <div className="flex flex-1 items-center gap-2">
         <span className="font-medium">
           {startTimeFormatted} - {endTimeFormatted}
         </span>
+        <Badge 
+          variant={getCategoryVariant(slot.category) as any} 
+          className="ml-2"
+        >
+          <Tag className="h-3 w-3 mr-1" />
+          {slot.category}
+        </Badge>
       </div>
       <div className="flex items-center space-x-2">
         <Button 

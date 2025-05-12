@@ -130,6 +130,26 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
     );
   };
 
+  // Get color based on category
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'session':
+        return 'bg-green-100 border-green-300 text-green-800';
+      case 'break':
+        return 'bg-blue-100 border-blue-300 text-blue-800';
+      case 'office':
+        return 'bg-purple-100 border-purple-300 text-purple-800';
+      case 'meeting':
+        return 'bg-yellow-100 border-yellow-300 text-yellow-800';
+      case 'class setup':
+        return 'bg-orange-100 border-orange-300 text-orange-800';
+      case 'qc':
+        return 'bg-pink-100 border-pink-300 text-pink-800';
+      default:
+        return 'bg-gray-100 border-gray-300 text-gray-800';
+    }
+  };
+
   return (
     <div className="flex h-full">
       {/* Time column */}
@@ -176,12 +196,17 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
             {availabilitySlots.map((slot, index) => (
               <div
                 key={`availability-${index}`}
-                className="absolute left-1 right-1 rounded px-2 py-1 bg-green-100 border border-green-300 text-green-800 overflow-hidden text-sm group cursor-pointer hover:bg-green-200"
+                className={`absolute left-1 right-1 rounded px-2 py-1 border overflow-hidden text-sm group cursor-pointer hover:opacity-90 ${getCategoryColor(slot.category)}`}
                 style={calculateAvailabilityPosition(slot)}
                 onClick={() => handleAvailabilityClick(slot)}
               >
-                <div className="font-semibold group-hover:underline">
-                  {slot.userName ? `${slot.userName}'s Availability` : 'Available Slot'}
+                <div className="flex justify-between">
+                  <span className="font-semibold group-hover:underline">
+                    {slot.userName ? `${slot.userName}` : 'Available'}
+                  </span>
+                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/50">
+                    {slot.category}
+                  </span>
                 </div>
                 <div className="text-xs opacity-90">
                   {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
