@@ -21,13 +21,15 @@ export const bookTrialClass = async (
       return false;
     }
 
+    const currentMetadata = slotData.metadata || {};
+    
     // Update the slot to mark it as booked
     const { error: updateError } = await supabase
       .from("user_events")
       .update({
         event_type: "trial_booking",
         metadata: {
-          ...slotData.metadata,
+          ...(typeof currentMetadata === 'object' ? currentMetadata : {}),
           student_id: studentId,
           course_id: courseId,
           course_title: courseTitle || 'Trial Class'
@@ -74,8 +76,14 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
       return false;
     }
 
-    const studentId = slot?.metadata?.student_id;
-    const courseId = slot?.metadata?.course_id;
+    if (!slot?.metadata || typeof slot.metadata !== 'object') {
+      console.error("Missing or invalid metadata in slot");
+      return false;
+    }
+
+    const metadata = slot.metadata as Record<string, any>;
+    const studentId = metadata.student_id;
+    const courseId = metadata.course_id;
 
     if (!studentId || !courseId) {
       console.error("Missing student or course ID in slot metadata");
@@ -83,12 +91,14 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     }
 
     // Update the slot to mark it as available again
+    const currentMetadata = slot.metadata || {};
+    
     const { error: updateError } = await supabase
       .from("user_events")
       .update({
         event_type: "availability",
         metadata: {
-          ...slot.metadata,
+          ...(typeof currentMetadata === 'object' ? currentMetadata : {}),
           student_id: null
         }
       })

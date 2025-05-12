@@ -34,8 +34,11 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
       }
       
       // Add course title if available in metadata
-      if (slot.metadata && typeof slot.metadata === 'object' && slot.metadata.course_title) {
-        availability.courseTitle = slot.metadata.course_title;
+      if (slot.metadata && typeof slot.metadata === 'object') {
+        const metadata = slot.metadata as Record<string, any>;
+        if (metadata.course_title) {
+          availability.courseTitle = metadata.course_title;
+        }
       } else if (courseId) {
         // If course title is not in metadata but we have a courseId, try to fetch it
         // For simplicity we'll just use a default for now
