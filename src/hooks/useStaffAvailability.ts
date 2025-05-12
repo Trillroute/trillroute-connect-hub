@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { fetchAllStaffAvailability } from '@/services/availability/staffAvailabilityApi';
+import { fetchAllStaffAvailability } from '@/services/availability/api';
 import { UserAvailabilityMap } from '@/services/availability/types';
 
 export interface StaffMember {

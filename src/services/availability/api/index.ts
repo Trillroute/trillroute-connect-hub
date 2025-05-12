@@ -4,3 +4,4 @@ export * from './availabilityCore';
 export * from './userAvailability';
 export * from './availabilityCrud';
 export * from './multiUserAvailability';
+export * from './staffAvailability';
