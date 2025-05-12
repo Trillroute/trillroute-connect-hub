@@ -19,6 +19,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   filterIds = []
 }) => {
   // Use our custom hook to handle all the filtering logic
+  // We don't need to store the result as we're updating the context state directly
   useFilteredEvents({
     filterType,
     filterId,

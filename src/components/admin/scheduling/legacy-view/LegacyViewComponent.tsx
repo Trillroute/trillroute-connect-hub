@@ -3,10 +3,18 @@ import React, { useMemo } from 'react';
 import { useFilteredEvents } from '../hooks/useFilteredEvents';
 import { useCalendar } from '../context/CalendarContext';
 import { Loader2, ChevronDown } from 'lucide-react';
+import { UserAvailability } from '../context/calendarTypes';
 
 const LegacyViewComponent: React.FC = () => {
-  const { events, isLoading, availabilities } = useFilteredEvents();
-  const { currentDate } = useCalendar();
+  // Directly use the calendar context for events and availabilities
+  const { currentDate, events, availabilities } = useCalendar();
+  
+  // We'll still call useFilteredEvents to apply any filters, but we get data from context
+  const { staffUserIds } = useFilteredEvents({
+    filterType: null
+  });
+  
+  const isLoading = false; // We can assume data is already loaded since we're using the context
   
   // Get all time slots from events and availabilities
   const timeSlots = useMemo(() => {
@@ -76,7 +84,7 @@ const LegacyViewComponent: React.FC = () => {
   };
 
   // Function to get status and name for a cell
-  const getCellInfo = (day: any, timeSlot: string) => {
+  const getCellInfo = (day: { name: string, date: Date, dayOfWeek: number }, timeSlot: string) => {
     // Check availabilities first
     const availabilityEntries = Object.entries(availabilities);
     for (const [userId, userData] of availabilityEntries) {
@@ -155,7 +163,7 @@ const LegacyViewComponent: React.FC = () => {
                   {formatTimeDisplay(slot)}
                 </div>
                 <div className="text-xs text-gray-500">
-                  Calander view details
+                  Calendar view details
                 </div>
               </th>
             ))}

@@ -13,8 +13,9 @@ export const useFilteredEvents = ({
   filterType,
   filterId,
   filterIds = []
-}: UseFilteredEventsProps) => {
-  const { setEvents, events, refreshEvents } = useCalendar();
+}: UseFilteredEventsProps = {}) => {
+  const { setEvents, events, refreshEvents, availabilities } = useCalendar();
+  const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Combination of filterId and filterIds
@@ -26,36 +27,42 @@ export const useFilteredEvents = ({
   // Effect to filter events or fetch new ones based on filter parameters
   useEffect(() => {
     const applyFilters = async () => {
-      // If no filter type is specified, just refresh all events
-      if (!filterType) {
-        console.log('No filterType specified, refreshing all events');
-        await refreshEvents();
-        return;
-      }
-
-      // If we have filter IDs, filter events by role or fetch filtered events
-      if (filterType === 'role') {
-        console.log('Filtering events by role:', allFilterIds);
-        await refreshEvents();
-        // Server-side filtering already applied by fetchEvents based on role
-      } else if (filterType && allFilterIds.length > 0) {
-        // For other filter types with IDs (course, teacher, etc.)
-        console.log(`Filtering events by ${filterType}:`, allFilterIds);
-        await refreshEvents();
-        
-        // Apply client-side filtering after refresh
-        if (events.length > 0) {
-          const filteredEvents = filterEventsByType(events, filterType, allFilterIds);
-          console.log(`Found ${filteredEvents.length} events after filtering by ${filterType}`);
-          setEvents(filteredEvents);
+      setIsLoading(true);
+      try {
+        // If no filter type is specified, just refresh all events
+        if (!filterType) {
+          console.log('No filterType specified, refreshing all events');
+          await refreshEvents();
+          return;
         }
-      } else {
-        // Just refresh without filtering
-        console.log('No specific filters applied, refreshing all events');
-        await refreshEvents();
+
+        // If we have filter IDs, filter events by role or fetch filtered events
+        if (filterType === 'role') {
+          console.log('Filtering events by role:', allFilterIds);
+          await refreshEvents();
+          // Server-side filtering already applied by fetchEvents based on role
+        } else if (filterType && allFilterIds.length > 0) {
+          // For other filter types with IDs (course, teacher, etc.)
+          console.log(`Filtering events by ${filterType}:`, allFilterIds);
+          await refreshEvents();
+          
+          // Apply client-side filtering after refresh
+          if (events.length > 0) {
+            const filteredEvents = filterEventsByType(events, filterType, allFilterIds);
+            console.log(`Found ${filteredEvents.length} events after filtering by ${filterType}`);
+            setEvents(filteredEvents);
+          }
+        } else {
+          // Just refresh without filtering
+          console.log('No specific filters applied, refreshing all events');
+          await refreshEvents();
+        }
+      } catch (error) {
+        console.error("Error applying filters:", error);
+      } finally {
+        setIsLoading(false);
+        setIsInitialized(true);
       }
-      
-      setIsInitialized(true);
     };
 
     applyFilters();
@@ -84,5 +91,5 @@ export const useFilteredEvents = ({
     });
   };
 
-  return { isInitialized };
+  return { events, isLoading, isInitialized, availabilities };
 };
