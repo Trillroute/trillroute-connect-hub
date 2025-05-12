@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { isAfter } from 'date-fns';
+import { isAfter, isFuture } from 'date-fns';
 import { CalendarEvent } from '../context/calendarTypes';
 import { DayAvailability } from '@/hooks/useUserAvailability';
 import { convertSlotToDisplayItem, EventItem, SlotItem, ListItem } from '../utils/listViewUtils';
@@ -30,8 +30,6 @@ export const useListView = ({ events, dailyAvailability }: UseListViewProps) => 
   
   // Combine and filter events and availability slots
   const combinedItems = useMemo(() => {
-    const now = new Date();
-    
     // Convert events to a common format with proper typing
     const eventItems: EventItem[] = events.map(event => ({
       ...event,
@@ -40,11 +38,12 @@ export const useListView = ({ events, dailyAvailability }: UseListViewProps) => 
     
     // Combine events and availability slots with proper typing
     const allItems: ListItem[] = [...eventItems, ...availabilityItems]
-      .filter(item => isAfter(item.start, now)) // Only future items
+      // Filter only future items for upcoming tab, otherwise show all
+      .filter(item => activeTab === "upcoming" ? isFuture(item.start) : true)
       .sort((a, b) => a.start.getTime() - b.start.getTime()); // Sort by start time
     
     return allItems;
-  }, [events, availabilityItems]);
+  }, [events, availabilityItems, activeTab]);
   
   // Filter based on active tab
   const filteredItems = useMemo(() => {
@@ -52,6 +51,8 @@ export const useListView = ({ events, dailyAvailability }: UseListViewProps) => 
       return combinedItems.filter(item => !item.isSlot);
     } else if (activeTab === "slots") {
       return combinedItems.filter(item => item.isSlot);
+    } else if (activeTab === "upcoming") {
+      return combinedItems; // Already filtered in combinedItems
     }
     return combinedItems;
   }, [combinedItems, activeTab]);
