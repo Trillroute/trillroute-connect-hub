@@ -7,6 +7,12 @@ interface TrialClassParams {
   course_id: string;
 }
 
+// Extend the Supabase client type to include our custom RPC functions
+type CustomSupabaseClient = typeof supabase & {
+  rpc(fn: 'add_trial_class', args: TrialClassParams): Promise<{ data: null; error: any }>;
+  rpc(fn: 'remove_trial_class', args: TrialClassParams): Promise<{ data: null; error: any }>;
+}
+
 // Book a trial class for a student
 export const bookTrialClass = async (
   slotId: string, 
@@ -54,9 +60,10 @@ export const bookTrialClass = async (
       course_id: courseId 
     };
     
-    // Call the RPC function using a type assertion to fix the error
-    const { error: userUpdateError } = await supabase.rpc(
-      'add_trial_class' as any, 
+    // Cast the supabase client to our custom type to fix the TypeScript error
+    const customClient = supabase as CustomSupabaseClient;
+    const { error: userUpdateError } = await customClient.rpc(
+      'add_trial_class', 
       params
     );
 
@@ -127,9 +134,10 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
       course_id: courseId 
     };
     
-    // Call the RPC function using a type assertion to fix the error
-    const { error: userUpdateError } = await supabase.rpc(
-      'remove_trial_class' as any, 
+    // Cast the supabase client to our custom type to fix the TypeScript error
+    const customClient = supabase as CustomSupabaseClient;
+    const { error: userUpdateError } = await customClient.rpc(
+      'remove_trial_class', 
       params
     );
 
