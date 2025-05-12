@@ -12,15 +12,17 @@ interface EventListViewProps {
 }
 
 const EventListView: React.FC<EventListViewProps> = ({ onEditEvent, onDeleteEvent }) => {
-  const { currentDate, events, viewMode, handleDateSelect } = useCalendar();
+  const { currentDate, events, viewMode } = useCalendar();
   
-  // Filter events based on the selected view mode
+  // Filter events based on the current date
   const filteredEvents = React.useMemo(() => {
-    // For list view, always show events for the current day only
+    console.log(`List view processing ${events.length} total events for date ${format(currentDate, 'yyyy-MM-dd')}`);
+    
+    // For list view, show events for the current day
     const todayEvents = events.filter(event => isSameDay(event.start, currentDate))
       .sort((a, b) => a.start.getTime() - b.start.getTime());
     
-    console.log(`List view showing ${todayEvents.length} events for ${format(currentDate, 'yyyy-MM-dd')}`);
+    console.log(`Found ${todayEvents.length} events for the current day`);
     return todayEvents;
   }, [events, currentDate]);
   
