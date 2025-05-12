@@ -22,8 +22,8 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   onEditEvent,
   onDeleteEvent,
   onDateClick,
-  filterType,
-  filterId,
+  filterType = null,
+  filterId = null,
   filterIds = []
 }) => {
   const { setViewMode } = useCalendar();

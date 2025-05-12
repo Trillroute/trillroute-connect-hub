@@ -20,6 +20,12 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
   // Ensure selectedFilters is always an array
   const safeSelectedFilters = Array.isArray(selectedFilters) ? selectedFilters : [];
   
+  console.log('FilterDropdown rendering with:', {
+    optionsCount: filterOptions.length,
+    selectedCount: safeSelectedFilters.length,
+    filterType
+  });
+  
   return (
     <MultiSelect 
       options={filterOptions} 

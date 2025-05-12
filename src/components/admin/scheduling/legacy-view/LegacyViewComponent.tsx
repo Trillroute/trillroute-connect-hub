@@ -7,26 +7,33 @@ import LegacyViewTable from './LegacyViewTable';
 import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 
 const LegacyViewComponent: React.FC = () => {
-  // Directly use the calendar context for events
-  const { currentDate, events, refreshEvents } = useCalendar();
-  const { availabilityByUser, loading: availabilityLoading, refetch: refreshAvailability } = useStaffAvailability();
+  // Directly use the calendar context for events and availabilities
+  const { currentDate, events, refreshEvents, availabilities } = useCalendar();
+  const { availabilityByUser, loading: availabilityLoading, refetch } = useStaffAvailability();
   
   // Ensure we have the latest events and availability data
   useEffect(() => {
     console.log("Legacy view mounted, refreshing data...");
     const loadData = async () => {
       await refreshEvents();
-      await refreshAvailability();
+      await refetch(); // This is the correct method name
       console.log("Legacy view data refreshed");
     };
     
     loadData();
-  }, [refreshEvents, refreshAvailability]);
+  }, [refreshEvents, refetch]);
+  
+  // Determine which availability data to use - prefer filtered availabilities from context if available
+  const effectiveAvailabilities = useMemo(() => {
+    const contextAvailabilityCount = Object.keys(availabilities || {}).length;
+    console.log(`LegacyView: Using ${contextAvailabilityCount > 0 ? 'filtered' : 'all staff'} availabilities`);
+    return contextAvailabilityCount > 0 ? availabilities : availabilityByUser;
+  }, [availabilities, availabilityByUser]);
   
   // Get all time slots from events and availabilities
   const timeSlots = useMemo(() => 
-    getTimeSlots(events, availabilityByUser), 
-    [events, availabilityByUser]
+    getTimeSlots(events, effectiveAvailabilities), 
+    [events, effectiveAvailabilities]
   );
   
   // Get days of the week starting from current date
@@ -38,13 +45,12 @@ const LegacyViewComponent: React.FC = () => {
   // Log data for debugging
   useEffect(() => {
     console.log("Legacy view data:", {
-      events: events.length,
+      eventCount: events.length,
       timeSlotCount: timeSlots.length,
-      timeSlots,
-      availabilityByUserCount: Object.keys(availabilityByUser).length,
-      daysOfWeek
+      availabilityCount: Object.keys(effectiveAvailabilities || {}).length,
+      daysCount: daysOfWeek.length
     });
-  }, [events, timeSlots, availabilityByUser, daysOfWeek]);
+  }, [events, timeSlots, effectiveAvailabilities, daysOfWeek]);
 
   const isLoading = availabilityLoading;
 
@@ -60,7 +66,7 @@ const LegacyViewComponent: React.FC = () => {
     <div className="w-full overflow-auto p-4">
       <LegacyViewTable
         events={events}
-        availabilities={availabilityByUser}
+        availabilities={effectiveAvailabilities}
         timeSlots={timeSlots}
         daysOfWeek={daysOfWeek}
       />

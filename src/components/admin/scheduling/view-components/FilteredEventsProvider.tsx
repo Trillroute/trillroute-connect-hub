@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useFilteredEvents } from '../hooks/useFilteredEvents';
 import { useCalendar } from '../context/CalendarContext';
-import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 
 interface FilteredEventsProviderProps {
   children: React.ReactNode;
@@ -20,7 +19,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   filterId,
   filterIds = []
 }) => {
-  // Get events from the FilteredEvents hook
+  // Get events from the FilteredEvents hook with improved debugging
   const { events: filteredEvents, isLoading, availabilities } = useFilteredEvents({
     filterType,
     filterId,
@@ -32,19 +31,20 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   
   // Effect to update the events in the calendar context when they change
   useEffect(() => {
-    if (!isLoading && filteredEvents && filteredEvents.length >= 0) {
+    if (!isLoading && filteredEvents) {
       console.log(`FilteredEventsProvider: Setting ${filteredEvents.length} events for ${filterType || 'all'} filter`);
       setEvents(filteredEvents);
     }
-  }, [filteredEvents, isLoading, setEvents]);
+  }, [filteredEvents, isLoading, setEvents, filterType]);
   
   // Effect to update the availabilities in the calendar context
   useEffect(() => {
     if (availabilities) {
-      console.log(`FilteredEventsProvider: Setting availabilities for ${filterType || 'all'} filter`);
+      console.log(`FilteredEventsProvider: Setting availabilities for ${filterType || 'all'} filter`, 
+        { availabilityCount: Object.keys(availabilities).length });
       setAvailabilities(availabilities);
     }
-  }, [availabilities, setAvailabilities]);
+  }, [availabilities, setAvailabilities, filterType]);
   
   return <>{children}</>;
 };
