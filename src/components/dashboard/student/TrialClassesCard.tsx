@@ -1,95 +1,116 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock } from 'lucide-react';
-import { useTrialSlots } from '@/hooks/useTrialSlots';
+import { Calendar, Clock, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
+import { useTrialSlots } from '@/hooks/useTrialSlots';
+import { AvailabilitySlot } from '@/services/availability/teaching/types';
 
-export const TrialClassesCard: React.FC = () => {
-  const { myTrialSlots, loading, cancelTrialSlot } = useTrialSlots();
-  const { toast } = useToast();
+interface TrialClassesCardProps {
+  courseId: string;
+  userId: string;
+  title: string;
+}
 
-  const handleCancelTrial = async (slotId: string, courseTitle?: string) => {
-    const success = await cancelTrialSlot(slotId);
+const TrialClassesCard: React.FC<TrialClassesCardProps> = ({ courseId, userId, title }) => {
+  const { availableSlots, hasTrial, loading, error, refresh } = useTrialSlots(courseId, userId);
+  
+  const handleCancelTrial = async (slotId: string) => {
+    // Implementation for canceling a trial would go here
+    console.log("Cancel trial for slot:", slotId);
     
-    if (success) {
-      toast({
-        title: "Trial Class Cancelled",
-        description: `Your trial class for ${courseTitle || 'the course'} has been cancelled.`
-      });
-    } else {
-      toast({
-        title: "Failed to Cancel",
-        description: "There was a problem cancelling your trial class",
-        variant: "destructive"
-      });
-    }
+    // After cancellation, refresh the data
+    await refresh();
   };
+  
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Trial Classes</CardTitle>
+          <CardDescription>Loading your trial classes...</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
-  // Filter to get only upcoming trials
-  const upcomingTrials = myTrialSlots.filter(slot => 
-    slot.isBooked && new Date(slot.startTime) > new Date()
-  );
+  if (error) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle>Error Loading Trials</CardTitle>
+          <CardDescription>There was a problem loading your trial classes</CardDescription>
+        </CardHeader>
+        <CardFooter>
+          <Button variant="outline" onClick={() => refresh()}>Try Again</Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
+  if (!hasTrial || availableSlots.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Trial Classes</CardTitle>
+          <CardDescription>You have no upcoming trial classes</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  // Find a booked slot for this course
+  const bookedSlot = availableSlots.find((slot: AvailabilitySlot) => slot.isBooked && slot.courseId === courseId);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Upcoming Trial Classes</CardTitle>
-        <CardDescription>
-          Your scheduled trial classes
-        </CardDescription>
+        <CardTitle>Trial Classes</CardTitle>
+        <CardDescription>Your upcoming trial classes</CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="flex justify-center items-center h-32">
-            <div className="loading-spinner" />
-          </div>
-        ) : upcomingTrials.length > 0 ? (
+        {bookedSlot ? (
           <div className="space-y-4">
-            {upcomingTrials.map((trial) => (
-              <div key={trial.id} className="p-4 border rounded-lg bg-white shadow-sm">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{trial.courseTitle || 'Trial Class'}</h3>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <span>{format(trial.startTime, 'EEEE, MMMM d')}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span>
-                        {format(trial.startTime, 'h:mm a')} - {format(trial.endTime, 'h:mm a')}
-                      </span>
-                    </div>
-                    {trial.teacherName && (
-                      <p className="text-sm mt-2">
-                        Teacher: {trial.teacherName}
-                      </p>
-                    )}
+            <div className="flex items-start space-x-4 p-4 border rounded-lg">
+              <div className="bg-primary/10 p-2 rounded">
+                <Calendar className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold">{title}</h3>
+                <div className="text-sm text-muted-foreground">
+                  <div className="flex items-center mt-1">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>{format(new Date(bookedSlot.startTime), 'EEEE, MMMM d')}</span>
                   </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCancelTrial(trial.id, trial.courseTitle)}
-                  >
-                    Cancel
-                  </Button>
+                  <div className="flex items-center mt-1">
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span>
+                      {format(new Date(bookedSlot.startTime), 'h:mm a')} - 
+                      {format(new Date(bookedSlot.endTime), 'h:mm a')}
+                    </span>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">You don't have any upcoming trial classes</p>
-            <Button className="mt-4 bg-music-500 hover:bg-music-600" onClick={() => window.location.href = '/courses'}>
-              Browse Courses
-            </Button>
-          </div>
+          <p>No upcoming trial classes found for this course.</p>
         )}
       </CardContent>
+      {bookedSlot && (
+        <CardFooter>
+          <Button 
+            variant="outline" 
+            className="text-red-500 border-red-200 hover:bg-red-50" 
+            onClick={() => handleCancelTrial(bookedSlot.id)}
+          >
+            <X className="h-4 w-4 mr-1" /> Cancel Trial
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };
+
+export default TrialClassesCard;

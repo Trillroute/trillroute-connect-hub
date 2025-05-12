@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -26,14 +25,13 @@ import TeacherCoursesSection from '@/components/teacher/dashboard/TeacherCourses
 import TeacherClassesSection from '@/components/teacher/dashboard/TeacherClassesSection';
 import { useToast } from '@/hooks/use-toast';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
-import { useTrialSlots } from '@/hooks/useTrialSlots';
+import { createAvailabilitySlot } from '@/services/availability/teaching';
 import { format, addMinutes, isBefore } from 'date-fns';
 
 const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { myCourses } = useTeacherCourses();
-  const { createAvailability } = useTrialSlots();
   
   const [isSlotDialogOpen, setIsSlotDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -76,7 +74,8 @@ const TeacherDashboard: React.FC = () => {
     
     setLoading(true);
     try {
-      const success = await createAvailability(
+      const success = await createAvailabilitySlot(
+        user.id, 
         startDateTime, 
         endDateTime,
         selectedCourseId || undefined

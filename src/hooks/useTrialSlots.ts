@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { fetchAvailableSlotsForCourse, hasTrialForCourse } from '@/services/availability/teaching';
+import { fetchAvailableSlotsForCourse, hasTrialForCourse, createAvailabilitySlot, bookTrialClass } from '@/services/availability/teaching';
 import { AvailabilitySlot } from '@/services/availability/teaching/types';
 
 interface UseTrialSlotsResult {
@@ -8,15 +9,18 @@ interface UseTrialSlotsResult {
   loading: boolean;
   error: Error | null;
   refresh: () => Promise<void>;
+  createAvailability: (startTime: Date, endTime: Date, courseId?: string) => Promise<boolean>;
 }
 
-export const useTrialSlots = (courseId: string, userId: string): UseTrialSlotsResult => {
+export const useTrialSlots = (courseId?: string, userId?: string): UseTrialSlotsResult => {
   const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
   const [hasTrial, setHasTrial] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   const loadTrialData = async () => {
+    if (!courseId) return;
+    
     setLoading(true);
     setError(null);
     try {
@@ -25,8 +29,10 @@ export const useTrialSlots = (courseId: string, userId: string): UseTrialSlotsRe
       setAvailableSlots(slots);
 
       // Check if user has a trial for this course
-      const trialStatus = await hasTrialForCourse(userId, courseId);
-      setHasTrial(trialStatus);
+      if (userId) {
+        const trialStatus = await hasTrialForCourse(userId, courseId);
+        setHasTrial(trialStatus);
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load trial data'));
     } finally {
@@ -35,10 +41,28 @@ export const useTrialSlots = (courseId: string, userId: string): UseTrialSlotsRe
   };
 
   useEffect(() => {
-    if (courseId && userId) {
+    if (courseId) {
       loadTrialData();
     }
   }, [courseId, userId]);
+
+  const createAvailability = async (startTime: Date, endTime: Date, courseId?: string): Promise<boolean> => {
+    if (!userId) {
+      setError(new Error('User ID is required to create availability'));
+      return false;
+    }
+
+    try {
+      const success = await createAvailabilitySlot(userId, startTime, endTime, courseId);
+      if (success) {
+        await loadTrialData();
+      }
+      return success;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to create availability slot'));
+      return false;
+    }
+  };
 
   const refresh = async () => {
     await loadTrialData();
@@ -49,7 +73,7 @@ export const useTrialSlots = (courseId: string, userId: string): UseTrialSlotsRe
     hasTrial,
     loading,
     error,
-    refresh
+    refresh,
+    createAvailability
   };
 };
-

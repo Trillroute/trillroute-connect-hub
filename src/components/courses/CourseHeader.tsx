@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,7 +8,7 @@ import { Course } from '@/types/course';
 import { isStudentEnrolledInCourse, forceVerifyEnrollment } from '@/utils/enrollment';
 import { PaymentButton } from '@/components/PaymentButton';
 import BookTrialDialog from './scheduler/BookTrialDialog';
-import { hasTrialForCourse } from '@/services/teacherAvailabilityService';
+import { hasTrialForCourse } from '@/services/availability/teaching';
 
 interface CourseHeaderProps {
   course: Course;
@@ -214,8 +213,8 @@ export const CourseHeader = ({
       
       {isBookTrialOpen && (
         <BookTrialDialog
-          open={isBookTrialOpen}
-          onOpenChange={setIsBookTrialOpen}
+          isOpen={isBookTrialOpen}
+          onClose={() => setIsBookTrialOpen(false)}
           courseId={courseId}
           courseTitle={course.title}
         />
