@@ -7,6 +7,9 @@ interface TrialClassParams {
   course_id: string;
 }
 
+// Define the return type for the RPC functions
+type RpcResponse = null;
+
 // Book a trial class for a student
 export const bookTrialClass = async (
   slotId: string, 
@@ -55,7 +58,7 @@ export const bookTrialClass = async (
     };
     
     // Call the RPC function with proper typing
-    const { error: userUpdateError } = await supabase.rpc<any, TrialClassParams>(
+    const { error: userUpdateError } = await supabase.rpc<RpcResponse, TrialClassParams>(
       'add_trial_class', 
       params
     );
@@ -128,7 +131,7 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
     };
     
     // Call the RPC function with proper typing
-    const { error: userUpdateError } = await supabase.rpc<any, TrialClassParams>(
+    const { error: userUpdateError } = await supabase.rpc<RpcResponse, TrialClassParams>(
       'remove_trial_class', 
       params
     );
