@@ -16,8 +16,34 @@ interface EventListViewProps {
   onDeleteEvent: (event: CalendarEvent) => void;
 }
 
+// Define a common interface for both event and slot items
+interface DisplayItem {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  isSlot: boolean;
+}
+
+// Define event-specific properties
+interface EventItem extends DisplayItem {
+  isSlot: false;
+  description?: string;
+  location?: string;
+  color?: string;
+}
+
+// Define slot-specific properties
+interface SlotItem extends DisplayItem {
+  isSlot: true;
+  dayName: string;
+  category: string;
+}
+
+type ListItem = EventItem | SlotItem;
+
 // Helper to convert availability slot to a display-friendly format
-const convertSlotToDisplayItem = (slot: any, dayName: string, dayNumber: number) => {
+const convertSlotToDisplayItem = (slot: any, dayName: string, dayNumber: number): SlotItem => {
   // Parse the time strings into Date objects for easier comparison
   const today = new Date();
   const slotDate = new Date();
@@ -80,14 +106,14 @@ const EventListView: React.FC<EventListViewProps> = ({
   const combinedItems = useMemo(() => {
     const now = new Date();
     
-    // Convert events to a common format
-    const eventItems = events.map(event => ({
+    // Convert events to a common format with proper typing
+    const eventItems: EventItem[] = events.map(event => ({
       ...event,
       isSlot: false
     }));
     
-    // Combine events and availability slots
-    const allItems = [...eventItems, ...availabilityItems]
+    // Combine events and availability slots with proper typing
+    const allItems: ListItem[] = [...eventItems, ...availabilityItems]
       .filter(item => isAfter(item.start, now)) // Only future items
       .sort((a, b) => a.start.getTime() - b.start.getTime()); // Sort by start time
     
@@ -173,7 +199,7 @@ const EventListView: React.FC<EventListViewProps> = ({
                   <h3 className="text-lg font-medium">{item.title}</h3>
                   <Badge variant={item.isSlot ? "outline" : "default"} className="font-normal">
                     {format(item.start, 'MMMM d, yyyy')}
-                    {item.isSlot && ` (${(item as any).dayName})`}
+                    {item.isSlot && ` (${(item as SlotItem).dayName})`}
                   </Badge>
                 </div>
                 
@@ -184,35 +210,41 @@ const EventListView: React.FC<EventListViewProps> = ({
                   </span>
                 </div>
                 
-                {!item.isSlot && item.location && (
+                {/* Only show location for events, not for slots */}
+                {!item.isSlot && (item as EventItem).location && (
                   <div className="flex items-center text-gray-500 mb-2">
                     <MapPin className="w-4 h-4 mr-2" />
-                    <span className="text-sm">{item.location}</span>
+                    <span className="text-sm">{(item as EventItem).location}</span>
                   </div>
                 )}
                 
+                {/* Show category badge for slots only */}
                 {item.isSlot && (
                   <div className="text-sm text-gray-600 mb-4">
                     <Badge variant="secondary" className="font-normal">
-                      {(item as any).category}
+                      {(item as SlotItem).category}
                     </Badge>
                   </div>
                 )}
                 
-                {!item.isSlot && item.description && (
-                  <p className="mt-2 text-sm text-gray-600 mb-4">{item.description}</p>
+                {/* Only show description for events, not for slots */}
+                {!item.isSlot && (item as EventItem).description && (
+                  <p className="mt-2 text-sm text-gray-600 mb-4">{(item as EventItem).description}</p>
                 )}
                 
                 <div className="flex justify-between items-center mt-4">
                   <div
                     className="w-1/3 h-2 rounded"
-                    style={{ backgroundColor: item.isSlot ? 
-                             (item as any).category === "Session" ? "#10b981" : 
-                             (item as any).category === "Break" ? "#3b82f6" : 
-                             (item as any).category === "Meeting" ? "#eab308" : "#6b7280"
-                             : item.color || '#4285F4' }}
+                    style={{ 
+                      backgroundColor: item.isSlot ? 
+                        ((item as SlotItem).category === "Session" ? "#10b981" : 
+                         (item as SlotItem).category === "Break" ? "#3b82f6" : 
+                         (item as SlotItem).category === "Meeting" ? "#eab308" : "#6b7280")
+                        : (item as EventItem).color || '#4285F4' 
+                    }}
                   ></div>
                   
+                  {/* Only show edit/delete buttons for events, not for slots */}
                   {!item.isSlot && (
                     <div className="flex space-x-2">
                       <Button 
