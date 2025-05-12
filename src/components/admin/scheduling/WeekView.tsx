@@ -18,21 +18,11 @@ import EventFormDialog from './EventFormDialog';
 import WeekViewEvent from './week-view/WeekViewEvent';
 import WeekTimeGrid from './week-view/WeekTimeGrid';
 import WeekDayHeader from './week-view/WeekDayHeader';
-import { calculateEventPosition } from './week-view/weekViewUtils';
+import WeekAvailabilitySlots from './week-view/WeekAvailabilitySlots';
+import { calculateEventPosition, AvailabilitySlot, isTimeAvailable } from './week-view/weekViewUtils';
 
 interface WeekViewProps {
   onCreateEvent?: () => void;
-}
-
-interface AvailabilitySlot {
-  dayOfWeek: number;
-  startHour: number;
-  startMinute: number;
-  endHour: number;
-  endMinute: number;
-  userId: string;
-  userName?: string;
-  category: string;
 }
 
 const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
@@ -83,11 +73,6 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
     );
   };
 
-  // Get availability for a specific day of the week
-  const getAvailabilityForDay = (dayOfWeek: number) => {
-    return availabilitySlots.filter(slot => slot.dayOfWeek === dayOfWeek);
-  };
-
   const openEventActions = (event: CalendarEvent) => {
     setSelectedEvent(event);
   };
@@ -117,7 +102,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   
   const handleCellClick = (dayIndex: number, hour: number) => {
     // Only create event if the time slot is available
-    if (onCreateEvent && isTimeAvailable(hour, dayIndex)) {
+    if (onCreateEvent && isTimeAvailable(hour, dayIndex, availabilitySlots)) {
       onCreateEvent();
     }
   };
@@ -128,64 +113,6 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
       sessionStorage.setItem('availabilitySlot', JSON.stringify(slot));
       onCreateEvent();
     }
-  };
-
-  // Get color based on category
-  const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'session':
-        return 'bg-green-100 border-green-300 text-green-800';
-      case 'break':
-        return 'bg-blue-100 border-blue-300 text-blue-800';
-      case 'office':
-        return 'bg-purple-100 border-purple-300 text-purple-800';
-      case 'meeting':
-        return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-      case 'class setup':
-        return 'bg-orange-100 border-orange-300 text-orange-800';
-      case 'qc':
-        return 'bg-pink-100 border-pink-300 text-pink-800';
-      default:
-        return 'bg-gray-100 border-gray-300 text-gray-800';
-    }
-  };
-
-  // Render an availability slot
-  const renderAvailabilitySlot = (slot: AvailabilitySlot, dayIndex: number) => {
-    const startPercentage = ((slot.startHour - 7) + slot.startMinute / 60) * 60; // 60px per hour
-    const duration = (slot.endHour - slot.startHour) + (slot.endMinute - slot.startMinute) / 60;
-    const height = duration * 60; // 60px per hour
-    
-    return (
-      <div
-        key={`avail-${dayIndex}-${slot.startHour}-${slot.startMinute}-${slot.userId}`}
-        className={`absolute left-1 right-1 rounded px-2 py-1 border overflow-hidden text-sm group cursor-pointer hover:opacity-90 z-10 ${getCategoryColor(slot.category)}`}
-        style={{
-          top: `${startPercentage}px`,
-          height: `${height}px`,
-        }}
-        onClick={() => handleAvailabilityClick(slot)}
-      >
-        <div className="flex justify-between">
-          <span className="font-semibold group-hover:underline">
-            {slot.userName ? `${slot.userName}` : 'Available'}
-          </span>
-          <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/50">
-            {slot.category}
-          </span>
-        </div>
-        <div className="text-xs opacity-90">
-          {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
-        </div>
-      </div>
-    );
-  };
-
-  // Check if a time slot has availability for a specific day
-  const isTimeAvailable = (hour: number, dayOfWeek: number) => {
-    return availabilitySlots.some(slot => 
-      slot.dayOfWeek === dayOfWeek && (slot.startHour <= hour && slot.endHour > hour)
-    );
   };
 
   return (
@@ -233,21 +160,23 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
                 <div
                   key={hour}
                   className={`h-[60px] border-b border-r border-gray-200 ${
-                    isTimeAvailable(hour, dayIndex) 
+                    isTimeAvailable(hour, dayIndex, availabilitySlots) 
                       ? 'cursor-pointer hover:bg-blue-50' 
                       : 'bg-gray-300 cursor-not-allowed'
                   } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''}`}
                   onClick={() => handleCellClick(dayIndex, hour)}
-                  aria-disabled={!isTimeAvailable(hour, dayIndex)}
+                  aria-disabled={!isTimeAvailable(hour, dayIndex, availabilitySlots)}
                 ></div>
               ))}
             </div>
             
             {/* Availability slots */}
             <div className="absolute top-0 left-0 right-0">
-              {getAvailabilityForDay(dayIndex).map((slot, slotIndex) => 
-                renderAvailabilitySlot(slot, slotIndex)
-              )}
+              <WeekAvailabilitySlots 
+                availabilitySlots={availabilitySlots}
+                dayIndex={dayIndex}
+                onAvailabilityClick={handleAvailabilityClick}
+              />
             </div>
             
             {/* Events */}
