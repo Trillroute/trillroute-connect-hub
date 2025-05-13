@@ -1,21 +1,22 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 import { format, addDays } from 'date-fns';
+import { getTimeSlots, formatTimeDisplay, isTimeSlotExpired } from './legacyViewUtils';
 
 const LegacyViewComponent: React.FC = () => {
   const { events, availabilities, currentDate, setIsCreateEventOpen, handleDateSelect } = useCalendar();
   const { availabilityByUser, loading: staffLoading, refetch } = useStaffAvailability();
   const [isLoading, setIsLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Standard time slots that we'll display
-  const standardTimeSlots = useMemo(() => [
-    '09:00', '09:45', '10:30', '11:15', '12:00', '12:45',
-    '13:30', '14:15', '15:00', '15:45', '16:30', '17:15', '18:00'
-  ], []);
+  const standardTimeSlots = useMemo(() => 
+    getTimeSlots(events, { ...availabilities, ...availabilityByUser }),
+  [events, availabilities, availabilityByUser]);
   
   // Days of the week starting from the current date
   const daysOfWeek = useMemo(() => {
@@ -97,14 +98,6 @@ const LegacyViewComponent: React.FC = () => {
     return availableStaff;
   };
 
-  // Check if a time slot is expired (in the past)
-  const isTimeSlotExpired = (timeSlot: string, date: Date) => {
-    const [hours, minutes] = timeSlot.split(':').map(Number);
-    const slotDateTime = new Date(date);
-    slotDateTime.setHours(hours, minutes || 0, 0, 0);
-    return new Date() > slotDateTime;
-  };
-  
   const handleCellClick = (day: Date, timeSlot: string) => {
     const [hours, minutes] = timeSlot.split(':').map(Number);
     const selectedDate = new Date(day);
@@ -114,7 +107,6 @@ const LegacyViewComponent: React.FC = () => {
     setIsCreateEventOpen(true);
   };
   
-  // Loading state
   if (isLoading || staffLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -124,71 +116,68 @@ const LegacyViewComponent: React.FC = () => {
   }
 
   return (
-    <div className="w-full overflow-auto bg-black text-white p-4">
-      {/* Header Row */}
-      <div className="grid grid-cols-[120px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-1 mb-1">
-        <div className="bg-zinc-900 p-4 text-center">Time slot</div>
-        {standardTimeSlots.map(time => (
-          <div key={time} className="bg-zinc-900 p-4 text-center flex justify-between items-center">
-            <ChevronDown className="h-5 w-5" />
-            {format(new Date().setHours(parseInt(time.split(':')[0]), parseInt(time.split(':')[1])), 'h:mm a')}
-            <div className="w-6 text-center">5</div>
+    <div className="w-full overflow-auto bg-card text-card-foreground p-4" ref={containerRef}>
+      {/* Day Headers */}
+      <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-1 mb-2 sticky top-0 z-10">
+        <div className="bg-muted p-3 text-center rounded font-medium">Time</div>
+        {daysOfWeek.map((day, i) => (
+          <div key={i} className="bg-muted p-3 text-center rounded font-medium">
+            <div>{day.name}</div>
+            <div className="text-sm text-muted-foreground">
+              {format(day.date, 'MMM d')}
+            </div>
           </div>
         ))}
       </div>
-      
-      {/* Day Rows */}
+
+      {/* Time Slots and Days Grid */}
       <div className="space-y-1">
-        {daysOfWeek.map((day) => (
-          <div key={day.name}>
-            {/* Day Header */}
-            <div 
-              className="grid grid-cols-[120px_1fr] gap-1 mb-1 cursor-pointer"
-              onClick={() => toggleRow(day.name)}
-            >
-              <div className="bg-zinc-900 p-4 flex justify-between items-center">
-                {expandedRows[day.name] ? 
-                  <ChevronUp className="h-5 w-5" /> : 
-                  <ChevronDown className="h-5 w-5" />
-                }
-                {day.name}
-                <div className="w-6 text-center">9</div>
-              </div>
-              <div className="bg-zinc-900 p-4">Calender view details</div>
+        {standardTimeSlots.map((timeSlot) => (
+          <div key={timeSlot} className="grid grid-cols-[120px_repeat(7,1fr)] gap-1 mb-1">
+            <div className="bg-muted/50 p-3 text-center rounded flex items-center justify-center">
+              <span className="font-medium">{formatTimeDisplay(timeSlot)}</span>
             </div>
             
-            {/* Time Slots for this Day */}
-            {expandedRows[day.name] && standardTimeSlots.map((timeSlot) => {
+            {daysOfWeek.map((day, dayIndex) => {
               const staff = getAvailabilityData(day.date.getDay(), timeSlot);
               const expired = isTimeSlotExpired(timeSlot, day.date);
               
               return (
-                <div className="grid grid-cols-[120px_1fr] gap-1 mb-1" key={`${day.name}-${timeSlot}`}>
-                  <div className="invisible">Spacer</div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {staff.length > 0 ? (
-                      staff.map((person, idx) => (
-                        <div 
-                          key={`${day.name}-${timeSlot}-${idx}`}
-                          className={`p-4 ${expired ? 'bg-red-900/80' : 'bg-green-800'} rounded`}
-                        >
-                          <div className="font-medium">{person.name}</div>
-                          <div>{person.category}</div>
-                          <div>
-                            {format(new Date().setHours(parseInt(timeSlot.split(':')[0]), parseInt(timeSlot.split(':')[1])), 'h:mm a')}
-                          </div>
-                          {expired && <div className="text-red-300 text-xs">Expired</div>}
+                <div 
+                  key={`${day.name}-${timeSlot}`}
+                  className="relative min-h-[80px] rounded overflow-hidden"
+                >
+                  {staff.length > 0 ? (
+                    <div 
+                      className={`absolute inset-0 p-3 transition-all rounded ${
+                        expired 
+                          ? 'bg-red-500/10 text-red-600' 
+                          : 'bg-primary/20 text-primary hover:bg-primary/30'
+                      }`}
+                    >
+                      <div className="font-medium">{staff[0].name}</div>
+                      <div className="text-sm">{staff[0].category}</div>
+                      {staff.length > 1 && (
+                        <div className="text-xs mt-1 font-medium">
+                          +{staff.length - 1} more
                         </div>
-                      ))
-                    ) : (
-                      <div 
-                        className={`p-4 ${expired ? 'bg-gray-800' : 'bg-zinc-900 hover:bg-gray-700 cursor-pointer'} rounded flex justify-center items-center`}
-                        onClick={() => !expired && handleCellClick(day.date, timeSlot)}
-                      >
-                        {!expired && <span className="text-gray-400 text-xl">+</span>}
-                      </div>
-                    )}
-                  </div>
+                      )}
+                      {expired && <div className="text-xs mt-1 opacity-75">Expired</div>}
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => !expired && handleCellClick(day.date, timeSlot)}
+                      className={`absolute inset-0 p-3 flex flex-col justify-center items-center rounded transition-all ${
+                        expired 
+                          ? 'bg-muted/30 text-muted-foreground cursor-default' 
+                          : 'bg-accent/50 hover:bg-accent text-accent-foreground cursor-pointer'
+                      }`}
+                    >
+                      {!expired && (
+                        <span className="font-medium text-2xl opacity-50">+</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

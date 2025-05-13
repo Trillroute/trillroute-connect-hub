@@ -6,7 +6,7 @@ import {
   deleteAvailabilitySlot,
   copyDayAvailability
 } from '@/services/userAvailabilityService';
-import { type Toast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 // Hook for CRUD operations on availability slots
 export const useAvailabilityOperations = (
