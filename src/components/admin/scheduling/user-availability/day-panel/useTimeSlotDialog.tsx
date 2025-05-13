@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { UserAvailability } from '@/services/availability/types';
 
 interface UseTimeSlotDialogProps {
@@ -29,29 +29,6 @@ export function useTimeSlotDialog({
     dayOfWeek: 0
   });
 
-  // Helper function to convert our component's slot format to the API's UserAvailability format
-  const convertToUserAvailability = (slot: {
-    id: string;
-    userId: string;
-    dayOfWeek: number;
-    startTime: string;
-    endTime: string;
-    category: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }): UserAvailability => {
-    return {
-      id: slot.id,
-      user_id: slot.userId,
-      dayOfWeek: slot.dayOfWeek,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      category: slot.category,
-      created_at: slot.createdAt,
-      updated_at: slot.updatedAt
-    } as UserAvailability;
-  };
-
   const openAddDialog = useCallback((dayOfWeek: number) => {
     setState({
       isOpen: true,
@@ -80,7 +57,7 @@ export function useTimeSlotDialog({
     }));
   }, []);
 
-  const handleSave = async (startTime: string, endTime: string, category: string) => {
+  const handleSave = useCallback(async (startTime: string, endTime: string, category: string) => {
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
@@ -103,9 +80,9 @@ export function useTimeSlotDialog({
       console.error('Error saving time slot:', error);
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  };
+  }, [state.isEditing, state.slot, state.dayOfWeek, onUpdateSlot, onAddSlot, closeDialog]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!state.slot) return;
     
     setState(prev => ({ ...prev, isLoading: true }));
@@ -121,9 +98,21 @@ export function useTimeSlotDialog({
       console.error('Error deleting time slot:', error);
       setState(prev => ({ ...prev, isLoading: false }));
     }
+  }, [state.slot, onDeleteSlot, closeDialog]);
+
+  // Aliases for backward compatibility with code that uses old naming conventions
+  const isDialogOpen = state.isOpen;
+  const editingSlot = state.slot;
+  const setIsDialogOpen = (open: boolean) => {
+    if (!open) closeDialog();
   };
+  const handleOpenEditDialog = openEditDialog;
+  const handleOpenNewDialog = openAddDialog;
+  const handleCloseDialog = closeDialog;
+  const handleSaveSlot = handleSave;
 
   return {
+    // New API
     isOpen: state.isOpen,
     isEditing: state.isEditing,
     isLoading: state.isLoading,
@@ -133,6 +122,14 @@ export function useTimeSlotDialog({
     openEditDialog,
     closeDialog,
     handleSave,
-    handleDelete
+    handleDelete,
+    // Backward compatibility API
+    isDialogOpen,
+    editingSlot,
+    setIsDialogOpen,
+    handleOpenEditDialog,
+    handleOpenNewDialog,
+    handleCloseDialog,
+    handleSaveSlot
   };
 }

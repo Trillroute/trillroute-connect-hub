@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import { useTrialSlots } from '@/hooks/useTrialSlots';
 import { AvailabilitySlot } from '@/services/availability/teaching/types';
 import { useAuth } from '@/hooks/useAuth';
+import { cancelTrialClass } from '@/services/availability/teaching';
+import { toast } from '@/components/ui/use-toast';
 
 interface TrialClassesCardProps {
   courseId?: string;
@@ -20,11 +22,41 @@ const TrialClassesCard: React.FC<TrialClassesCardProps> = ({ courseId, userId, t
   const { availableSlots, hasTrial, loading, error, refresh } = useTrialSlots(courseId, effectiveUserId);
   
   const handleCancelTrial = async (slotId: string) => {
-    // Implementation for canceling a trial would go here
-    console.log("Cancel trial for slot:", slotId);
+    if (!effectiveUserId) {
+      toast({
+        title: 'Error',
+        description: 'User ID is required to cancel a trial',
+        variant: 'destructive',
+      });
+      return;
+    }
     
-    // After cancellation, refresh the data
-    await refresh();
+    try {
+      const success = await cancelTrialClass(slotId, effectiveUserId);
+      
+      if (success) {
+        toast({
+          title: 'Success',
+          description: 'Your trial class has been cancelled',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to cancel the trial class',
+          variant: 'destructive',
+        });
+      }
+      
+      // Refresh data after cancellation attempt
+      await refresh();
+    } catch (error) {
+      console.error('Error cancelling trial:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    }
   };
   
   if (loading) {

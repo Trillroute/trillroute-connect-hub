@@ -1,19 +1,83 @@
 
 import { useMemo, useEffect, useState } from 'react';
-import { CalendarEvent, FilterState, UserAvailability as CalendarUserAvailability } from '../context/calendarTypes';
 import { UserAvailabilityMap, UserAvailability } from '@/services/availability/types';
-import { filterEvents } from '../utils/filterUtils';
+
+interface FilterState {
+  users: string[];
+  startDate?: Date;
+  endDate?: Date;
+  courses: string[];
+  skills: string[];
+}
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  allDay?: boolean;
+  userId?: string;
+  courseId?: string;
+  skillId?: string;
+  color?: string;
+}
+
+interface CalendarUserAvailability {
+  id: string;
+  userId: string;
+  userName?: string;
+  dayOfWeek: number;
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+  category?: string;
+}
 
 interface UseFilteredEventsProps {
-  events: CalendarEvent[];
-  filters: FilterState;
+  events?: CalendarEvent[];
+  filters?: FilterState;
   availabilities?: UserAvailabilityMap | null;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterId?: string | null;
+  filterIds?: string[];
+}
+
+// Simple filtering function for events
+function filterEvents(events: CalendarEvent[] = [], filters: FilterState = { users: [], courses: [], skills: [] }) {
+  const filteredEvents = events.filter(event => {
+    // Filter by users
+    if (filters.users.length > 0 && event.userId && !filters.users.includes(event.userId)) {
+      return false;
+    }
+    
+    // Filter by courses
+    if (filters.courses.length > 0 && event.courseId && !filters.courses.includes(event.courseId)) {
+      return false;
+    }
+    
+    // Filter by skills
+    if (filters.skills.length > 0 && event.skillId && !filters.skills.includes(event.skillId)) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  return { filteredEvents };
 }
 
 /**
  * Custom hook to filter calendar events and availabilities based on filter criteria
  */
-export function useFilteredEvents({ events, filters, availabilities }: UseFilteredEventsProps) {
+export function useFilteredEvents({ 
+  events = [], 
+  filters = { users: [], courses: [], skills: [] }, 
+  availabilities,
+  filterType,
+  filterId,
+  filterIds = []
+}: UseFilteredEventsProps) {
   const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
   const [filteredAvailability, setFilteredAvailability] = useState<CalendarUserAvailability[]>([]);
 
@@ -30,7 +94,7 @@ export function useFilteredEvents({ events, filters, availabilities }: UseFilter
         result.push({
           id: slot.id,
           userId: slot.user_id,
-          userName: userName,
+          userName, // Now property exists in the interface
           dayOfWeek: slot.dayOfWeek,
           startHour: parseInt(slot.startTime.split(':')[0]),
           startMinute: parseInt(slot.startTime.split(':')[1]),

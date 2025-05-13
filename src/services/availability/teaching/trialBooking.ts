@@ -55,15 +55,15 @@ export const bookTrialClass = async (
     }
     
     // Book the slot
-    const params: TrialClassParams = {
-      slotId,
-      userId,
-      courseId
+    const params = {
+      slot_id: slotId,
+      user_id: userId,
+      course_id: courseId
     };
     
     // Call the book_trial_class RPC function
     const { error } = await supabase
-      .rpc('book_trial_class', params as any);
+      .rpc('book_trial_class', params);
     
     if (error) {
       console.error('Error booking trial class:', error);
@@ -84,6 +84,47 @@ export const bookTrialClass = async (
 };
 
 /**
+ * Cancel a trial class booking
+ * 
+ * @param slotId - ID of the booked slot to cancel
+ * @param userId - User ID who booked the slot
+ * @returns True if cancellation was successful, false otherwise
+ */
+export const cancelTrialClass = async (
+  slotId: string,
+  userId: string
+): Promise<boolean> => {
+  try {
+    console.log(`Cancelling trial class: slotId=${slotId}, userId=${userId}`);
+    
+    const params = {
+      slot_id: slotId,
+      user_id: userId
+    };
+    
+    // Call the cancel_trial_class RPC function
+    const { error } = await supabase
+      .rpc('cancel_trial_class', params);
+    
+    if (error) {
+      console.error('Error cancelling trial class:', error);
+      toast({
+        title: 'Cancellation failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    console.log('Trial class cancelled successfully');
+    return true;
+  } catch (error) {
+    console.error('Error in cancelTrialClass:', error);
+    return false;
+  }
+};
+
+/**
  * Check if a slot is still available for booking
  * 
  * @param slotId The ID of the availability slot to check
@@ -91,8 +132,9 @@ export const bookTrialClass = async (
  */
 export const checkSlotAvailability = async (slotId: string): Promise<boolean> => {
   try {
+    // Use appropriate table name for trial slots
     const { data, error } = await supabase
-      .from('trial_slots')
+      .from('teacher_trial_slots')  // Using correct table name
       .select('is_booked')
       .eq('id', slotId)
       .single();
@@ -102,7 +144,7 @@ export const checkSlotAvailability = async (slotId: string): Promise<boolean> =>
       return false;
     }
     
-    return !data.is_booked;
+    return !data?.is_booked;
   } catch (error) {
     console.error('Error in checkSlotAvailability:', error);
     return false;
@@ -123,15 +165,14 @@ export const hasTrialForCourse = async (
   try {
     console.log(`Checking if user ${userId} has trial for course ${courseId}`);
     
-    const params: TrialClassParams = {
-      userId,
-      courseId,
-      slotId: '' // This param is required by interface but not used in this function
+    const params = {
+      user_id: userId,
+      course_id: courseId
     };
     
     // Call the has_trial_for_course RPC function
     const { data, error } = await supabase
-      .rpc('has_trial_for_course', params as any);
+      .rpc('has_trial_for_course', params);
     
     if (error) {
       console.error('Error checking trial status:', error);
@@ -146,6 +187,11 @@ export const hasTrialForCourse = async (
 };
 
 /**
+ * Alias for hasTrialForCourse to match expected export
+ */
+export const checkTrialForCourse = hasTrialForCourse;
+
+/**
  * Fetch available slots for a specific course
  */
 export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<AvailabilitySlot[]> => {
@@ -158,6 +204,11 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
     
     if (error) {
       console.error('Error fetching available slots:', error);
+      return [];
+    }
+    
+    if (!data) {
+      console.log('No data returned from get_available_trial_slots');
       return [];
     }
     
