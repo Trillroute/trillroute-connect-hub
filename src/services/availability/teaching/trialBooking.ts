@@ -1,173 +1,180 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { AvailabilitySlot } from './types';
+import { toast } from '@/components/ui/use-toast';
 
-// Define a proper interface for the RPC function parameters
+/**
+ * Interface for trial class parameters
+ */
 interface TrialClassParams {
-  user_id: string;
-  course_id: string;
+  slotId: string;
+  userId: string;
+  courseId: string;
 }
 
-// Book a trial class for a student
+/**
+ * Book a trial class in an available slot
+ * 
+ * @param slotId - ID of the availability slot to book
+ * @param userId - User ID booking the slot
+ * @param courseId - Course ID for the trial
+ * @returns True if booking was successful, false otherwise
+ */
 export const bookTrialClass = async (
-  slotId: string, 
-  studentId: string, 
-  courseId: string, 
-  courseTitle?: string
-): Promise<boolean> => {
-  try {
-    // First, fetch the slot to get its details
-    const { data: slotData, error: slotError } = await supabase
-      .from("user_events")
-      .select("*")
-      .eq("id", slotId)
-      .single();
-
-    if (slotError || !slotData) {
-      console.error("Error fetching slot for booking:", slotError);
-      return false;
-    }
-
-    const currentMetadata = slotData.metadata || {};
-    
-    // Update the slot to mark it as booked
-    const { error: updateError } = await supabase
-      .from("user_events")
-      .update({
-        event_type: "trial_booking",
-        metadata: {
-          ...(typeof currentMetadata === 'object' ? currentMetadata : {}),
-          student_id: studentId,
-          course_id: courseId,
-          course_title: courseTitle || 'Trial Class'
-        }
-      })
-      .eq("id", slotId);
-
-    if (updateError) {
-      console.error("Error booking trial class:", updateError);
-      return false;
-    }
-
-    // Add this course to the user's trial_classes array
-    const params: TrialClassParams = { 
-      user_id: studentId, 
-      course_id: courseId 
-    };
-    
-    // Use the correct approach for RPC calls
-    const { error: userUpdateError } = await supabase.rpc<any>(
-      "add_trial_class",
-      params
-    );
-
-    if (userUpdateError) {
-      console.error("Error updating user trial classes:", userUpdateError);
-      // We've already booked the slot, so we'll still return true
-      // A separate process should handle this inconsistency
-    }
-
-    return true;
-  } catch (err) {
-    console.error("Failed to book trial class:", err);
-    return false;
-  }
-};
-
-// Cancel a booked trial class
-export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
-  try {
-    // First, get the slot to access its metadata
-    const { data: slot, error: fetchError } = await supabase
-      .from("user_events")
-      .select("metadata")
-      .eq("id", slotId)
-      .single();
-
-    if (fetchError) {
-      console.error("Error fetching slot for cancellation:", fetchError);
-      return false;
-    }
-
-    if (!slot?.metadata || typeof slot.metadata !== 'object') {
-      console.error("Missing or invalid metadata in slot");
-      return false;
-    }
-
-    const metadata = slot.metadata as Record<string, any>;
-    const studentId = metadata.student_id;
-    const courseId = metadata.course_id;
-
-    if (!studentId || !courseId) {
-      console.error("Missing student or course ID in slot metadata");
-      return false;
-    }
-
-    // Update the slot to mark it as available again
-    const currentMetadata = slot.metadata || {};
-    
-    const { error: updateError } = await supabase
-      .from("user_events")
-      .update({
-        event_type: "availability",
-        metadata: {
-          ...(typeof currentMetadata === 'object' ? currentMetadata : {}),
-          student_id: null
-        }
-      })
-      .eq("id", slotId);
-
-    if (updateError) {
-      console.error("Error cancelling trial class:", updateError);
-      return false;
-    }
-
-    // Remove this course from the user's trial_classes array
-    const params: TrialClassParams = { 
-      user_id: studentId, 
-      course_id: courseId 
-    };
-    
-    // Use the correct approach for RPC calls
-    const { error: userUpdateError } = await supabase.rpc<any>(
-      "remove_trial_class",
-      params
-    );
-
-    if (userUpdateError) {
-      console.error("Error updating user trial classes:", userUpdateError);
-      // We've already cancelled the slot, so we'll still return true
-      // A separate process should handle this inconsistency
-    }
-
-    return true;
-  } catch (err) {
-    console.error("Failed to cancel trial class:", err);
-    return false;
-  }
-};
-
-// Function to check if a student has already taken a trial for a specific course
-// Renamed to avoid conflict with the one in availabilityQuery.ts
-export const checkTrialForCourse = async (
+  slotId: string,
   userId: string,
   courseId: string
 ): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from("custom_users")
-      .select("trial_classes")
-      .eq("id", userId)
-      .single();
+    console.log(`Booking trial class: slotId=${slotId}, userId=${userId}, courseId=${courseId}`);
     
-    if (error || !data) {
-      console.error("Error checking trial status:", error);
+    // First check if the user already has a trial for this course
+    const hasTrialAlready = await hasTrialForCourse(userId, courseId);
+    
+    if (hasTrialAlready) {
+      console.warn('User already has a trial for this course');
+      toast({
+        title: 'Already booked',
+        description: 'You have already booked a trial class for this course',
+        variant: 'destructive',
+      });
       return false;
     }
     
-    const trialClasses = data.trial_classes || [];
-    return trialClasses.includes(courseId);
-  } catch (err) {
-    console.error("Failed to check trial status:", err);
+    // Check if slot is still available
+    const isAvailable = await checkSlotAvailability(slotId);
+    
+    if (!isAvailable) {
+      console.warn('Slot is no longer available');
+      toast({
+        title: 'Slot unavailable',
+        description: 'This slot is no longer available',
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    // Book the slot
+    const params: TrialClassParams = {
+      slotId,
+      userId,
+      courseId
+    };
+    
+    // Call the book_trial_class RPC function
+    const { error } = await supabase
+      .rpc('book_trial_class', params as any);
+    
+    if (error) {
+      console.error('Error booking trial class:', error);
+      toast({
+        title: 'Booking failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    console.log('Trial class booked successfully');
+    return true;
+  } catch (error) {
+    console.error('Error in bookTrialClass:', error);
     return false;
+  }
+};
+
+/**
+ * Check if a slot is still available for booking
+ * 
+ * @param slotId The ID of the availability slot to check
+ * @returns True if the slot is available, false otherwise
+ */
+export const checkSlotAvailability = async (slotId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('trial_slots')
+      .select('is_booked')
+      .eq('id', slotId)
+      .single();
+    
+    if (error) {
+      console.error('Error checking slot availability:', error);
+      return false;
+    }
+    
+    return !data.is_booked;
+  } catch (error) {
+    console.error('Error in checkSlotAvailability:', error);
+    return false;
+  }
+};
+
+/**
+ * Check if user already has a trial class for this course
+ * 
+ * @param userId User ID to check
+ * @param courseId Course ID to check
+ * @returns True if user already has a trial for this course, false otherwise
+ */
+export const hasTrialForCourse = async (
+  userId: string,
+  courseId: string
+): Promise<boolean> => {
+  try {
+    console.log(`Checking if user ${userId} has trial for course ${courseId}`);
+    
+    const params: TrialClassParams = {
+      userId,
+      courseId,
+      slotId: '' // This param is required by interface but not used in this function
+    };
+    
+    // Call the has_trial_for_course RPC function
+    const { data, error } = await supabase
+      .rpc('has_trial_for_course', params as any);
+    
+    if (error) {
+      console.error('Error checking trial status:', error);
+      return false;
+    }
+    
+    return Boolean(data);
+  } catch (error) {
+    console.error('Error in hasTrialForCourse:', error);
+    return false;
+  }
+};
+
+/**
+ * Fetch available slots for a specific course
+ */
+export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<AvailabilitySlot[]> => {
+  try {
+    console.log(`Fetching available slots for course: ${courseId}`);
+    
+    // Call the get_available_trial_slots RPC function
+    const { data, error } = await supabase
+      .rpc('get_available_trial_slots', { course_id: courseId });
+    
+    if (error) {
+      console.error('Error fetching available slots:', error);
+      return [];
+    }
+    
+    const availableSlots: AvailabilitySlot[] = data.map((slot: any) => ({
+      id: slot.id,
+      teacherId: slot.teacher_id,
+      teacherName: slot.teacher_name,
+      startTime: new Date(slot.start_time),
+      endTime: new Date(slot.end_time),
+      isBooked: slot.is_booked || false,
+      courseId: slot.course_id
+    }));
+    
+    console.log(`Found ${availableSlots.length} available slots`);
+    return availableSlots;
+  } catch (error) {
+    console.error('Error in fetchAvailableSlotsForCourse:', error);
+    return [];
   }
 };
