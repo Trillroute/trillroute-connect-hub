@@ -1,47 +1,35 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { UserAvailability, UserAvailabilityMap } from '../types';
+import { UserAvailability } from '../types';
 
-/**
- * Map database format to frontend format
- */
-export const mapDbAvailabilitySlot = (slot: any): UserAvailability => {
-  return {
-    id: slot.id,
-    userId: slot.user_id,
-    dayOfWeek: slot.day_of_week,
-    startTime: slot.start_time,
-    endTime: slot.end_time,
-    category: slot.category || 'Session',
-    createdAt: new Date(slot.created_at),
-    updatedAt: new Date(slot.updated_at)
-  };
-};
-
-/**
- * Helper function to build user availability map
- */
-export const buildAvailabilityMap = (users: any[], availabilityData: any[]): UserAvailabilityMap => {
-  // Initialize map with user info
-  const availabilityMap: UserAvailabilityMap = {};
-  
-  users.forEach(user => {
-    availabilityMap[user.id] = {
-      slots: [],
-      name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-      role: user.role // Ensure role is always provided
-    };
-  });
-  
-  // Add availability slots to the map
-  if (availabilityData && availabilityData.length > 0) {
-    availabilityData.forEach(slot => {
-      const userId = slot.user_id;
-      if (availabilityMap[userId]) {
-        availabilityMap[userId].slots.push(mapDbAvailabilitySlot(slot));
-      }
-    });
+// Helper to map from database availability slot to UserAvailability type
+export const mapDbAvailabilitySlot = (dbSlot: any): UserAvailability => {
+  if (!dbSlot) {
+    console.error('Attempted to map null or undefined db slot');
+    throw new Error('Cannot map null or undefined slot');
   }
-  
-  return availabilityMap;
+
+  // Debug log
+  console.log('Mapping DB slot:', dbSlot);
+
+  const result: UserAvailability = {
+    id: dbSlot.id,
+    user_id: dbSlot.user_id,
+    dayOfWeek: typeof dbSlot.day_of_week === 'number' ? dbSlot.day_of_week : parseInt(dbSlot.day_of_week),
+    startTime: dbSlot.start_time,
+    endTime: dbSlot.end_time,
+    category: dbSlot.category || 'Session'
+  };
+
+  if (dbSlot.created_at) {
+    result.created_at = dbSlot.created_at;
+  }
+
+  if (dbSlot.updated_at) {
+    result.updated_at = dbSlot.updated_at;
+  }
+
+  // Debug log the result
+  console.log('Mapped to UserAvailability:', result);
+
+  return result;
 };

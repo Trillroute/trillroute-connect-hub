@@ -3,7 +3,7 @@ import React, { memo, useCallback } from 'react';
 import { format, parse } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2, Tag } from 'lucide-react';
-import { UserAvailability } from '@/services/userAvailabilityService';
+import { UserAvailability } from '@/services/availability/types';
 import { Badge } from '@/components/ui/badge';
 
 interface AvailabilityListItemProps {
@@ -14,18 +14,18 @@ interface AvailabilityListItemProps {
 
 // Function to get badge variant based on category
 const getCategoryVariant = (category: string) => {
-  switch (category) {
-    case 'Session':
+  switch (category?.toLowerCase()) {
+    case 'session':
       return 'success';
-    case 'Break':
+    case 'break':
       return 'default';
-    case 'Office':
+    case 'office':
       return 'purple';
-    case 'Meeting':
+    case 'meeting':
       return 'yellow';
-    case 'Class Setup':
+    case 'class setup':
       return 'orange';
-    case 'QC':
+    case 'qc':
       return 'pink';
     default:
       return 'secondary';
@@ -77,7 +77,7 @@ const AvailabilityListItem: React.FC<AvailabilityListItemProps> = ({
           className="ml-2"
         >
           <Tag className="h-3 w-3 mr-1" />
-          {slot.category}
+          {slot.category || 'Session'}
         </Badge>
       </div>
       <div className="flex items-center space-x-2">

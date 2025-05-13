@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
-import { UserAvailability } from '@/services/userAvailabilityService';
+import { UserAvailability } from '@/services/availability/types';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { 
@@ -11,9 +11,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import TimeSlotDialog from '../TimeSlotDialog';
-import AvailabilitySlotCard from '../day-panel/AvailabilitySlotCard';
+import AvailabilityListItem from './AvailabilityListItem';
 import { Badge } from '@/components/ui/badge';
-import { AVAILABILITY_CATEGORIES } from '@/services/availability/types';
 
 interface DayAvailabilityListProps {
   day: DayAvailability;
@@ -33,6 +32,7 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   const handleAddSlot = async (startTime: string, endTime: string, category: string) => {
+    console.log('Adding slot:', { dayOfWeek: day.dayOfWeek, startTime, endTime, category });
     const success = await onAddSlot(day.dayOfWeek, startTime, endTime, category);
     if (success) {
       setIsAddDialogOpen(false);
@@ -55,26 +55,9 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
     }
     return success;
   };
-
-  // Function to get badge color based on category
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Session':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'Break':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'Office':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'Meeting':
-        return 'bg-purple-100 text-purple-800 border-purple-300';
-      case 'Class Setup':
-        return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'QC':
-        return 'bg-red-100 text-red-800 border-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
+  
+  // Check if the day has any slots
+  console.log(`DayAvailabilityList for ${day.dayName}: ${day.slots.length} slots`, day.slots);
 
   return (
     <Accordion type="single" collapsible className="border rounded-md">
@@ -90,27 +73,12 @@ const DayAvailabilityList: React.FC<DayAvailabilityListProps> = ({
             {day.slots.length > 0 ? (
               <div className="space-y-2">
                 {day.slots.map((slot) => (
-                  <div key={slot.id} className="flex items-center justify-between p-3 border rounded-lg shadow-sm hover:bg-gray-50">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{slot.startTime.substring(0, 5)} - {slot.endTime.substring(0, 5)}</span>
-                        <Badge variant="outline" className={getCategoryColor(slot.category)}>
-                          {slot.category}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEditSlot(slot)}>Edit</Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-red-500 hover:bg-red-50 hover:border-red-200" 
-                        onClick={() => onDeleteSlot(slot.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
+                  <AvailabilityListItem 
+                    key={slot.id}
+                    slot={slot}
+                    onEdit={handleEditSlot}
+                    onDelete={onDeleteSlot}
+                  />
                 ))}
               </div>
             ) : (
