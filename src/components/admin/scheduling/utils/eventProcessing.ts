@@ -69,8 +69,7 @@ export const fetchFilteredEvents = async ({
       // Filter events by course or skill
       const filteredEvents = events.filter(event => {
         // Extract course and skill info from event metadata or description
-        const eventCourseId = event.courseId || 
-          (event.metadata?.courseId) || 
+        const eventCourseId = event.metadata?.courseId || 
           (event.description?.includes('course_id:') ? 
             event.description.match(/course_id:([^,\s]+)/)?.[1] : null);
             
