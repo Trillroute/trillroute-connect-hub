@@ -29,10 +29,14 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
       await refreshEvents();
       
       if (refreshAvailability) {
-        const data = await refreshAvailability();
-        if (data && Object.keys(data).length > 0) {
-          console.log('Setting availabilities from refreshAvailability:', data);
-          setAvailabilities(data);
+        try {
+          const data = await refreshAvailability();
+          if (data && Object.keys(data).length > 0) {
+            console.log('Setting availabilities from refreshAvailability:', data);
+            setAvailabilities(data);
+          }
+        } catch (error) {
+          console.error("Error refreshing availability:", error);
         }
       }
     };
@@ -45,9 +49,12 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
       setAvailabilities(availabilityData);
     }
     
+  }, [refreshEvents, refreshAvailability, setAvailabilities, availabilityData]);
+  
+  useEffect(() => {
     console.log('WeekViewComponent: Events count:', events.length);
     console.log('WeekViewComponent: Availability data:', Object.keys(availabilities).length);
-  }, [refreshEvents, refreshAvailability, setAvailabilities, availabilityData, events.length, availabilities]);
+  }, [events, availabilities]);
   
   return (
     <div className="h-full overflow-auto">

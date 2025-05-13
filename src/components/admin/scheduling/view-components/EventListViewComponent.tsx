@@ -26,10 +26,13 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   useEffect(() => {
     console.log(`EventListViewComponent mounting, refreshing events and slots`);
     refreshEvents();
-    refreshAvailability();
+    
+    if (refreshAvailability) {
+      refreshAvailability();
+    }
   }, [refreshEvents, refreshAvailability]);
   
-  console.log(`EventListViewComponent rendering with ${events.length} events`);
+  console.log(`EventListViewComponent rendering with ${events.length} events and ${dailyAvailability?.length || 0} availability days`);
   
   return (
     <div className="h-full overflow-auto px-6">
