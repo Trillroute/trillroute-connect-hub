@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import FilterSelector from './FilterSelector';
@@ -11,6 +10,7 @@ import { useUpdateEvent } from '../hooks/useUpdateEvent';
 import { useDeleteEvent } from '../hooks/useDeleteEvent';
 
 interface CalendarMainContentProps {
+  hasAdminAccess?: boolean; // Added missing prop
   userId?: string;
   roleFilter?: string[];
   title?: string;
@@ -25,7 +25,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   title,
   description,
   initialFilterType = null,
-  showFilterTabs = true
+  showFilterTabs = true,
+  hasAdminAccess = false // Added prop with default value
 }) => {
   const { viewMode, setViewMode, currentDate, setCurrentDate, refreshEvents } = useCalendar();
   const [filterType, setFilterType] = useState<string | null>(initialFilterType);
