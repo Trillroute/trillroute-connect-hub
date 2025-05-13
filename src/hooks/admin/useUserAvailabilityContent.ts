@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserAvailability, DayAvailability } from '@/hooks/useUserAvailability';
@@ -72,7 +73,7 @@ export const useUserAvailabilityContent = (): UseUserAvailabilityContentResult =
   
   // User availability data
   const { 
-    loading: isLoadingAvailability,
+    isLoading: isLoadingAvailability,
     dailyAvailability,
     refreshAvailability,
     addSlot,
@@ -158,7 +159,7 @@ export const useUserAvailabilityContent = (): UseUserAvailabilityContentResult =
     
     // Availability data
     isLoadingAvailability,
-    dailyAvailability,
+    dailyAvailability: dailyAvailability || [],
     showLoading,
     
     // Availability actions

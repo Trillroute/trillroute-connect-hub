@@ -17,7 +17,10 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
 }) => {
   const { events, refreshEvents } = useCalendar();
   const { user } = useAuth();
-  const { dailyAvailability, refreshAvailability } = useUserAvailability(user?.id);
+  const { 
+    dailyAvailability, 
+    refreshAvailability 
+  } = useUserAvailability(user?.id);
   
   // Force refresh events and availability when the component mounts
   useEffect(() => {
@@ -33,7 +36,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
       <h2 className="text-xl font-semibold my-4">Upcoming Events & Availability</h2>
       <EventListView 
         events={events}
-        dailyAvailability={dailyAvailability}
+        dailyAvailability={dailyAvailability || []}
         onEditEvent={onEditEvent} 
         onDeleteEvent={onDeleteEvent} 
       />
