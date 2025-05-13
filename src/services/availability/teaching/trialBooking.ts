@@ -55,7 +55,11 @@ export const bookTrialClass = async (
     }
     
     // Book the slot
-    const params = {
+    const params: {
+      slot_id: string;
+      user_id: string;
+      course_id: string;
+    } = {
       slot_id: slotId,
       user_id: userId,
       course_id: courseId
@@ -97,7 +101,10 @@ export const cancelTrialClass = async (
   try {
     console.log(`Cancelling trial class: slotId=${slotId}, userId=${userId}`);
     
-    const params = {
+    const params: {
+      slot_id: string;
+      user_id: string;
+    } = {
       slot_id: slotId,
       user_id: userId
     };
@@ -134,7 +141,9 @@ export const checkSlotAvailability = async (slotId: string): Promise<boolean> =>
   try {
     // Instead of directly querying a table that doesn't exist, use an RPC function
     const { data, error } = await supabase
-      .rpc('check_slot_availability', { slot_id: slotId });
+      .rpc('check_slot_availability', { 
+        slot_id: slotId 
+      } as { slot_id: string });
     
     if (error) {
       console.error('Error checking slot availability:', error);
@@ -163,7 +172,10 @@ export const hasTrialForCourse = async (
   try {
     console.log(`Checking if user ${userId} has trial for course ${courseId}`);
     
-    const params = {
+    const params: {
+      user_id: string;
+      course_id: string;
+    } = {
       user_id: userId,
       course_id: courseId
     };
@@ -198,7 +210,9 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
     
     // Call the get_available_trial_slots RPC function
     const { data, error } = await supabase
-      .rpc('get_available_trial_slots', { course_id: courseId });
+      .rpc('get_available_trial_slots', { 
+        course_id: courseId 
+      } as { course_id: string });
     
     if (error) {
       console.error('Error fetching available slots:', error);
@@ -243,7 +257,12 @@ export const createAvailabilitySlot = async (
   try {
     console.log(`Creating availability slot for teacher ${teacherId}`);
     
-    const params = {
+    const params: {
+      teacher_id: string;
+      start_time: string;
+      end_time: string;
+      course_id: string | null;
+    } = {
       teacher_id: teacherId,
       start_time: startTime.toISOString(),
       end_time: endTime.toISOString(),
