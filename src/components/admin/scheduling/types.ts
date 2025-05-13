@@ -9,4 +9,4 @@ export type CalendarEvent = {
   color?: string;
 };
 
-export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
+export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
