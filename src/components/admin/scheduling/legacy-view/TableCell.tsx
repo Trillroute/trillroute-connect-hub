@@ -2,20 +2,55 @@
 import React from 'react';
 import { formatTimeDisplay } from './legacyViewUtils';
 import { CellInfo } from './useCellInfo';
+import { useCalendar } from '../context/CalendarContext';
+import { format } from 'date-fns';
 
 interface TableCellProps {
   timeSlot: string;
   cellInfos: CellInfo[];
   isExpired: boolean;
+  date: Date;
 }
 
-const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired }) => {
+const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired, date }) => {
+  const { setIsCreateEventOpen, handleDateSelect } = useCalendar();
+  
   // Ensure cellInfos is always an array, even if undefined is passed
   const safeInfos = Array.isArray(cellInfos) ? cellInfos : [];
   
-  // If no infos, render an empty cell
+  const handleCellClick = () => {
+    // If this is an empty cell (available slot)
+    if (safeInfos.length === 0) {
+      // Parse the timeSlot to get hours and minutes
+      const timeParts = timeSlot.split(':');
+      const hours = parseInt(timeParts[0], 10);
+      const minutes = parseInt(timeParts[1], 10);
+      
+      // Create a new date with the day from the date prop but hours/minutes from timeSlot
+      const clickedDate = new Date(date);
+      clickedDate.setHours(hours, minutes, 0, 0);
+      
+      // Select the date in the calendar context which stores it for the event creation dialog
+      handleDateSelect(clickedDate);
+      
+      // Open the create event dialog
+      setIsCreateEventOpen(true);
+    }
+  };
+  
+  // If no infos, render an empty cell that's clickable to add an event
   if (safeInfos.length === 0) {
-    return <td className="p-2 border bg-gray-50 h-16"></td>;
+    return (
+      <td 
+        className="p-2 border bg-gray-50 h-16 cursor-pointer hover:bg-gray-100 transition-colors"
+        onClick={handleCellClick}
+        title={`Add event at ${timeSlot} on ${format(date, 'EEEE, MMM d')}`}
+      >
+        <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+          <span>+</span>
+        </div>
+      </td>
+    );
   }
   
   return (

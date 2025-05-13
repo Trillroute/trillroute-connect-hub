@@ -1,51 +1,40 @@
 
 import React from 'react';
 import TableCell from './TableCell';
-import { CellInfo } from './useCellInfo';
-
-interface Day {
-  name: string;
-  date: Date;
-  dayOfWeek: number;
-}
+import { useCellInfo } from './useCellInfo';
+import { isTimeSlotExpired } from './legacyViewUtils';
+import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
 
 interface TableRowProps {
-  day: Day;
-  timeSlots: string[];
-  getCellInfo: (day: Day, timeSlot: string) => CellInfo[];
+  timeSlot: string;
+  daysOfWeek: Date[];
+  events: CalendarEvent[];
+  availabilities: UserAvailabilityMap;
 }
 
-const TableRow: React.FC<TableRowProps> = ({ day, timeSlots, getCellInfo }) => {
-  // Helper to check if a time has passed
-  const isTimeExpired = (timeSlot: string): boolean => {
-    const now = new Date();
-    const slotDate = new Date(day.date);
-    const [hours, minutes] = timeSlot.split(':').map(Number);
-    slotDate.setHours(hours, minutes || 0, 0, 0);
-    return slotDate < now;
-  };
+const TableRow: React.FC<TableRowProps> = ({ timeSlot, daysOfWeek, events, availabilities }) => {
+  // Get cell info for each day
+  const { getCellInfoForDay } = useCellInfo(timeSlot, events, availabilities);
 
   return (
-    <tr className="border-b">
-      <td className="p-2 border bg-gray-100">
-        <div>
-          {day.name}
-        </div>
-        <div className="text-xs text-gray-500">
-          {day.date.toLocaleDateString()}
-        </div>
+    <tr>
+      {/* Time slot column */}
+      <td className="px-2 py-1 border bg-gray-100 font-medium text-sm w-20 text-center">
+        {timeSlot}
       </td>
       
-      {timeSlots.map((timeSlot, slotIndex) => {
-        const cellInfos = getCellInfo(day, timeSlot);
-        const isExpired = isTimeExpired(timeSlot);
+      {/* Each day's cell */}
+      {daysOfWeek.map((date, dayIndex) => {
+        const cellInfos = getCellInfoForDay(date);
+        const isExpired = isTimeSlotExpired(timeSlot, date);
         
         return (
-          <TableCell
-            key={`${day.dayOfWeek}-${slotIndex}`}
-            timeSlot={timeSlot}
+          <TableCell 
+            key={`cell-${date.toISOString()}-${timeSlot}`}
+            timeSlot={timeSlot} 
             cellInfos={cellInfos}
             isExpired={isExpired}
+            date={date}
           />
         );
       })}
