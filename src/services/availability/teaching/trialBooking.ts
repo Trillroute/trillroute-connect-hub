@@ -1,252 +1,15 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { AvailabilitySlot } from './types';
-import { toast } from '@/components/ui/use-toast';
+import { supabase } from "@/integrations/supabase/client";
+import { AvailabilitySlot } from "./types";
 
 /**
- * Interface for trial class parameters
- */
-interface TrialClassParams {
-  slotId: string;
-  userId: string;
-  courseId: string;
-}
-
-/**
- * Book a trial class in an available slot
+ * Create an availability slot for a teacher
  * 
- * @param slotId - ID of the availability slot to book
- * @param userId - User ID booking the slot
- * @param courseId - Course ID for the trial
- * @returns True if booking was successful, false otherwise
- */
-export const bookTrialClass = async (
-  slotId: string,
-  userId: string,
-  courseId: string
-): Promise<boolean> => {
-  try {
-    console.log(`Booking trial class: slotId=${slotId}, userId=${userId}, courseId=${courseId}`);
-    
-    // First check if the user already has a trial for this course
-    const hasTrialAlready = await hasTrialForCourse(userId, courseId);
-    
-    if (hasTrialAlready) {
-      console.warn('User already has a trial for this course');
-      toast({
-        title: 'Already booked',
-        description: 'You have already booked a trial class for this course',
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    // Check if slot is still available
-    const isAvailable = await checkSlotAvailability(slotId);
-    
-    if (!isAvailable) {
-      console.warn('Slot is no longer available');
-      toast({
-        title: 'Slot unavailable',
-        description: 'This slot is no longer available',
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    // Book the slot
-    const params: {
-      slot_id: string;
-      user_id: string;
-      course_id: string;
-    } = {
-      slot_id: slotId,
-      user_id: userId,
-      course_id: courseId
-    };
-    
-    // Call the book_trial_class RPC function
-    const { error } = await supabase
-      .rpc('book_trial_class', params);
-    
-    if (error) {
-      console.error('Error booking trial class:', error);
-      toast({
-        title: 'Booking failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    console.log('Trial class booked successfully');
-    return true;
-  } catch (error) {
-    console.error('Error in bookTrialClass:', error);
-    return false;
-  }
-};
-
-/**
- * Cancel a trial class booking
- * 
- * @param slotId - ID of the booked slot to cancel
- * @param userId - User ID who booked the slot
- * @returns True if cancellation was successful, false otherwise
- */
-export const cancelTrialClass = async (
-  slotId: string,
-  userId: string
-): Promise<boolean> => {
-  try {
-    console.log(`Cancelling trial class: slotId=${slotId}, userId=${userId}`);
-    
-    const params: {
-      slot_id: string;
-      user_id: string;
-    } = {
-      slot_id: slotId,
-      user_id: userId
-    };
-    
-    // Call the cancel_trial_class RPC function
-    const { error } = await supabase
-      .rpc('cancel_trial_class', params);
-    
-    if (error) {
-      console.error('Error cancelling trial class:', error);
-      toast({
-        title: 'Cancellation failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-      return false;
-    }
-    
-    console.log('Trial class cancelled successfully');
-    return true;
-  } catch (error) {
-    console.error('Error in cancelTrialClass:', error);
-    return false;
-  }
-};
-
-/**
- * Check if a slot is still available for booking
- * 
- * @param slotId The ID of the availability slot to check
- * @returns True if the slot is available, false otherwise
- */
-export const checkSlotAvailability = async (slotId: string): Promise<boolean> => {
-  try {
-    // Instead of directly querying a table that doesn't exist, use an RPC function
-    const { data, error } = await supabase
-      .rpc('check_slot_availability', { 
-        slot_id: slotId 
-      } as { slot_id: string });
-    
-    if (error) {
-      console.error('Error checking slot availability:', error);
-      return false;
-    }
-    
-    // The RPC function should return a boolean indicating if the slot is available
-    return !!data;
-  } catch (error) {
-    console.error('Error in checkSlotAvailability:', error);
-    return false;
-  }
-};
-
-/**
- * Check if user already has a trial class for this course
- * 
- * @param userId User ID to check
- * @param courseId Course ID to check
- * @returns True if user already has a trial for this course, false otherwise
- */
-export const hasTrialForCourse = async (
-  userId: string,
-  courseId: string
-): Promise<boolean> => {
-  try {
-    console.log(`Checking if user ${userId} has trial for course ${courseId}`);
-    
-    const params: {
-      user_id: string;
-      course_id: string;
-    } = {
-      user_id: userId,
-      course_id: courseId
-    };
-    
-    // Call the has_trial_for_course RPC function
-    const { data, error } = await supabase
-      .rpc('has_trial_for_course', params);
-    
-    if (error) {
-      console.error('Error checking trial status:', error);
-      return false;
-    }
-    
-    return Boolean(data);
-  } catch (error) {
-    console.error('Error in hasTrialForCourse:', error);
-    return false;
-  }
-};
-
-/**
- * Alias for hasTrialForCourse to match expected export
- */
-export const checkTrialForCourse = hasTrialForCourse;
-
-/**
- * Fetch available slots for a specific course
- */
-export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<AvailabilitySlot[]> => {
-  try {
-    console.log(`Fetching available slots for course: ${courseId}`);
-    
-    // Call the get_available_trial_slots RPC function
-    const { data, error } = await supabase
-      .rpc('get_available_trial_slots', { 
-        course_id: courseId 
-      } as { course_id: string });
-    
-    if (error) {
-      console.error('Error fetching available slots:', error);
-      return [];
-    }
-    
-    if (!data) {
-      console.log('No data returned from get_available_trial_slots');
-      return [];
-    }
-    
-    // Ensure data is an array before mapping
-    const dataArray = Array.isArray(data) ? data : [];
-    
-    const availableSlots: AvailabilitySlot[] = dataArray.map((slot: any) => ({
-      id: slot.id,
-      teacherId: slot.teacher_id,
-      teacherName: slot.teacher_name,
-      startTime: new Date(slot.start_time),
-      endTime: new Date(slot.end_time),
-      isBooked: slot.is_booked || false,
-      courseId: slot.course_id
-    }));
-    
-    console.log(`Found ${availableSlots.length} available slots`);
-    return availableSlots;
-  } catch (error) {
-    console.error('Error in fetchAvailableSlotsForCourse:', error);
-    return [];
-  }
-};
-
-/**
- * Creates a new availability slot
+ * @param teacherId The ID of the teacher
+ * @param startTime The start time of the availability slot
+ * @param endTime The end time of the availability slot
+ * @param courseId Optional course ID to link the slot to
+ * @returns True if the slot was created successfully, false otherwise
  */
 export const createAvailabilitySlot = async (
   teacherId: string,
@@ -255,32 +18,217 @@ export const createAvailabilitySlot = async (
   courseId?: string
 ): Promise<boolean> => {
   try {
-    console.log(`Creating availability slot for teacher ${teacherId}`);
-    
-    const params: {
-      teacher_id: string;
-      start_time: string;
-      end_time: string;
-      course_id: string | null;
-    } = {
-      teacher_id: teacherId,
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
-      course_id: courseId || null
-    };
-    
-    // Call the create_availability_slot RPC function
     const { error } = await supabase
-      .rpc('create_availability_slot', params);
+      .from("user_events")
+      .insert({
+        user_id: teacherId,
+        title: courseId ? "Course-specific Availability" : "General Availability",
+        description: "Teacher availability for trial classes",
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        event_type: "availability",
+        is_blocked: false,
+        metadata: courseId ? { course_id: courseId } : {}
+      });
+
+    if (error) {
+      console.error("Error creating availability slot:", error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Failed to create availability slot:", err);
+    return false;
+  }
+};
+
+/**
+ * Fetch available slots for a specific course
+ * 
+ * @param courseId The ID of the course
+ * @returns An array of available slots
+ */
+export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<AvailabilitySlot[]> => {
+  try {
+    // Query user_events table for availability slots
+    const { data: events, error } = await supabase
+      .from("user_events")
+      .select(`
+        id,
+        user_id,
+        start_time,
+        end_time,
+        title,
+        metadata,
+        custom_users:user_id (first_name, last_name)
+      `)
+      .eq("event_type", "availability")
+      .eq("is_blocked", false)
+      .gte("start_time", new Date().toISOString());
     
     if (error) {
-      console.error('Error creating availability slot:', error);
+      console.error("Error fetching available slots:", error);
+      return [];
+    }
+
+    // Filter slots based on course ID if provided, or get general slots
+    const filteredEvents = courseId 
+      ? events.filter(event => event.metadata?.course_id === courseId || !event.metadata?.course_id)
+      : events;
+    
+    // Map to AvailabilitySlot type
+    return filteredEvents.map(event => {
+      const teacher = event.custom_users;
+      return {
+        id: event.id,
+        teacherId: event.user_id,
+        teacherName: teacher ? `${teacher.first_name} ${teacher.last_name}` : "Unknown Teacher",
+        startTime: new Date(event.start_time),
+        endTime: new Date(event.end_time),
+        isBooked: !!event.metadata?.is_booked,
+        courseId: event.metadata?.course_id,
+        courseTitle: event.metadata?.course_title || 'Trial Class'
+      };
+    });
+  } catch (err) {
+    console.error("Failed to fetch available slots:", err);
+    return [];
+  }
+};
+
+/**
+ * Check if a user has a trial booking for a specific course
+ * 
+ * @param userId The ID of the user
+ * @param courseId The ID of the course
+ * @returns True if the user has a trial booking for the course, false otherwise
+ */
+export const hasTrialForCourse = async (userId: string, courseId: string): Promise<boolean> => {
+  try {
+    // Query user_events table for trial bookings
+    const { data, error } = await supabase
+      .from("user_events")
+      .select("*")
+      .eq("event_type", "trial_booking")
+      .eq("metadata->student_id", userId)
+      .eq("metadata->course_id", courseId);
+    
+    if (error) {
+      console.error("Error checking trial booking:", error);
+      return false;
+    }
+    
+    return data && data.length > 0;
+  } catch (err) {
+    console.error("Failed to check trial booking:", err);
+    return false;
+  }
+};
+
+/**
+ * Book a trial class
+ * 
+ * @param slotId The ID of the availability slot
+ * @param studentId The ID of the student
+ * @param courseId The ID of the course
+ * @returns True if the trial was booked successfully, false otherwise
+ */
+export const bookTrialClass = async (
+  slotId: string,
+  studentId: string,
+  courseId: string
+): Promise<boolean> => {
+  try {
+    // Get the slot details first
+    const { data: slot, error: slotError } = await supabase
+      .from("user_events")
+      .select("*")
+      .eq("id", slotId)
+      .single();
+    
+    if (slotError || !slot) {
+      console.error("Error fetching slot for booking:", slotError);
+      return false;
+    }
+    
+    // Update the slot with booking information
+    const { error: updateError } = await supabase
+      .from("user_events")
+      .update({
+        metadata: {
+          ...slot.metadata,
+          is_booked: true,
+          student_id: studentId,
+          course_id: courseId,
+          booking_time: new Date().toISOString()
+        }
+      })
+      .eq("id", slotId);
+    
+    if (updateError) {
+      console.error("Error updating slot with booking:", updateError);
       return false;
     }
     
     return true;
-  } catch (error) {
-    console.error('Error in createAvailabilitySlot:', error);
+  } catch (err) {
+    console.error("Failed to book trial class:", err);
+    return false;
+  }
+};
+
+/**
+ * Cancel a trial class booking
+ * 
+ * @param slotId The ID of the availability slot
+ * @param studentId The ID of the student
+ * @returns True if the trial was cancelled successfully, false otherwise
+ */
+export const cancelTrialClass = async (
+  slotId: string,
+  studentId: string
+): Promise<boolean> => {
+  try {
+    // Get the slot details first
+    const { data: slot, error: slotError } = await supabase
+      .from("user_events")
+      .select("*")
+      .eq("id", slotId)
+      .single();
+    
+    if (slotError || !slot) {
+      console.error("Error fetching slot for cancellation:", slotError);
+      return false;
+    }
+    
+    // Verify that the student is the one who booked the slot
+    if (slot.metadata?.student_id !== studentId) {
+      console.error("Student ID mismatch for cancellation");
+      return false;
+    }
+    
+    // Update the slot to remove booking information
+    const { error: updateError } = await supabase
+      .from("user_events")
+      .update({
+        metadata: {
+          ...slot.metadata,
+          is_booked: false,
+          student_id: null,
+          booking_time: null
+        }
+      })
+      .eq("id", slotId);
+    
+    if (updateError) {
+      console.error("Error updating slot for cancellation:", updateError);
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error("Failed to cancel trial class:", err);
     return false;
   }
 };

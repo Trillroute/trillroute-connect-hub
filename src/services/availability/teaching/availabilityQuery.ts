@@ -10,15 +10,22 @@ import { supabase } from '@/integrations/supabase/client';
 export const checkSlotAvailability = async (slotId: string): Promise<boolean> => {
   try {
     // Use RPC function to check slot availability
+    // If there's no RPC function, we need to query the user_events table
     const { data, error } = await supabase
-      .rpc('check_slot_availability', { slot_id: slotId });
+      .from("user_events")
+      .select("*")
+      .eq("id", slotId)
+      .single();
     
     if (error) {
       console.error('Error checking slot availability:', error);
       return false;
     }
     
-    return !!data;
+    // Check if the event exists and is not already booked
+    // Assuming the metadata field contains booking information
+    const metadata = data?.metadata || {};
+    return !metadata.is_booked;
   } catch (error) {
     console.error('Error in checkSlotAvailability:', error);
     return false;
