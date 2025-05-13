@@ -11,17 +11,15 @@ import { useUpdateEvent } from '../hooks/useUpdateEvent';
 import { useDeleteEvent } from '../hooks/useDeleteEvent';
 
 interface CalendarMainContentProps {
-  hasAdminAccess?: boolean;
   userId?: string;
   roleFilter?: string[];
   title?: string;
   description?: string;
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
-  showFilterTabs?: boolean; // Added prop to control filter tabs visibility
+  showFilterTabs?: boolean;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
-  hasAdminAccess = false,
   userId,
   roleFilter,
   title,
@@ -29,12 +27,23 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   initialFilterType = null,
   showFilterTabs = true
 }) => {
-  const { viewMode, setViewMode, currentDate, setCurrentDate } = useCalendar();
+  const { viewMode, setViewMode, currentDate, setCurrentDate, refreshEvents } = useCalendar();
   const [filterType, setFilterType] = useState<string | null>(initialFilterType);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>(roleFilter || []);
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  
+  // Use the hooks for event operations
+  const { createEvent } = useCreateEvent();
+  const { updateEvent } = useUpdateEvent();
+  const { deleteEvent } = useDeleteEvent();
+
+  // Force data refresh when component mounts or view changes
+  React.useEffect(() => {
+    console.log('CalendarMainContent: Refreshing data on viewMode change:', viewMode);
+    refreshEvents();
+  }, [viewMode, refreshEvents]);
 
   // Initialize event handlers
   const handleCreateEvent = () => {
@@ -46,8 +55,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   };
 
   const handleDeleteEvent = (event: CalendarEvent) => {
-    // Implement delete logic or use a hook
-    console.log("Delete event:", event);
+    if (confirm(`Are you sure you want to delete "${event.title}"?`)) {
+      deleteEvent(event.id);
+    }
   };
 
   const handleDateClick = (date: Date) => {
@@ -100,9 +110,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           open={isCreateEventOpen}
           onOpenChange={setIsCreateEventOpen}
           onSave={(eventData) => {
-            // Handle create logic
-            setIsCreateEventOpen(false);
-            return Promise.resolve("");
+            return createEvent(eventData);
           }}
           mode="create"
         />
@@ -114,9 +122,9 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           onOpenChange={(open) => !open && setEditingEvent(null)}
           initialEvent={editingEvent}
           onSave={(eventData) => {
-            // Handle edit logic
-            setEditingEvent(null);
-            return Promise.resolve("");
+            return updateEvent(editingEvent.id, eventData).then(
+              success => success ? editingEvent.id : null
+            );
           }}
           mode="edit"
         />

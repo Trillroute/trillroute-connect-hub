@@ -58,8 +58,8 @@ export interface CalendarContextType {
   navigatePrev: () => void;
   refreshEvents: () => Promise<void>;
   handleCreateEvent: (eventData: Omit<CalendarEvent, 'id'>) => Promise<string | null>;
-  handleUpdateEvent: (id: string, eventData: Partial<Omit<CalendarEvent, 'id'>>) => void;
-  handleDeleteEvent: (id: string) => void;
+  handleUpdateEvent: (id: string, eventData: Partial<Omit<CalendarEvent, 'id'>>) => Promise<boolean>;
+  handleDeleteEvent: (id: string) => Promise<boolean>;
   availabilities: UserAvailabilityMap;
   setAvailabilities: (availabilities: UserAvailabilityMap) => void;
   setEvents: (events: CalendarEvent[]) => void;

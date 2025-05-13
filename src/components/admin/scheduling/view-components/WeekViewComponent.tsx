@@ -1,7 +1,10 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import WeekView from '../WeekView';
 import { CalendarEvent } from '../context/calendarTypes';
+import { useCalendar } from '../context/CalendarContext';
+import { useUserAvailability } from '@/hooks/useUserAvailability';
+import { useAuth } from '@/hooks/useAuth';
 
 interface WeekViewComponentProps {
   onCreateEvent?: () => void;
@@ -14,6 +17,17 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   onEditEvent,
   onDeleteEvent
 }) => {
+  const { user } = useAuth();
+  const { refreshEvents } = useCalendar();
+  const { refreshAvailability } = useUserAvailability(user?.id);
+  
+  // Force refresh events and availability when the component mounts
+  useEffect(() => {
+    console.log('WeekViewComponent: Refreshing events and availability data');
+    refreshEvents();
+    if (refreshAvailability) refreshAvailability();
+  }, [refreshEvents, refreshAvailability]);
+  
   return (
     <div className="h-full overflow-auto">
       <WeekView 
