@@ -1,5 +1,5 @@
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { getHourCells } from '../calendarUtils';
 import { CalendarEvent } from '../context/calendarTypes';
@@ -24,18 +24,11 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   onDeleteEvent 
 }) => {
   const { currentDate, events, availabilities } = useCalendar();
-  const hours = getHourCells();
+  const hours = useMemo(() => getHourCells(), []);
   
-  // Improved logging for debugging
-  useEffect(() => {
-    console.log("WeekTimeGrid rendering with events:", events);
-    console.log("WeekTimeGrid rendering with availabilities:", availabilities);
-  }, [events, availabilities]);
-  
-  // Processing availability slots for the week with improved error handling
+  // Process availability slots for the week - memoized for performance
   const weekAvailabilitySlots = useMemo(() => {
     if (!availabilities || Object.keys(availabilities).length === 0) {
-      console.log("No availability data to process");
       return [];
     }
     
@@ -44,19 +37,12 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     try {
       // Process all staff availabilities
       Object.entries(availabilities).forEach(([userId, userData]) => {
-        if (!userData) {
-          console.warn(`Invalid userData for userId ${userId}`);
-          return;
-        }
-        
-        if (!userData.slots || !Array.isArray(userData.slots) || userData.slots.length === 0) {
-          console.log(`No slots for user ${userId} (${userData.name || 'unknown'})`);
+        if (!userData || !userData.slots || !Array.isArray(userData.slots)) {
           return;
         }
         
         userData.slots.forEach(slot => {
           if (slot.dayOfWeek === undefined || !slot.startTime || !slot.endTime) {
-            console.warn("Invalid slot data", slot);
             return;
           }
           
@@ -75,12 +61,10 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               category: slot.category || 'Session'
             });
           } catch (err) {
-            console.error("Error processing time slot:", err, slot);
+            console.error("Error processing time slot:", err);
           }
         });
       });
-      
-      console.log(`Processed ${slots.length} availability slots for week view`);
     } catch (err) {
       console.error("Error processing availability data:", err);
     }
@@ -88,43 +72,43 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     return slots;
   }, [availabilities]);
   
-  // Handle availability slot click
-  const handleAvailabilityClick = (slot: AvailabilitySlot) => {
+  // Handle availability slot click - memoized
+  const handleAvailabilityClick = useCallback((slot: AvailabilitySlot) => {
     if (onCreateEvent) {
-      console.log("Availability slot clicked:", slot);
       sessionStorage.setItem('selectedAvailability', JSON.stringify(slot));
       onCreateEvent();
     }
-  };
+  }, [onCreateEvent]);
 
-  // Filter events to only show those that are valid
+  // Filter events to only show those that are valid - memoized
   const validEvents = useMemo(() => {
     return events.filter(event => {
       if (!event || !event.start || !event.end) {
-        console.warn('Invalid event found:', event);
         return false;
       }
       return true;
     });
   }, [events]);
 
-  useEffect(() => {
-    console.log(`WeekTimeGrid: Found ${validEvents.length} valid events to display`);
-  }, [validEvents]);
+  // Optimize event filtering per day
+  const eventsByDay = useMemo(() => {
+    const eventMap = new Map<string, CalendarEvent[]>();
+    
+    days.forEach(day => {
+      const dayEvents = validEvents.filter(event => {
+        const eventStart = new Date(event.start);
+        return isSameDay(eventStart, day);
+      });
+      
+      eventMap.set(day.toISOString(), dayEvents);
+    });
+    
+    return eventMap;
+  }, [validEvents, days]);
 
   return (
     <div className="flex flex-col h-full overflow-auto">
-      {/* Day headers */}
-      <div className="flex">
-        <div className="w-16 flex-shrink-0 border-b border-gray-200 h-12 bg-white"></div>
-        {days.map((day, index) => (
-          <WeekDayHeader 
-            key={index} 
-            day={day} 
-            currentDate={currentDate} 
-          />
-        ))}
-      </div>
+      {/* Day headers - already in parent component */}
       
       {/* Time grid */}
       <div className="flex flex-1 overflow-y-auto">
@@ -176,19 +160,14 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               ))}
             
             {/* Events */}
-            {validEvents
-              .filter(event => {
-                const eventStart = new Date(event.start);
-                return isSameDay(eventStart, day);
-              })
-              .map((event, eventIndex) => (
-                <CalendarEventComponent
-                  key={`event-${event.id}-${eventIndex}`}
-                  event={event}
-                  onEditClick={() => onEditEvent && onEditEvent(event)}
-                  onDeleteClick={() => onDeleteEvent && onDeleteEvent(event)}
-                />
-              ))}
+            {eventsByDay.get(day.toISOString())?.map((event, eventIndex) => (
+              <CalendarEventComponent
+                key={`event-${event.id}-${eventIndex}`}
+                event={event}
+                onEditClick={() => onEditEvent && onEditEvent(event)}
+                onDeleteClick={() => onDeleteEvent && onDeleteEvent(event)}
+              />
+            ))}
           </div>
         ))}
       </div>

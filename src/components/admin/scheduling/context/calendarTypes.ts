@@ -1,21 +1,12 @@
 import { ReactNode } from 'react';
+import { CalendarEvent as BaseCalendarEvent } from '../types';
 
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
 
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  description?: string;
-  location?: string;
-  start: Date;
-  end: Date;
-  color?: string;
+export interface CalendarEvent extends BaseCalendarEvent {
   userId?: string;
   createdAt?: string;
   updatedAt?: string;
-  metadata?: Record<string, any>;
-  courseId?: string;
-  skillId?: string;
   [key: string]: any; // Allow additional fields for flexibility
 }
 

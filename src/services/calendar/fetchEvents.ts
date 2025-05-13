@@ -4,29 +4,37 @@ import { CalendarEvent } from "@/components/admin/scheduling/types";
 import { mapFromDbEvent } from "./mappers";
 import { canManageEvents } from "@/utils/permissions/modulePermissions";
 
+// Simple in-memory cache for events
+const eventCache = new Map<string, { events: CalendarEvent[], timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export const fetchEvents = async (userId: string, role: string | null): Promise<CalendarEvent[]> => {
   try {
-    console.log(`Fetching events for user ${userId} with role ${role}`);
+    // Create cache key based on user and role
+    const cacheKey = `${userId}:${role || 'no-role'}`;
+    
+    // Check if we have a valid cached result
+    const cachedData = eventCache.get(cacheKey);
+    if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
+      return cachedData.events;
+    }
+    
+    // If not in cache or expired, fetch from database
     let query = supabase.from("calendar_events").select("*");
     
     // Filter events based on user role
     if (role === 'superadmin') {
       // Superadmins see all events
-      console.log("Superadmin user, fetching all events");
     } else if (role === 'admin') {
       // Check admin permissions
       const user = { id: userId, role: 'admin' };
       const hasViewPermission = canManageEvents(user, 'view');
       
-      if (hasViewPermission) {
-        console.log("Admin with event view permissions, fetching all events");
-      } else {
-        console.log("Admin without event view permissions, fetching only own events");
+      if (!hasViewPermission) {
         query = query.eq("user_id", userId);
       }
     } else if (role === 'teacher') {
       // Teachers see events they created plus events for courses they teach
-      console.log("Teacher user, fetching relevant events");
       
       // First get the teacher's courses
       const { data: teacherCourses } = await supabase
@@ -45,7 +53,6 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
       }
     } else if (role === 'student') {
       // Students see events for courses they're enrolled in
-      console.log("Student user, fetching enrolled course events");
       
       // First get the student's enrolled courses
       const { data: studentCourses } = await supabase
@@ -74,14 +81,23 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
       return [];
     }
     
-    console.log(`Successfully fetched ${data?.length || 0} events from database`);
-    
+    // Map the data to the expected format
     const mappedEvents = data ? data.map(mapFromDbEvent) : [];
-    console.log(`Mapped ${mappedEvents.length} events`);
+    
+    // Store in cache
+    eventCache.set(cacheKey, {
+      events: mappedEvents,
+      timestamp: Date.now()
+    });
     
     return mappedEvents;
   } catch (err) {
     console.error("Failed to fetch events:", err);
     return [];
   }
+};
+
+// Clear cache manually when data is likely to have changed
+export const clearEventCache = (): void => {
+  eventCache.clear();
 };

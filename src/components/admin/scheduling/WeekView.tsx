@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { isSameDay, format } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { getWeekDays, getHourCells } from './calendarUtils';
@@ -33,46 +34,29 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDelet
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   
-  // Generate days and hours for the week view
+  // Generate days and hours for the week view - memoized to avoid recalculation
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
-  const hours = getHourCells();
+  const hours = useMemo(() => getHourCells(), []);
 
-  // Debug data
-  useEffect(() => {
-    console.log("WeekView rendered with:", {
-      currentDate,
-      eventCount: events?.length || 0,
-      availabilityCount: Object.keys(availabilities || {})?.length || 0,
-      weekDays: weekDays?.length || 0,
-    });
-    
-    if (events?.length > 0) {
-      console.log("Sample event:", events[0]);
-    }
-  }, [events, availabilities, weekDays, currentDate]);
-
-  // Process availability data for the week
+  // Process availability data for the week - memoized
   useEffect(() => {
     const processAvailabilities = () => {
       if (!availabilities || Object.keys(availabilities).length === 0) {
-        console.log("No availability data to process in WeekView");
         setAvailabilitySlots([]);
         return;
       }
       
-      const processedSlots: AvailabilitySlot[] = [];
-      
       try {
+        const processedSlots: AvailabilitySlot[] = [];
+        
         // Process all user availabilities
         Object.entries(availabilities).forEach(([userId, userData]) => {
           if (!userData || !userData.slots || !Array.isArray(userData.slots)) {
-            console.log(`No valid slots for user ${userId}`);
             return;
           }
           
           userData.slots.forEach(slot => {
             if (slot.dayOfWeek === undefined || !slot.startTime || !slot.endTime) {
-              console.warn("Invalid slot data:", slot);
               return;
             }
             
@@ -91,12 +75,11 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDelet
                 category: slot.category || 'Session'
               });
             } catch (err) {
-              console.error("Error processing slot time:", err, slot);
+              console.error("Error processing slot time:", err);
             }
           });
         });
         
-        console.log(`Processed ${processedSlots.length} availability slots`);
         setAvailabilitySlots(processedSlots);
       } catch (err) {
         console.error("Error processing availability data:", err);
@@ -107,78 +90,66 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDelet
     processAvailabilities();
   }, [availabilities]);
   
-  // Getting events for each day
-  const getEventsForDay = (date: Date) => {
-    if (!events || !Array.isArray(events)) return [];
-    
-    return events.filter(event => {
-      if (!event || !event.start) return false;
-      
-      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
-      return isSameDay(eventStart, date);
-    });
-  };
-
-  const openEventActions = (event: CalendarEvent) => {
-    setSelectedEvent(event);
-  };
-
-  const handleEdit = () => {
+  // Event handlers - memoized with useCallback
+  const handleEdit = useCallback(() => {
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
-  const handleSaveEdit = (eventData: Omit<CalendarEvent, 'id'>) => {
+  const handleSaveEdit = useCallback((eventData: Omit<CalendarEvent, 'id'>) => {
     if (selectedEvent) {
       handleUpdateEvent(selectedEvent.id, eventData);
     }
     setIsEditDialogOpen(false);
-  };
+  }, [selectedEvent, handleUpdateEvent]);
 
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (selectedEvent) {
       handleDeleteEvent(selectedEvent.id);
     }
     setIsDeleteDialogOpen(false);
     setSelectedEvent(null);
-  };
+  }, [selectedEvent, handleDeleteEvent]);
   
-  const handleCellClick = (dayIndex: number, hour: number) => {
-    // Only create event if the time slot is available
-    if (onCreateEvent && isTimeAvailable(hour, dayIndex, availabilitySlots)) {
-      onCreateEvent();
-    }
-  };
-  
-  const handleAvailabilityClick = (slot: AvailabilitySlot) => {
+  const handleAvailabilityClick = useCallback((slot: AvailabilitySlot) => {
     if (onCreateEvent) {
       // Store slot data in session storage for the create event dialog to use
       sessionStorage.setItem('availabilitySlot', JSON.stringify(slot));
       onCreateEvent();
     }
-  };
+  }, [onCreateEvent]);
 
   // Use provided event handlers when available
-  const handleEditEvent = (event: CalendarEvent) => {
+  const handleEditEvent = useCallback((event: CalendarEvent) => {
     if (onEditEvent) {
       onEditEvent(event);
     } else {
       setSelectedEvent(event);
       setIsEditDialogOpen(true);
     }
-  };
+  }, [onEditEvent]);
 
-  const handleDeleteEventClick = (event: CalendarEvent) => {
+  const handleDeleteEventClick = useCallback((event: CalendarEvent) => {
     if (onDeleteEvent) {
       onDeleteEvent(event);
     } else {
       setSelectedEvent(event);
       setIsDeleteDialogOpen(true);
     }
-  };
+  }, [onDeleteEvent]);
+
+  // Filter valid events
+  const validEvents = useMemo(() => {
+    return events.filter(event => {
+      if (!event || !event.start || !event.end) {
+        return false;
+      }
+      return true;
+    });
+  }, [events]);
 
   return (
     <div className="relative h-full">
