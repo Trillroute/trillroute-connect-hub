@@ -1,12 +1,12 @@
 
 import React, { useEffect } from 'react';
-import { CalendarEvent, CalendarViewMode } from './context/calendarTypes';
+import { CalendarEvent } from './context/calendarTypes';
 import { FilteredEventsProvider } from './view-components/FilteredEventsProvider';
 import { ViewSelector } from './view-components/ViewSelector';
 import { useCalendar } from './context/CalendarContext';
 
 interface CalendarViewRendererProps {
-  viewMode: CalendarViewMode;
+  viewMode: 'day' | 'week' | 'month' | 'list';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -22,8 +22,8 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   onEditEvent,
   onDeleteEvent,
   onDateClick,
-  filterType = null,
-  filterId = null,
+  filterType,
+  filterId,
   filterIds = []
 }) => {
   const { setViewMode } = useCalendar();
@@ -33,16 +33,6 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
     console.log('CalendarViewRenderer: Setting view mode to:', viewMode);
     setViewMode(viewMode);
   }, [viewMode, setViewMode]);
-
-  // Log current filter settings
-  useEffect(() => {
-    console.log('CalendarViewRenderer applying filters:', {
-      filterType,
-      filterId,
-      filterIds,
-      viewMode
-    });
-  }, [filterType, filterId, filterIds, viewMode]);
 
   return (
     <FilteredEventsProvider 

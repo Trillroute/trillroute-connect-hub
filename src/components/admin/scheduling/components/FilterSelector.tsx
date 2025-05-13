@@ -38,17 +38,14 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
       selectedFilter, 
       selectedFilters,
       showFilterTypeTabs,
-      filterOptionsCount: filterOptions.length
+      filterOptions: filterOptions.length
     });
   }, [filterType, selectedFilter, selectedFilters, showFilterTypeTabs, filterOptions]);
 
   // Reset selected filters when filter type changes
   useEffect(() => {
-    if (filterType !== null) {
-      setSelectedFilter(null);
-      setSelectedFilters([]);
-      console.log('FilterSelector: reset selections due to filter type change to', filterType);
-    }
+    setSelectedFilter(null);
+    setSelectedFilters([]);
   }, [filterType, setSelectedFilter, setSelectedFilters]);
 
   const handleMultiSelectChange = (selected: string[]) => {
@@ -57,14 +54,10 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     // Ensure selected is an array
     const safeSelected = Array.isArray(selected) ? selected : [];
     
-    // Update both filter states
     setSelectedFilters(safeSelected);
-    setSelectedFilter(safeSelected.length > 0 ? safeSelected[0] : null);
     
-    console.log("Updated filter selections:", {
-      selectedFilters: safeSelected,
-      selectedFilter: safeSelected.length > 0 ? safeSelected[0] : null
-    });
+    // Also update the single selection state for backward compatibility
+    setSelectedFilter(safeSelected.length > 0 ? safeSelected[0] : null);
   };
 
   return (

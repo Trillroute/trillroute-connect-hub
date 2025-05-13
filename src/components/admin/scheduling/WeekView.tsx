@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { isSameDay, format } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { getWeekDays, getHourCells } from './calendarUtils';
@@ -23,133 +23,97 @@ import { calculateEventPosition, AvailabilitySlot, isTimeAvailable } from './wee
 
 interface WeekViewProps {
   onCreateEvent?: () => void;
-  onEditEvent?: (event: CalendarEvent) => void;
-  onDeleteEvent?: (event: CalendarEvent) => void;
 }
 
-const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDeleteEvent }) => {
+const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   const { currentDate, events, handleUpdateEvent, handleDeleteEvent, availabilities } = useCalendar();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   
-  // Generate days and hours for the week view - memoized to avoid recalculation
-  const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
-  const hours = useMemo(() => getHourCells(), []);
+  // Generate days and hours for the week view
+  const weekDays = getWeekDays(currentDate);
+  const hours = getHourCells();
 
-  // Process availability data for the week - memoized
+  // Process availability data for the week
   useEffect(() => {
     const processAvailabilities = () => {
-      if (!availabilities || Object.keys(availabilities).length === 0) {
-        setAvailabilitySlots([]);
-        return;
-      }
+      const processedSlots: AvailabilitySlot[] = [];
       
-      try {
-        const processedSlots: AvailabilitySlot[] = [];
-        
-        // Process all user availabilities
-        Object.entries(availabilities).forEach(([userId, userData]) => {
-          if (!userData || !userData.slots || !Array.isArray(userData.slots)) {
-            return;
-          }
+      // Process all user availabilities
+      Object.entries(availabilities).forEach(([userId, userData]) => {
+        userData.slots.forEach(slot => {
+          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
           
-          userData.slots.forEach(slot => {
-            if (slot.dayOfWeek === undefined || !slot.startTime || !slot.endTime) {
-              return;
-            }
-            
-            try {
-              const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-              const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-              
-              processedSlots.push({
-                dayOfWeek: slot.dayOfWeek,
-                startHour,
-                startMinute: startMinute || 0,
-                endHour,
-                endMinute: endMinute || 0,
-                userId: userId,
-                userName: userData.name || 'Staff',
-                category: slot.category || 'Session'
-              });
-            } catch (err) {
-              console.error("Error processing slot time:", err);
-            }
+          processedSlots.push({
+            dayOfWeek: slot.dayOfWeek,
+            startHour,
+            startMinute,
+            endHour,
+            endMinute,
+            userId: slot.userId,
+            userName: userData.name,
+            category: slot.category
           });
         });
-        
-        setAvailabilitySlots(processedSlots);
-      } catch (err) {
-        console.error("Error processing availability data:", err);
-        setAvailabilitySlots([]);
-      }
+      });
+      
+      setAvailabilitySlots(processedSlots);
     };
     
     processAvailabilities();
   }, [availabilities]);
   
-  // Event handlers - memoized with useCallback
-  const handleEdit = useCallback(() => {
-    setIsEditDialogOpen(true);
-  }, []);
+  // Getting events for each day
+  const getEventsForDay = (date: Date) => {
+    return events.filter(event => 
+      isSameDay(event.start, date)
+    );
+  };
 
-  const handleSaveEdit = useCallback((eventData: Omit<CalendarEvent, 'id'>) => {
+  const openEventActions = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+  };
+
+  const handleEdit = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = (eventData: Omit<CalendarEvent, 'id'>) => {
     if (selectedEvent) {
       handleUpdateEvent(selectedEvent.id, eventData);
     }
     setIsEditDialogOpen(false);
-  }, [selectedEvent, handleUpdateEvent]);
+  };
 
-  const confirmDelete = useCallback(() => {
+  const confirmDelete = () => {
     setIsDeleteDialogOpen(true);
-  }, []);
+  };
 
-  const handleConfirmDelete = useCallback(() => {
+  const handleConfirmDelete = () => {
     if (selectedEvent) {
       handleDeleteEvent(selectedEvent.id);
     }
     setIsDeleteDialogOpen(false);
     setSelectedEvent(null);
-  }, [selectedEvent, handleDeleteEvent]);
+  };
   
-  const handleAvailabilityClick = useCallback((slot: AvailabilitySlot) => {
+  const handleCellClick = (dayIndex: number, hour: number) => {
+    // Only create event if the time slot is available
+    if (onCreateEvent && isTimeAvailable(hour, dayIndex, availabilitySlots)) {
+      onCreateEvent();
+    }
+  };
+  
+  const handleAvailabilityClick = (slot: AvailabilitySlot) => {
     if (onCreateEvent) {
       // Store slot data in session storage for the create event dialog to use
       sessionStorage.setItem('availabilitySlot', JSON.stringify(slot));
       onCreateEvent();
     }
-  }, [onCreateEvent]);
-
-  // Use provided event handlers when available
-  const handleEditEvent = useCallback((event: CalendarEvent) => {
-    if (onEditEvent) {
-      onEditEvent(event);
-    } else {
-      setSelectedEvent(event);
-      setIsEditDialogOpen(true);
-    }
-  }, [onEditEvent]);
-
-  const handleDeleteEventClick = useCallback((event: CalendarEvent) => {
-    if (onDeleteEvent) {
-      onDeleteEvent(event);
-    } else {
-      setSelectedEvent(event);
-      setIsDeleteDialogOpen(true);
-    }
-  }, [onDeleteEvent]);
-
-  // Filter valid events
-  const validEvents = useMemo(() => {
-    return events.filter(event => {
-      if (!event || !event.start || !event.end) {
-        return false;
-      }
-      return true;
-    });
-  }, [events]);
+  };
 
   return (
     <div className="relative h-full">
@@ -169,15 +133,72 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDelet
       </div>
       
       {/* Time grid */}
-      <WeekTimeGrid
-        days={weekDays}
-        onCreateEvent={onCreateEvent}
-        onEditEvent={onEditEvent || handleEditEvent}
-        onDeleteEvent={onDeleteEvent || handleDeleteEventClick}
-      />
+      <div className="flex h-[calc(100%-48px)]">
+        {/* Time labels */}
+        <div className="w-16 flex-shrink-0">
+          {hours.map(hour => (
+            <div 
+              key={hour} 
+              className="relative h-[60px] border-b border-r border-gray-200"
+            >
+              <div className="absolute -top-3 right-2 text-xs text-gray-500">
+                {hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour-12} PM`}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Day columns */}
+        {weekDays.map((day, dayIndex) => (
+          <div 
+            key={dayIndex} 
+            className="flex-1 relative"
+          >
+            {/* Hour cells - with improved availability indication */}
+            <div>
+              {hours.map(hour => (
+                <div
+                  key={hour}
+                  className={`h-[60px] border-b border-r border-gray-200 ${
+                    isTimeAvailable(hour, dayIndex, availabilitySlots) 
+                      ? 'cursor-pointer hover:bg-blue-50' 
+                      : 'bg-gray-300 cursor-not-allowed'
+                  } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''}`}
+                  onClick={() => handleCellClick(dayIndex, hour)}
+                  aria-disabled={!isTimeAvailable(hour, dayIndex, availabilitySlots)}
+                ></div>
+              ))}
+            </div>
+            
+            {/* Availability slots */}
+            <div className="absolute top-0 left-0 right-0">
+              <WeekAvailabilitySlots 
+                availabilitySlots={availabilitySlots}
+                dayIndex={dayIndex}
+                onAvailabilityClick={handleAvailabilityClick}
+              />
+            </div>
+            
+            {/* Events */}
+            <div className="absolute top-0 left-0 right-0">
+              {getEventsForDay(day).map((event, eventIndex) => (
+                <WeekViewEvent
+                  key={eventIndex}
+                  event={event}
+                  isSelected={selectedEvent?.id === event.id}
+                  onSelect={openEventActions}
+                  onEdit={handleEdit}
+                  onDelete={confirmDelete}
+                  style={calculateEventPosition(event)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
 
-      {/* Edit Event Dialog - only show if we're handling editing internally */}
-      {!onEditEvent && selectedEvent && (
+      {/* Edit Event Dialog */}
+      {selectedEvent && (
         <EventFormDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
@@ -194,28 +215,26 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDelet
         />
       )}
 
-      {/* Delete Confirmation Dialog - only show if we're handling deletion internally */}
-      {!onDeleteEvent && (
-        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Event</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete "{selectedEvent?.title}"? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                className="bg-red-600 hover:bg-red-700"
-                onClick={handleConfirmDelete}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedEvent?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

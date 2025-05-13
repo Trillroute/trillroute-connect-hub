@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap, CalendarViewMode } from './calendarTypes';
+import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { useCalendarFilters } from './useCalendarFilters';
@@ -43,53 +43,40 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
   
-  // Debug output to track context values
-  useEffect(() => {
-    console.log('CalendarContext updated:', {
-      eventsCount: events?.length || 0,
-      viewMode,
-      currentDate: currentDate?.toISOString(),
-      availabilitiesCount: Object.keys(availabilities || {})?.length || 0,
-    });
-  }, [events, viewMode, currentDate, availabilities]);
-  
   // Load events when component mounts
   useEffect(() => {
-    console.log('CalendarContext: Initial events load');
     refreshEvents();
-  }, [refreshEvents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <CalendarContext.Provider
       value={{
-        events,
-        isLoading,
         currentDate,
         viewMode,
-        setViewMode,
-        setCurrentDate,
-        navigateToToday: goToToday,
-        navigateNext: goToNext,
-        navigatePrev: goToPrevious,
-        refreshEvents,
-        handleCreateEvent,
-        handleUpdateEvent,
-        handleDeleteEvent,
-        availabilities,
-        setAvailabilities,
-        setEvents,
-        handleDateSelect,
+        events,
         isCreateEventOpen,
+        isLoading,
+        activeLayers,
+        selectedUsers,
+        availabilities,
+        setCurrentDate,
+        setViewMode,
+        setEvents,
         setIsCreateEventOpen,
+        setActiveLayers,
+        setSelectedUsers,
+        setAvailabilities,
+        toggleLayer,
+        toggleUser,
         goToToday,
         goToPrevious,
         goToNext,
-        activeLayers,
-        selectedUsers,
-        setActiveLayers,
-        setSelectedUsers,
-        toggleLayer,
-        toggleUser,
+        handleCreateEvent,
+        handleUpdateEvent,
+        handleDeleteEvent,
+        handleDateSelect,
+        refreshEvents,
         filterEventsByRole,
         filterEventsByUser,
       }}

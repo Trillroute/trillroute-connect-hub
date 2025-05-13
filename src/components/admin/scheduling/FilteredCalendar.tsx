@@ -23,12 +23,8 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
 }) => {
   // Process filter props to map to the right properties
   const mapFilterTypeToProvider = () => {
-    // Ensure filterValues is always an array and filter out empty values
-    const safeFilterValues = Array.isArray(filterValues) 
-      ? filterValues.filter(Boolean) 
-      : [];
-    
-    console.log('FilteredCalendar mapping filters:', { filterType, safeFilterValues });
+    // Ensure filterValues is always an array
+    const safeFilterValues = Array.isArray(filterValues) ? filterValues : [];
     
     switch(filterType) {
       case 'role':

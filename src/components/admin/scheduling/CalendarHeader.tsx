@@ -3,9 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import CalendarTitle from './components/CalendarTitle';
-import ViewModeSelector from './components/ViewModeSelector';
+import ViewModeSelector, { ViewOption } from './components/ViewModeSelector';
 import { useCalendar } from './context/CalendarContext';
-import { CalendarViewMode } from './context/calendarTypes';
 
 interface CalendarHeaderProps {
   onCreateEvent: () => void;
@@ -13,10 +12,17 @@ interface CalendarHeaderProps {
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
   const { viewMode, setViewMode, currentDate } = useCalendar();
+
+  const viewOptions: ViewOption[] = [
+    { value: 'day', label: 'Day View' },
+    { value: 'week', label: 'Week View' },
+    { value: 'month', label: 'Month View' },
+    { value: 'list', label: 'List View' }
+  ];
   
-  const handleViewModeChange = (mode: CalendarViewMode) => {
+  const handleViewModeChange = (mode: string) => {
     console.log('Setting view mode from header:', mode);
-    setViewMode(mode);
+    setViewMode(mode as 'day' | 'week' | 'month' | 'list');
   };
 
   return (
@@ -26,7 +32,8 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
       <div className="flex items-center gap-2">
         <ViewModeSelector 
           viewMode={viewMode} 
-          onViewModeChange={handleViewModeChange}
+          setViewMode={handleViewModeChange} 
+          viewOptions={viewOptions}
         />
         <Button 
           onClick={onCreateEvent}

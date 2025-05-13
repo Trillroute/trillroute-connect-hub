@@ -56,7 +56,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
       }, 500);
     }
   }, [loading, isRefreshing, onRefresh]);
-  
+
   const handleCopyDay = useCallback(() => {
     setIsCopyDialogOpen(true);
   }, []);

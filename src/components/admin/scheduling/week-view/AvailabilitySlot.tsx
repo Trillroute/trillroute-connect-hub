@@ -15,15 +15,9 @@ const AvailabilitySlotItem: React.FC<AvailabilitySlotProps> = ({
   dayIndex,
   onClick
 }) => {
-  // Calculate the position and height of the slot based on time
-  // Start position: Each hour = 60px height, startHour - 7 to offset from 7AM
   const startPercentage = ((slot.startHour - 7) + slot.startMinute / 60) * 60; // 60px per hour
   const duration = (slot.endHour - slot.startHour) + (slot.endMinute - slot.startMinute) / 60;
   const height = duration * 60; // 60px per hour
-  
-  // Format minutes to always show two digits (e.g., 9:05 instead of 9:5)
-  const formatTime = (hour: number, minute: number) => 
-    `${hour}:${minute.toString().padStart(2, '0')}`;
   
   return (
     <div
@@ -31,7 +25,7 @@ const AvailabilitySlotItem: React.FC<AvailabilitySlotProps> = ({
       className={`absolute left-1 right-1 rounded px-2 py-1 border overflow-hidden text-sm group cursor-pointer hover:opacity-90 z-10 ${getCategoryColor(slot.category)}`}
       style={{
         top: `${startPercentage}px`,
-        height: `${Math.max(20, height)}px`, // Ensure minimum height for visibility
+        height: `${height}px`,
       }}
       onClick={() => onClick(slot)}
     >
@@ -44,7 +38,7 @@ const AvailabilitySlotItem: React.FC<AvailabilitySlotProps> = ({
         </span>
       </div>
       <div className="text-xs opacity-90">
-        {`${formatTime(slot.startHour, slot.startMinute)} - ${formatTime(slot.endHour, slot.endMinute)}`}
+        {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
       </div>
     </div>
   );

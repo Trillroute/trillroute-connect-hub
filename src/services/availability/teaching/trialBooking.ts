@@ -7,11 +7,9 @@ interface TrialClassParams {
   course_id: string;
 }
 
-// Extend the Supabase client type to include our custom RPC functions
-type CustomSupabaseClient = typeof supabase & {
-  rpc(fn: 'add_trial_class', args: TrialClassParams): Promise<{ data: null; error: any }>;
-  rpc(fn: 'remove_trial_class', args: TrialClassParams): Promise<{ data: null; error: any }>;
-}
+// Define the return type for the RPC functions - we'll use 'unknown' instead of 'null'
+// since the constraint error suggests 'never' isn't accepting 'null'
+type RpcResponse = unknown;
 
 // Book a trial class for a student
 export const bookTrialClass = async (
@@ -60,9 +58,8 @@ export const bookTrialClass = async (
       course_id: courseId 
     };
     
-    // Cast the supabase client to our custom type to fix the TypeScript error
-    const customClient = supabase as CustomSupabaseClient;
-    const { error: userUpdateError } = await customClient.rpc(
+    // Call the RPC function with proper typing
+    const { error: userUpdateError } = await supabase.rpc(
       'add_trial_class', 
       params
     );
@@ -134,9 +131,8 @@ export const cancelTrialClass = async (slotId: string): Promise<boolean> => {
       course_id: courseId 
     };
     
-    // Cast the supabase client to our custom type to fix the TypeScript error
-    const customClient = supabase as CustomSupabaseClient;
-    const { error: userUpdateError } = await customClient.rpc(
+    // Call the RPC function with proper typing
+    const { error: userUpdateError } = await supabase.rpc(
       'remove_trial_class', 
       params
     );

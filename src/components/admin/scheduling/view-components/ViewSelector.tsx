@@ -6,10 +6,9 @@ import { DayViewComponent } from './DayViewComponent';
 import { WeekViewComponent } from './WeekViewComponent';
 import { MonthViewComponent } from './MonthViewComponent';
 import { EventListViewComponent } from './EventListViewComponent';
-import LegacyViewComponent from '../legacy-view/LegacyViewComponent';
 
 interface ViewSelectorProps {
-  viewMode: 'day' | 'week' | 'month' | 'list' | 'legacy';
+  viewMode: 'day' | 'week' | 'month' | 'list';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -23,11 +22,10 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   onDeleteEvent,
   onDateClick,
 }) => {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const isAdminOrHigher = role === 'admin' || role === 'superadmin';
   
   console.log('ViewSelector rendering with viewMode:', viewMode);
-  console.log('Current user role:', role, 'isAdminOrHigher:', isAdminOrHigher);
   
   // Show the appropriate view based on viewMode
   switch (viewMode) {
@@ -43,8 +41,6 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
       return (
         <WeekViewComponent 
           onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
-          onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
-          onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
         />
       );
     case 'month':
@@ -59,19 +55,12 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
           onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
         />
       );
-    case 'legacy':
-      console.log('Rendering legacy view component');
-      return (
-        <LegacyViewComponent />
-      );
     default:
       console.error(`Unknown view mode: ${viewMode}`);
       // Fallback to week view
       return (
         <WeekViewComponent 
           onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
-          onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
-          onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
         />
       );
   }

@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
 import TodayContent from './TodayContent';
 import LeadsKanbanContent from './LeadsKanbanContent';
@@ -29,8 +29,7 @@ interface TabContentMapProps {
   onDeleteLead?: (lead: Lead) => void;
 }
 
-// Use memo to prevent unnecessary re-renders
-const TabContentMap: React.FC<TabContentMapProps> = memo(({ 
+const TabContentMap: React.FC<TabContentMapProps> = ({ 
   activeTab,
   stats,
   userActivityData,
@@ -41,9 +40,20 @@ const TabContentMap: React.FC<TabContentMapProps> = memo(({
   onEditLead,
   onDeleteLead
 }) => {
-  console.log("TabContentMap rendering for tab:", activeTab);
-  
-  // Render content based on active tab
+  console.log("TabContentMap rendering with activeTab:", activeTab);
+
+  // Force-render StudentManagement for debugging
+  if (activeTab === 'students') {
+    console.log("ACTIVELY RENDERING StudentManagement component");
+    return (
+      <StudentManagement 
+        canAddUser={true}
+        canEditUser={true}
+        canDeleteUser={true}
+      />
+    );
+  }
+
   switch (activeTab) {
     case 'today':
       return stats && userActivityData && currentYear && handleYearChange ? (
@@ -80,16 +90,14 @@ const TabContentMap: React.FC<TabContentMapProps> = memo(({
       />;
       
     case 'scheduling':
-      // Initialize scheduling component with focus on current date
-      return <SchedulingContent key="scheduling" initialViewMode="week" />;
+      console.log("Rendering SchedulingContent component");
+      // Always render the SchedulingContent component for the scheduling tab
+      return <SchedulingContent />;
       
     case 'calendar':
-      // Use the scheduling content but with different initial view
-      return <SchedulingContent key="calendar" initialViewMode="month" />;
-      
-    case 'legacy-view':
-      // Dedicated route for legacy view
-      return <SchedulingContent key="legacy-view" initialViewMode="legacy" />;
+      console.log("Rendering SchedulingContent for calendar tab");
+      // Map 'calendar' tab to the SchedulingContent component
+      return <SchedulingContent />;
       
     case 'user-availability':
       return <UserAvailabilityContent />;
@@ -118,21 +126,11 @@ const TabContentMap: React.FC<TabContentMapProps> = memo(({
         canEditLevel={true}
         canDeleteLevel={true}
       />;
-
-    case 'students':
-      return (
-        <StudentManagement 
-          canAddUser={true}
-          canEditUser={true}
-          canDeleteUser={true}
-        />
-      );
       
     default:
+      console.log("Default case: Rendering PlaceholderContent for tab:", activeTab);
       return <PlaceholderContent tab={activeTab} />;
   }
-});
-
-TabContentMap.displayName = 'TabContentMap';
+};
 
 export default TabContentMap;

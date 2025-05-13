@@ -2,55 +2,66 @@
 import React from 'react';
 
 interface AvailabilitySlotProps {
-  top: number;
-  height: number;
-  userName: string;
-  category?: string;
-  startHour: number;
-  startMinute: number;
-  endHour: number;
-  endMinute: number;
+  slot: {
+    startHour: number;
+    startMinute: number;
+    endHour: number;
+    endMinute: number;
+    userId: string;
+    userName?: string;
+    category: string;
+  };
+  onClick: (slot: any) => void;
 }
 
-const AvailabilitySlot: React.FC<AvailabilitySlotProps> = ({
-  top,
-  height,
-  userName,
-  category = 'Session',
-  startHour,
-  startMinute,
-  endHour,
-  endMinute
-}) => {
-  // Helper function to format hours
-  const formatTime = (hour: number, minute: number) => {
-    return `${hour}:${minute.toString().padStart(2, '0')}`;
-  };
-  
-  // Select background color based on category
-  const getBackgroundColor = (category: string) => {
-    switch(category.toLowerCase()) {
-      case 'session': return 'bg-green-100 border-green-300';
-      case 'break': return 'bg-blue-100 border-blue-300';
-      case 'office': return 'bg-purple-100 border-purple-300';
-      case 'meeting': return 'bg-yellow-100 border-yellow-300';
-      default: return 'bg-gray-100 border-gray-300';
+const AvailabilitySlot: React.FC<AvailabilitySlotProps> = ({ slot, onClick }) => {
+  // Get color based on category
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'session':
+        return 'bg-green-100 border-green-300 text-green-800';
+      case 'break':
+        return 'bg-blue-100 border-blue-300 text-blue-800';
+      case 'office':
+        return 'bg-purple-100 border-purple-300 text-purple-800';
+      case 'meeting':
+        return 'bg-yellow-100 border-yellow-300 text-yellow-800';
+      case 'class setup':
+        return 'bg-orange-100 border-orange-300 text-orange-800';
+      case 'qc':
+        return 'bg-pink-100 border-pink-300 text-pink-800';
+      default:
+        return 'bg-gray-100 border-gray-300 text-gray-800';
     }
+  };
+
+  const calculatePosition = () => {
+    const startPercentage = ((slot.startHour - 7) + slot.startMinute / 60) * 60; // 60px per hour
+    const duration = (slot.endHour - slot.startHour) + (slot.endMinute - slot.startMinute) / 60;
+    const height = duration * 60; // 60px per hour
+    
+    return {
+      top: `${startPercentage}px`,
+      height: `${height}px`,
+    };
   };
   
   return (
-    <div 
-      className={`absolute left-1 right-1 rounded-md border ${getBackgroundColor(category)} p-2 z-10 text-sm overflow-hidden`}
-      style={{ 
-        top: `${top}px`, 
-        height: `${height}px`, 
-        opacity: 0.85
-      }}
+    <div
+      className={`absolute left-1 right-1 rounded px-2 py-1 border overflow-hidden text-sm group cursor-pointer hover:opacity-90 ${getCategoryColor(slot.category)}`}
+      style={calculatePosition()}
+      onClick={() => onClick(slot)}
     >
-      <div className="font-medium">{userName}</div>
-      <div className="text-xs">{category}</div>
-      <div className="text-xs mt-1">
-        {formatTime(startHour, startMinute)} - {formatTime(endHour, endMinute)}
+      <div className="flex justify-between">
+        <span className="font-semibold group-hover:underline">
+          {slot.userName ? `${slot.userName}` : 'Available'}
+        </span>
+        <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/50">
+          {slot.category}
+        </span>
+      </div>
+      <div className="text-xs opacity-90">
+        {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
       </div>
     </div>
   );

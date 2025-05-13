@@ -1,79 +1,71 @@
-import { ReactNode } from 'react';
-import { CalendarEvent as BaseCalendarEvent } from '../types';
+export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
 
-export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
-
-export interface CalendarEvent extends BaseCalendarEvent {
-  userId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  [key: string]: any; // Allow additional fields for flexibility
-}
-
-export interface UserAvailabilitySlot {
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  category?: string;
-  [key: string]: any;
-}
-
-export interface UserAvailabilityData {
-  slots: UserAvailabilitySlot[];
-  name?: string;
-  role?: string;
-}
-
-export interface UserAvailabilityMap {
-  [userId: string]: UserAvailabilityData;
-}
-
-// Add EventLayer and SelectedUser types
+// Define layer types for filtering
 export type EventLayer = 'teachers' | 'students' | 'admins' | 'superadmins';
 
-export interface SelectedUser {
+// Define user selection type
+export type SelectedUser = {
   id: string;
   name: string;
   layer: EventLayer;
+};
+
+// Add the UserAvailability interface
+export interface UserAvailability {
+  id: string;
+  userId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  category: string;
 }
 
+// Add the UserAvailabilityMap interface
+export interface UserAvailabilityMap {
+  [userId: string]: {
+    slots: UserAvailability[];
+    name: string;
+    role: string;
+  };
+}
+
+// Update the CalendarContextType to include availability data
 export interface CalendarContextType {
-  events: CalendarEvent[];
-  isLoading: boolean;
   currentDate: Date;
   viewMode: CalendarViewMode;
-  setViewMode: (mode: CalendarViewMode) => void;
-  setCurrentDate: (date: Date) => void;
-  navigateToToday: () => void;
-  navigateNext: () => void;
-  navigatePrev: () => void;
-  refreshEvents: () => Promise<void>;
-  handleCreateEvent: (eventData: Omit<CalendarEvent, 'id'>) => Promise<string | null>;
-  handleUpdateEvent: (id: string, eventData: Partial<Omit<CalendarEvent, 'id'>>) => Promise<boolean>;
-  handleDeleteEvent: (id: string) => Promise<boolean>;
-  availabilities: UserAvailabilityMap;
-  setAvailabilities: (availabilities: UserAvailabilityMap) => void;
-  setEvents: (events: CalendarEvent[]) => void;
-  // Add missing properties for sidebar and filters
-  handleDateSelect: (date: Date | undefined) => void;
-  setIsCreateEventOpen: (isOpen: boolean) => void;
+  events: CalendarEvent[];
   isCreateEventOpen: boolean;
-  goToToday: () => void;
-  goToPrevious: () => void;
-  goToNext: () => void;
-  // Add properties for layers and filters
+  isLoading: boolean;
   activeLayers: EventLayer[];
   selectedUsers: SelectedUser[];
+  availabilities: UserAvailabilityMap;
+  setCurrentDate: (date: Date) => void;
+  setViewMode: (mode: CalendarViewMode) => void;
+  setEvents: (events: CalendarEvent[]) => void;
+  setIsCreateEventOpen: (open: boolean) => void;
   setActiveLayers: (layers: EventLayer[]) => void;
   setSelectedUsers: (users: SelectedUser[]) => void;
   toggleLayer: (layer: EventLayer) => void;
   toggleUser: (user: SelectedUser) => void;
+  goToToday: () => void;
+  goToPrevious: () => void;
+  goToNext: () => void;
+  handleCreateEvent: (eventData: Omit<CalendarEvent, 'id'>) => Promise<boolean>;
+  handleUpdateEvent: (id: string, eventData: Omit<CalendarEvent, 'id'>) => Promise<boolean>;
+  handleDeleteEvent: (id: string) => Promise<boolean>;
+  handleDateSelect: (date: Date | undefined) => void;
+  refreshEvents: () => Promise<void>;
   filterEventsByRole: (roles: string[]) => Promise<void>;
   filterEventsByUser: (userId: string) => Promise<void>;
+  setAvailabilities: (availabilities: UserAvailabilityMap) => void;
 }
 
-export interface CalendarProviderProps {
-  children: ReactNode;
-  initialDate?: Date;
-  initialViewMode?: CalendarViewMode;
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  description?: string;
+  location?: string;
+  color?: string;
 }
