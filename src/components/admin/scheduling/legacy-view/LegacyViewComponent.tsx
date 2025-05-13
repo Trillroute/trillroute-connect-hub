@@ -16,7 +16,7 @@ const LegacyViewComponent: React.FC = () => {
     console.log("Legacy view mounted, refreshing data...");
     const loadData = async () => {
       await refreshEvents();
-      await refetch(); // This is the correct method name
+      await refetch();
       console.log("Legacy view data refreshed");
     };
     
@@ -36,7 +36,7 @@ const LegacyViewComponent: React.FC = () => {
     [events, effectiveAvailabilities]
   );
   
-  // Get days of the week starting from current date - correctly typed now
+  // Get days of the week starting from current date
   const daysOfWeek = useMemo(() => 
     getDaysOfWeek(currentDate), 
     [currentDate]
@@ -48,9 +48,10 @@ const LegacyViewComponent: React.FC = () => {
       eventCount: events.length,
       timeSlotCount: timeSlots.length,
       availabilityCount: Object.keys(effectiveAvailabilities || {}).length,
-      daysCount: daysOfWeek.length
+      daysCount: daysOfWeek.length,
+      currentDate
     });
-  }, [events, timeSlots, effectiveAvailabilities, daysOfWeek]);
+  }, [events, timeSlots, effectiveAvailabilities, daysOfWeek, currentDate]);
 
   const isLoading = availabilityLoading;
 

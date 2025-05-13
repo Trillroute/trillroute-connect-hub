@@ -42,6 +42,8 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
       return (
         <WeekViewComponent 
           onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
+          onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
+          onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
         />
       );
     case 'month':

@@ -27,19 +27,23 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     const lookup: Record<number, Record<string, { userData: any, slot: any }>> = {};
     
     // Initialize the data structure for each day of week
-    for (let day = 1; day <= 7; day++) {
+    for (let day = 0; day <= 6; day++) {
       lookup[day] = {};
     }
 
     // Populate the lookup structure
-    Object.entries(availabilities).forEach(([userId, userData]) => {
-      if (!userData.slots || !Array.isArray(userData.slots)) return;
+    Object.entries(availabilities || {}).forEach(([userId, userData]) => {
+      if (!userData?.slots || !Array.isArray(userData.slots)) return;
       
       userData.slots.forEach(slot => {
         if (slot.dayOfWeek === undefined || !slot.startTime) return;
         
         const dayOfWeek = slot.dayOfWeek;
         const startTime = slot.startTime;
+        
+        if (!lookup[dayOfWeek]) {
+          lookup[dayOfWeek] = {};
+        }
         
         if (!lookup[dayOfWeek][startTime]) {
           lookup[dayOfWeek][startTime] = { userData, slot };
@@ -94,6 +98,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     if (availabilityLookup[day.dayOfWeek] && availabilityLookup[day.dayOfWeek][timeSlot]) {
       const { userData, slot } = availabilityLookup[day.dayOfWeek][timeSlot];
       results.push({
+        id: `avail-${day.dayOfWeek}-${timeSlot}-${userData?.id || 'unknown'}`,
         name: userData.name || 'Staff',
         status: 'available',
         category: slot.category || 'Regular slot',
@@ -130,6 +135,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
       
       matchingEvents.forEach(event => {
         results.push({
+          id: event.id,
           name: event.title,
           status: 'booked',
           description: event.description,

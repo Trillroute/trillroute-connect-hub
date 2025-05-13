@@ -18,7 +18,7 @@ export const getDaysOfWeek = (startDate: Date): { name: string; date: Date; dayO
   // Add the current day and the next 6 days
   for (let i = 0; i < 7; i++) {
     const currentDate = addDays(start, i);
-    const dayOfWeek = currentDate.getDay() || 7; // Convert Sunday (0) to 7 for consistency
+    const dayOfWeek = currentDate.getDay(); // This gives 0 for Sunday, 1 for Monday, etc.
     days.push({
       name: format(currentDate, 'EEEE'), // Full day name
       date: currentDate,
@@ -35,6 +35,11 @@ export const getTimeSlots = (events: CalendarEvent[], availabilities: UserAvaila
 
   // Add time slots from events
   events.forEach(event => {
+    if (!event.start || !event.end) {
+      console.warn('Invalid event without start or end time:', event);
+      return;
+    }
+
     const startHour = event.start.getHours();
     const startMinute = event.start.getMinutes();
     const endHour = event.end.getHours();

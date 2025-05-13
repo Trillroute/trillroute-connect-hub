@@ -1,128 +1,72 @@
 
-import React, { useState } from 'react';
-import CalendarHeader from '../CalendarHeader';
-import CalendarViewRenderer from '../CalendarViewRenderer';
-import EventFormDialog from '../EventFormDialog';
-import FilterTypeTabs from './FilterTypeTabs';
+import React from 'react';
 import { useCalendar } from '../context/CalendarContext';
+import FilterSelector from './FilterSelector';
+import { CalendarEvent, CalendarViewMode } from '../context/calendarTypes';
+import ViewModeSelector from './ViewModeSelector';
+import { ViewSelector } from '../view-components/ViewSelector';
 
 interface CalendarMainContentProps {
-  hasAdminAccess?: boolean;
-  userId?: string;
-  roleFilter?: string[];
-  title?: string;
-  description?: string;
-  initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
-  showFilterTabs?: boolean;
+  filterType: string | null;
+  setFilterType: (type: string | null) => void;
+  selectedFilter: string | null;
+  setSelectedFilter: (id: string | null) => void;
+  selectedFilters: string[];
+  setSelectedFilters: (ids: string[]) => void;
+  onCreateEvent: () => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onDateClick: (date: Date) => void;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
-  hasAdminAccess = false,
-  userId,
-  roleFilter,
-  title,
-  description,
-  initialFilterType = null,
-  showFilterTabs = true
+  filterType,
+  setFilterType,
+  selectedFilter,
+  setSelectedFilter,
+  selectedFilters,
+  setSelectedFilters,
+  onCreateEvent,
+  onEditEvent,
+  onDeleteEvent,
+  onDateClick
 }) => {
-  const { viewMode } = useCalendar();
-  const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
-  const [filterType, setFilterType] = useState<'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null>(
-    initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
-  );
+  const { viewMode, setViewMode } = useCalendar();
 
-  const handleCreateEvent = () => {
-    setIsCreateEventDialogOpen(true);
+  // Handler for view mode changes
+  const handleViewModeChange = (mode: CalendarViewMode) => {
+    console.log('Changing view mode to:', mode);
+    setViewMode(mode);
   };
-
-  const handleEventEdit = () => {
-    // Implement event edit logic here
-  };
-
-  const handleEventDelete = () => {
-    // Implement event delete logic here
-  };
-
-  const handleDateClick = () => {
-    // Implement date click logic here
-  };
-  
-  // Handle filter type change with correct type casting
-  const handleFilterTypeChange = (type: string | null) => {
-    setFilterType(type as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null);
-  };
-
-  // Determine filter type and IDs based on props
-  const getFilterParams = () => {
-    // If we have a userId, it's a user-specific filter
-    if (userId) {
-      return {
-        filterType: 'teacher' as const,
-        filterIds: [userId]
-      };
-    }
-    
-    if (roleFilter && roleFilter.length > 0) {
-      let type: 'teacher' | 'student' | 'admin' | 'staff' | null = null;
-      
-      if (roleFilter.includes('teacher')) {
-        type = 'teacher';
-      } else if (roleFilter.includes('admin') || roleFilter.includes('superadmin')) {
-        type = 'admin';
-      } else if (roleFilter.includes('student')) {
-        type = 'student';
-      }
-      
-      if (roleFilter.includes('teacher') && (roleFilter.includes('admin') || roleFilter.includes('superadmin'))) {
-        type = 'staff';
-      }
-      
-      return {
-        filterType: type,
-        filterIds: [] // No specific IDs, just filter by role
-      };
-    }
-    
-    return {
-      filterType,
-      filterIds: []
-    };
-  };
-  
-  const { filterType: effectiveFilterType, filterIds } = getFilterParams();
 
   return (
     <div className="flex flex-col h-full">
-      <CalendarHeader onCreateEvent={handleCreateEvent} />
-      
-      {/* Only render FilterTypeTabs if showFilterTabs is true */}
-      {showFilterTabs && (
-        <FilterTypeTabs 
-          filterType={filterType} 
-          setFilterType={handleFilterTypeChange}
+      {/* Top controls */}
+      <div className="flex justify-between items-center mb-4 px-2 gap-3">
+        <FilterSelector
+          filterType={filterType}
+          setFilterType={setFilterType}
+          selectedFilter={selectedFilter}
+          setSelectedFilter={setSelectedFilter}
+          selectedFilters={selectedFilters}
+          setSelectedFilters={setSelectedFilters}
         />
-      )}
-      
-      <div className="flex-grow overflow-auto">
-        <CalendarViewRenderer 
+        <ViewModeSelector
           viewMode={viewMode}
-          onCreateEvent={handleCreateEvent}
-          onEditEvent={handleEventEdit}
-          onDeleteEvent={handleEventDelete}
-          onDateClick={handleDateClick}
-          filterType={effectiveFilterType}
-          filterIds={filterIds}
+          onViewModeChange={handleViewModeChange}
         />
       </div>
-      <EventFormDialog 
-        open={isCreateEventDialogOpen} 
-        onOpenChange={setIsCreateEventDialogOpen} 
-        mode="create"
-        onSave={() => {
-          // Handle event creation
-          setIsCreateEventDialogOpen(false);
-        }} 
-      />
+
+      {/* Calendar view content */}
+      <div className="flex-1 overflow-hidden border rounded-md">
+        <ViewSelector
+          viewMode={viewMode}
+          onCreateEvent={onCreateEvent}
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
+          onDateClick={onDateClick}
+        />
+      </div>
     </div>
   );
 };
