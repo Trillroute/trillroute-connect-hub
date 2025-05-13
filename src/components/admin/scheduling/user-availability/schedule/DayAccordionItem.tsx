@@ -8,8 +8,8 @@ import DayAvailabilityPanel from '../DayAvailabilityPanel';
 
 interface DayAccordionItemProps {
   day: DayAvailability;
-  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string) => Promise<boolean>;
-  onUpdateSlot: (id: string, startTime: string, endTime: string) => Promise<boolean>;
+  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onDeleteSlot: (id: string) => Promise<boolean>;
 }
 
@@ -38,7 +38,9 @@ const DayAccordionItem: React.FC<DayAccordionItemProps> = ({
             e.stopPropagation();
             const startTime = "09:00:00";
             const endTime = "10:00:00";
-            onAddSlot(day.dayOfWeek, startTime, endTime);
+            // Make sure category is passed as a string
+            const category = "general";
+            onAddSlot(day.dayOfWeek, startTime, endTime, category);
           }}
           className="mr-4"
         >
@@ -48,7 +50,7 @@ const DayAccordionItem: React.FC<DayAccordionItemProps> = ({
       <AccordionContent>
         <DayAvailabilityPanel 
           day={day}
-          onAddSlot={(startTime, endTime) => onAddSlot(day.dayOfWeek, startTime, endTime)}
+          onAddSlot={(startTime, endTime, category) => onAddSlot(day.dayOfWeek, startTime, endTime, category)}
           onUpdateSlot={onUpdateSlot}
           onDeleteSlot={onDeleteSlot}
         />
