@@ -41,6 +41,8 @@ const TabContentMap: React.FC<TabContentMapProps> = memo(({
   onEditLead,
   onDeleteLead
 }) => {
+  console.log("TabContentMap rendering for tab:", activeTab);
+  
   // Render content based on active tab
   switch (activeTab) {
     case 'today':
@@ -78,12 +80,12 @@ const TabContentMap: React.FC<TabContentMapProps> = memo(({
       />;
       
     case 'scheduling':
-      // Always render the SchedulingContent component for the scheduling tab
-      return <SchedulingContent />;
+      // Initialize scheduling component with focus on current date
+      return <SchedulingContent key="scheduling" initialViewMode="week" />;
       
     case 'calendar':
-      // Map 'calendar' tab to the SchedulingContent component
-      return <SchedulingContent />;
+      // Use the scheduling content but with different initial view
+      return <SchedulingContent key="calendar" initialViewMode="month" />;
       
     case 'user-availability':
       return <UserAvailabilityContent />;

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import FilterSelector from './FilterSelector';
 import { CalendarEvent, CalendarViewMode } from '../context/calendarTypes';
@@ -10,13 +11,14 @@ import { useUpdateEvent } from '../hooks/useUpdateEvent';
 import { useDeleteEvent } from '../hooks/useDeleteEvent';
 
 interface CalendarMainContentProps {
-  hasAdminAccess?: boolean; // Added missing prop
+  hasAdminAccess?: boolean;
   userId?: string;
   roleFilter?: string[];
   title?: string;
   description?: string;
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   showFilterTabs?: boolean;
+  initialViewMode?: CalendarViewMode;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
@@ -26,7 +28,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   description,
   initialFilterType = null,
   showFilterTabs = true,
-  hasAdminAccess = false // Added prop with default value
+  hasAdminAccess = false,
+  initialViewMode = 'week'
 }) => {
   const { viewMode, setViewMode, currentDate, setCurrentDate, refreshEvents } = useCalendar();
   const [filterType, setFilterType] = useState<string | null>(initialFilterType);
@@ -40,8 +43,14 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   const { updateEvent } = useUpdateEvent();
   const { deleteEvent } = useDeleteEvent();
 
+  // Set initial view mode when component mounts
+  useEffect(() => {
+    console.log('CalendarMainContent: Setting initial viewMode to:', initialViewMode);
+    setViewMode(initialViewMode);
+  }, [initialViewMode, setViewMode]);
+
   // Force data refresh when component mounts or view changes
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('CalendarMainContent: Refreshing data on viewMode change:', viewMode);
     refreshEvents();
   }, [viewMode, refreshEvents]);

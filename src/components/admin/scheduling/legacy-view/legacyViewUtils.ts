@@ -1,91 +1,96 @@
 
-import { format, addDays, startOfDay } from 'date-fns';
 import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
+import { format, addDays, startOfDay } from 'date-fns';
 
-// Format time for display
-export const formatTimeDisplay = (timeSlot: string): string => {
-  const [hours, minutes] = timeSlot.split(':').map(Number);
-  const period = hours < 12 ? 'AM' : 'PM';
-  const displayHours = hours % 12 || 12;
-  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-};
-
-// Get days of the week starting from a given date
-export const getDaysOfWeek = (startDate: Date): { name: string; date: Date; dayOfWeek: number }[] => {
-  const days: { name: string; date: Date; dayOfWeek: number }[] = [];
-  const start = startOfDay(startDate);
-
-  // Add the current day and the next 6 days
-  for (let i = 0; i < 7; i++) {
-    const currentDate = addDays(start, i);
-    const dayOfWeek = currentDate.getDay(); // This gives 0 for Sunday, 1 for Monday, etc.
-    days.push({
-      name: format(currentDate, 'EEEE'), // Full day name
-      date: currentDate,
-      dayOfWeek: dayOfWeek
+/**
+ * Extracts unique time slots from both events and availability data
+ */
+export function getTimeSlots(events: CalendarEvent[], availabilities: UserAvailabilityMap): string[] {
+  const timeSlotSet = new Set<string>();
+  
+  // Get time slots from events
+  if (events && Array.isArray(events)) {
+    events.forEach(event => {
+      const startDate = new Date(event.start);
+      const hour = startDate.getHours();
+      const minutes = startDate.getMinutes();
+      const timeString = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      timeSlotSet.add(timeString);
     });
   }
-
-  return days;
-};
-
-// Function to extract time slots from events and availabilities
-export const getTimeSlots = (events: CalendarEvent[], availabilities: UserAvailabilityMap | undefined): string[] => {
-  const timeSlots = new Set<string>();
-
-  // Add time slots from events
-  events.forEach(event => {
-    if (!event.start || !event.end) {
-      console.warn('Invalid event without start or end time:', event);
-      return;
-    }
-
-    const startHour = event.start.getHours();
-    const startMinute = event.start.getMinutes();
-    const endHour = event.end.getHours();
-    const endMinute = event.end.getMinutes();
-    
-    // Add starting time
-    timeSlots.add(`${startHour}:${startMinute === 0 ? '00' : startMinute}`);
-    
-    // Add ending time
-    timeSlots.add(`${endHour}:${endMinute === 0 ? '00' : endMinute}`);
-  });
-
-  // Add time slots from availability
-  if (availabilities) {
-    Object.values(availabilities).forEach(userAvailability => {
-      if (userAvailability && userAvailability.slots) {
-        userAvailability.slots.forEach(slot => {
+  
+  // Get time slots from availability data
+  if (availabilities && typeof availabilities === 'object') {
+    Object.values(availabilities).forEach(userData => {
+      if (userData && Array.isArray(userData.slots)) {
+        userData.slots.forEach(slot => {
           if (slot.startTime) {
-            const [startHour, startMinute] = slot.startTime.split(':');
-            timeSlots.add(`${startHour}:${startMinute || '00'}`);
-          }
-          if (slot.endTime) {
-            const [endHour, endMinute] = slot.endTime.split(':');
-            timeSlots.add(`${endHour}:${endMinute || '00'}`);
+            timeSlotSet.add(slot.startTime);
           }
         });
       }
     });
   }
-
-  // If no time slots found, add default business hours
-  if (timeSlots.size === 0) {
-    for (let i = 8; i <= 18; i++) {
-      timeSlots.add(`${i}:00`);
+  
+  // If no time slots found, add default business hours (9 AM to 5 PM)
+  if (timeSlotSet.size === 0) {
+    for (let hour = 9; hour <= 17; hour++) {
+      timeSlotSet.add(`${hour.toString().padStart(2, '0')}:00`);
     }
   }
+  
+  // Sort time slots chronologically
+  const sortedTimeSlots = Array.from(timeSlotSet).sort((a, b) => {
+    const [aHour, aMinutes] = a.split(':').map(Number);
+    const [bHour, bMinutes] = b.split(':').map(Number);
+    
+    if (aHour === bHour) {
+      return aMinutes - bMinutes;
+    }
+    return aHour - bHour;
+  });
+  
+  return sortedTimeSlots;
+}
 
-  // Sort time slots
-  return Array.from(timeSlots)
-    .sort((a, b) => {
-      const [hourA, minuteA] = a.split(':').map(Number);
-      const [hourB, minuteB] = b.split(':').map(Number);
-      
-      if (hourA !== hourB) {
-        return hourA - hourB;
-      }
-      return minuteA - minuteB;
+/**
+ * Gets the day names and dates for a week starting from the given date
+ */
+export function getDaysOfWeek(currentDate: Date): { name: string; date: Date; dayOfWeek: number }[] {
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const result = [];
+  
+  // Ensure we have a valid date
+  const baseDate = currentDate && currentDate instanceof Date ? currentDate : new Date();
+  const startDay = startOfDay(baseDate);
+  
+  // Create 7 days starting from the current date
+  for (let i = 0; i < 7; i++) {
+    const date = addDays(startDay, i);
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    result.push({
+      name: dayNames[dayOfWeek],
+      date: date,
+      dayOfWeek: dayOfWeek
     });
-};
+  }
+  
+  return result;
+}
+
+/**
+ * Format time slot for display (e.g., "09:00" -> "9:00 AM")
+ */
+export function formatTimeDisplay(timeSlot: string): string {
+  if (!timeSlot) return '';
+  
+  const [hour, minute] = timeSlot.split(':').map(Number);
+  
+  // Handle 24-hour time format
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+  const displayMinute = minute ? `:${minute.toString().padStart(2, '0')}` : ':00';
+  
+  return `${displayHour}${displayMinute} ${period}`;
+}

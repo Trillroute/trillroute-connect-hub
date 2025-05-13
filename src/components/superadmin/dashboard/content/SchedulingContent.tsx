@@ -1,45 +1,32 @@
 
-import React, { useState } from 'react';
-import ContentWrapper from './ContentWrapper';
-import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
-import { useAuth } from '@/hooks/useAuth';
-import FilterSelector from '@/components/admin/scheduling/components/FilterSelector';
+import React from 'react';
+import { CalendarProvider } from '@/components/admin/scheduling/context/CalendarContext';
+import CalendarMainContent from '@/components/admin/scheduling/components/CalendarMainContent';
+import { CalendarViewMode } from '@/components/admin/scheduling/context/calendarTypes';
 
-const SchedulingContent: React.FC = () => {
-  const { role, isAdmin, isSuperAdmin } = useAuth();
-  const hasAdminAccess = isAdmin() || isSuperAdmin();
+interface SchedulingContentProps {
+  initialViewMode?: CalendarViewMode;
+}
+
+const SchedulingContent: React.FC<SchedulingContentProps> = ({ 
+  initialViewMode = "week" 
+}) => {
+  console.log("SchedulingContent: initializing with view mode", initialViewMode);
   
-  const [filterType, setFilterType] = useState<string | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-
   return (
-    <ContentWrapper
-      title="Calendar"
-      description="View and manage all calendar events"
-    >
-      <div className="mb-4">
-        <FilterSelector
-          filterType={filterType}
-          setFilterType={setFilterType}
-          selectedFilter={selectedFilter}
-          setSelectedFilter={setSelectedFilter}
-          selectedFilters={selectedFilters}
-          setSelectedFilters={setSelectedFilters}
-          showFilterTypeTabs={true} // Show the filter type tabs in this view
-        />
+    <div className="w-full">
+      <div className="flex flex-col space-y-4">
+        <div className="bg-white shadow-sm rounded-md p-4">
+          <CalendarProvider>
+            <CalendarMainContent 
+              hasAdminAccess={true}
+              title="Class Calendar"
+              initialViewMode={initialViewMode}
+            />
+          </CalendarProvider>
+        </div>
       </div>
-      
-      <div className="border rounded-lg bg-white overflow-hidden h-[600px]">
-        <FilteredCalendar
-          title="All Events"
-          hasAdminAccess={hasAdminAccess}
-          filterType={filterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | undefined}
-          filterValues={selectedFilters}
-          showFilterTabs={false} // Don't show duplicate tabs here as we're using the FilterSelector above
-        />
-      </div>
-    </ContentWrapper>
+    </div>
   );
 };
 

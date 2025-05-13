@@ -1,154 +1,103 @@
 
-import { useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
-import { isValid } from 'date-fns';
-
-interface Day {
-  name: string;
-  date: Date;
-  dayOfWeek: number;
-}
+import { addHours, isSameDay, format, parse } from 'date-fns';
 
 export interface CellInfo {
-  id?: string; // Add id property as optional since it might not always be available
+  id?: string;
   name: string;
-  status: string;
+  isEvent: boolean;
   category?: string;
   description?: string;
-  isEvent?: boolean;
-  isAvailability?: boolean;
-  eventData?: CalendarEvent;
-  availabilityData?: any;
 }
 
 export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailabilityMap) => {
-  // Memoize availability lookup map for O(1) access by day and time
-  const availabilityLookup = useMemo(() => {
-    const lookup: Record<number, Record<string, { userData: any, slot: any }>> = {};
-    
-    // Initialize the data structure for each day of week
-    for (let day = 0; day <= 6; day++) {
-      lookup[day] = {};
-    }
+  // Cache cell info to prevent re-generating on each render
+  const [cellInfoCache, setCellInfoCache] = useState<Record<string, CellInfo[]>>({});
 
-    // Populate the lookup structure
-    Object.entries(availabilities || {}).forEach(([userId, userData]) => {
-      if (!userData?.slots || !Array.isArray(userData.slots)) return;
-      
-      userData.slots.forEach(slot => {
-        if (slot.dayOfWeek === undefined || !slot.startTime) return;
-        
-        const dayOfWeek = slot.dayOfWeek;
-        const startTime = slot.startTime;
-        
-        if (!lookup[dayOfWeek]) {
-          lookup[dayOfWeek] = {};
-        }
-        
-        if (!lookup[dayOfWeek][startTime]) {
-          lookup[dayOfWeek][startTime] = { userData, slot };
-        }
-      });
-    });
+  const getCellInfo = useCallback((
+    day: { name: string; date: Date; dayOfWeek: number },
+    timeSlot: string
+  ): CellInfo[] => {
+    // Create a cache key using day and time slot
+    const cacheKey = `${day.date.toDateString()}-${timeSlot}`;
     
-    return lookup;
-  }, [availabilities]);
-
-  // Memoize events by day and time for faster lookups
-  const eventsByDayAndTime = useMemo(() => {
-    const eventMap: Record<string, CalendarEvent[]> = {};
-    
-    events.forEach(event => {
-      if (!event.start || !event.end) return;
-      
-      let eventStart: Date;
-      
-      if (event.start instanceof Date) {
-        eventStart = event.start;
-      } else {
-        try {
-          eventStart = new Date(event.start);
-          if (!isValid(eventStart)) {
-            console.error("Invalid event start date:", event);
-            return;
-          }
-        } catch (error) {
-          console.error("Error parsing event date:", error);
-          return;
-        }
-      }
-      
-      const dateKey = eventStart.toISOString().split('T')[0]; // YYYY-MM-DD format
-      
-      if (!eventMap[dateKey]) {
-        eventMap[dateKey] = [];
-      }
-      
-      eventMap[dateKey].push(event);
-    });
-    
-    return eventMap;
-  }, [events]);
-
-  // Updated getCellInfo to return both events and availabilities
-  const getCellInfo = useCallback((day: Day, timeSlot: string): CellInfo[] => {
-    const results: CellInfo[] = [];
-    
-    // First check availabilities using our optimized lookup
-    if (availabilityLookup[day.dayOfWeek] && availabilityLookup[day.dayOfWeek][timeSlot]) {
-      const { userData, slot } = availabilityLookup[day.dayOfWeek][timeSlot];
-      results.push({
-        id: `avail-${day.dayOfWeek}-${timeSlot}-${userData?.id || 'unknown'}`,
-        name: userData.name || 'Staff',
-        status: 'available',
-        category: slot.category || 'Regular slot',
-        isAvailability: true,
-        availabilityData: { userData, slot }
-      });
+    // If we have cached data, return it
+    if (cellInfoCache[cacheKey]) {
+      return cellInfoCache[cacheKey];
     }
     
-    // Check for events
-    if (!isValid(day.date)) {
-      console.error("Invalid day.date in getCellInfo:", day);
-      return results;
-    }
+    const result: CellInfo[] = [];
     
-    const dayDate = new Date(day.date);
-    const dateKey = dayDate.toISOString().split('T')[0];
-    
-    if (eventsByDayAndTime[dateKey]) {
-      const [hours, minutes] = timeSlot.split(':').map(Number);
-      dayDate.setHours(hours, minutes || 0, 0, 0);
-      
-      // Create time range for slot
-      const slotStart = new Date(dayDate);
-      const slotEnd = new Date(slotStart);
-      slotEnd.setHours(slotStart.getHours() + 1); // Assuming 1 hour slots
-      
-      // Find events that overlap with this time slot
-      const matchingEvents = eventsByDayAndTime[dateKey].filter(event => {
-        const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
-        const eventEnd = event.end instanceof Date ? event.end : new Date(event.end);
+    // Check if there are events at this day and time
+    if (events && Array.isArray(events)) {
+      const matchingEvents = events.filter(event => {
+        const eventHour = new Date(event.start).getHours();
+        const eventMinutes = new Date(event.start).getMinutes();
+        const [slotHour, slotMinutes] = timeSlot.split(':').map(Number);
         
-        return (eventStart <= slotEnd && eventEnd >= slotStart);
+        return (
+          isSameDay(new Date(event.start), day.date) && 
+          eventHour === slotHour && 
+          eventMinutes === (slotMinutes || 0)
+        );
       });
       
+      // Add matching events to result
       matchingEvents.forEach(event => {
-        results.push({
+        result.push({
           id: event.id,
-          name: event.title,
-          status: 'booked',
-          description: event.description,
+          name: event.title || 'Untitled Event',
           isEvent: true,
-          eventData: event
+          category: event.eventCategory || 'Event',
+          description: event.description
         });
       });
     }
     
-    return results;
-  }, [availabilityLookup, eventsByDayAndTime]);
+    // Check for availability slots at this day and time
+    if (availabilities && typeof availabilities === 'object') {
+      const userIds = Object.keys(availabilities);
+      
+      for (const userId of userIds) {
+        const userData = availabilities[userId];
+        
+        if (userData && Array.isArray(userData.slots)) {
+          // Find slots matching this day and time
+          const matchingSlots = userData.slots.filter(slot => {
+            // Check if the day of week matches
+            if (slot.dayOfWeek !== day.dayOfWeek) return false;
+            
+            // Parse the time slot and slot start time
+            const [slotHour, slotMinutes] = timeSlot.split(':').map(Number);
+            const [startHour, startMinutes] = slot.startTime.split(':').map(Number);
+            
+            // Compare times - simple hour:minute comparison
+            return startHour === slotHour && startMinutes === (slotMinutes || 0);
+          });
+          
+          // Add matching availability slots to result
+          matchingSlots.forEach(slot => {
+            result.push({
+              id: `${userId}-${slot.dayOfWeek}-${slot.startTime}`,
+              name: userData.name || 'Staff Member',
+              isEvent: false,
+              category: slot.category || 'Available',
+              description: `${userData.name || 'Staff member'} is available`
+            });
+          });
+        }
+      }
+    }
+    
+    // Cache the result
+    setCellInfoCache(prev => ({
+      ...prev,
+      [cacheKey]: result
+    }));
+    
+    return result;
+  }, [events, availabilities]);
 
   return { getCellInfo };
 };
-
-export default useCellInfo;
