@@ -12,6 +12,52 @@ import { DayAvailability } from '@/hooks/availability/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAvailabilityOperations } from './useAvailabilityOperations';
 
+// Helper function to create a separate scope for availability queries
+const useAvailabilityQueries = (userId: string | undefined) => {
+  // Fetch availability for a specific date
+  const getAvailabilityForDate = useCallback(async (date: Date) => {
+    if (!userId) return [];
+    
+    try {
+      return await fetchUserAvailabilityForDate(userId, date);
+    } catch (error) {
+      console.error('Failed to fetch availability for date:', error);
+      return [];
+    }
+  }, [userId]);
+  
+  // Fetch availability for an entire week
+  const getAvailabilityForWeek = useCallback(async () => {
+    if (!userId) return [];
+    
+    try {
+      return await fetchUserAvailabilityForWeek(userId);
+    } catch (error) {
+      console.error('Failed to fetch weekly availability:', error);
+      return [];
+    }
+  }, [userId]);
+  
+  // Fetch availability for multiple users
+  const getMultiUserAvailability = useCallback(async (userIds: string[]) => {
+    try {
+      if (!userIds.length) return {};
+      
+      console.log(`Fetching availability for ${userIds.length} users`);
+      return await fetchUserAvailabilityForUsers(userIds);
+    } catch (error) {
+      console.error('Failed to fetch multi-user availability:', error);
+      return {};
+    }
+  }, []);
+
+  return {
+    getAvailabilityForDate,
+    getAvailabilityForWeek,
+    getMultiUserAvailability
+  };
+};
+
 // Main hook for user availability functionality
 export const useUserAvailability = (userId: string | undefined) => {
   const [userAvailability, setUserAvailability] = useState<UserAvailability[]>([]);
@@ -19,15 +65,7 @@ export const useUserAvailability = (userId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(false);
   const [dailyAvailability, setDailyAvailability] = useState<DayAvailability[]>([]);
   const { toast } = useToast();
-
-  // Get CRUD operations from separate hook
-  const { 
-    addSlot, 
-    updateSlot, 
-    deleteSlot, 
-    copyDaySlots 
-  } = useAvailabilityOperations(userId, refreshAvailability, toast);
-
+  
   // Fetch availability slots for a specific user
   const refreshAvailability = useCallback(async () => {
     if (!userId) {
@@ -78,6 +116,14 @@ export const useUserAvailability = (userId: string | undefined) => {
     return null;
   }, [userId]);
 
+  // Get CRUD operations from separate hook
+  const { 
+    addSlot, 
+    updateSlot, 
+    deleteSlot, 
+    copyDaySlots 
+  } = useAvailabilityOperations(userId, refreshAvailability, { toast });
+
   // Fetch availability for a specific date or week
   const { 
     getAvailabilityForDate, 
@@ -107,51 +153,5 @@ export const useUserAvailability = (userId: string | undefined) => {
     updateSlot,
     deleteSlot,
     copyDaySlots
-  };
-};
-
-// Hook for availability query operations
-const useAvailabilityQueries = (userId: string | undefined) => {
-  // Fetch availability for a specific date
-  const getAvailabilityForDate = useCallback(async (date: Date) => {
-    if (!userId) return [];
-    
-    try {
-      return await fetchUserAvailabilityForDate(userId, date);
-    } catch (error) {
-      console.error('Failed to fetch availability for date:', error);
-      return [];
-    }
-  }, [userId]);
-  
-  // Fetch availability for an entire week
-  const getAvailabilityForWeek = useCallback(async () => {
-    if (!userId) return [];
-    
-    try {
-      return await fetchUserAvailabilityForWeek(userId);
-    } catch (error) {
-      console.error('Failed to fetch weekly availability:', error);
-      return [];
-    }
-  }, [userId]);
-  
-  // Fetch availability for multiple users
-  const getMultiUserAvailability = useCallback(async (userIds: string[]) => {
-    try {
-      if (!userIds.length) return {};
-      
-      console.log(`Fetching availability for ${userIds.length} users`);
-      return await fetchUserAvailabilityForUsers(userIds);
-    } catch (error) {
-      console.error('Failed to fetch multi-user availability:', error);
-      return {};
-    }
-  }, []);
-
-  return {
-    getAvailabilityForDate,
-    getAvailabilityForWeek,
-    getMultiUserAvailability
   };
 };
