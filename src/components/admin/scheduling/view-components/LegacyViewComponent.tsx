@@ -8,7 +8,6 @@ import { Clock, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserAvailability } from '@/services/availability/types';
 import { useStaffAvailability } from '@/hooks/useStaffAvailability';
-import { transformAvailabilityData } from '@/hooks/availability/availabilityTransforms';
 
 interface LegacyViewComponentProps {
   onCreateEvent?: () => void;
@@ -22,7 +21,7 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = React.mem
   onDeleteEvent
 }) => {
   const { currentDate, events } = useCalendar();
-  const { availabilities, isLoading } = useStaffAvailability();
+  const { availabilityByUser, isLoading } = useStaffAvailability();
 
   // Get events for the current date
   const todayEvents = useMemo(() => {
@@ -38,13 +37,13 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = React.mem
 
   // Transform availability data for display
   const availabilitySlots = useMemo(() => {
-    if (!availabilities || isLoading) return [];
+    if (!availabilityByUser || isLoading) return [];
     
     const dayOfWeek = currentDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
-    const availabilityForToday: UserAvailability[] = [];
+    const availabilityForToday: Array<UserAvailability & { userName?: string }> = [];
     
     // Collect all availability slots for the current day of week
-    Object.values(availabilities).forEach(userAvailability => {
+    Object.entries(availabilityByUser).forEach(([userId, userAvailability]) => {
       if (userAvailability && userAvailability.slots) {
         const todaySlots = userAvailability.slots.filter(slot => slot.dayOfWeek === dayOfWeek);
         if (todaySlots.length > 0) {
@@ -62,7 +61,7 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = React.mem
     return availabilityForToday.sort((a, b) => {
       return a.startTime.localeCompare(b.startTime);
     });
-  }, [availabilities, currentDate, isLoading]);
+  }, [availabilityByUser, currentDate, isLoading]);
 
   // Format time string for display
   const formatTimeString = useCallback((timeString: string) => {

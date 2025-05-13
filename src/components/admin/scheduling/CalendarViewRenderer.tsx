@@ -5,14 +5,16 @@ import { WeekViewComponent } from './view-components/WeekViewComponent';
 import { MonthViewComponent } from './view-components/MonthViewComponent';
 import { EventListViewComponent } from './view-components/EventListViewComponent';
 import { LegacyViewComponent } from './view-components/LegacyViewComponent';
-import { CalendarEvent } from './types';
+import { CalendarEvent, CalendarViewMode } from './types';
 
 interface CalendarViewRendererProps {
-  viewMode: 'day' | 'week' | 'month' | 'list' | 'legacy';
+  viewMode: CalendarViewMode;
   onDateClick?: (date: Date) => void;
   onCreateEvent?: () => void;
   onEditEvent?: (event: CalendarEvent) => void;
   onDeleteEvent?: (event: CalendarEvent) => void;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterIds?: string[];
 }
 
 const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
@@ -20,7 +22,9 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   onDateClick,
   onCreateEvent,
   onEditEvent,
-  onDeleteEvent
+  onDeleteEvent,
+  filterType,
+  filterIds
 }) => {
   switch (viewMode) {
     case 'day':

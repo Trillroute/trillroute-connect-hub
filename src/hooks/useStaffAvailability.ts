@@ -9,10 +9,12 @@ export interface StaffMember {
   role: string;
 }
 
-interface UseStaffAvailabilityResult {
+export interface UseStaffAvailabilityResult {
   staffMembers: StaffMember[];
+  availabilities: UserAvailabilityMap;
   availabilityByUser: UserAvailabilityMap;
   loading: boolean;
+  isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 }
@@ -55,8 +57,10 @@ export const useStaffAvailability = (): UseStaffAvailabilityResult => {
 
   return {
     staffMembers,
+    availabilities: availabilityByUser, // Added this property
     availabilityByUser,
     loading,
+    isLoading: loading, // Added this property as an alias
     error,
     refetch: fetchStaffAvailability
   };
