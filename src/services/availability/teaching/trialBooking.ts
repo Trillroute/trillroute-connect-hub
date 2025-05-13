@@ -132,19 +132,17 @@ export const cancelTrialClass = async (
  */
 export const checkSlotAvailability = async (slotId: string): Promise<boolean> => {
   try {
-    // Use appropriate table name for trial slots
+    // Instead of directly querying a table that doesn't exist, use an RPC function
     const { data, error } = await supabase
-      .from('teacher_trial_slots')  // Using correct table name
-      .select('is_booked')
-      .eq('id', slotId)
-      .single();
+      .rpc('check_slot_availability', { slot_id: slotId });
     
     if (error) {
       console.error('Error checking slot availability:', error);
       return false;
     }
     
-    return !data?.is_booked;
+    // The RPC function should return a boolean indicating if the slot is available
+    return !!data;
   } catch (error) {
     console.error('Error in checkSlotAvailability:', error);
     return false;
@@ -207,8 +205,8 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
       return [];
     }
     
-    if (!data) {
-      console.log('No data returned from get_available_trial_slots');
+    if (!data || !Array.isArray(data)) {
+      console.log('No data returned from get_available_trial_slots or data is not an array');
       return [];
     }
     

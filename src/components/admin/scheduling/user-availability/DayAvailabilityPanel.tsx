@@ -8,7 +8,7 @@ import AvailabilitySlotsGrid from './day-panel/AvailabilitySlotsGrid';
 
 interface DayAvailabilityPanelProps {
   day: DayAvailability;
-  onAddSlot: (startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onDeleteSlot: (id: string) => Promise<boolean>;
 }
@@ -19,6 +19,11 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
   onUpdateSlot,
   onDeleteSlot
 }) => {
+  // Modified to correctly pass the day's dayOfWeek to onAddSlot
+  const adaptedOnAddSlot = (startTime: string, endTime: string, category: string) => {
+    return onAddSlot(day.dayOfWeek, startTime, endTime, category);
+  };
+
   const { 
     isDialogOpen, 
     editingSlot, 
@@ -27,7 +32,10 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
     handleOpenNewDialog, 
     handleCloseDialog, 
     handleSaveSlot 
-  } = useTimeSlotDialog({ onAddSlot, onUpdateSlot });
+  } = useTimeSlotDialog({ 
+    onAddSlot, 
+    onUpdateSlot 
+  });
   
   // Debug log when component renders or day changes
   useEffect(() => {
@@ -37,6 +45,11 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
       slotsCount: day.slots.length
     });
   }, [day]);
+
+  // Modified to correctly handle the slot editing
+  const onSaveSlot = (startTime: string, endTime: string, category: string) => {
+    return handleSaveSlot(day.dayOfWeek, startTime, endTime, category);
+  };
 
   return (
     <div className="py-2">
@@ -51,7 +64,7 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
       <TimeSlotDialog 
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onSave={handleSaveSlot}
+        onSave={onSaveSlot}
         initialStartTime={editingSlot?.startTime}
         initialEndTime={editingSlot?.endTime}
         initialCategory={editingSlot?.category}

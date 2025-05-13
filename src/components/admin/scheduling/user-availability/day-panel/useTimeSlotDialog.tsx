@@ -1,129 +1,72 @@
 
-import { useState, useCallback } from 'react';
-import { UserAvailability } from '@/services/availability/types';
+import React, { useState } from 'react';
+import { UserAvailability } from '@/services/userAvailabilityService';
 
-interface UseTimeSlotDialogProps {
+interface TimeSlotDialogProps {
   onAddSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
-  onDeleteSlot: (id: string) => Promise<boolean>;
 }
 
-interface TimeSlotDialogState {
-  isOpen: boolean;
-  isEditing: boolean;
-  isLoading: boolean;
-  slot: UserAvailability | null;
-  dayOfWeek: number;
-}
+export const useTimeSlotDialog = ({ onAddSlot, onUpdateSlot }: TimeSlotDialogProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<{
+    id?: string;
+    startTime?: string;
+    endTime?: string;
+    category?: string;
+  } | null>(null);
 
-export function useTimeSlotDialog({
-  onAddSlot,
-  onUpdateSlot,
-  onDeleteSlot
-}: UseTimeSlotDialogProps) {
-  const [state, setState] = useState<TimeSlotDialogState>({
-    isOpen: false,
-    isEditing: false,
-    isLoading: false,
-    slot: null,
-    dayOfWeek: 0
-  });
-
-  const openAddDialog = useCallback((dayOfWeek: number) => {
-    setState({
-      isOpen: true,
-      isEditing: false,
-      isLoading: false,
-      slot: null,
-      dayOfWeek
+  const handleOpenNewDialog = (hour?: number, minute?: number) => {
+    // Default to current hour if not provided
+    const now = new Date();
+    const startHour = hour !== undefined ? hour : now.getHours();
+    const startMinute = minute !== undefined ? minute : 0;
+    
+    // Format time as HH:MM
+    const startTime = `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
+    
+    // Default end time is one hour later
+    const endHour = (startHour + 1) % 24;
+    const endTime = `${String(endHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
+    
+    setEditingSlot({
+      startTime,
+      endTime,
+      category: 'Session'
     });
-  }, []);
+    setIsDialogOpen(true);
+  };
 
-  const openEditDialog = useCallback((slot: UserAvailability, dayOfWeek: number) => {
-    setState({
-      isOpen: true,
-      isEditing: true,
-      isLoading: false,
-      slot,
-      dayOfWeek
+  const handleOpenEditDialog = (slot: UserAvailability) => {
+    setEditingSlot({
+      id: slot.id,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      category: slot.category
     });
-  }, []);
+    setIsDialogOpen(true);
+  };
 
-  const closeDialog = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      isOpen: false,
-      isLoading: false
-    }));
-  }, []);
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingSlot(null);
+  };
 
-  const handleSave = useCallback(async (startTime: string, endTime: string, category: string) => {
-    setState(prev => ({ ...prev, isLoading: true }));
-
+  const handleSaveSlot = async (dayOfWeek: number, startTime: string, endTime: string, category: string): Promise<boolean> => {
     try {
-      let success: boolean;
-
-      if (state.isEditing && state.slot) {
+      if (editingSlot?.id) {
         // Update existing slot
-        success = await onUpdateSlot(state.slot.id, startTime, endTime, category);
+        return await onUpdateSlot(editingSlot.id, startTime, endTime, category);
       } else {
         // Add new slot
-        success = await onAddSlot(state.dayOfWeek, startTime, endTime, category);
+        return await onAddSlot(dayOfWeek, startTime, endTime, category);
       }
-
-      if (success) {
-        closeDialog();
-      } else {
-        setState(prev => ({ ...prev, isLoading: false }));
-      }
-    } catch (error) {
-      console.error('Error saving time slot:', error);
-      setState(prev => ({ ...prev, isLoading: false }));
+    } finally {
+      handleCloseDialog();
     }
-  }, [state.isEditing, state.slot, state.dayOfWeek, onUpdateSlot, onAddSlot, closeDialog]);
-
-  const handleDelete = useCallback(async () => {
-    if (!state.slot) return;
-    
-    setState(prev => ({ ...prev, isLoading: true }));
-
-    try {
-      const success = await onDeleteSlot(state.slot.id);
-      if (success) {
-        closeDialog();
-      } else {
-        setState(prev => ({ ...prev, isLoading: false }));
-      }
-    } catch (error) {
-      console.error('Error deleting time slot:', error);
-      setState(prev => ({ ...prev, isLoading: false }));
-    }
-  }, [state.slot, onDeleteSlot, closeDialog]);
-
-  // Aliases for backward compatibility with code that uses old naming conventions
-  const isDialogOpen = state.isOpen;
-  const editingSlot = state.slot;
-  const setIsDialogOpen = (open: boolean) => {
-    if (!open) closeDialog();
   };
-  const handleOpenEditDialog = openEditDialog;
-  const handleOpenNewDialog = openAddDialog;
-  const handleCloseDialog = closeDialog;
-  const handleSaveSlot = handleSave;
 
   return {
-    // New API
-    isOpen: state.isOpen,
-    isEditing: state.isEditing,
-    isLoading: state.isLoading,
-    slot: state.slot,
-    dayOfWeek: state.dayOfWeek,
-    openAddDialog,
-    openEditDialog,
-    closeDialog,
-    handleSave,
-    handleDelete,
-    // Backward compatibility API
     isDialogOpen,
     editingSlot,
     setIsDialogOpen,
@@ -132,4 +75,4 @@ export function useTimeSlotDialog({
     handleCloseDialog,
     handleSaveSlot
   };
-}
+};
