@@ -1,5 +1,6 @@
+
 import { useState, useCallback } from 'react';
-import { CalendarEvent } from '../types';
+import { CalendarEvent } from '../context/calendarTypes';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { 
@@ -42,7 +43,7 @@ export const useCalendarEvents = () => {
         description: "You must be logged in to create events",
         variant: "destructive"
       });
-      return false;
+      return null;
     }
 
     setIsLoading(true);
@@ -55,7 +56,7 @@ export const useCalendarEvents = () => {
           title: "Event created",
           description: `"${eventData.title}" has been added to your calendar.`,
         });
-        return true;
+        return newEvent.id;
       }
     } catch (error: any) {
       toast({
@@ -66,10 +67,10 @@ export const useCalendarEvents = () => {
     } finally {
       setIsLoading(false);
     }
-    return false;
+    return null;
   }, [user, toast]);
 
-  const handleUpdateEvent = useCallback(async (id: string, eventData: Omit<CalendarEvent, 'id'>) => {
+  const handleUpdateEvent = useCallback(async (id: string, eventData: Partial<Omit<CalendarEvent, 'id'>>) => {
     if (!user) return false;
     
     setIsLoading(true);

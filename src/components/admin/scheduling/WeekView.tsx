@@ -23,9 +23,11 @@ import { calculateEventPosition, AvailabilitySlot, isTimeAvailable } from './wee
 
 interface WeekViewProps {
   onCreateEvent?: () => void;
+  onEditEvent?: (event: CalendarEvent) => void;
+  onDeleteEvent?: (event: CalendarEvent) => void;
 }
 
-const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
+const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDeleteEvent }) => {
   const { currentDate, events, handleUpdateEvent, handleDeleteEvent, availabilities } = useCalendar();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -155,6 +157,25 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
     }
   };
 
+  // Use provided event handlers when available
+  const handleEditEvent = (event: CalendarEvent) => {
+    if (onEditEvent) {
+      onEditEvent(event);
+    } else {
+      setSelectedEvent(event);
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  const handleDeleteEventClick = (event: CalendarEvent) => {
+    if (onDeleteEvent) {
+      onDeleteEvent(event);
+    } else {
+      setSelectedEvent(event);
+      setIsDeleteDialogOpen(true);
+    }
+  };
+
   return (
     <div className="relative h-full">
       {/* Time column */}
@@ -227,8 +248,8 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
                   event={event}
                   isSelected={selectedEvent?.id === event.id}
                   onSelect={openEventActions}
-                  onEdit={handleEdit}
-                  onDelete={confirmDelete}
+                  onEdit={() => handleEditEvent(event)}
+                  onDelete={() => handleDeleteEventClick(event)}
                   style={calculateEventPosition(event)}
                 />
               ))}
@@ -237,8 +258,8 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
         ))}
       </div>
 
-      {/* Edit Event Dialog */}
-      {selectedEvent && (
+      {/* Edit Event Dialog - only show if we're handling editing internally */}
+      {!onEditEvent && selectedEvent && (
         <EventFormDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
@@ -255,26 +276,28 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Event</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{selectedEvent?.title}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleConfirmDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Confirmation Dialog - only show if we're handling deletion internally */}
+      {!onDeleteEvent && (
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Event</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{selectedEvent?.title}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                className="bg-red-600 hover:bg-red-700"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 };

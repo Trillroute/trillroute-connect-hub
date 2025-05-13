@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
+import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap, CalendarViewMode } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { useCalendarFilters } from './useCalendarFilters';
@@ -52,31 +52,36 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
   return (
     <CalendarContext.Provider
       value={{
+        events,
+        isLoading,
         currentDate,
         viewMode,
-        events,
-        isCreateEventOpen,
-        isLoading,
-        activeLayers,
-        selectedUsers,
-        availabilities,
-        setCurrentDate,
         setViewMode,
-        setEvents,
-        setIsCreateEventOpen,
-        setActiveLayers,
-        setSelectedUsers,
-        setAvailabilities,
-        toggleLayer,
-        toggleUser,
-        goToToday,
-        goToPrevious,
-        goToNext,
+        setCurrentDate,
+        navigateToToday: goToToday,
+        navigateNext: goToNext,
+        navigatePrev: goToPrevious,
+        refreshEvents,
         handleCreateEvent,
         handleUpdateEvent,
         handleDeleteEvent,
+        availabilities,
+        setAvailabilities,
+        setEvents,
+        // Add missing properties
         handleDateSelect,
-        refreshEvents,
+        isCreateEventOpen,
+        setIsCreateEventOpen,
+        goToToday,
+        goToPrevious,
+        goToNext,
+        // Add filter properties
+        activeLayers,
+        selectedUsers,
+        setActiveLayers,
+        setSelectedUsers,
+        toggleLayer,
+        toggleUser,
         filterEventsByRole,
         filterEventsByUser,
       }}

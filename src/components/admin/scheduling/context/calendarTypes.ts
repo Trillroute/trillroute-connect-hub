@@ -37,6 +37,15 @@ export interface UserAvailabilityMap {
   [userId: string]: UserAvailabilityData;
 }
 
+// Add EventLayer and SelectedUser types
+export type EventLayer = 'teachers' | 'students' | 'admins' | 'superadmins';
+
+export interface SelectedUser {
+  id: string;
+  name: string;
+  layer: EventLayer;
+}
+
 export interface CalendarContextType {
   events: CalendarEvent[];
   isLoading: boolean;
@@ -54,6 +63,22 @@ export interface CalendarContextType {
   availabilities: UserAvailabilityMap;
   setAvailabilities: (availabilities: UserAvailabilityMap) => void;
   setEvents: (events: CalendarEvent[]) => void;
+  // Add missing properties for sidebar and filters
+  handleDateSelect: (date: Date | undefined) => void;
+  setIsCreateEventOpen: (isOpen: boolean) => void;
+  isCreateEventOpen: boolean;
+  goToToday: () => void;
+  goToPrevious: () => void;
+  goToNext: () => void;
+  // Add properties for layers and filters
+  activeLayers: EventLayer[];
+  selectedUsers: SelectedUser[];
+  setActiveLayers: (layers: EventLayer[]) => void;
+  setSelectedUsers: (users: SelectedUser[]) => void;
+  toggleLayer: (layer: EventLayer) => void;
+  toggleUser: (user: SelectedUser) => void;
+  filterEventsByRole: (roles: string[]) => Promise<void>;
+  filterEventsByUser: (userId: string) => Promise<void>;
 }
 
 export interface CalendarProviderProps {
