@@ -103,6 +103,7 @@ export const useFilteredEvents = ({
             console.log('No filterType specified, refreshing all events');
           }
           
+          // Fix: Store the result of refreshEvents() in a variable and then check it
           const refreshedEvents = await refreshEvents();
           if (isMounted && refreshedEvents) {
             setEvents(refreshedEvents);
