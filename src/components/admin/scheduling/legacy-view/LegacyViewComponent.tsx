@@ -37,7 +37,7 @@ const LegacyViewComponent: React.FC = () => {
     };
     
     loadData();
-  }, [currentDate]);
+  }, [currentDate, refreshEvents, refetch, setAvailabilities, availabilityByUser]);
   
   // Determine which availability data to use - prefer filtered availabilities from context if available
   const effectiveAvailabilities = useMemo(() => {
