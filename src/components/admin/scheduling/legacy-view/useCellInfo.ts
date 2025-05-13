@@ -16,7 +16,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
   const [cellInfoCache, setCellInfoCache] = useState<Record<string, CellInfo[]>>({});
 
   const getCellInfo = useCallback((
-    day: { name: string; date: Date; dayOfWeek: number },
+    day: Date,
     timeSlot: string
   ): CellInfo[] => {
     if (!day || !timeSlot) {
@@ -24,7 +24,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     }
 
     // Create a cache key using day and time slot
-    const cacheKey = `${day.date.toDateString()}-${timeSlot}`;
+    const cacheKey = `${day.toDateString()}-${timeSlot}`;
     
     // If we have cached data, return it
     if (cellInfoCache[cacheKey]) {
@@ -44,7 +44,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
         const [slotHour, slotMinutes] = timeSlot.split(':').map(Number);
         
         return (
-          isSameDay(eventStart, day.date) && 
+          isSameDay(eventStart, day) && 
           eventHour === slotHour && 
           eventMinutes === (slotMinutes || 0)
         );
@@ -65,6 +65,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     // Check for availability slots at this day and time
     if (availabilities && typeof availabilities === 'object') {
       const userIds = Object.keys(availabilities);
+      const dayOfWeek = day.getDay(); // 0 = Sunday, 1 = Monday, etc.
       
       for (const userId of userIds) {
         const userData = availabilities[userId];
@@ -77,7 +78,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
             }
             
             // Check if the day of week matches
-            if (slot.dayOfWeek !== day.dayOfWeek) return false;
+            if (slot.dayOfWeek !== dayOfWeek) return false;
             
             // Parse the time slot and slot start time
             const [slotHour, slotMinutes] = timeSlot.split(':').map(Number);

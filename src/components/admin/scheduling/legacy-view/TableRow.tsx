@@ -14,7 +14,7 @@ interface TableRowProps {
 
 const TableRow: React.FC<TableRowProps> = ({ timeSlot, daysOfWeek, events, availabilities }) => {
   // Get cell info for each day
-  const { getCellInfoForDay } = useCellInfo(timeSlot, events, availabilities);
+  const { getCellInfo } = useCellInfo(events, availabilities);
 
   return (
     <tr>
@@ -25,7 +25,7 @@ const TableRow: React.FC<TableRowProps> = ({ timeSlot, daysOfWeek, events, avail
       
       {/* Each day's cell */}
       {daysOfWeek.map((date, dayIndex) => {
-        const cellInfos = getCellInfoForDay(date);
+        const cellInfos = getCellInfo(date, timeSlot);
         const isExpired = isTimeSlotExpired(timeSlot, date);
         
         return (

@@ -1,6 +1,6 @@
 
 import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
-import { format, addDays, startOfDay } from 'date-fns';
+import { format, addDays, startOfDay, isAfter } from 'date-fns';
 
 /**
  * Extracts unique time slots from both events and availability data
@@ -57,10 +57,9 @@ export function getTimeSlots(events: CalendarEvent[], availabilities: UserAvaila
 }
 
 /**
- * Gets the day names and dates for a week starting from the given date
+ * Gets array of dates for a week starting from the given date
  */
-export function getDaysOfWeek(currentDate: Date): { name: string; date: Date; dayOfWeek: number }[] {
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export function getDaysOfWeek(currentDate: Date): Date[] {
   const result = [];
   
   // Ensure we have a valid date
@@ -70,13 +69,7 @@ export function getDaysOfWeek(currentDate: Date): { name: string; date: Date; da
   // Create 7 days starting from the current date
   for (let i = 0; i < 7; i++) {
     const date = addDays(startDay, i);
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    
-    result.push({
-      name: dayNames[dayOfWeek],
-      date: date,
-      dayOfWeek: dayOfWeek
-    });
+    result.push(date);
   }
   
   return result;
@@ -96,4 +89,17 @@ export function formatTimeDisplay(timeSlot: string): string {
   const displayMinute = minute ? `:${minute.toString().padStart(2, '0')}` : ':00';
   
   return `${displayHour}${displayMinute} ${period}`;
+}
+
+/**
+ * Checks if a time slot is in the past
+ */
+export function isTimeSlotExpired(timeSlot: string, date: Date): boolean {
+  if (!timeSlot || !date) return false;
+  
+  const [hours, minutes] = timeSlot.split(':').map(Number);
+  const slotDate = new Date(date);
+  slotDate.setHours(hours, minutes, 0, 0);
+  
+  return isAfter(new Date(), slotDate);
 }
