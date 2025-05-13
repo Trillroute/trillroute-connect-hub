@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { AvailabilitySlot } from "./types";
 
@@ -72,23 +71,45 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
       return [];
     }
 
-    // Filter slots based on course ID if provided, or get general slots
-    const filteredEvents = courseId 
-      ? events.filter(event => event.metadata?.course_id === courseId || !event.metadata?.course_id)
-      : events;
+    // Filter slots and safely access metadata
+    const filteredEvents = events.filter(event => {
+      const metadata = event.metadata;
+      if (typeof metadata === 'object' && metadata !== null) {
+        // If courseId is provided, only include slots that have matching course_id or no course_id
+        return courseId ? 
+          ((metadata as Record<string, unknown>).course_id === courseId || !(metadata as Record<string, unknown>).course_id) : 
+          true;
+      }
+      return true; // Include events with no metadata
+    });
     
-    // Map to AvailabilitySlot type
+    // Map to AvailabilitySlot type with safe metadata access
     return filteredEvents.map(event => {
       const teacher = event.custom_users;
+      const metadata = event.metadata;
+      
+      // Default values
+      let isBooked = false;
+      let eventCourseId: string | undefined;
+      let courseTitle = 'Trial Class';
+      
+      // Safely access metadata if it's an object
+      if (typeof metadata === 'object' && metadata !== null) {
+        const typedMetadata = metadata as Record<string, unknown>;
+        isBooked = typedMetadata.is_booked === true;
+        eventCourseId = typedMetadata.course_id as string | undefined;
+        courseTitle = (typedMetadata.course_title as string) || 'Trial Class';
+      }
+      
       return {
         id: event.id,
         teacherId: event.user_id,
         teacherName: teacher ? `${teacher.first_name} ${teacher.last_name}` : "Unknown Teacher",
         startTime: new Date(event.start_time),
         endTime: new Date(event.end_time),
-        isBooked: !!event.metadata?.is_booked,
-        courseId: event.metadata?.course_id,
-        courseTitle: event.metadata?.course_title || 'Trial Class'
+        isBooked: isBooked,
+        courseId: eventCourseId,
+        courseTitle: courseTitle
       };
     });
   } catch (err) {
@@ -111,8 +132,8 @@ export const hasTrialForCourse = async (userId: string, courseId: string): Promi
       .from("user_events")
       .select("*")
       .eq("event_type", "trial_booking")
-      .eq("metadata->student_id", userId)
-      .eq("metadata->course_id", courseId);
+      .filter('metadata->student_id', 'eq', userId)
+      .filter('metadata->course_id', 'eq', courseId);
     
     if (error) {
       console.error("Error checking trial booking:", error);
@@ -152,17 +173,24 @@ export const bookTrialClass = async (
       return false;
     }
     
+    // Ensure metadata is an object
+    const currentMetadata = (typeof slot.metadata === 'object' && slot.metadata !== null) 
+      ? slot.metadata as Record<string, unknown>
+      : {};
+    
     // Update the slot with booking information
+    const updatedMetadata = {
+      ...currentMetadata,
+      is_booked: true,
+      student_id: studentId,
+      course_id: courseId,
+      booking_time: new Date().toISOString()
+    };
+    
     const { error: updateError } = await supabase
       .from("user_events")
       .update({
-        metadata: {
-          ...slot.metadata,
-          is_booked: true,
-          student_id: studentId,
-          course_id: courseId,
-          booking_time: new Date().toISOString()
-        }
+        metadata: updatedMetadata
       })
       .eq("id", slotId);
     
@@ -202,22 +230,29 @@ export const cancelTrialClass = async (
       return false;
     }
     
+    // Ensure metadata is an object and verify student ID
+    const currentMetadata = (typeof slot.metadata === 'object' && slot.metadata !== null) 
+      ? slot.metadata as Record<string, unknown>
+      : {};
+      
     // Verify that the student is the one who booked the slot
-    if (slot.metadata?.student_id !== studentId) {
+    if (currentMetadata.student_id !== studentId) {
       console.error("Student ID mismatch for cancellation");
       return false;
     }
     
-    // Update the slot to remove booking information
+    // Update the slot to remove booking information but keep other metadata
+    const updatedMetadata = {
+      ...currentMetadata,
+      is_booked: false,
+      student_id: null,
+      booking_time: null
+    };
+    
     const { error: updateError } = await supabase
       .from("user_events")
       .update({
-        metadata: {
-          ...slot.metadata,
-          is_booked: false,
-          student_id: null,
-          booking_time: null
-        }
+        metadata: updatedMetadata
       })
       .eq("id", slotId);
     
