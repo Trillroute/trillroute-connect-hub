@@ -99,7 +99,7 @@ export function isTimeSlotExpired(timeSlot: string, date: Date): boolean {
   
   const [hours, minutes] = timeSlot.split(':').map(Number);
   const slotDate = new Date(date);
-  slotDate.setHours(hours, minutes, 0, 0);
+  slotDate.setHours(hours, minutes || 0, 0, 0);
   
   return isAfter(new Date(), slotDate);
 }
