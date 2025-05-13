@@ -20,7 +20,7 @@ const DayAccordionItem: React.FC<DayAccordionItemProps> = ({
   onDeleteSlot
 }) => {
   return (
-    <AccordionItem key={day.dayOfWeek} value={day.dayOfWeek.toString()}>
+    <AccordionItem key={day.dayOfWeek} value={String(day.dayOfWeek)}>
       <div className="flex items-center">
         <AccordionTrigger className="flex-1">
           <span className="font-semibold text-lg">{day.dayName}</span>
