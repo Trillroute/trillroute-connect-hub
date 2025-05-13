@@ -19,8 +19,11 @@ const DayAccordionItem: React.FC<DayAccordionItemProps> = ({
   onUpdateSlot,
   onDeleteSlot
 }) => {
+  // Convert dayOfWeek to string for the value prop
+  const dayValueAsString = String(day.dayOfWeek);
+  
   return (
-    <AccordionItem key={day.dayOfWeek} value={day.dayOfWeek.toString()}>
+    <AccordionItem value={dayValueAsString}>
       <div className="flex items-center">
         <AccordionTrigger className="flex-1">
           <span className="font-semibold text-lg">{day.dayName}</span>
