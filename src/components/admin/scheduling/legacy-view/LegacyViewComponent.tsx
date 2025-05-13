@@ -25,9 +25,9 @@ const LegacyViewComponent: React.FC = () => {
         ]);
         
         // Update availabilities in the context if needed
-        if (Object.keys(availabilityByUser || {}).length > 0 && Object.keys(availabilities || {}).length === 0) {
-          console.log("Legacy view: Setting availabilities from staff availability hook");
-          setAvailabilities(availabilityByUser || {});
+        if (availabilityByUser && Object.keys(availabilityByUser).length > 0) {
+          console.log("Legacy view: Setting availabilities from staff availability hook", availabilityByUser);
+          setAvailabilities(availabilityByUser);
         }
       } catch (error) {
         console.error("Legacy view: Error refreshing data:", error);
@@ -37,7 +37,7 @@ const LegacyViewComponent: React.FC = () => {
     };
     
     loadData();
-  }, [currentDate, refreshEvents, refetch]);
+  }, [currentDate]);
   
   // Determine which availability data to use - prefer filtered availabilities from context if available
   const effectiveAvailabilities = useMemo(() => {
@@ -62,13 +62,13 @@ const LegacyViewComponent: React.FC = () => {
   // Get all time slots from events and availabilities
   const timeSlots = useMemo(() => {
     console.log("LegacyView: Calculating time slots for", events?.length || 0, "events");
-    return getTimeSlots(events || [], effectiveAvailabilities || {});
+    return getTimeSlots(events || [], effectiveAvailabilities);
   }, [events, effectiveAvailabilities]);
   
   // Get days of the week starting from current date
   const daysOfWeek = useMemo(() => {
     console.log("LegacyView: Calculating days of week from", currentDate?.toDateString());
-    return getDaysOfWeek(currentDate);
+    return getDaysOfWeek(currentDate || new Date());
   }, [currentDate]);
 
   // Log data for debugging
@@ -92,7 +92,7 @@ const LegacyViewComponent: React.FC = () => {
     );
   }
 
-  if (timeSlots.length === 0) {
+  if (!timeSlots || timeSlots.length === 0) {
     return (
       <div className="flex justify-center items-center h-64 flex-col gap-4">
         <p className="text-gray-500 text-center">No time slots found for the selected period.</p>
@@ -105,7 +105,7 @@ const LegacyViewComponent: React.FC = () => {
     <div className="w-full overflow-auto p-4">
       <LegacyViewTable
         events={events || []}
-        availabilities={effectiveAvailabilities || {}}
+        availabilities={effectiveAvailabilities}
         timeSlots={timeSlots}
         daysOfWeek={daysOfWeek}
       />

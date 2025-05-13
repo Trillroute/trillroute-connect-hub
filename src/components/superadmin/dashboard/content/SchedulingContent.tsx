@@ -22,6 +22,7 @@ const SchedulingContent: React.FC<SchedulingContentProps> = ({
               hasAdminAccess={true}
               title="Class Calendar"
               initialViewMode={initialViewMode}
+              showFilterTabs={initialViewMode !== "legacy"} // Hide filter tabs for legacy view
             />
           </CalendarProvider>
         </div>

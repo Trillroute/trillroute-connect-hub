@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
-import { addHours, isSameDay, format, parse } from 'date-fns';
+import { isSameDay } from 'date-fns';
 
 export interface CellInfo {
   id?: string;
@@ -19,6 +19,10 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     day: { name: string; date: Date; dayOfWeek: number },
     timeSlot: string
   ): CellInfo[] => {
+    if (!day || !timeSlot) {
+      return [];
+    }
+
     // Create a cache key using day and time slot
     const cacheKey = `${day.date.toDateString()}-${timeSlot}`;
     
@@ -32,12 +36,15 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     // Check if there are events at this day and time
     if (events && Array.isArray(events)) {
       const matchingEvents = events.filter(event => {
-        const eventHour = new Date(event.start).getHours();
-        const eventMinutes = new Date(event.start).getMinutes();
+        if (!event || !event.start) return false;
+        
+        const eventStart = new Date(event.start);
+        const eventHour = eventStart.getHours();
+        const eventMinutes = eventStart.getMinutes();
         const [slotHour, slotMinutes] = timeSlot.split(':').map(Number);
         
         return (
-          isSameDay(new Date(event.start), day.date) && 
+          isSameDay(eventStart, day.date) && 
           eventHour === slotHour && 
           eventMinutes === (slotMinutes || 0)
         );
@@ -65,12 +72,20 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
         if (userData && Array.isArray(userData.slots)) {
           // Find slots matching this day and time
           const matchingSlots = userData.slots.filter(slot => {
+            if (!slot || typeof slot.dayOfWeek !== 'number' || !slot.startTime) {
+              return false;
+            }
+            
             // Check if the day of week matches
             if (slot.dayOfWeek !== day.dayOfWeek) return false;
             
             // Parse the time slot and slot start time
             const [slotHour, slotMinutes] = timeSlot.split(':').map(Number);
             const [startHour, startMinutes] = slot.startTime.split(':').map(Number);
+            
+            if (isNaN(slotHour) || isNaN(startHour)) {
+              return false;
+            }
             
             // Compare times - simple hour:minute comparison
             return startHour === slotHour && startMinutes === (slotMinutes || 0);
@@ -97,7 +112,7 @@ export const useCellInfo = (events: CalendarEvent[], availabilities: UserAvailab
     }));
     
     return result;
-  }, [events, availabilities]);
+  }, [events, availabilities, cellInfoCache]);
 
   return { getCellInfo };
 };

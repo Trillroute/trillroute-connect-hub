@@ -10,15 +10,18 @@ interface TableCellProps {
 }
 
 const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired }) => {
+  // Ensure cellInfos is always an array, even if undefined is passed
+  const safeInfos = Array.isArray(cellInfos) ? cellInfos : [];
+  
   // If no infos, render an empty cell
-  if (!cellInfos || cellInfos.length === 0) {
+  if (safeInfos.length === 0) {
     return <td className="p-2 border bg-gray-50 h-16"></td>;
   }
   
   return (
     <td className="p-2 border relative min-h-[120px]">
       <div className="flex flex-col gap-1">
-        {cellInfos.map((cellInfo, idx) => {
+        {safeInfos.map((cellInfo, idx) => {
           // Determine the cell color based on type and expiration status
           let bgColorClass = '';
           

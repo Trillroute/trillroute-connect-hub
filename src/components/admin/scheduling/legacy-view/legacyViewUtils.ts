@@ -11,11 +11,13 @@ export function getTimeSlots(events: CalendarEvent[], availabilities: UserAvaila
   // Get time slots from events
   if (events && Array.isArray(events)) {
     events.forEach(event => {
-      const startDate = new Date(event.start);
-      const hour = startDate.getHours();
-      const minutes = startDate.getMinutes();
-      const timeString = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      timeSlotSet.add(timeString);
+      if (event && event.start) {
+        const startDate = new Date(event.start);
+        const hour = startDate.getHours();
+        const minutes = startDate.getMinutes();
+        const timeString = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        timeSlotSet.add(timeString);
+      }
     });
   }
   
@@ -24,7 +26,7 @@ export function getTimeSlots(events: CalendarEvent[], availabilities: UserAvaila
     Object.values(availabilities).forEach(userData => {
       if (userData && Array.isArray(userData.slots)) {
         userData.slots.forEach(slot => {
-          if (slot.startTime) {
+          if (slot && slot.startTime) {
             timeSlotSet.add(slot.startTime);
           }
         });
@@ -41,6 +43,7 @@ export function getTimeSlots(events: CalendarEvent[], availabilities: UserAvaila
   
   // Sort time slots chronologically
   const sortedTimeSlots = Array.from(timeSlotSet).sort((a, b) => {
+    if (!a || !b) return 0;
     const [aHour, aMinutes] = a.split(':').map(Number);
     const [bHour, bMinutes] = b.split(':').map(Number);
     

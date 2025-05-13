@@ -87,6 +87,10 @@ const TabContentMap: React.FC<TabContentMapProps> = memo(({
       // Use the scheduling content but with different initial view
       return <SchedulingContent key="calendar" initialViewMode="month" />;
       
+    case 'legacy-view':
+      // Dedicated route for legacy view
+      return <SchedulingContent key="legacy-view" initialViewMode="legacy" />;
+      
     case 'user-availability':
       return <UserAvailabilityContent />;
       

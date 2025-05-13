@@ -83,11 +83,14 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     setViewMode(mode);
   };
 
+  // Only show filters if not in legacy view and showFilterTabs is true
+  const shouldShowFilters = showFilterTabs && viewMode !== 'legacy';
+
   return (
     <div className="flex flex-col h-full">
       {/* Top controls */}
       <div className="flex justify-between items-center mb-4 px-2 gap-3">
-        {showFilterTabs && (
+        {shouldShowFilters && (
           <FilterSelector
             filterType={filterType}
             setFilterType={setFilterType}
