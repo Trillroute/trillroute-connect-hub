@@ -103,10 +103,14 @@ export const useFilteredEvents = ({
             console.log('No filterType specified, refreshing all events');
           }
           
-          // Fix: Store the result of refreshEvents() in a variable and then check it
-          const refreshedEvents = await refreshEvents();
-          if (isMounted && refreshedEvents) {
-            setEvents(refreshedEvents);
+          // Fix: Call refreshEvents and properly handle the Promise result
+          // The refreshEvents function could return events or void, so we need to handle both cases
+          const result = await refreshEvents();
+          if (isMounted) {
+            // If result is an array of events, use that. Otherwise leave the state as is.
+            if (Array.isArray(result)) {
+              setEvents(result);
+            }
           }
           return;
         }
