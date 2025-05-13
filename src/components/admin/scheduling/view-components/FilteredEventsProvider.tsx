@@ -31,7 +31,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   
   // Effect to update the events in the calendar context when they change
   useEffect(() => {
-    if (!isLoading && filteredEvents) {
+    if (!isLoading && filteredEvents && filteredEvents.length > 0) {
       console.log(`FilteredEventsProvider: Setting ${filteredEvents.length} events for ${filterType || 'all'} filter`);
       setEvents(filteredEvents);
     }
@@ -39,7 +39,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   
   // Effect to update the availabilities in the calendar context
   useEffect(() => {
-    if (availabilities) {
+    if (availabilities && Object.keys(availabilities).length > 0) {
       console.log(`FilteredEventsProvider: Setting availabilities for ${filterType || 'all'} filter`, 
         { availabilityCount: Object.keys(availabilities).length });
       setAvailabilities(availabilities);

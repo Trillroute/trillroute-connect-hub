@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import { applyFilter } from '../utils/filterUtils';
 import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
@@ -23,12 +23,14 @@ export const useFilteredEvents = ({
   filterId,
   filterIds = []
 }: UseFilteredEventsProps = {}) => {
-  const { events, refreshEvents, setEvents, setAvailabilities, availabilities } = useCalendar();
+  const { events, refreshEvents } = useCalendar();
+  const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
   const [staffUserIds, setStaffUserIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [availabilities, setAvailabilities] = useState<ContextUserAvailabilityMap>({});
   
   // Helper function to convert from service type to context type
-  const convertAvailabilityMap = (serviceMap: ServiceUserAvailabilityMap): ContextUserAvailabilityMap => {
+  const convertAvailabilityMap = useCallback((serviceMap: ServiceUserAvailabilityMap): ContextUserAvailabilityMap => {
     const contextMap: ContextUserAvailabilityMap = {};
     
     Object.keys(serviceMap).forEach(userId => {
@@ -41,7 +43,7 @@ export const useFilteredEvents = ({
     });
     
     return contextMap;
-  };
+  }, []);
   
   // Get user IDs based on filter type and values
   useEffect(() => {
@@ -74,7 +76,7 @@ export const useFilteredEvents = ({
     };
     
     fetchRelatedStaff();
-  }, [filterType, filterId, filterIds]);
+  }, [filterType, filterId, JSON.stringify(filterIds)]);
 
   // Apply filters when filter type or IDs change
   useEffect(() => {
@@ -82,7 +84,9 @@ export const useFilteredEvents = ({
     
     if (!filterType) {
       console.log("No filterType specified, refreshing all events");
-      refreshEvents();
+      refreshEvents().then(events => {
+        if (events) setFilteredEvents(events);
+      });
       return;
     }
 
@@ -98,14 +102,28 @@ export const useFilteredEvents = ({
           ? [...safeFilterIds, filterId].filter(Boolean) 
           : safeFilterIds.filter(Boolean);
         
-        await applyFilter({
+        // Get availabilities for related staff
+        if (staffUserIds.length > 0) {
+          const staffAvailabilities = await fetchUserAvailabilityForUsers(staffUserIds);
+          const convertedAvailabilities = convertAvailabilityMap(staffAvailabilities);
+          setAvailabilities(convertedAvailabilities);
+        }
+        
+        // Filter events
+        const result = await applyFilter({
           filterType,
           ids,
           staffUserIds,
-          setEvents,
-          setAvailabilities,
           convertAvailabilityMap
         });
+        
+        if (result && result.events) {
+          setFilteredEvents(result.events);
+        }
+        
+        if (result && result.availabilities) {
+          setAvailabilities(result.availabilities);
+        }
       } catch (error) {
         console.error("Error applying filters:", error);
       } finally {
@@ -114,30 +132,12 @@ export const useFilteredEvents = ({
     };
 
     applyFilters();
-  }, [filterType, filterId, filterIds, staffUserIds, refreshEvents, setEvents, setAvailabilities]);
-
-  // Fetch availabilities for staff members
-  const fetchStaffAvailabilities = async (staffIds: string[]) => {
-    try {
-      setIsLoading(true);
-      if (staffIds.length > 0) {
-        const serviceAvailabilities = await fetchUserAvailabilityForUsers(staffIds);
-        return convertAvailabilityMap(serviceAvailabilities);
-      }
-    } catch (error) {
-      console.error("Error fetching staff availabilities:", error);
-    } finally {
-      setIsLoading(false);
-    }
-    return {};
-  };
+  }, [filterType, filterId, JSON.stringify(filterIds), staffUserIds, refreshEvents, convertAvailabilityMap]);
 
   return {
-    events,
+    events: filteredEvents.length > 0 ? filteredEvents : events,
     isLoading,
     availabilities,
-    staffUserIds,
-    fetchStaffAvailabilities,
-    convertAvailabilityMap
+    staffUserIds
   };
 };
