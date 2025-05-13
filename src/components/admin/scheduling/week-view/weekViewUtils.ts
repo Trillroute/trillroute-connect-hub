@@ -3,6 +3,11 @@ import { CalendarEvent } from '../context/calendarTypes';
 
 // Position calculation for events
 export const calculateEventPosition = (event: CalendarEvent) => {
+  if (!event || !event.start || !event.end) {
+    console.error("Invalid event data:", event);
+    return { top: "0px", height: "0px", backgroundColor: "#ccc" };
+  }
+
   const startHour = event.start.getHours();
   const startMinute = event.start.getMinutes();
   const endHour = event.end.getHours();
@@ -10,7 +15,7 @@ export const calculateEventPosition = (event: CalendarEvent) => {
   
   const startPercentage = ((startHour - 7) + startMinute / 60) * 60; // 60px per hour
   const duration = (endHour - startHour) + (endMinute - startMinute) / 60;
-  const height = duration * 60; // 60px per hour
+  const height = Math.max(20, duration * 60); // Minimum 20px for visibility
   
   return {
     top: `${startPercentage}px`,
@@ -33,13 +38,28 @@ export interface AvailabilitySlot {
 
 // Check if a time slot has availability for a specific day
 export const isTimeAvailable = (hour: number, dayOfWeek: number, availabilitySlots: AvailabilitySlot[]) => {
-  return availabilitySlots.some(slot => 
-    slot.dayOfWeek === dayOfWeek && (slot.startHour <= hour && slot.endHour > hour)
-  );
+  if (!availabilitySlots || availabilitySlots.length === 0) {
+    return false;
+  }
+  
+  // Ensure dayOfWeek is using the correct numbering (0 = Sunday, 6 = Saturday)
+  const normalizedDayOfWeek = dayOfWeek === 7 ? 0 : dayOfWeek;
+  
+  return availabilitySlots.some(slot => {
+    // Also normalize slot.dayOfWeek if needed
+    const slotDayOfWeek = slot.dayOfWeek === 7 ? 0 : slot.dayOfWeek;
+    
+    // Check if the hour falls within the slot's time range
+    return slotDayOfWeek === normalizedDayOfWeek && 
+           (slot.startHour < hour || (slot.startHour === hour && slot.startMinute === 0)) && 
+           (slot.endHour > hour || (slot.endHour === hour && slot.endMinute > 0));
+  });
 };
 
 // Map category to CSS classes for styling
 export const getCategoryColor = (category: string) => {
+  if (!category) return 'bg-gray-100 border-gray-300 text-gray-800';
+  
   switch (category.toLowerCase()) {
     case 'session':
       return 'bg-green-100 border-green-300 text-green-800';

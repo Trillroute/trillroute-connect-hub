@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { isSameDay, format } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { getWeekDays, getHourCells } from './calendarUtils';
@@ -33,34 +33,69 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
   
   // Generate days and hours for the week view
-  const weekDays = getWeekDays(currentDate);
+  const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
   const hours = getHourCells();
+
+  // Debug data
+  useEffect(() => {
+    console.log("WeekView rendered with:", {
+      eventCount: events?.length || 0,
+      availabilityCount: Object.keys(availabilities || {})?.length || 0,
+      weekDays: weekDays?.length || 0,
+    });
+  }, [events, availabilities, weekDays]);
 
   // Process availability data for the week
   useEffect(() => {
     const processAvailabilities = () => {
+      if (!availabilities || Object.keys(availabilities).length === 0) {
+        console.log("No availability data to process in WeekView");
+        setAvailabilitySlots([]);
+        return;
+      }
+      
       const processedSlots: AvailabilitySlot[] = [];
       
-      // Process all user availabilities
-      Object.entries(availabilities).forEach(([userId, userData]) => {
-        userData.slots.forEach(slot => {
-          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+      try {
+        // Process all user availabilities
+        Object.entries(availabilities).forEach(([userId, userData]) => {
+          if (!userData || !userData.slots || !Array.isArray(userData.slots)) {
+            console.log(`No valid slots for user ${userId}`);
+            return;
+          }
           
-          processedSlots.push({
-            dayOfWeek: slot.dayOfWeek,
-            startHour,
-            startMinute,
-            endHour,
-            endMinute,
-            userId: slot.userId,
-            userName: userData.name,
-            category: slot.category
+          userData.slots.forEach(slot => {
+            if (slot.dayOfWeek === undefined || !slot.startTime || !slot.endTime) {
+              console.warn("Invalid slot data:", slot);
+              return;
+            }
+            
+            try {
+              const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+              const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+              
+              processedSlots.push({
+                dayOfWeek: slot.dayOfWeek,
+                startHour,
+                startMinute: startMinute || 0,
+                endHour,
+                endMinute: endMinute || 0,
+                userId: userId,
+                userName: userData.name || 'Staff',
+                category: slot.category || 'Session'
+              });
+            } catch (err) {
+              console.error("Error processing slot time:", err, slot);
+            }
           });
         });
-      });
-      
-      setAvailabilitySlots(processedSlots);
+        
+        console.log(`Processed ${processedSlots.length} availability slots`);
+        setAvailabilitySlots(processedSlots);
+      } catch (err) {
+        console.error("Error processing availability data:", err);
+        setAvailabilitySlots([]);
+      }
     };
     
     processAvailabilities();
@@ -68,9 +103,14 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   
   // Getting events for each day
   const getEventsForDay = (date: Date) => {
-    return events.filter(event => 
-      isSameDay(event.start, date)
-    );
+    if (!events || !Array.isArray(events)) return [];
+    
+    return events.filter(event => {
+      if (!event || !event.start) return false;
+      
+      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+      return isSameDay(eventStart, date);
+    });
   };
 
   const openEventActions = (event: CalendarEvent) => {
@@ -162,7 +202,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
                   className={`h-[60px] border-b border-r border-gray-200 ${
                     isTimeAvailable(hour, dayIndex, availabilitySlots) 
                       ? 'cursor-pointer hover:bg-blue-50' 
-                      : 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-gray-50 cursor-not-allowed'
                   } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''}`}
                   onClick={() => handleCellClick(dayIndex, hour)}
                   aria-disabled={!isTimeAvailable(hour, dayIndex, availabilitySlots)}

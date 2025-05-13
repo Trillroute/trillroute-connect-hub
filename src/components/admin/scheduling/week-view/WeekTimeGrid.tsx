@@ -26,34 +26,65 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   const { currentDate, events, availabilities } = useCalendar();
   const hours = getHourCells();
   
-  // Processing availability slots for the week
+  // Improved logging for debugging
+  console.log("WeekTimeGrid rendering with:", {
+    eventCount: events?.length || 0,
+    availabilitiesCount: Object.keys(availabilities || {}).length,
+    daysCount: days?.length || 0
+  });
+  
+  // Processing availability slots for the week with improved error handling
   const weekAvailabilitySlots = useMemo(() => {
-    if (!availabilities) return [];
+    if (!availabilities || Object.keys(availabilities).length === 0) {
+      console.log("No availability data to process");
+      return [];
+    }
     
     const slots: AvailabilitySlot[] = [];
     
-    // Process all staff availabilities
-    Object.entries(availabilities).forEach(([userId, userData]) => {
-      if (userData.slots && Array.isArray(userData.slots)) {
+    try {
+      // Process all staff availabilities
+      Object.entries(availabilities).forEach(([userId, userData]) => {
+        if (!userData) {
+          console.warn(`Invalid userData for userId ${userId}`);
+          return;
+        }
+        
+        if (!userData.slots || !Array.isArray(userData.slots) || userData.slots.length === 0) {
+          console.log(`No slots for user ${userId} (${userData.name || 'unknown'})`);
+          return;
+        }
+        
         userData.slots.forEach(slot => {
-          if (slot.dayOfWeek !== undefined && slot.startTime && slot.endTime) {
+          if (slot.dayOfWeek === undefined || !slot.startTime || !slot.endTime) {
+            console.warn("Invalid slot data", slot);
+            return;
+          }
+          
+          try {
             const [startHour, startMinute] = slot.startTime.split(':').map(Number);
             const [endHour, endMinute] = slot.endTime.split(':').map(Number);
             
             slots.push({
               dayOfWeek: slot.dayOfWeek,
               startHour,
-              startMinute,
+              startMinute: startMinute || 0,
               endHour,
-              endMinute,
+              endMinute: endMinute || 0,
               userId,
               userName: userData.name || 'Staff',
               category: slot.category || 'Session'
             });
+          } catch (err) {
+            console.error("Error processing time slot:", err, slot);
           }
         });
-      }
-    });
+      });
+      
+      console.log(`Processed ${slots.length} availability slots`);
+    } catch (err) {
+      console.error("Error processing availability data:", err);
+    }
     
     return slots;
   }, [availabilities]);
@@ -61,6 +92,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   // Handle availability slot click
   const handleAvailabilityClick = (slot: AvailabilitySlot) => {
     if (onCreateEvent) {
+      console.log("Availability slot clicked:", slot);
       sessionStorage.setItem('selectedAvailability', JSON.stringify(slot));
       onCreateEvent();
     }
@@ -131,7 +163,15 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
             
             {/* Events */}
             {events
-              .filter(event => isSameDay(new Date(event.start), day))
+              .filter(event => {
+                if (!event || !event.start) return false;
+                
+                const eventStart = event.start instanceof Date ? 
+                  event.start : 
+                  new Date(event.start);
+                  
+                return isSameDay(eventStart, day);
+              })
               .map((event, eventIndex) => (
                 <CalendarEventComponent
                   key={`event-${dayIndex}-${eventIndex}`}
