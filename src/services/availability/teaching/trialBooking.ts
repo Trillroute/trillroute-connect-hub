@@ -205,12 +205,15 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
       return [];
     }
     
-    if (!data || !Array.isArray(data)) {
-      console.log('No data returned from get_available_trial_slots or data is not an array');
+    if (!data) {
+      console.log('No data returned from get_available_trial_slots');
       return [];
     }
     
-    const availableSlots: AvailabilitySlot[] = data.map((slot: any) => ({
+    // Ensure data is an array before mapping
+    const dataArray = Array.isArray(data) ? data : [];
+    
+    const availableSlots: AvailabilitySlot[] = dataArray.map((slot: any) => ({
       id: slot.id,
       teacherId: slot.teacher_id,
       teacherName: slot.teacher_name,
@@ -225,5 +228,40 @@ export const fetchAvailableSlotsForCourse = async (courseId: string): Promise<Av
   } catch (error) {
     console.error('Error in fetchAvailableSlotsForCourse:', error);
     return [];
+  }
+};
+
+/**
+ * Creates a new availability slot
+ */
+export const createAvailabilitySlot = async (
+  teacherId: string,
+  startTime: Date,
+  endTime: Date,
+  courseId?: string
+): Promise<boolean> => {
+  try {
+    console.log(`Creating availability slot for teacher ${teacherId}`);
+    
+    const params = {
+      teacher_id: teacherId,
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      course_id: courseId || null
+    };
+    
+    // Call the create_availability_slot RPC function
+    const { error } = await supabase
+      .rpc('create_availability_slot', params);
+    
+    if (error) {
+      console.error('Error creating availability slot:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in createAvailabilitySlot:', error);
+    return false;
   }
 };
