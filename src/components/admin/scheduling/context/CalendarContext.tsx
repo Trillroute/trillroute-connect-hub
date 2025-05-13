@@ -43,11 +43,21 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
   
+  // Debug output to track context values
+  useEffect(() => {
+    console.log('CalendarContext updated:', {
+      eventsCount: events?.length || 0,
+      viewMode,
+      currentDate: currentDate?.toISOString(),
+      availabilitiesCount: Object.keys(availabilities || {})?.length || 0,
+    });
+  }, [events, viewMode, currentDate, availabilities]);
+  
   // Load events when component mounts
   useEffect(() => {
+    console.log('CalendarContext: Initial events load');
     refreshEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refreshEvents]);
 
   return (
     <CalendarContext.Provider
@@ -68,14 +78,12 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         availabilities,
         setAvailabilities,
         setEvents,
-        // Add missing properties
         handleDateSelect,
         isCreateEventOpen,
         setIsCreateEventOpen,
         goToToday,
         goToPrevious,
         goToNext,
-        // Add filter properties
         activeLayers,
         selectedUsers,
         setActiveLayers,

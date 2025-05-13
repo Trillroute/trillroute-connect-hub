@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { getHourCells } from '../calendarUtils';
 import { CalendarEvent } from '../context/calendarTypes';
@@ -27,11 +27,10 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   const hours = getHourCells();
   
   // Improved logging for debugging
-  console.log("WeekTimeGrid rendering with:", {
-    eventCount: events?.length || 0,
-    availabilitiesCount: Object.keys(availabilities || {}).length,
-    daysCount: days?.length || 0
-  });
+  useEffect(() => {
+    console.log("WeekTimeGrid rendering with events:", events);
+    console.log("WeekTimeGrid rendering with availabilities:", availabilities);
+  }, [events, availabilities]);
   
   // Processing availability slots for the week with improved error handling
   const weekAvailabilitySlots = useMemo(() => {
@@ -81,7 +80,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
         });
       });
       
-      console.log(`Processed ${slots.length} availability slots`);
+      console.log(`Processed ${slots.length} availability slots for week view`);
     } catch (err) {
       console.error("Error processing availability data:", err);
     }
@@ -97,6 +96,21 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
       onCreateEvent();
     }
   };
+
+  // Filter events to only show those that are valid
+  const validEvents = useMemo(() => {
+    return events.filter(event => {
+      if (!event || !event.start || !event.end) {
+        console.warn('Invalid event found:', event);
+        return false;
+      }
+      return true;
+    });
+  }, [events]);
+
+  useEffect(() => {
+    console.log(`WeekTimeGrid: Found ${validEvents.length} valid events to display`);
+  }, [validEvents]);
 
   return (
     <div className="flex flex-col h-full overflow-auto">
@@ -153,7 +167,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               .filter(slot => slot.dayOfWeek === day.getDay())
               .map((slot, slotIndex) => (
                 <AvailabilitySlotItem
-                  key={`slot-${dayIndex}-${slotIndex}`}
+                  key={`slot-${dayIndex}-${slotIndex}-${slot.userId}`}
                   slot={slot}
                   slotIndex={slotIndex}
                   dayIndex={dayIndex}
@@ -162,19 +176,14 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               ))}
             
             {/* Events */}
-            {events
+            {validEvents
               .filter(event => {
-                if (!event || !event.start) return false;
-                
-                const eventStart = event.start instanceof Date ? 
-                  event.start : 
-                  new Date(event.start);
-                  
+                const eventStart = new Date(event.start);
                 return isSameDay(eventStart, day);
               })
               .map((event, eventIndex) => (
                 <CalendarEventComponent
-                  key={`event-${dayIndex}-${eventIndex}`}
+                  key={`event-${event.id}-${eventIndex}`}
                   event={event}
                   onEditClick={() => onEditEvent && onEditEvent(event)}
                   onDeleteClick={() => onDeleteEvent && onDeleteEvent(event)}

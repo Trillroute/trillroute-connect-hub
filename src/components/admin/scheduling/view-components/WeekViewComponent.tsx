@@ -18,15 +18,34 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   onDeleteEvent
 }) => {
   const { user } = useAuth();
-  const { refreshEvents } = useCalendar();
-  const { refreshAvailability } = useUserAvailability(user?.id);
+  const { events, refreshEvents, availabilities, setAvailabilities } = useCalendar();
+  const { refreshAvailability, availabilityData } = useUserAvailability(user?.id);
   
   // Force refresh events and availability when the component mounts
   useEffect(() => {
     console.log('WeekViewComponent: Refreshing events and availability data');
-    refreshEvents();
-    if (refreshAvailability) refreshAvailability();
-  }, [refreshEvents, refreshAvailability]);
+    
+    const loadData = async () => {
+      await refreshEvents();
+      
+      if (refreshAvailability) {
+        const data = await refreshAvailability();
+        if (data && Object.keys(data).length > 0) {
+          setAvailabilities(data);
+        }
+      }
+    };
+    
+    loadData();
+    
+    // Also update availabilities from useUserAvailability if available
+    if (availabilityData && Object.keys(availabilityData).length > 0) {
+      setAvailabilities(availabilityData);
+    }
+    
+    console.log('WeekViewComponent: Events count:', events.length);
+    console.log('WeekViewComponent: Availability data:', Object.keys(availabilities).length);
+  }, [refreshEvents, refreshAvailability, setAvailabilities]);
   
   return (
     <div className="h-full overflow-auto">

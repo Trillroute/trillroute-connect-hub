@@ -23,10 +23,11 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   onDeleteEvent,
   onDateClick,
 }) => {
-  const { role } = useAuth();
+  const { user, role } = useAuth();
   const isAdminOrHigher = role === 'admin' || role === 'superadmin';
   
   console.log('ViewSelector rendering with viewMode:', viewMode);
+  console.log('Current user role:', role, 'isAdminOrHigher:', isAdminOrHigher);
   
   // Show the appropriate view based on viewMode
   switch (viewMode) {
@@ -69,6 +70,8 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
       return (
         <WeekViewComponent 
           onCreateEvent={isAdminOrHigher ? onCreateEvent : undefined}
+          onEditEvent={isAdminOrHigher ? onEditEvent : undefined}
+          onDeleteEvent={isAdminOrHigher ? onDeleteEvent : undefined}
         />
       );
   }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { isSameDay, format } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
@@ -41,11 +40,16 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDelet
   // Debug data
   useEffect(() => {
     console.log("WeekView rendered with:", {
+      currentDate,
       eventCount: events?.length || 0,
       availabilityCount: Object.keys(availabilities || {})?.length || 0,
       weekDays: weekDays?.length || 0,
     });
-  }, [events, availabilities, weekDays]);
+    
+    if (events?.length > 0) {
+      console.log("Sample event:", events[0]);
+    }
+  }, [events, availabilities, weekDays, currentDate]);
 
   // Process availability data for the week
   useEffect(() => {
@@ -194,69 +198,12 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent, onEditEvent, onDelet
       </div>
       
       {/* Time grid */}
-      <div className="flex h-[calc(100%-48px)]">
-        {/* Time labels */}
-        <div className="w-16 flex-shrink-0">
-          {hours.map(hour => (
-            <div 
-              key={hour} 
-              className="relative h-[60px] border-b border-r border-gray-200"
-            >
-              <div className="absolute -top-3 right-2 text-xs text-gray-500">
-                {hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour-12} PM`}
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Day columns */}
-        {weekDays.map((day, dayIndex) => (
-          <div 
-            key={dayIndex} 
-            className="flex-1 relative"
-          >
-            {/* Hour cells - with improved availability indication */}
-            <div>
-              {hours.map(hour => (
-                <div
-                  key={hour}
-                  className={`h-[60px] border-b border-r border-gray-200 ${
-                    isTimeAvailable(hour, dayIndex, availabilitySlots) 
-                      ? 'cursor-pointer hover:bg-blue-50' 
-                      : 'bg-gray-50 cursor-not-allowed'
-                  } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''}`}
-                  onClick={() => handleCellClick(dayIndex, hour)}
-                  aria-disabled={!isTimeAvailable(hour, dayIndex, availabilitySlots)}
-                ></div>
-              ))}
-            </div>
-            
-            {/* Availability slots */}
-            <div className="absolute top-0 left-0 right-0">
-              <WeekAvailabilitySlots 
-                availabilitySlots={availabilitySlots}
-                dayIndex={dayIndex}
-                onAvailabilityClick={handleAvailabilityClick}
-              />
-            </div>
-            
-            {/* Events */}
-            <div className="absolute top-0 left-0 right-0">
-              {getEventsForDay(day).map((event, eventIndex) => (
-                <WeekViewEvent
-                  key={eventIndex}
-                  event={event}
-                  isSelected={selectedEvent?.id === event.id}
-                  onSelect={openEventActions}
-                  onEdit={() => handleEditEvent(event)}
-                  onDelete={() => handleDeleteEventClick(event)}
-                  style={calculateEventPosition(event)}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <WeekTimeGrid
+        days={weekDays}
+        onCreateEvent={onCreateEvent}
+        onEditEvent={onEditEvent || handleEditEvent}
+        onDeleteEvent={onDeleteEvent || handleDeleteEventClick}
+      />
 
       {/* Edit Event Dialog - only show if we're handling editing internally */}
       {!onEditEvent && selectedEvent && (
