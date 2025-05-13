@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import TableCell from './TableCell';
 import { useCellInfo } from './useCellInfo';
 import { isTimeSlotExpired } from './legacyViewUtils';
@@ -12,7 +12,7 @@ interface TableRowProps {
   availabilities: UserAvailabilityMap;
 }
 
-const TableRow: React.FC<TableRowProps> = ({ timeSlot, daysOfWeek, events, availabilities }) => {
+const TableRow: React.FC<TableRowProps> = memo(({ timeSlot, daysOfWeek, events, availabilities }) => {
   // Get cell info for each day
   const { getCellInfo } = useCellInfo(events, availabilities);
 
@@ -24,7 +24,7 @@ const TableRow: React.FC<TableRowProps> = ({ timeSlot, daysOfWeek, events, avail
       </td>
       
       {/* Each day's cell */}
-      {daysOfWeek.map((date, dayIndex) => {
+      {daysOfWeek.map((date) => {
         const cellInfos = getCellInfo(date, timeSlot);
         const isExpired = isTimeSlotExpired(timeSlot, date);
         
@@ -40,6 +40,8 @@ const TableRow: React.FC<TableRowProps> = ({ timeSlot, daysOfWeek, events, avail
       })}
     </tr>
   );
-};
+});
+
+TableRow.displayName = 'TableRow';
 
 export default TableRow;

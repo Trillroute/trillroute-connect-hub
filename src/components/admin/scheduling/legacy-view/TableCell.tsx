@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { formatTimeDisplay } from './legacyViewUtils';
 import { CellInfo } from './useCellInfo';
 import { useCalendar } from '../context/CalendarContext';
@@ -12,19 +12,19 @@ interface TableCellProps {
   date: Date;
 }
 
-const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired, date }) => {
+const TableCell: React.FC<TableCellProps> = memo(({ timeSlot, cellInfos, isExpired, date }) => {
   const { setIsCreateEventOpen, handleDateSelect } = useCalendar();
   
   // Ensure cellInfos is always an array, even if undefined is passed
   const safeInfos = Array.isArray(cellInfos) ? cellInfos : [];
   
-  const handleCellClick = () => {
+  const handleCellClick = useCallback(() => {
     // If this is an empty cell (available slot)
-    if (safeInfos.length === 0) {
+    if (safeInfos.length === 0 && !isExpired) {
       // Parse the timeSlot to get hours and minutes
       const timeParts = timeSlot.split(':');
       const hours = parseInt(timeParts[0], 10);
-      const minutes = parseInt(timeParts[1], 10);
+      const minutes = parseInt(timeParts[1] || '0', 10);
       
       // Create a new date with the day from the date prop but hours/minutes from timeSlot
       const clickedDate = new Date(date);
@@ -36,18 +36,18 @@ const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired, d
       // Open the create event dialog
       setIsCreateEventOpen(true);
     }
-  };
+  }, [safeInfos, isExpired, timeSlot, date, handleDateSelect, setIsCreateEventOpen]);
   
   // If no infos, render an empty cell that's clickable to add an event
   if (safeInfos.length === 0) {
     return (
       <td 
-        className="p-2 border bg-gray-50 h-16 cursor-pointer hover:bg-gray-100 transition-colors"
+        className={`p-2 border ${isExpired ? 'bg-gray-50' : 'bg-gray-50 hover:bg-gray-100 cursor-pointer'} h-16 transition-colors`}
         onClick={handleCellClick}
-        title={`Add event at ${timeSlot} on ${format(date, 'EEEE, MMM d')}`}
+        title={`${isExpired ? 'Past time slot' : `Add event at ${timeSlot} on ${format(date, 'EEEE, MMM d')}`}`}
       >
         <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-          <span>+</span>
+          {!isExpired && <span>+</span>}
         </div>
       </td>
     );
@@ -86,6 +86,8 @@ const TableCell: React.FC<TableCellProps> = ({ timeSlot, cellInfos, isExpired, d
       </div>
     </td>
   );
-};
+});
+
+TableCell.displayName = 'TableCell';
 
 export default TableCell;

@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import TableHeader from './TableHeader';
 import TableRow from './TableRow';
 import { CalendarEvent, UserAvailabilityMap } from '../context/calendarTypes';
+import { Table } from '@/components/ui/table';
 
 interface LegacyViewTableProps {
   events: CalendarEvent[];
@@ -11,7 +12,7 @@ interface LegacyViewTableProps {
   daysOfWeek: Date[];
 }
 
-const LegacyViewTable: React.FC<LegacyViewTableProps> = ({ 
+const LegacyViewTable: React.FC<LegacyViewTableProps> = memo(({ 
   events,
   availabilities,
   timeSlots,
@@ -19,10 +20,10 @@ const LegacyViewTable: React.FC<LegacyViewTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full border-collapse">
+      <Table className="min-w-full border-collapse">
         <TableHeader daysOfWeek={daysOfWeek} />
         <tbody>
-          {timeSlots.map((timeSlot, index) => (
+          {timeSlots.map((timeSlot) => (
             <TableRow 
               key={`timeslot-${timeSlot}`}
               timeSlot={timeSlot}
@@ -32,9 +33,11 @@ const LegacyViewTable: React.FC<LegacyViewTableProps> = ({
             />
           ))}
         </tbody>
-      </table>
+      </Table>
     </div>
   );
-};
+});
+
+LegacyViewTable.displayName = 'LegacyViewTable';
 
 export default LegacyViewTable;
