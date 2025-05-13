@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
@@ -17,6 +17,9 @@ export interface UserActivityData {
   Admins: number;
 }
 
+// Cache duration in milliseconds (5 minutes)
+const CACHE_DURATION = 5 * 60 * 1000;
+
 export const useDashboardData = () => {
   const [stats, setStats] = useState<DashboardStats>({
     coursesCount: 0,
@@ -27,65 +30,69 @@ export const useDashboardData = () => {
   const [userActivityData, setUserActivityData] = useState<UserActivityData[]>([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
+  
+  // Refs to track last fetch time and prevent redundant fetches
+  const lastFetchTime = useRef<number>(0);
+  const isFetching = useRef<boolean>(false);
 
-  const fetchDashboardData = async () => {
+  // Batch fetch all dashboard statistics in a single function
+  const fetchDashboardData = useCallback(async (force = false) => {
+    // Skip if already fetching or if cache is still valid (unless forced)
+    const now = Date.now();
+    if (
+      isFetching.current || 
+      (!force && now - lastFetchTime.current < CACHE_DURATION)
+    ) {
+      return;
+    }
+    
     try {
       setLoading(true);
+      isFetching.current = true;
       
-      const { count: totalCourses, error: coursesError } = await supabase
-        .from('courses')
-        .select('*', { count: 'exact', head: true });
-        
-      if (coursesError) {
-        console.error('Error fetching courses count:', coursesError);
-      }
+      console.log('Fetching dashboard data...');
       
-      const { count: totalStudents, error: studentsError } = await supabase
-        .from('custom_users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'student');
-        
-      if (studentsError) {
-        console.error('Error fetching students count:', studentsError);
-      }
+      // Batch fetch counts for all user types in parallel
+      const [coursesResult, studentsResult, teachersResult, adminsResult] = await Promise.all([
+        supabase.from('courses').select('*', { count: 'exact', head: true }),
+        supabase.from('custom_users').select('*', { count: 'exact', head: true }).eq('role', 'student'),
+        supabase.from('custom_users').select('*', { count: 'exact', head: true }).eq('role', 'teacher'),
+        supabase.from('custom_users').select('*', { count: 'exact', head: true }).eq('role', 'admin')
+      ]);
       
-      const { count: totalTeachers, error: teachersError } = await supabase
-        .from('custom_users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'teacher');
-        
-      if (teachersError) {
-        console.error('Error fetching teachers count:', teachersError);
-      }
-
-      const { count: totalAdmins, error: adminsError } = await supabase
-        .from('custom_users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'admin');
-        
-      if (adminsError) {
-        console.error('Error fetching admins count:', adminsError);
-      }
+      // Process any errors
+      if (coursesResult.error) console.error('Error fetching courses count:', coursesResult.error);
+      if (studentsResult.error) console.error('Error fetching students count:', studentsResult.error);
+      if (teachersResult.error) console.error('Error fetching teachers count:', teachersResult.error);
+      if (adminsResult.error) console.error('Error fetching admins count:', adminsResult.error);
       
+      // Update stats with new counts
       setStats({
-        coursesCount: totalCourses || 0,
-        studentsCount: totalStudents || 0,
-        teachersCount: totalTeachers || 0,
-        adminsCount: totalAdmins || 0
+        coursesCount: coursesResult.count || 0,
+        studentsCount: studentsResult.count || 0,
+        teachersCount: teachersResult.count || 0,
+        adminsCount: adminsResult.count || 0
       });
       
+      // Fetch monthly growth data for the current year
       await fetchUserGrowthData(currentYear);
+      
+      // Update last fetch timestamp
+      lastFetchTime.current = Date.now();
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
-  };
+  }, [currentYear]);
 
   const fetchUserGrowthData = async (year: number) => {
     try {
+      console.log(`Fetching user growth data for year ${year}...`);
       const monthsData: UserActivityData[] = [];
       
+      // Process all months at once using more efficient queries
       for (let month = 0; month < 12; month++) {
         const monthDate = new Date(year, month, 1);
         const monthLabel = format(monthDate, 'MMM');
@@ -93,44 +100,33 @@ export const useDashboardData = () => {
         const startOfMonth = new Date(year, month, 1).toISOString();
         const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
         
-        const { count: monthlyStudents, error: studentsError } = await supabase
-          .from('custom_users')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'student')
-          .gte('created_at', startOfMonth)
-          .lt('created_at', endOfMonth);
-          
-        if (studentsError) {
-          console.error(`Error fetching students for ${monthLabel}:`, studentsError);
-        }
-        
-        const { count: monthlyTeachers, error: teachersError } = await supabase
-          .from('custom_users')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'teacher')
-          .gte('created_at', startOfMonth)
-          .lt('created_at', endOfMonth);
-          
-        if (teachersError) {
-          console.error(`Error fetching teachers for ${monthLabel}:`, teachersError);
-        }
-
-        const { count: monthlyAdmins, error: adminsError } = await supabase
-          .from('custom_users')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'admin')
-          .gte('created_at', startOfMonth)
-          .lt('created_at', endOfMonth);
-          
-        if (adminsError) {
-          console.error(`Error fetching admins for ${monthLabel}:`, adminsError);
-        }
+        // Batch query all role counts for this month in parallel
+        const [studentsResult, teachersResult, adminsResult] = await Promise.all([
+          supabase
+            .from('custom_users')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'student')
+            .gte('created_at', startOfMonth)
+            .lt('created_at', endOfMonth),
+          supabase
+            .from('custom_users')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'teacher')
+            .gte('created_at', startOfMonth)
+            .lt('created_at', endOfMonth),
+          supabase
+            .from('custom_users')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'admin')
+            .gte('created_at', startOfMonth)
+            .lt('created_at', endOfMonth)
+        ]);
         
         monthsData.push({
           name: monthLabel,
-          Students: monthlyStudents || 0,
-          Teachers: monthlyTeachers || 0,
-          Admins: monthlyAdmins || 0
+          Students: studentsResult.count || 0,
+          Teachers: teachersResult.count || 0,
+          Admins: adminsResult.count || 0
         });
       }
       
@@ -140,36 +136,51 @@ export const useDashboardData = () => {
     }
   };
 
-  const handleYearChange = (change: number) => {
+  const handleYearChange = useCallback((change: number) => {
     const newYear = currentYear + change;
+    console.log(`Changing year to ${newYear}`);
     setCurrentYear(newYear);
-    fetchUserGrowthData(newYear);
-  };
+    // This will trigger a re-fetch via the useEffect below
+  }, [currentYear]);
 
+  // Initial data fetch
   useEffect(() => {
     fetchDashboardData();
-
+    
+    // Use a combined subscription for efficiency
     const subscription = supabase
-      .channel('public:courses')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, (payload) => {
-        console.log('Dashboard detected change in courses:', payload);
-        fetchDashboardData();
-      })
-      .subscribe();
-
-    const userSubscription = supabase
-      .channel('custom_users_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_users' }, () => {
-        console.log('Dashboard detected change in users');
-        fetchDashboardData();
-      })
+      .channel('dashboard-changes')
+      .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'courses' }, 
+          () => {
+            console.log('Dashboard detected change in courses table');
+            // Don't immediately fetch - check if we should refresh based on time
+            const now = Date.now();
+            if (now - lastFetchTime.current > CACHE_DURATION / 2) {
+              fetchDashboardData();
+            }
+          })
+      .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'custom_users' }, 
+          () => {
+            console.log('Dashboard detected change in users table');
+            // Don't immediately fetch - check if we should refresh based on time
+            const now = Date.now();
+            if (now - lastFetchTime.current > CACHE_DURATION / 2) {
+              fetchDashboardData();
+            }
+          })
       .subscribe();
 
     return () => {
       subscription.unsubscribe();
-      userSubscription.unsubscribe();
     };
   }, []);
+  
+  // Refetch when year changes
+  useEffect(() => {
+    fetchUserGrowthData(currentYear);
+  }, [currentYear]);
 
   return {
     stats,
@@ -177,6 +188,6 @@ export const useDashboardData = () => {
     currentYear,
     loading,
     handleYearChange,
-    fetchDashboardData
+    refreshData: () => fetchDashboardData(true) // Force refresh function
   };
 };

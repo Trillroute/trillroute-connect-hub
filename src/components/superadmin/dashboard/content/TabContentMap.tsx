@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
 import TodayContent from './TodayContent';
 import LeadsKanbanContent from './LeadsKanbanContent';
@@ -29,7 +29,8 @@ interface TabContentMapProps {
   onDeleteLead?: (lead: Lead) => void;
 }
 
-const TabContentMap: React.FC<TabContentMapProps> = ({ 
+// Use memo to prevent unnecessary re-renders
+const TabContentMap: React.FC<TabContentMapProps> = memo(({ 
   activeTab,
   stats,
   userActivityData,
@@ -40,20 +41,7 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
   onEditLead,
   onDeleteLead
 }) => {
-  console.log("TabContentMap rendering with activeTab:", activeTab);
-
-  // Force-render StudentManagement for debugging
-  if (activeTab === 'students') {
-    console.log("ACTIVELY RENDERING StudentManagement component");
-    return (
-      <StudentManagement 
-        canAddUser={true}
-        canEditUser={true}
-        canDeleteUser={true}
-      />
-    );
-  }
-
+  // Render content based on active tab
   switch (activeTab) {
     case 'today':
       return stats && userActivityData && currentYear && handleYearChange ? (
@@ -90,12 +78,10 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
       />;
       
     case 'scheduling':
-      console.log("Rendering SchedulingContent component");
       // Always render the SchedulingContent component for the scheduling tab
       return <SchedulingContent />;
       
     case 'calendar':
-      console.log("Rendering SchedulingContent for calendar tab");
       // Map 'calendar' tab to the SchedulingContent component
       return <SchedulingContent />;
       
@@ -126,11 +112,21 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
         canEditLevel={true}
         canDeleteLevel={true}
       />;
+
+    case 'students':
+      return (
+        <StudentManagement 
+          canAddUser={true}
+          canEditUser={true}
+          canDeleteUser={true}
+        />
+      );
       
     default:
-      console.log("Default case: Rendering PlaceholderContent for tab:", activeTab);
       return <PlaceholderContent tab={activeTab} />;
   }
-};
+});
+
+TabContentMap.displayName = 'TabContentMap';
 
 export default TabContentMap;

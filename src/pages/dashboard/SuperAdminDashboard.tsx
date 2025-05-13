@@ -14,21 +14,18 @@ import { Lead } from "@/types/lead";
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('today'); // Changed default from 'access' to 'today'
+  const [activeTab, setActiveTab] = useState<ActiveTab>('today');
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
 
-  useEffect(() => {
-    console.log("Current activeTab in SuperAdminDashboard:", activeTab);
-  }, [activeTab]);
-
-  // Dashboard data for statistics and charts
+  // Dashboard data for statistics and charts - now with improved caching
   const {
     stats,
     userActivityData,
     currentYear,
     loading,
-    handleYearChange
+    handleYearChange,
+    refreshData
   } = useDashboardData();
 
   // Leads data for leads management

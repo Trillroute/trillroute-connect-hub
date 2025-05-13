@@ -4,8 +4,14 @@ import { CalendarEvent } from "@/components/admin/scheduling/types";
 import { mapFromDbEvent } from "./mappers";
 import { canManageEvents } from "@/utils/permissions/modulePermissions";
 
+// Enhanced cache with timestamp tracking for each key
+interface CacheEntry {
+  events: CalendarEvent[];
+  timestamp: number;
+}
+
 // Simple in-memory cache for events
-const eventCache = new Map<string, { events: CalendarEvent[], timestamp: number }>();
+const eventCache = new Map<string, CacheEntry>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const fetchEvents = async (userId: string, role: string | null): Promise<CalendarEvent[]> => {
@@ -16,8 +22,11 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
     // Check if we have a valid cached result
     const cachedData = eventCache.get(cacheKey);
     if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
+      console.log(`Using cached events for user ${userId} (${role})`);
       return cachedData.events;
     }
+    
+    console.log(`Fetching events for user ${userId} with role ${role}`);
     
     // If not in cache or expired, fetch from database
     let query = supabase.from("calendar_events").select("*");
@@ -83,6 +92,7 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
     
     // Map the data to the expected format
     const mappedEvents = data ? data.map(mapFromDbEvent) : [];
+    console.log(`Received ${mappedEvents.length} events from API`);
     
     // Store in cache
     eventCache.set(cacheKey, {
@@ -99,5 +109,17 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
 
 // Clear cache manually when data is likely to have changed
 export const clearEventCache = (): void => {
+  console.log("Clearing event cache");
   eventCache.clear();
+};
+
+// Add a method to clear cache for a specific user
+export const clearUserEventCache = (userId: string): void => {
+  // Remove all cache entries for this user (with any role)
+  for (const key of eventCache.keys()) {
+    if (key.startsWith(`${userId}:`)) {
+      console.log(`Clearing event cache for ${key}`);
+      eventCache.delete(key);
+    }
+  }
 };
