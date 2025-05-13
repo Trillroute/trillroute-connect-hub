@@ -66,16 +66,15 @@ const LegacyViewComponent: React.FC = () => {
   
   // Get all time slots from events and availabilities
   const timeSlots = useMemo(() => {
-    if (!events || !events.length) return [];
     console.log("LegacyView: Calculating time slots for", events?.length || 0, "events");
     return getTimeSlots(events || [], effectiveAvailabilities);
   }, [events, effectiveAvailabilities]);
   
   // Get days of the week starting from current date
   const daysOfWeek = useMemo(() => {
-    if (!currentDate) return [];
-    console.log("LegacyView: Calculating days of week from", currentDate?.toDateString());
-    return getDaysOfWeek(currentDate || new Date());
+    const today = currentDate || new Date();
+    console.log("LegacyView: Calculating days of week from", today.toDateString());
+    return getDaysOfWeek(today);
   }, [currentDate]);
 
   // Avoid showing loading indicator for subsequent data updates
@@ -89,16 +88,7 @@ const LegacyViewComponent: React.FC = () => {
     );
   }
 
-  // Only render the table once we have actual data
-  if (!timeSlots || timeSlots.length === 0 || daysOfWeek.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-64 flex-col gap-4">
-        <p className="text-gray-500 text-center">No time slots found for the selected period.</p>
-        <p className="text-gray-400 text-sm text-center">Try selecting a different date range or adding events/availability.</p>
-      </div>
-    );
-  }
-
+  // Always render the table since we now always have time slots
   return (
     <div className="w-full overflow-auto p-4">
       <LegacyViewTable

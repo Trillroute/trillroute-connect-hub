@@ -1,4 +1,3 @@
-
 import React, { memo, useCallback } from 'react';
 import { formatTimeDisplay } from './legacyViewUtils';
 import { CellInfo } from './useCellInfo';
@@ -42,7 +41,7 @@ const TableCell: React.FC<TableCellProps> = memo(({ timeSlot, cellInfos, isExpir
   if (safeInfos.length === 0) {
     return (
       <td 
-        className={`p-2 border ${isExpired ? 'bg-gray-50' : 'bg-gray-50 hover:bg-gray-100 cursor-pointer'} h-16 transition-colors`}
+        className={`p-2 border ${isExpired ? 'bg-gray-50' : 'bg-white hover:bg-gray-100 cursor-pointer'} h-16 transition-colors`}
         onClick={handleCellClick}
         title={`${isExpired ? 'Past time slot' : `Add event at ${timeSlot} on ${format(date, 'EEEE, MMM d')}`}`}
       >

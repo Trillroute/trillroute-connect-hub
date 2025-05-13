@@ -4,6 +4,7 @@ import { format, addDays, startOfDay, isAfter } from 'date-fns';
 
 /**
  * Extracts unique time slots from both events and availability data
+ * Always generates default business hours if no events/availabilities exist
  */
 export function getTimeSlots(events: CalendarEvent[], availabilities: UserAvailabilityMap): string[] {
   const timeSlotSet = new Set<string>();
@@ -34,11 +35,10 @@ export function getTimeSlots(events: CalendarEvent[], availabilities: UserAvaila
     });
   }
   
-  // If no time slots found, add default business hours (9 AM to 5 PM)
-  if (timeSlotSet.size === 0) {
-    for (let hour = 9; hour <= 17; hour++) {
-      timeSlotSet.add(`${hour.toString().padStart(2, '0')}:00`);
-    }
+  // Always add default business hours (9 AM to 5 PM)
+  // This ensures we always have slots even if no events or availability data exists
+  for (let hour = 9; hour <= 17; hour++) {
+    timeSlotSet.add(`${hour.toString().padStart(2, '0')}:00`);
   }
   
   // Sort time slots chronologically
