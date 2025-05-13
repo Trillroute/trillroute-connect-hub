@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
@@ -16,6 +15,7 @@ export interface CalendarEvent {
   updatedAt?: string;
   metadata?: Record<string, any>;
   courseId?: string;
+  skillId?: string;
   [key: string]: any; // Allow additional fields for flexibility
 }
 

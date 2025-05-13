@@ -69,13 +69,15 @@ export const fetchFilteredEvents = async ({
       // Filter events by course or skill
       const filteredEvents = events.filter(event => {
         // Extract course and skill info from event metadata or description
-        const eventCourseId = event.metadata?.courseId || 
+        const eventCourseId = (event.metadata?.courseId) || 
           (event.description?.includes('course_id:') ? 
-            event.description.match(/course_id:([^,\s]+)/)?.[1] : null);
+            event.description.match(/course_id:([^,\s]+)/)?.[1] : null) ||
+          event.courseId;
             
-        const eventSkillId = event.metadata?.skillId || 
+        const eventSkillId = (event.metadata?.skillId) || 
           (event.description?.includes('skill_id:') ? 
-            event.description.match(/skill_id:([^,\s]+)/)?.[1] : null);
+            event.description.match(/skill_id:([^,\s]+)/)?.[1] : null) ||
+          event.skillId;
         
         // Match based on course or skill
         const matchesCourse = courseIds && courseIds.length > 0 ? 
