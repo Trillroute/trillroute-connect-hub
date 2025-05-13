@@ -1,7 +1,7 @@
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useCalendar } from '../context/CalendarContext';
-import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 import { format, addDays } from 'date-fns';
 import { getTimeSlots, formatTimeDisplay, isTimeSlotExpired } from './legacyViewUtils';
@@ -11,14 +11,8 @@ const LegacyViewComponent: React.FC = () => {
   const { availabilityByUser, loading: staffLoading, refetch } = useStaffAvailability();
   const [isLoading, setIsLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const containerRef = useRef<HTMLDivElement>(null);
   
-  // Standard time slots that we'll display
-  const standardTimeSlots = useMemo(() => 
-    getTimeSlots(events, { ...availabilities, ...availabilityByUser }),
-  [events, availabilities, availabilityByUser]);
-  
-  // Days of the week starting from the current date
+  // Memoize days of the week to prevent recreation on each render
   const daysOfWeek = useMemo(() => {
     const today = currentDate || new Date();
     const days = [];
@@ -32,7 +26,12 @@ const LegacyViewComponent: React.FC = () => {
     return days;
   }, [currentDate]);
   
-  // Initialize with all rows expanded
+  // Memoize standardTimeSlots to prevent recreation on each render
+  const standardTimeSlots = useMemo(() => 
+    getTimeSlots(events, { ...availabilities, ...availabilityByUser }),
+  [events, availabilities, availabilityByUser]);
+  
+  // Initialize with all rows expanded - only run once when days change
   useEffect(() => {
     const initialExpandedState: Record<string, boolean> = {};
     daysOfWeek.forEach(day => {
@@ -52,16 +51,16 @@ const LegacyViewComponent: React.FC = () => {
     loadData();
   }, [refetch]);
   
-  // Toggle row expansion
-  const toggleRow = (day: string) => {
+  // Memoize toggle row function to prevent recreation on each render
+  const toggleRow = useCallback((day: string) => {
     setExpandedRows(prev => ({
       ...prev,
       [day]: !prev[day]
     }));
-  };
+  }, []);
   
-  // Check if a slot has availability
-  const getAvailabilityData = (day: number, timeSlot: string) => {
+  // Memoize availability check function to prevent recreation on each render
+  const getAvailabilityData = useCallback((day: number, timeSlot: string) => {
     // Combine context availabilities and staff availabilities
     const allAvailabilities = { ...availabilities, ...availabilityByUser };
     const availableStaff = [];
@@ -96,16 +95,17 @@ const LegacyViewComponent: React.FC = () => {
     }
     
     return availableStaff;
-  };
+  }, [availabilities, availabilityByUser]);
 
-  const handleCellClick = (day: Date, timeSlot: string) => {
+  // Memoize cell click handler to prevent recreation on each render
+  const handleCellClick = useCallback((day: Date, timeSlot: string) => {
     const [hours, minutes] = timeSlot.split(':').map(Number);
     const selectedDate = new Date(day);
     selectedDate.setHours(hours, minutes, 0, 0);
     
     handleDateSelect(selectedDate);
     setIsCreateEventOpen(true);
-  };
+  }, [handleDateSelect, setIsCreateEventOpen]);
   
   if (isLoading || staffLoading) {
     return (
@@ -116,7 +116,7 @@ const LegacyViewComponent: React.FC = () => {
   }
 
   return (
-    <div className="w-full overflow-auto bg-card text-card-foreground p-4" ref={containerRef}>
+    <div className="w-full overflow-auto bg-card text-card-foreground p-4">
       {/* Day Headers */}
       <div className="grid grid-cols-[120px_repeat(7,1fr)] gap-1 mb-2 sticky top-0 z-10">
         <div className="bg-muted p-3 text-center rounded font-medium">Time</div>
@@ -130,8 +130,8 @@ const LegacyViewComponent: React.FC = () => {
         ))}
       </div>
 
-      {/* Time Slots and Days Grid */}
-      <div className="space-y-1">
+      {/* Time Slots and Days Grid - wrapped in a stable div that doesn't change dimensions */}
+      <div className="space-y-1 min-h-[500px]">
         {standardTimeSlots.map((timeSlot) => (
           <div key={timeSlot} className="grid grid-cols-[120px_repeat(7,1fr)] gap-1 mb-1">
             <div className="bg-muted/50 p-3 text-center rounded flex items-center justify-center">
@@ -145,13 +145,13 @@ const LegacyViewComponent: React.FC = () => {
               return (
                 <div 
                   key={`${day.name}-${timeSlot}`}
-                  className="relative min-h-[80px] rounded overflow-hidden"
+                  className="relative h-[80px] rounded overflow-hidden"
                 >
                   {staff.length > 0 ? (
                     <div 
                       className={`absolute inset-0 p-3 transition-all rounded ${
                         expired 
-                          ? 'bg-red-500/10 text-red-600' 
+                          ? 'bg-destructive/10 text-destructive' 
                           : 'bg-primary/20 text-primary hover:bg-primary/30'
                       }`}
                     >
@@ -188,4 +188,4 @@ const LegacyViewComponent: React.FC = () => {
   );
 };
 
-export default LegacyViewComponent;
+export default React.memo(LegacyViewComponent);
