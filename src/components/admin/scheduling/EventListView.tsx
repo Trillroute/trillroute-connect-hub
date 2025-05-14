@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { format, isSameDay, isAfter } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
@@ -14,19 +15,30 @@ interface EventListViewProps {
 }
 
 // Define a type for list items that can be either events or availability slots
-interface ListItem {
+interface AvailabilityItem {
   id: string;
-  type: 'event' | 'availability';
+  type: 'availability';
+  title: string;
+  start: Date;
+  end: Date;
+  userId?: string;
+  userName?: string;
+  category?: string;
+  color?: string;
+}
+
+interface EventItem {
+  id: string;
+  type: 'event';
   title: string;
   start: Date;
   end: Date;
   location?: string;
   description?: string;
   color?: string;
-  userId?: string;
-  userName?: string;
-  category?: string;
 }
+
+type ListItem = AvailabilityItem | EventItem;
 
 const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDeleteEvent }) => {
   const { currentDate, availabilities } = useCalendar();
@@ -36,7 +48,7 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
   const availabilityItems = useMemo(() => {
     if (!availabilities) return [];
     
-    const items: ListItem[] = [];
+    const items: AvailabilityItem[] = [];
     const now = new Date();
     const dayOfWeek = currentDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
     
@@ -168,13 +180,13 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
                         <span className="text-sm">{item.location}</span>
                       </div>
                     )}
-                    {item.userName && item.type === 'availability' && (
+                    {item.type === 'availability' && item.userName && (
                       <div className="flex items-center text-gray-500 mt-1">
                         <Users className="w-4 h-4 mr-1" />
                         <span className="text-sm">{item.userName}</span>
                       </div>
                     )}
-                    {item.category && item.type === 'availability' && (
+                    {item.type === 'availability' && item.category && (
                       <div className="flex items-center text-gray-500 mt-1">
                         <Tag className="w-4 h-4 mr-1" />
                         <span className="text-sm">{item.category}</span>

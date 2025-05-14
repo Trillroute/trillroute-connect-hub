@@ -14,9 +14,9 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     setEvents,
     isLoading,
     refreshEvents,
-    handleCreateEvent,
-    handleUpdateEvent,
-    handleDeleteEvent,
+    handleCreateEvent: originalCreateEvent,
+    handleUpdateEvent: originalUpdateEvent,
+    handleDeleteEvent: originalDeleteEvent,
   } = useCalendarEvents();
 
   const {
@@ -43,6 +43,22 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
+  
+  // Wrapper functions to ensure correct return types (Promise<void>)
+  const handleCreateEvent = async (event: any): Promise<void> => {
+    await originalCreateEvent(event);
+    return;
+  };
+  
+  const handleUpdateEvent = async (id: string, event: any): Promise<void> => {
+    await originalUpdateEvent(id, event);
+    return;
+  };
+  
+  const handleDeleteEvent = async (id: string): Promise<void> => {
+    await originalDeleteEvent(id);
+    return;
+  };
   
   // Load events and availabilities when component mounts
   useEffect(() => {
