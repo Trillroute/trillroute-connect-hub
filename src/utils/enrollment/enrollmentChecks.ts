@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -76,7 +77,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     
     // Get max students from class types data
     const classTypesData = data.class_types_data || [];
-    let maxStudents = 0;
+    let maxStudents: number = 0;
     
     if (Array.isArray(classTypesData) && classTypesData.length > 0) {
       // Use the highest max_students value from all class types
