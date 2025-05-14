@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { format, isSameDay, isAfter } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
@@ -11,7 +12,6 @@ interface EventListViewProps {
   events: CalendarEvent[];
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
-  showAvailability?: boolean; // New prop to control availability display
 }
 
 // Define a type for list items that can be either events or availability slots
@@ -42,19 +42,13 @@ interface EventItem {
 
 type ListItem = AvailabilityItem | EventItem;
 
-const EventListView: React.FC<EventListViewProps> = ({ 
-  events, 
-  onEditEvent, 
-  onDeleteEvent,
-  showAvailability = true // Default to showing availability 
-}) => {
+const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDeleteEvent }) => {
   const { currentDate, availabilities } = useCalendar();
   const [displayCount, setDisplayCount] = useState<number>(20);
   
   // Convert availability slots to list items format
   const availabilityItems = useMemo(() => {
-    // If showAvailability is false, return an empty array
-    if (!showAvailability || !availabilities) return [];
+    if (!availabilities) return [];
     
     const items: AvailabilityItem[] = [];
     const now = new Date();
@@ -100,7 +94,7 @@ const EventListView: React.FC<EventListViewProps> = ({
     });
     
     return items;
-  }, [availabilities, currentDate, showAvailability]);
+  }, [availabilities, currentDate]);
   
   // Convert calendar events to list items format
   const eventItems = useMemo(() => {
@@ -138,7 +132,7 @@ const EventListView: React.FC<EventListViewProps> = ({
   
   // Get an appropriate title based on current date
   const getViewTitle = () => {
-    return `${showAvailability ? 'Events & Availability' : 'Events'} for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
+    return `Events & Availability for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
   };
 
   return (

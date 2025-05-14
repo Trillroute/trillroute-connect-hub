@@ -5,7 +5,6 @@ import { PlusCircle } from 'lucide-react';
 import CalendarTitle from './components/CalendarTitle';
 import ViewModeSelector, { ViewOption } from './components/ViewModeSelector';
 import { useCalendar } from './context/CalendarContext';
-import { CalendarViewMode } from './context/calendarTypes';
 
 interface CalendarHeaderProps {
   onCreateEvent: () => void;
@@ -23,7 +22,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
   
   const handleViewModeChange = (mode: string) => {
     console.log('Setting view mode from header:', mode);
-    setViewMode(mode as CalendarViewMode);
+    setViewMode(mode as 'day' | 'week' | 'month' | 'list');
   };
 
   return (

@@ -16,10 +16,9 @@ const StudentCalendarContent: React.FC = () => {
       <div className="h-[calc(100vh-220px)]">
         <FilteredCalendar
           title="Student Calendar"
-          filterType="student"
+          filterType="role"
           filterValues={['student']}
           hasAdminAccess={hasAdminAccess}
-          showAvailability={false} // Explicitly disable showing availability slots
         />
       </div>
     </ContentWrapper>
