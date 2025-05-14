@@ -9,9 +9,10 @@ import { DayViewComponent } from './view-components/DayViewComponent';
 import { WeekViewComponent } from './view-components/WeekViewComponent';
 import { MonthViewComponent } from './view-components/MonthViewComponent';
 import { EventListViewComponent } from './view-components/EventListViewComponent';
+import { LegacyViewComponent } from './view-components/LegacyViewComponent';
 
 interface CalendarViewRendererProps {
-  viewMode: 'day' | 'week' | 'month' | 'list';
+  viewMode: 'day' | 'week' | 'month' | 'list' | 'legacy';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -45,6 +46,14 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
           onEditEvent={onEditEvent} 
           onDeleteEvent={onDeleteEvent}
           showAvailability={showAvailability}
+        />
+      );
+    case 'legacy':
+      return (
+        <LegacyViewComponent
+          onCreateEvent={onCreateEvent}
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
         />
       );
     default:
