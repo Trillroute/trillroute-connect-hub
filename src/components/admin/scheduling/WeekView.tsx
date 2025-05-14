@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import EventFormDialog from './EventFormDialog';
 import WeekViewEvent from './week-view/WeekViewEvent';
 import WeekTimeGrid from './week-view/WeekTimeGrid';
@@ -156,7 +157,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   };
 
   return (
-    <div className="relative h-full overflow-hidden flex flex-col">
+    <div className="relative h-full flex flex-col">
       {/* Day headers */}
       <div className="flex border-b">
         {/* Corner cell */}
@@ -172,47 +173,52 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
         ))}
       </div>
       
-      {/* Time grid with events */}
-      <WeekTimeGrid
-        hours={hours}
-        weekDays={weekDays}
-        onCellClick={handleCellClick}
-        getAvailabilityClass={getAvailabilityClass}
-      />
-      
-      {/* Day columns with events and availability slots */}
-      <div className="absolute top-12 left-16 right-0 bottom-0">
-        {weekDays.map((day, dayIndex) => (
-          <div 
-            key={dayIndex} 
-            className="absolute top-0 bottom-0"
-            style={{
-              left: `${(dayIndex * 100) / weekDays.length}%`,
-              width: `${100 / weekDays.length}%`
-            }}
-          >
-            {/* Availability slots */}
-            <WeekAvailabilitySlots
-              availabilitySlots={availabilitySlots}
-              dayIndex={dayIndex}
-              onAvailabilityClick={handleAvailabilityClick}
-            />
-            
-            {/* Events */}
-            {getEventsForDay(day).map((event, eventIndex) => (
-              <WeekViewEvent
-                key={`${eventIndex}-${event.id}`}
-                event={event}
-                isSelected={selectedEvent?.id === event.id}
-                onSelect={openEventActions}
-                onEdit={handleEdit}
-                onDelete={confirmDelete}
-                style={calculateEventPosition(event)}
-              />
+      {/* Scrollable content container */}
+      <ScrollArea className="h-[calc(100%-48px)] flex-grow">
+        <div className="relative min-h-[720px]"> {/* Ensure minimum height for content */}
+          {/* Time grid with events */}
+          <WeekTimeGrid
+            hours={hours}
+            weekDays={weekDays}
+            onCellClick={handleCellClick}
+            getAvailabilityClass={getAvailabilityClass}
+          />
+          
+          {/* Day columns with events and availability slots */}
+          <div className="absolute top-0 left-16 right-0 bottom-0">
+            {weekDays.map((day, dayIndex) => (
+              <div 
+                key={dayIndex} 
+                className="absolute top-0 bottom-0"
+                style={{
+                  left: `${(dayIndex * 100) / weekDays.length}%`,
+                  width: `${100 / weekDays.length}%`
+                }}
+              >
+                {/* Availability slots */}
+                <WeekAvailabilitySlots
+                  availabilitySlots={availabilitySlots}
+                  dayIndex={dayIndex}
+                  onAvailabilityClick={handleAvailabilityClick}
+                />
+                
+                {/* Events */}
+                {getEventsForDay(day).map((event, eventIndex) => (
+                  <WeekViewEvent
+                    key={`${eventIndex}-${event.id}`}
+                    event={event}
+                    isSelected={selectedEvent?.id === event.id}
+                    onSelect={openEventActions}
+                    onEdit={handleEdit}
+                    onDelete={confirmDelete}
+                    style={calculateEventPosition(event)}
+                  />
+                ))}
+              </div>
             ))}
           </div>
-        ))}
-      </div>
+        </div>
+      </ScrollArea>
 
       {/* Edit Event Dialog */}
       {selectedEvent && (

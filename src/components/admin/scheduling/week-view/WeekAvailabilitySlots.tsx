@@ -18,7 +18,7 @@ const WeekAvailabilitySlots: React.FC<WeekAvailabilitySlotsProps> = ({
   const slotsForThisDay = availabilitySlots.filter(slot => slot.dayOfWeek === dayIndex);
   
   const calculatePosition = (slot: AvailabilitySlot) => {
-    // Calculate position relative to calendar start time (7:00 AM)
+    // Calculate position relative to calendar start time (7 AM)
     const startHour = slot.startHour - 7; // Adjust for calendar starting at 7 AM
     const startPosition = (startHour * 60) + slot.startMinute; // Convert to minutes position
     

@@ -10,7 +10,7 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   onCreateEvent
 }) => {
   return (
-    <div className="h-full overflow-auto">
+    <div className="h-full">
       <WeekView onCreateEvent={onCreateEvent} />
     </div>
   );

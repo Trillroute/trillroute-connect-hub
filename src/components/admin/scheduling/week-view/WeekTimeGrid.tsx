@@ -15,7 +15,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   getAvailabilityClass
 }) => {
   return (
-    <div className="flex h-[calc(100%-48px)] overflow-auto">
+    <div className="flex">
       {/* Time labels column */}
       <div className="w-16 flex-shrink-0 sticky left-0 bg-white z-10">
         {hours.map(hour => (
