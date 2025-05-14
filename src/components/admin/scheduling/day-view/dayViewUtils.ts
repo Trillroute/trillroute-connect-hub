@@ -20,21 +20,43 @@ export const processAvailabilities = (currentDate: Date, availabilities: any) =>
     userSlots.forEach((slot: any) => {
       if (!slot || !slot.startTime || !slot.endTime) return;
       
-      const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-      const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-      
-      processedSlots.push({
-        startHour,
-        startMinute,
-        endHour,
-        endMinute,
-        userId: slot.userId || slot.user_id || userId,
-        userName: userData.name || 'Unknown',
-        category: slot.category || 'Default'
-      });
+      // Parse time strings to extract hours and minutes
+      try {
+        const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+        const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+        
+        // Validate the parsed values
+        if (
+          isNaN(startHour) || 
+          isNaN(startMinute) || 
+          isNaN(endHour) || 
+          isNaN(endMinute) ||
+          startHour < 0 || startHour > 23 || 
+          startMinute < 0 || startMinute > 59 || 
+          endHour < 0 || endHour > 23 || 
+          endMinute < 0 || endMinute > 59
+        ) {
+          console.error('Invalid time format in slot:', slot);
+          return;
+        }
+        
+        // Add valid slot to processed slots
+        processedSlots.push({
+          startHour,
+          startMinute,
+          endHour,
+          endMinute,
+          userId: slot.userId || slot.user_id || userId,
+          userName: userData.name || 'Unknown',
+          category: slot.category || 'Default'
+        });
+      } catch (error) {
+        console.error('Error processing availability slot:', error, slot);
+      }
     });
   });
   
+  console.log(`Processed ${processedSlots.length} availability slots for day ${currentDate.toDateString()}`);
   return processedSlots;
 };
 
@@ -52,8 +74,11 @@ export const isTimeAvailable = (availabilitySlots: any[] = [], hour: number) => 
   if (!availabilitySlots || availabilitySlots.length === 0) return false;
   
   return availabilitySlots.some(slot => 
-    slot && typeof slot.startHour === 'number' && 
+    slot && 
+    typeof slot.startHour === 'number' && 
     typeof slot.endHour === 'number' &&
-    (slot.startHour <= hour && slot.endHour > hour)
+    ((slot.startHour < hour && slot.endHour > hour) || // Hour is fully within slot
+     (slot.startHour === hour && slot.endMinute === 0) || // Slot starts exactly at hour
+     (slot.endHour === hour && slot.endMinute > 0)) // Slot extends into this hour
   );
 };

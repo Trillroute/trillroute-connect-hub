@@ -18,21 +18,20 @@ const CalendarEventComponent: React.FC<CalendarEventProps> = ({
 }) => {
   const calculateEventPosition = () => {
     // Hours in calendar view start from 7:00 AM (0 minutes) to 7:00 PM (720 minutes)
-    // Total range is 12 hours = 720 minutes
-    
+    // Calculate minutes from 7:00 AM reference point
     const startHour = event.start.getHours();
     const startMinute = event.start.getMinutes();
     const endHour = event.end.getHours();
     const endMinute = event.end.getMinutes();
     
-    // Calculate minutes from 7:00 AM
+    // Calculate minutes from 7:00 AM reference point
     const startMinutesFromReference = ((startHour - 7) * 60) + startMinute;
     
     // Calculate event duration in minutes
     const durationMinutes = ((endHour - startHour) * 60) + (endMinute - startMinute);
     
-    // Convert to pixel positions (60px = 1 hour = 60 minutes)
-    const topPosition = startMinutesFromReference; // 1 minute = 1px
+    // Convert to pixel positions (1 minute = 1px)
+    const topPosition = Math.max(0, startMinutesFromReference);
     const heightValue = Math.max(durationMinutes, 20); // Ensure minimum height
     
     return {

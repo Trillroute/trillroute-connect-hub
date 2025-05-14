@@ -36,13 +36,19 @@ const AvailabilitySlot: React.FC<AvailabilitySlotProps> = ({ slot, onClick }) =>
   };
 
   const calculatePosition = () => {
-    const startPercentage = ((slot.startHour - 7) + slot.startMinute / 60) * 60; // 60px per hour
-    const duration = (slot.endHour - slot.startHour) + (slot.endMinute - slot.startMinute) / 60;
-    const height = duration * 60; // 60px per hour
+    // Calculate position relative to calendar start time (7:00 AM)
+    const hourOffset = slot.startHour - 7; // Adjust for calendar starting at 7 AM
+    const startPosition = (hourOffset * 60) + slot.startMinute; // Convert to minutes position
     
+    // Calculate duration in minutes
+    const startTimeInMinutes = (slot.startHour * 60) + slot.startMinute;
+    const endTimeInMinutes = (slot.endHour * 60) + slot.endMinute;
+    const durationInMinutes = endTimeInMinutes - startTimeInMinutes;
+    
+    // Convert to pixels (1 minute = 1px)
     return {
-      top: `${startPercentage}px`,
-      height: `${height}px`,
+      top: `${startPosition}px`,
+      height: `${durationInMinutes}px`,
     };
   };
   

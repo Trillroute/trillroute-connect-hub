@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -201,3 +200,69 @@ export const forceVerifyEnrollment = async (
     return false;
   }
 };
+
+/**
+ * Check if a class has reached its maximum capacity
+ * @param classId 
+ * @returns 
+ */
+export async function isClassAtCapacity(classId: string): Promise<boolean> {
+  try {
+    // Get the class data
+    const { data, error } = await supabase
+      .from('classes')
+      .select('*, class_types_data, enrolled_students')
+      .eq('id', classId)
+      .single();
+    
+    if (error || !data) {
+      console.error('Error checking class capacity:', error);
+      return false;
+    }
+    
+    // Count enrolled students
+    const enrolledStudents = data.enrolled_students || [];
+    const currentEnrollment = Array.isArray(enrolledStudents) ? enrolledStudents.length : 0;
+    
+    // Get max students from class types data
+    const classTypesData = data.class_types_data || [];
+    let maxStudents: number = 0;
+    
+    if (Array.isArray(classTypesData) && classTypesData.length > 0) {
+      // Use the highest max_students value from all class types
+      classTypesData.forEach(classType => {
+        let classTypeMaxStudents = 0;
+        
+        if (classType && typeof classType === 'object' && 'max_students' in classType) {
+          const maxStudentsValue: Json = classType.max_students;
+          
+          if (typeof maxStudentsValue === 'number') {
+            classTypeMaxStudents = maxStudentsValue;
+          } else if (typeof maxStudentsValue === 'string') {
+            // Convert string to number
+            classTypeMaxStudents = parseInt(maxStudentsValue, 10) || 0;
+          } else if (maxStudentsValue === null || maxStudentsValue === undefined) {
+            // Handle null or undefined
+            classTypeMaxStudents = 0;
+          }
+        }
+        
+        // Update maxStudents if this class type has a higher value
+        if (classTypeMaxStudents > maxStudents) {
+          maxStudents = classTypeMaxStudents;
+        }
+      });
+    }
+    
+    // If no max students specified or zero, assume unlimited capacity
+    if (maxStudents <= 0) {
+      return false;
+    }
+    
+    // Check if current enrollment meets or exceeds maximum
+    return currentEnrollment >= maxStudents;
+  } catch (error) {
+    console.error('Error in isClassAtCapacity:', error);
+    return false;
+  }
+}
