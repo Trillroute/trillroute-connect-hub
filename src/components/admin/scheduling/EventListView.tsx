@@ -66,6 +66,7 @@ const EventListView: React.FC<EventListViewProps> = ({
       if (!userData || !userData.slots) return;
       
       userData.slots.forEach(slot => {
+        // Only include slots for the current day of week
         if (slot.dayOfWeek !== dayOfWeek) return;
         
         try {
