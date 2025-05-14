@@ -77,7 +77,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     
     // Get max students from class types data
     const classTypesData = data.class_types_data || [];
-    let maxStudents: number = 0;
+    let maxStudents = 0;
     
     if (Array.isArray(classTypesData) && classTypesData.length > 0) {
       // Use the highest max_students value from all class types
@@ -103,7 +103,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     }
     
     // Check if there's space available
-    let currentStudents: number = 0;
+    let currentStudents = 0;
     
     if (typeof data.students === 'number') {
       currentStudents = data.students;
@@ -165,12 +165,12 @@ export const forceVerifyEnrollment = async (
     }
     
     // Increment the students count
-    let currentStudents: number = 0;
+    let currentStudents = 0;
     
     if (typeof courseData.students === 'number') {
       currentStudents = courseData.students;
     } else if (typeof courseData.students === 'string') {
-      currentStudents = parseInt(courseData.students as string, 10) || 0;
+      currentStudents = parseInt(courseData.students, 10) || 0;
     }
     
     const updatedStudentsCount = currentStudents + 1;
