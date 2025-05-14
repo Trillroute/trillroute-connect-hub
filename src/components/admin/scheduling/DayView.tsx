@@ -33,15 +33,24 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
   
   // Process availability data for the current day
   useEffect(() => {
+    console.log("Processing availabilities for day view, data:", 
+      { date: currentDate, availabilitiesCount: Object.keys(availabilities || {}).length });
     const slots = processAvailabilities(currentDate, availabilities);
+    console.log(`Processed ${slots.length} availability slots for day ${currentDate.toDateString()}`);
     setAvailabilitySlots(slots);
   }, [currentDate, availabilities]);
   
   // Filter events for the current day
   const todayEvents = filterTodayEvents(events, currentDate);
+  console.log(`Displaying ${todayEvents.length} events for day ${currentDate.toDateString()}`);
   
   const handleCellClick = (hour: number) => {
-    if (onCreateEvent && isTimeAvailable(availabilitySlots, hour)) {
+    if (onCreateEvent) {
+      // Store hour in session storage for event creation dialog
+      const newEventDate = new Date(currentDate);
+      newEventDate.setHours(hour, 0, 0, 0);
+      sessionStorage.setItem('newEventStartTime', newEventDate.toISOString());
+      
       onCreateEvent();
     }
   };
@@ -49,7 +58,16 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
   const handleAvailabilityClick = (slot: AvailabilitySlotType) => {
     if (onCreateEvent) {
       // Store slot data in session storage for the create event dialog to use
-      sessionStorage.setItem('availabilitySlot', JSON.stringify(slot));
+      const newEventDate = new Date(currentDate);
+      newEventDate.setHours(slot.startHour, slot.startMinute, 0, 0);
+      
+      const endDate = new Date(currentDate);
+      endDate.setHours(slot.endHour, slot.endMinute, 0, 0);
+      
+      sessionStorage.setItem('newEventStartTime', newEventDate.toISOString());
+      sessionStorage.setItem('newEventEndTime', endDate.toISOString());
+      sessionStorage.setItem('newEventTitle', `Session with ${slot.userName || 'Instructor'}`);
+      
       onCreateEvent();
     }
   };
@@ -102,7 +120,7 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
           <div className="absolute top-0 left-0 right-0">
             {todayEvents.map((event, eventIndex) => (
               <CalendarEventComponent 
-                key={eventIndex}
+                key={`event-${eventIndex}-${event.id}`}
                 event={event}
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}

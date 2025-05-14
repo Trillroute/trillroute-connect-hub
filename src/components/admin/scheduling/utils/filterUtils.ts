@@ -39,7 +39,9 @@ export const applyFilter = async ({
           const serviceAvailabilities = await fetchUserAvailabilityForUsers(staffUserIds);
           setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         } else {
-          setAvailabilities({}); // Clear availabilities if no staff
+          // Even with no staff, we should fetch all teacher availabilities for this course
+          const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
+          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         }
         break;
         
@@ -51,7 +53,9 @@ export const applyFilter = async ({
           const serviceAvailabilities = await fetchUserAvailabilityForUsers(staffUserIds);
           setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         } else {
-          setAvailabilities({}); // Clear availabilities if no staff
+          // Even with no staff, we should fetch all teacher availabilities for this skill
+          const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
+          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         }
         break;
         
@@ -79,8 +83,9 @@ export const applyFilter = async ({
           userIds: ids.length > 0 ? ids : undefined,
           setEvents 
         });
-        // Students don't have availabilities, so clear them
-        setAvailabilities({});
+        // For students view, still fetch teacher availabilities
+        const teacherAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
+        setAvailabilities(convertAvailabilityMap(teacherAvailabilities));
         break;
         
       case 'admin':
@@ -118,8 +123,18 @@ export const applyFilter = async ({
           setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         }
         break;
+        
+      default:
+        // Default case - fetch all events and all staff availabilities
+        await fetchFilteredEvents({ setEvents });
+        const allAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher', 'admin', 'superadmin']);
+        setAvailabilities(convertAvailabilityMap(allAvailabilities));
+        break;
     }
   } catch (error) {
     console.error("Error applying filter:", error);
+    // Set empty data in case of error to prevent UI from breaking
+    setEvents([]);
+    setAvailabilities({});
   }
 };

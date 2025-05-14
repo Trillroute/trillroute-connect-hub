@@ -17,18 +17,27 @@ const CalendarEventComponent: React.FC<CalendarEventProps> = ({
   onDeleteClick
 }) => {
   const calculateEventPosition = () => {
+    // Hours in calendar view start from 7:00 AM (0 minutes) to 7:00 PM (720 minutes)
+    // Total range is 12 hours = 720 minutes
+    
     const startHour = event.start.getHours();
     const startMinute = event.start.getMinutes();
     const endHour = event.end.getHours();
     const endMinute = event.end.getMinutes();
     
-    const startPercentage = ((startHour - 7) + startMinute / 60) * 60; // 60px per hour
-    const duration = (endHour - startHour) + (endMinute - startMinute) / 60;
-    const height = duration * 60; // 60px per hour
+    // Calculate minutes from 7:00 AM
+    const startMinutesFromReference = ((startHour - 7) * 60) + startMinute;
+    
+    // Calculate event duration in minutes
+    const durationMinutes = ((endHour - startHour) * 60) + (endMinute - startMinute);
+    
+    // Convert to pixel positions (60px = 1 hour = 60 minutes)
+    const topPosition = startMinutesFromReference; // 1 minute = 1px
+    const heightValue = Math.max(durationMinutes, 20); // Ensure minimum height
     
     return {
-      top: `${startPercentage}px`,
-      height: `${height}px`,
+      top: `${topPosition}px`,
+      height: `${heightValue}px`,
       backgroundColor: event.color || '#4285F4',
     };
   };
