@@ -18,3 +18,12 @@ export interface UserAvailabilityMap {
     role: string;
   };
 }
+
+export const AVAILABILITY_CATEGORIES = [
+  'Session', 
+  'General', 
+  'Teaching', 
+  'Practice', 
+  'Performance', 
+  'Meeting'
+];

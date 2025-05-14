@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserAvailability, createAvailabilitySlot } from "./availabilityApi";
+import { fetchUserAvailability } from "./api";
+import { createAvailabilitySlot } from "./api/availabilityCrud";
 
 /**
  * Copy availability slots from one day to another

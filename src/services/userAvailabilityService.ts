@@ -7,12 +7,16 @@ import {
   fetchUserAvailability,
   fetchUserAvailabilityForDate,
   fetchUserAvailabilityForWeek,
-  createAvailabilitySlot,
-  updateAvailabilitySlot,
-  deleteAvailabilitySlot,
   fetchUserAvailabilityForUsers,
   fetchAllStaffAvailability
 } from './availability/api';
+
+import {
+  createAvailabilitySlot,
+  updateAvailabilitySlot,
+  deleteAvailabilitySlot
+} from './availability/api/availabilityCrud';
+
 import { copyDayAvailability } from './availability/availabilityManagement';
 
 // Export types

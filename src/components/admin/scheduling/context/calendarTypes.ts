@@ -1,3 +1,4 @@
+
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
 
 // Define layer types for filtering
@@ -10,17 +11,20 @@ export type SelectedUser = {
   layer: EventLayer;
 };
 
-// Add the UserAvailability interface
+// UserAvailability interface - updated to match service's interface
 export interface UserAvailability {
   id: string;
-  userId: string;
+  userId: string;  // Changed from required to match service type
+  user_id?: string; // Added to match service type
   dayOfWeek: number;
   startTime: string;
   endTime: string;
-  category: string;
+  category?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Add the UserAvailabilityMap interface
+// UserAvailabilityMap interface - updated to match service's interface
 export interface UserAvailabilityMap {
   [userId: string]: {
     slots: UserAvailability[];

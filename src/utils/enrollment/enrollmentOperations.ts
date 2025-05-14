@@ -1,116 +1,71 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { isStudentEnrolledInCourse } from './enrollmentChecks';
 
 /**
- * Enrolls a student in a course
+ * Force verify if a student is enrolled in a course by checking the database directly
  */
-export const enrollStudentInCourse = async (
-  studentId: string, 
-  courseId: string
-): Promise<boolean> => {
+export const forceVerifyEnrollment = async (courseId: string, userId: string): Promise<boolean> => {
   try {
-    // First check if the course exists
-    const { data: course, error: courseError } = await supabase
-      .from('courses')
-      .select('id, student_ids, students')
-      .eq('id', courseId)
-      .single();
-    
-    if (courseError) {
-      console.error('Error fetching course for enrollment:', courseError);
-      return false;
-    }
-    
-    if (!course) {
-      console.error('Course not found for enrollment');
-      return false;
-    }
-    
-    // Check if student is already enrolled
-    const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
-    
-    if (studentIds.includes(studentId)) {
-      console.warn('Student already enrolled in this course');
-      return true; // Already enrolled is considered success
-    }
-    
-    // Add student to course
-    const updatedStudentIds = [...studentIds, studentId];
-    const updatedStudentCount = (course.students || 0) + 1;
-    
-    const { error: updateError } = await supabase
-      .from('courses')
-      .update({
-        student_ids: updatedStudentIds,
-        students: updatedStudentCount
-      })
-      .eq('id', courseId);
-    
-    if (updateError) {
-      console.error('Error enrolling student in course:', updateError);
-      return false;
-    }
-    
-    return true;
+    return await isStudentEnrolledInCourse(userId, courseId);
   } catch (error) {
-    console.error('Error in enrollStudentInCourse:', error);
+    console.error('Error verifying enrollment:', error);
     return false;
   }
 };
 
 /**
- * Unenrolls a student from a course
+ * Enroll a student in a course
  */
-export const unenrollStudentFromCourse = async (
-  studentId: string, 
-  courseId: string
-): Promise<boolean> => {
+export const enrollStudentInCourse = async (courseId: string, userId: string): Promise<boolean> => {
   try {
-    // Get the course first
-    const { data: course, error: courseError } = await supabase
+    // First check if the user is already enrolled
+    const isEnrolled = await isStudentEnrolledInCourse(userId, courseId);
+    
+    if (isEnrolled) {
+      console.log('User is already enrolled in this course');
+      return true;
+    }
+    
+    // Get the current student_ids array for the course
+    const { data, error } = await supabase
       .from('courses')
-      .select('id, student_ids, students')
+      .select('student_ids, students')
       .eq('id', courseId)
       .single();
     
-    if (courseError) {
-      console.error('Error fetching course for unenrollment:', courseError);
+    if (error) {
+      console.error('Error getting course data:', error);
       return false;
     }
     
-    if (!course) {
-      console.error('Course not found for unenrollment');
-      return false;
+    // Add the student to the array if not already present
+    const studentIds = Array.isArray(data.student_ids) ? data.student_ids : [];
+    if (!studentIds.includes(userId)) {
+      studentIds.push(userId);
     }
     
-    // Check if student is enrolled
-    const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
+    // Update the students count
+    const newStudentsCount = data.students + 1;
     
-    if (!studentIds.includes(studentId)) {
-      console.warn('Student not enrolled in this course');
-      return true; // Already not enrolled is considered success
-    }
-    
-    // Remove student from course
-    const updatedStudentIds = studentIds.filter(id => id !== studentId);
-    const updatedStudentCount = Math.max(0, (course.students || 1) - 1);
-    
+    // Update the course with the new student_ids array and students count
     const { error: updateError } = await supabase
       .from('courses')
       .update({
-        student_ids: updatedStudentIds,
-        students: updatedStudentCount
+        student_ids: studentIds,
+        students: newStudentsCount
       })
       .eq('id', courseId);
     
     if (updateError) {
-      console.error('Error unenrolling student from course:', updateError);
+      console.error('Error updating course:', updateError);
       return false;
     }
     
+    console.log('Student successfully enrolled in the course');
     return true;
   } catch (error) {
-    console.error('Error in unenrollStudentFromCourse:', error);
+    console.error('Error in enrollStudentInCourse:', error);
     return false;
   }
 };

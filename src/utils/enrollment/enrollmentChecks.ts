@@ -82,7 +82,11 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     if (Array.isArray(classTypesData) && classTypesData.length > 0) {
       // Use the highest max_students value from all class types
       maxStudents = classTypesData.reduce((max, classType) => {
-        const classTypeMaxStudents = classType.max_students || 0;
+        // Ensure we're dealing with numbers, not JSON strings
+        const classTypeMaxStudents = typeof classType.max_students === 'number' 
+          ? classType.max_students 
+          : parseInt(classType.max_students as string, 10) || 0;
+          
         return Math.max(max, classTypeMaxStudents);
       }, 0);
     }
@@ -93,7 +97,10 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     }
     
     // Check if there's space available
-    const currentStudents = data.students || 0;
+    const currentStudents = typeof data.students === 'number' 
+      ? data.students 
+      : parseInt(data.students as string, 10) || 0;
+      
     return currentStudents < maxStudents;
   } catch (error) {
     console.error('Error in checkCourseHasSpace:', error);
