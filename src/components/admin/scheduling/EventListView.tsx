@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { format, isSameDay } from 'date-fns';
+import React, { useState, useMemo } from 'react';
+import { format, isSameDay, isAfter } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { CalendarEvent } from './context/calendarTypes';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Clock, MapPin, Pencil, Trash2, Calendar, Users, Tag } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface EventListViewProps {
   events: CalendarEvent[];
@@ -11,124 +13,221 @@ interface EventListViewProps {
   onDeleteEvent: (event: CalendarEvent) => void;
 }
 
+// Define a type for list items that can be either events or availability slots
+interface ListItem {
+  id: string;
+  type: 'event' | 'availability';
+  title: string;
+  start: Date;
+  end: Date;
+  location?: string;
+  description?: string;
+  color?: string;
+  userId?: string;
+  userName?: string;
+  category?: string;
+}
+
 const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDeleteEvent }) => {
-  const { currentDate } = useCalendar();
+  const { currentDate, availabilities } = useCalendar();
   const [displayCount, setDisplayCount] = useState<number>(20);
   
-  // Filter events based on the current date and future events
-  const filteredEvents = React.useMemo(() => {
-    console.log(`List view processing ${events.length} total events for date ${format(currentDate, 'yyyy-MM-dd')}`);
+  // Convert availability slots to list items format
+  const availabilityItems = useMemo(() => {
+    if (!availabilities) return [];
+    
+    const items: ListItem[] = [];
+    const now = new Date();
+    const dayOfWeek = currentDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
+    
+    // Process all user availabilities
+    Object.entries(availabilities).forEach(([userId, userData]) => {
+      if (!userData || !userData.slots) return;
+      
+      userData.slots.forEach(slot => {
+        if (slot.dayOfWeek !== dayOfWeek) return;
+        
+        try {
+          // Parse time strings to extract hours and minutes
+          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+          
+          // Create date objects for today with the slot's hours and minutes
+          const startDate = new Date(currentDate);
+          startDate.setHours(startHour, startMinute, 0);
+          
+          const endDate = new Date(currentDate);
+          endDate.setHours(endHour, endMinute, 0);
+          
+          // Only include availability slots that haven't ended yet
+          if (isAfter(endDate, now)) {
+            items.push({
+              id: slot.id,
+              type: 'availability',
+              title: `Available: ${userData.name || 'User'}`,
+              start: startDate,
+              end: endDate,
+              userId,
+              userName: userData.name,
+              category: slot.category || 'Default',
+              color: '#4ade80' // light green for availability
+            });
+          }
+        } catch (error) {
+          console.error('Error processing availability slot:', error);
+        }
+      });
+    });
+    
+    return items;
+  }, [availabilities, currentDate]);
+  
+  // Convert calendar events to list items format
+  const eventItems = useMemo(() => {
+    return events.map(event => ({
+      ...event,
+      type: 'event' as const,
+      title: event.title
+    }));
+  }, [events]);
+  
+  // Combine and sort both types of items
+  const combinedItems = useMemo(() => {
+    const allItems = [...eventItems, ...availabilityItems];
     
     // Get current time for filtering
     const now = new Date();
     
-    // For list view, show events for the current day and future events, sorted by start time
-    const relevantEvents = events
-      .filter(event => {
-        // Keep events that are either on the current selected date or in the future
-        return isSameDay(event.start, currentDate) || event.start >= now;
+    // Filter and sort items
+    return allItems
+      .filter(item => {
+        // Keep items that are either on the current selected date or in the future
+        return (isSameDay(item.start, currentDate) && isAfter(item.end, now)) || 
+               (isAfter(item.start, now));
       })
       .sort((a, b) => a.start.getTime() - b.start.getTime());
-    
-    console.log(`Found ${relevantEvents.length} relevant events from now onwards`);
-    return relevantEvents;
-  }, [events, currentDate]);
+  }, [eventItems, availabilityItems, currentDate]);
   
-  // Get the limited set of events to display based on the displayCount
-  const displayedEvents = filteredEvents.slice(0, displayCount);
+  // Get the limited set of items to display based on the displayCount
+  const displayedItems = combinedItems.slice(0, displayCount);
   
-  // Function to load more events
+  // Function to load more items
   const handleShowMore = () => {
     setDisplayCount(prevCount => prevCount + 20);
   };
   
   // Get an appropriate title based on current date
   const getViewTitle = () => {
-    return `Events for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
+    return `Events & Availability for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
   };
-  
+
   return (
     <div className="h-full flex flex-col">
       <h2 className="text-lg font-semibold px-6 py-4">
         {getViewTitle()}
       </h2>
       
-      <div className="flex-1 px-6 pb-6 overflow-y-auto">
-        {filteredEvents.length === 0 ? (
+      <ScrollArea className="flex-1 px-6 pb-6">
+        {combinedItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
             <div className="text-gray-500 text-center mb-6">
-              <div className="text-lg mb-2">No events scheduled for today</div>
+              <div className="text-lg mb-2">No events or availability scheduled</div>
               <div className="text-sm">Click on the calendar to add a new event</div>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            {displayedEvents.map((event, index) => (
+          <div className="space-y-4 pb-4">
+            {displayedItems.map((item, index) => (
               <div 
-                key={index} 
+                key={`${item.type}-${item.id}-${index}`} 
                 className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium">{event.title}</h3>
+                    <div className="flex items-center">
+                      {item.type === 'availability' ? (
+                        <Badge className="mr-2 bg-green-100 text-green-800 border-green-300">
+                          Available
+                        </Badge>
+                      ) : (
+                        <Badge className="mr-2 bg-blue-100 text-blue-800 border-blue-300">
+                          Event
+                        </Badge>
+                      )}
+                      <h3 className="text-lg font-medium">{item.title}</h3>
+                    </div>
                     <div className="flex items-center text-gray-500 mt-2">
                       <Clock className="w-4 h-4 mr-1" />
                       <span className="text-sm">
-                        {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
+                        {format(item.start, 'h:mm a')} - {format(item.end, 'h:mm a')}
                       </span>
                     </div>
-                    {event.location && (
+                    {item.location && (
                       <div className="flex items-center text-gray-500 mt-1">
                         <MapPin className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{event.location}</span>
+                        <span className="text-sm">{item.location}</span>
                       </div>
                     )}
-                    {event.description && (
-                      <p className="mt-2 text-sm text-gray-600">{event.description}</p>
+                    {item.userName && item.type === 'availability' && (
+                      <div className="flex items-center text-gray-500 mt-1">
+                        <Users className="w-4 h-4 mr-1" />
+                        <span className="text-sm">{item.userName}</span>
+                      </div>
+                    )}
+                    {item.category && item.type === 'availability' && (
+                      <div className="flex items-center text-gray-500 mt-1">
+                        <Tag className="w-4 h-4 mr-1" />
+                        <span className="text-sm">{item.category}</span>
+                      </div>
+                    )}
+                    {item.description && (
+                      <p className="mt-2 text-sm text-gray-600">{item.description}</p>
                     )}
                   </div>
-                  <div className="flex space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8" 
-                      onClick={() => onEditEvent(event)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 text-red-500 hover:text-red-600" 
-                      onClick={() => onDeleteEvent(event)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {item.type === 'event' && (
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8" 
+                        onClick={() => onEditEvent(item as CalendarEvent)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 text-red-500 hover:text-red-600" 
+                        onClick={() => onDeleteEvent(item as CalendarEvent)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 
                 <div
                   className="w-full h-1 mt-4"
-                  style={{ backgroundColor: event.color || '#4285F4' }}
+                  style={{ backgroundColor: item.color || '#4285F4' }}
                 ></div>
               </div>
             ))}
             
-            {/* Show more button - only visible if there are more events to show */}
-            {displayedEvents.length < filteredEvents.length && (
-              <div className="flex justify-center mt-4 pb-4">
+            {/* Show more button - only visible if there are more items to show */}
+            {displayedItems.length < combinedItems.length && (
+              <div className="flex justify-center mt-4">
                 <Button 
                   variant="outline" 
                   onClick={handleShowMore}
                   className="w-full max-w-sm"
                 >
-                  Show More ({filteredEvents.length - displayedEvents.length} events remaining)
+                  Show More ({combinedItems.length - displayedItems.length} items remaining)
                 </Button>
               </div>
             )}
           </div>
         )}
-      </div>
+      </ScrollArea>
     </div>
   );
 };

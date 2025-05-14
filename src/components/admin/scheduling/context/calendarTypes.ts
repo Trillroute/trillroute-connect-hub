@@ -1,4 +1,3 @@
-
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
 
 // Define layer types for filtering
@@ -44,24 +43,24 @@ export interface CalendarContextType {
   selectedUsers: SelectedUser[];
   availabilities: UserAvailabilityMap;
   setCurrentDate: (date: Date) => void;
-  setViewMode: (mode: CalendarViewMode) => void;
+  setViewMode: (viewMode: CalendarViewMode) => void;
   setEvents: (events: CalendarEvent[]) => void;
-  setIsCreateEventOpen: (open: boolean) => void;
+  setIsCreateEventOpen: (isOpen: boolean) => void;
   setActiveLayers: (layers: EventLayer[]) => void;
   setSelectedUsers: (users: SelectedUser[]) => void;
+  setAvailabilities: (availabilities: UserAvailabilityMap) => void;
   toggleLayer: (layer: EventLayer) => void;
   toggleUser: (user: SelectedUser) => void;
   goToToday: () => void;
   goToPrevious: () => void;
   goToNext: () => void;
-  handleCreateEvent: (eventData: Omit<CalendarEvent, 'id'>) => Promise<boolean>;
-  handleUpdateEvent: (id: string, eventData: Omit<CalendarEvent, 'id'>) => Promise<boolean>;
-  handleDeleteEvent: (id: string) => Promise<boolean>;
-  handleDateSelect: (date: Date | undefined) => void;
+  handleCreateEvent: (event: any) => Promise<void>;
+  handleUpdateEvent: (id: string, event: any) => Promise<void>;
+  handleDeleteEvent: (id: string) => Promise<void>;
+  handleDateSelect: (date: Date) => void;
   refreshEvents: () => Promise<void>;
   filterEventsByRole: (roles: string[]) => Promise<void>;
   filterEventsByUser: (userId: string) => Promise<void>;
-  setAvailabilities: (availabilities: UserAvailabilityMap) => void;
 }
 
 export interface CalendarEvent {

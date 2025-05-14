@@ -6,6 +6,7 @@ import { MonthViewComponent } from './view-components/MonthViewComponent';
 import { EventListViewComponent } from './view-components/EventListViewComponent';
 import { LegacyViewComponent } from './view-components/LegacyViewComponent';
 import { CalendarEvent, CalendarViewMode } from './types';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CalendarViewRendererProps {
   viewMode: CalendarViewMode;
@@ -28,18 +29,32 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
 }) => {
   switch (viewMode) {
     case 'day':
-      return <DayViewComponent onCreateEvent={onCreateEvent} />;
+      return (
+        <ScrollArea className="h-full">
+          <DayViewComponent onCreateEvent={onCreateEvent} />
+        </ScrollArea>
+      );
     case 'week':
-      return <WeekViewComponent onCreateEvent={onCreateEvent} />;
+      return (
+        <ScrollArea className="h-full">
+          <WeekViewComponent onCreateEvent={onCreateEvent} />
+        </ScrollArea>
+      );
     case 'month':
-      return <MonthViewComponent onDateClick={onDateClick || (() => {})} />;
+      return (
+        <ScrollArea className="h-full">
+          <MonthViewComponent onDateClick={onDateClick || (() => {})} />
+        </ScrollArea>
+      );
     case 'legacy':
       return (
-        <LegacyViewComponent 
-          onCreateEvent={onCreateEvent} 
-          onEditEvent={onEditEvent} 
-          onDeleteEvent={onDeleteEvent} 
-        />
+        <ScrollArea className="h-full">
+          <LegacyViewComponent 
+            onCreateEvent={onCreateEvent} 
+            onEditEvent={onEditEvent} 
+            onDeleteEvent={onDeleteEvent} 
+          />
+        </ScrollArea>
       );
     case 'list':
     default:
