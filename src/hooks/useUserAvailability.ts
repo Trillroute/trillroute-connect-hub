@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { daysOfWeek } from './availability/dayUtils';
@@ -136,45 +137,7 @@ export function useUserAvailability(userId?: string): UseAvailabilityResult {
   return {
     loading,
     dailyAvailability,
-    refreshAvailability: useCallback(async () => {
-      // Prevent multiple simultaneous refresh calls
-      if (fetchInProgress.current) {
-        console.log('Refresh already in progress, skipping redundant call');
-        return;
-      }
-      
-      // Clear any existing timeout
-      if (fetchTimeoutRef.current) {
-        clearTimeout(fetchTimeoutRef.current);
-        fetchTimeoutRef.current = null;
-      }
-
-      if (!targetUserId) {
-        console.log('No target user ID provided, skipping availability fetch');
-        // Initialize with empty data structure
-        const emptyAvailability = daysOfWeek.map((dayName, index) => ({
-          dayOfWeek: index,
-          dayName,
-          slots: []
-        }));
-        setDailyAvailability(emptyAvailability);
-        setLoading(false);
-        return;
-      }
-      
-      console.log('Refreshing availability for user ID:', targetUserId);
-      fetchInProgress.current = true;
-      
-      try {
-        await fetchAvailability();
-      } catch (error) {
-        console.error('Error in refreshAvailability:', error);
-      } finally {
-        if (isMounted.current) {
-          fetchInProgress.current = false;
-        }
-      }
-    }, [targetUserId, fetchAvailability]),
+    refreshAvailability,
     addSlot,
     updateSlot,
     deleteSlot,

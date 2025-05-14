@@ -82,7 +82,7 @@ export function useAvailabilityActions(
     }
   }, [userId, setLoading, setDailyAvailability, toast]);
 
-  const addSlot = useCallback(async (dayOfWeek: string, startTime: string, endTime: string, category: string = 'Session') => {
+  const addSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string, category: string = 'Session') => {
     if (!userId) {
       toast({
         title: "Error",
@@ -94,15 +94,13 @@ export function useAvailabilityActions(
     
     try {
       console.log(`Creating slot for user ${userId}, day ${dayOfWeek}: ${startTime}-${endTime}, category=${category}`);
-      // Convert dayOfWeek to number since the backend expects a number
-      const dayOfWeekNumber = parseInt(dayOfWeek, 10);
-      const result = await createAvailabilitySlot(userId, dayOfWeekNumber, startTime, endTime, category);
+      const result = await createAvailabilitySlot(userId, dayOfWeek, startTime, endTime, category);
       
       if (result) {
         await refreshAvailability();
         toast({
           title: "Availability added",
-          description: `Added ${category} availability for ${daysOfWeek[dayOfWeekNumber]} from ${startTime} to ${endTime}`,
+          description: `Added ${category} availability for ${daysOfWeek[dayOfWeek]} from ${startTime} to ${endTime}`,
         });
         return true;
       }
@@ -194,48 +192,8 @@ export function useAvailabilityActions(
   return {
     refreshAvailability,
     addSlot,
-    updateSlot: useCallback(async (id: string, startTime: string, endTime: string, category: string) => {
-      try {
-        const success = await updateAvailabilitySlot(id, startTime, endTime, category);
-        if (success) {
-          await refreshAvailability();
-          toast({
-            title: "Availability updated",
-            description: "Your availability has been updated successfully"
-          });
-        }
-        return success;
-      } catch (error) {
-        console.error("Error updating availability slot:", error);
-        toast({
-          title: "Failed to update availability",
-          description: "There was an error updating your availability",
-          variant: "destructive"
-        });
-        return false;
-      }
-    }, [refreshAvailability, toast]),
-    deleteSlot: useCallback(async (id: string) => {
-      try {
-        const success = await deleteAvailabilitySlot(id);
-        if (success) {
-          await refreshAvailability();
-          toast({
-            title: "Availability removed",
-            description: "The availability slot has been removed"
-          });
-        }
-        return success;
-      } catch (error) {
-        console.error("Error deleting availability slot:", error);
-        toast({
-          title: "Failed to delete availability",
-          description: "There was an error deleting the availability slot",
-          variant: "destructive"
-        });
-        return false;
-      }
-    }, [refreshAvailability, toast]),
+    updateSlot,
+    deleteSlot,
     copyDaySlots,
   };
 }

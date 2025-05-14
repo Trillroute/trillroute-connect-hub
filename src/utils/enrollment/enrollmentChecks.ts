@@ -103,9 +103,16 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     }
     
     // Check if there's space available
-    const currentStudents = typeof data.students === 'number' 
-      ? data.students 
-      : parseInt(data.students as unknown as string, 10) || 0;
+    let currentStudents: number = 0;
+    
+    if (typeof data.students === 'number') {
+      currentStudents = data.students;
+    } else if (typeof data.students === 'string') {
+      currentStudents = parseInt(data.students, 10) || 0;
+    } else {
+      // Handle any other potential type
+      currentStudents = 0;
+    }
       
     return currentStudents < maxStudents;
   } catch (error) {
@@ -158,9 +165,13 @@ export const forceVerifyEnrollment = async (
     }
     
     // Increment the students count
-    const currentStudents = typeof courseData.students === 'number'
-      ? courseData.students
-      : parseInt(courseData.students as unknown as string, 10) || 0;
+    let currentStudents: number = 0;
+    
+    if (typeof courseData.students === 'number') {
+      currentStudents = courseData.students;
+    } else if (typeof courseData.students === 'string') {
+      currentStudents = parseInt(courseData.students as string, 10) || 0;
+    }
     
     const updatedStudentsCount = currentStudents + 1;
     

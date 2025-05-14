@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DayAvailability } from '@/hooks/useUserAvailability';
 import CopyDayDialog from './CopyDayDialog';
@@ -11,7 +12,7 @@ import { useState, useCallback, memo, useEffect } from 'react';
 interface UserAvailabilityScheduleProps {
   dailyAvailability: DayAvailability[];
   loading: boolean;
-  onAddSlot: (dayOfWeek: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onDeleteSlot: (id: string) => Promise<boolean>;
   onCopyDay: (fromDay: number, toDay: number) => Promise<boolean>;
@@ -75,7 +76,7 @@ const UserAvailabilitySchedule: React.FC<UserAvailabilityScheduleProps> = ({
     }
   }, [onCopyDay]);
   
-  const handleAddSlot = useCallback(async (dayOfWeek: string, startTime: string, endTime: string, category: string) => {
+  const handleAddSlot = useCallback(async (dayOfWeek: number, startTime: string, endTime: string, category: string) => {
     setOperationInProgress(true);
     try {
       return await onAddSlot(dayOfWeek, startTime, endTime, category);
