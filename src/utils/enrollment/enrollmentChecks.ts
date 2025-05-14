@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 
@@ -77,7 +78,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     
     // Get max students from class types data
     const classTypesData = data.class_types_data || [];
-    let maxStudents: number = 0;
+    let maxStudents = 0;
     
     if (Array.isArray(classTypesData) && classTypesData.length > 0) {
       // Use the highest max_students value from all class types
@@ -93,7 +94,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
           } else if (typeof maxStudentsValue === 'string') {
             classTypeMaxStudents = parseInt(maxStudentsValue, 10) || 0;
           } else if (maxStudentsValue !== null && maxStudentsValue !== undefined) {
-            // Handle JSON value by converting to string first then to number
+            // Convert any other JSON value to number via string
             classTypeMaxStudents = parseInt(String(maxStudentsValue), 10) || 0;
           }
         }
@@ -208,10 +209,11 @@ export const forceVerifyEnrollment = async (
  */
 export async function isClassAtCapacity(classId: string): Promise<boolean> {
   try {
-    // Get the class data
+    // Get the class data from the courses table
+    // Note: Based on the error, it seems 'classes' table doesn't exist, so we use 'courses' instead
     const { data, error } = await supabase
-      .from('classes')
-      .select('*, class_types_data, enrolled_students')
+      .from('courses')
+      .select('*, class_types_data, student_ids')
       .eq('id', classId)
       .single();
     
@@ -220,9 +222,9 @@ export async function isClassAtCapacity(classId: string): Promise<boolean> {
       return false;
     }
     
-    // Count enrolled students
-    const enrolledStudents = data.enrolled_students || [];
-    const currentEnrollment = Array.isArray(enrolledStudents) ? enrolledStudents.length : 0;
+    // Count enrolled students from student_ids array
+    const enrolledStudentIds = data.student_ids || [];
+    const currentEnrollment = Array.isArray(enrolledStudentIds) ? enrolledStudentIds.length : 0;
     
     // Get max students from class types data
     const classTypesData = data.class_types_data || [];
@@ -244,6 +246,9 @@ export async function isClassAtCapacity(classId: string): Promise<boolean> {
           } else if (maxStudentsValue === null || maxStudentsValue === undefined) {
             // Handle null or undefined
             classTypeMaxStudents = 0;
+          } else {
+            // Convert any other JSON value to number via string
+            classTypeMaxStudents = parseInt(String(maxStudentsValue), 10) || 0;
           }
         }
         
@@ -266,3 +271,4 @@ export async function isClassAtCapacity(classId: string): Promise<boolean> {
     return false;
   }
 }
+
