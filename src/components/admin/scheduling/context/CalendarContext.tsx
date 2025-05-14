@@ -1,5 +1,6 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { CalendarEvent, UserAvailabilityMap } from './calendarTypes';
+
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { CalendarEvent, CalendarViewMode, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { useCalendarFilters } from './useCalendarFilters';
@@ -7,16 +8,16 @@ import { fetchAllStaffAvailability } from '@/services/availability/api';
 
 // Update the CalendarContextType interface
 interface CalendarContextType {
-  currentDate: string;
-  viewMode: string;
+  currentDate: Date;
+  viewMode: CalendarViewMode;
   events: CalendarEvent[];
   isCreateEventOpen: boolean;
   isLoading: boolean;
   activeLayers: EventLayer[];
   selectedUsers: SelectedUser[];
   availabilities: UserAvailabilityMap;
-  setCurrentDate: (date: string) => void;
-  setViewMode: (mode: string) => void;
+  setCurrentDate: (date: Date) => void;
+  setViewMode: (mode: CalendarViewMode) => void;
   setEvents: (events: CalendarEvent[]) => void;
   setIsCreateEventOpen: (open: boolean) => void;
   setActiveLayers: (layers: EventLayer[]) => void;
@@ -30,17 +31,17 @@ interface CalendarContextType {
   handleCreateEvent: (event: any) => Promise<void>;
   handleUpdateEvent: (id: string, event: any) => Promise<void>;
   handleDeleteEvent: (id: string) => Promise<void>;
-  handleDateSelect: (date: string) => void;
-  refreshEvents: () => void;
-  filterEventsByRole: (role: string) => void;
+  handleDateSelect: (date: Date) => void;
+  refreshEvents: () => Promise<void>;
+  filterEventsByRole: (role: string[]) => void;
   filterEventsByUser: (user: SelectedUser) => void;
   showAvailability: boolean; // New property to control availability display
 }
 
 // Default context
 const defaultContextValue: CalendarContextType = {
-  currentDate: '',
-  viewMode: '',
+  currentDate: new Date(),
+  viewMode: 'week',
   events: [],
   isCreateEventOpen: false,
   isLoading: false,
@@ -63,7 +64,7 @@ const defaultContextValue: CalendarContextType = {
   handleUpdateEvent: () => Promise.resolve(),
   handleDeleteEvent: () => Promise.resolve(),
   handleDateSelect: () => {},
-  refreshEvents: () => {},
+  refreshEvents: () => Promise.resolve(),
   filterEventsByRole: () => {},
   filterEventsByUser: () => {},
   showAvailability: true, // Default to showing availability
@@ -107,6 +108,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
+  const [showAvailability, setShowAvailability] = useState(true);
   
   // Wrapper functions to ensure correct return types (Promise<void>)
   const handleCreateEvent = async (event: any): Promise<void> => {
@@ -174,7 +176,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         refreshEvents,
         filterEventsByRole,
         filterEventsByUser,
-        showAvailability,
+        showAvailability
       }}
     >
       {children}

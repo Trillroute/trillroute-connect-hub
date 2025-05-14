@@ -1,45 +1,32 @@
 
-import React, { useState } from 'react';
-import ContentWrapper from './ContentWrapper';
+import React from 'react';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
-import { useAuth } from '@/hooks/useAuth';
-import FilterSelector from '@/components/admin/scheduling/components/FilterSelector';
 
-const SchedulingContent: React.FC = () => {
-  const { role, isAdmin, isSuperAdmin } = useAuth();
-  const hasAdminAccess = isAdmin() || isSuperAdmin();
-  
-  const [filterType, setFilterType] = useState<string | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+interface SchedulingContentProps {
+  title?: string;
+  description?: string;
+}
 
+const SchedulingContent: React.FC<SchedulingContentProps> = ({
+  title = 'Scheduling Calendar',
+  description
+}) => {
   return (
-    <ContentWrapper
-      title="Calendar"
-      description="View and manage all calendar events"
-    >
-      <div className="mb-4">
-        <FilterSelector
-          filterType={filterType}
-          setFilterType={setFilterType}
-          selectedFilter={selectedFilter}
-          setSelectedFilter={setSelectedFilter}
-          selectedFilters={selectedFilters}
-          setSelectedFilters={setSelectedFilters}
-          showFilterTypeTabs={true} // Show the filter type tabs in this view
-        />
-      </div>
+    <div className="h-full flex flex-col space-y-4">
+      {description && (
+        <p className="text-muted-foreground">{description}</p>
+      )}
       
-      <div className="border rounded-lg bg-white overflow-hidden h-[600px]">
+      <div className="flex-grow border rounded-md overflow-hidden">
         <FilteredCalendar
-          title="All Events"
-          hasAdminAccess={hasAdminAccess}
-          filterType={filterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | undefined}
-          filterValues={selectedFilters}
-          showFilterTabs={false} // Don't show duplicate tabs here as we're using the FilterSelector above
+          title={title}
+          hasAdminAccess={true}
+          filterType="staff"
+          filterValues={['teacher', 'admin', 'superadmin']}
+          showAvailability={true}
         />
       </div>
-    </ContentWrapper>
+    </div>
   );
 };
 

@@ -1,27 +1,30 @@
 
 import React from 'react';
-import ContentWrapper from './ContentWrapper';
 import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
-import { useAuth } from '@/hooks/useAuth';
 
-const StaffCalendarContent: React.FC = () => {
-  const { role, isAdmin, isSuperAdmin } = useAuth();
-  const hasAdminAccess = isAdmin() || isSuperAdmin();
-  
+interface StaffCalendarContentProps {
+  title?: string;
+  description?: string;
+}
+
+const StaffCalendarContent: React.FC<StaffCalendarContentProps> = ({ 
+  title = 'Staff Calendar', 
+  description 
+}) => {
   return (
-    <ContentWrapper
-      title="Staff Calendar"
-      description="View and manage schedule for all staff members"
-    >
-      <div className="h-[calc(100vh-220px)]">
-        <FilteredCalendar
-          title="Staff Calendar"
-          filterType="role"
+    <div className="h-full flex flex-col space-y-4">
+      {description && <p className="text-muted-foreground">{description}</p>}
+      
+      <div className="flex-grow border rounded-md overflow-hidden">
+        <FilteredCalendar 
+          hasAdminAccess={true}
+          filterType="staff"
           filterValues={['teacher', 'admin', 'superadmin']}
-          hasAdminAccess={hasAdminAccess}
+          title={title}
+          showAvailability={true}
         />
       </div>
-    </ContentWrapper>
+    </div>
   );
 };
 
