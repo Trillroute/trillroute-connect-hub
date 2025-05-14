@@ -81,7 +81,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     
     if (Array.isArray(classTypesData) && classTypesData.length > 0) {
       // Use the highest max_students value from all class types
-      maxStudents = classTypesData.reduce((max, classType) => {
+      maxStudents = classTypesData.reduce((max: number, classType: any) => {
         // Handle different types safely
         let classTypeMaxStudents = 0;
         
@@ -110,6 +110,75 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     return currentStudents < maxStudents;
   } catch (error) {
     console.error('Error in checkCourseHasSpace:', error);
+    return false;
+  }
+};
+
+// Add missing forceVerifyEnrollment export 
+export const forceVerifyEnrollment = async (
+  userId: string, 
+  courseId: string
+): Promise<boolean> => {
+  try {
+    // First check if already enrolled
+    const isEnrolled = await isStudentEnrolledInCourse(userId, courseId);
+    
+    if (isEnrolled) {
+      console.log('User is already enrolled in this course');
+      return true;
+    }
+    
+    // Check if the course has space
+    const hasSpace = await checkCourseHasSpace(courseId);
+    
+    if (!hasSpace) {
+      console.error('Course is full, cannot enroll more students');
+      return false;
+    }
+    
+    // Get the course to update its student_ids array
+    const { data: courseData, error: courseError } = await supabase
+      .from('courses')
+      .select('student_ids, students')
+      .eq('id', courseId)
+      .single();
+      
+    if (courseError) {
+      console.error('Error getting course data:', courseError);
+      return false;
+    }
+    
+    // Add student to the course's student_ids array
+    const studentIds = Array.isArray(courseData.student_ids) ? [...courseData.student_ids] : [];
+    
+    if (!studentIds.includes(userId)) {
+      studentIds.push(userId);
+    }
+    
+    // Increment the students count
+    const currentStudents = typeof courseData.students === 'number'
+      ? courseData.students
+      : parseInt(courseData.students as string, 10) || 0;
+    
+    const updatedStudentsCount = currentStudents + 1;
+    
+    // Update the course
+    const { error: updateError } = await supabase
+      .from('courses')
+      .update({
+        student_ids: studentIds,
+        students: updatedStudentsCount
+      })
+      .eq('id', courseId);
+      
+    if (updateError) {
+      console.error('Error updating course:', updateError);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in forceVerifyEnrollment:', error);
     return false;
   }
 };

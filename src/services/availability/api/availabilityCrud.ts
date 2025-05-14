@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvailability } from '../types';
-import { mapDbAvailabilitySlot } from './userAvailability';
+import { mapDbAvailabilitySlot } from './availabilityCore';
 
 /**
  * Create a new availability slot for a user
