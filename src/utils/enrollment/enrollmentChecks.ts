@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -105,7 +104,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     // Check if there's space available
     const currentStudents = typeof data.students === 'number' 
       ? data.students 
-      : parseInt(data.students as string, 10) || 0;
+      : parseInt(data.students as unknown as string, 10) || 0;
       
     return currentStudents < maxStudents;
   } catch (error) {
@@ -114,10 +113,12 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
   }
 };
 
-// Add missing forceVerifyEnrollment export 
+/**
+ * Force verify enrollment for a student in a course
+ */
 export const forceVerifyEnrollment = async (
-  userId: string, 
-  courseId: string
+  courseId: string,
+  userId: string
 ): Promise<boolean> => {
   try {
     // First check if already enrolled
@@ -158,7 +159,7 @@ export const forceVerifyEnrollment = async (
     // Increment the students count
     const currentStudents = typeof courseData.students === 'number'
       ? courseData.students
-      : parseInt(courseData.students as string, 10) || 0;
+      : parseInt(courseData.students as unknown as string, 10) || 0;
     
     const updatedStudentsCount = currentStudents + 1;
     

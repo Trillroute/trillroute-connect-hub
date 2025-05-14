@@ -39,6 +39,7 @@ const DayAccordionItem: React.FC<DayAccordionItemProps> = ({
             const startTime = "09:00:00";
             const endTime = "10:00:00";
             const category = "general";
+            // Convert dayOfWeek to string to match expected type
             onAddSlot(day.dayOfWeek, startTime, endTime, category);
           }}
           className="mr-4"

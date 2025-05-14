@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
@@ -6,8 +5,8 @@ import { toast } from '@/components/ui/use-toast';
  * Enrolls a student in a course by adding their ID to the course's student_ids array
  */
 export const enrollStudentInCourse = async (
-  studentId: string,
-  courseId: string
+  courseId: string,
+  studentId: string
 ): Promise<boolean> => {
   try {
     // First, get current student_ids
@@ -51,52 +50,6 @@ export const enrollStudentInCourse = async (
     return true;
   } catch (error) {
     console.error('Error in enrollStudentInCourse:', error);
-    return false;
-  }
-};
-
-/**
- * Force verify enrollment for testing and admin purposes
- * This will bypass payment checks and directly enroll a student
- */
-export const forceVerifyEnrollment = async (
-  courseId: string,
-  studentId?: string
-): Promise<boolean> => {
-  if (!studentId) {
-    console.error('Student ID is required for enrollment');
-    toast({
-      title: 'Enrollment Failed',
-      description: 'User identification is required for enrollment.',
-      variant: 'destructive'
-    });
-    return false;
-  }
-  
-  try {
-    const success = await enrollStudentInCourse(studentId, courseId);
-    
-    if (success) {
-      toast({
-        title: 'Enrollment Successful',
-        description: 'You have been enrolled in this course.',
-      });
-      return true;
-    } else {
-      toast({
-        title: 'Enrollment Failed',
-        description: 'There was a problem with the enrollment process.',
-        variant: 'destructive'
-      });
-      return false;
-    }
-  } catch (error) {
-    console.error('Force enrollment error:', error);
-    toast({
-      title: 'Enrollment Error',
-      description: 'An unexpected error occurred during enrollment.',
-      variant: 'destructive'
-    });
     return false;
   }
 };
