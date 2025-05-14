@@ -86,10 +86,15 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
         let classTypeMaxStudents = 0;
         
         if (classType && typeof classType === 'object' && 'max_students' in classType) {
-          if (typeof classType.max_students === 'number') {
-            classTypeMaxStudents = classType.max_students;
-          } else if (typeof classType.max_students === 'string') {
-            classTypeMaxStudents = parseInt(classType.max_students, 10) || 0;
+          const maxStudentsValue = classType.max_students;
+          
+          if (typeof maxStudentsValue === 'number') {
+            classTypeMaxStudents = maxStudentsValue;
+          } else if (typeof maxStudentsValue === 'string') {
+            classTypeMaxStudents = parseInt(maxStudentsValue, 10) || 0;
+          } else if (maxStudentsValue !== null && maxStudentsValue !== undefined) {
+            // Handle JSON value by converting to string first then to number
+            classTypeMaxStudents = parseInt(String(maxStudentsValue), 10) || 0;
           }
         }
           
