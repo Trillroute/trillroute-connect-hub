@@ -9,7 +9,7 @@ interface ScheduleContentProps {
   dailyAvailability: DayAvailability[];
   isContentLoading: boolean;
   hasData: boolean;
-  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onAddSlot: (dayOfWeek: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onDeleteSlot: (id: string) => Promise<boolean>;
 }

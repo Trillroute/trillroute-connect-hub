@@ -8,7 +8,7 @@ import AvailabilitySlotsGrid from './day-panel/AvailabilitySlotsGrid';
 
 interface DayAvailabilityPanelProps {
   day: DayAvailability;
-  onAddSlot: (dayOfWeek: number, startTime: string, endTime: string, category: string) => Promise<boolean>;
+  onAddSlot: (startTime: string, endTime: string, category: string) => Promise<boolean>;
   onUpdateSlot: (id: string, startTime: string, endTime: string, category: string) => Promise<boolean>;
   onDeleteSlot: (id: string) => Promise<boolean>;
 }
@@ -19,11 +19,7 @@ const DayAvailabilityPanel: React.FC<DayAvailabilityPanelProps> = ({
   onUpdateSlot,
   onDeleteSlot
 }) => {
-  // Modified to correctly pass the day's dayOfWeek to onAddSlot
-  const adaptedOnAddSlot = (startTime: string, endTime: string, category: string) => {
-    return onAddSlot(day.dayOfWeek, startTime, endTime, category);
-  };
-
+  // onAddSlot here is already wrapped to include the day information
   const { 
     isDialogOpen, 
     editingSlot, 
