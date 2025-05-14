@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvailability } from '../types';
+import { mapDbAvailabilitySlot } from './userAvailability';
 
 /**
  * Create a new availability slot for a user
@@ -22,15 +23,14 @@ export const createAvailabilitySlot = async (
         end_time: endTime,
         category: category
       })
-      .select()
-      .single();
+      .select();
       
     if (error) {
       console.error('Error creating availability slot:', error);
       return false;
     }
     
-    return !!data;
+    return !!data && data.length > 0;
   } catch (error) {
     console.error('Error in createAvailabilitySlot:', error);
     return false;
@@ -41,21 +41,35 @@ export const createAvailabilitySlot = async (
  * Update an existing availability slot
  */
 export const updateAvailabilitySlot = async (
-  slotId: string,
+  id: string,
   startTime: string,
   endTime: string,
-  category: string
+  category?: string
 ): Promise<boolean> => {
   try {
+    const updateData: Partial<UserAvailability> = {
+      startTime,
+      endTime
+    };
+    
+    if (category) {
+      updateData.category = category;
+    }
+    
+    // Convert to database column names
+    const dbUpdateData = {
+      start_time: updateData.startTime,
+      end_time: updateData.endTime
+    };
+    
+    if (updateData.category) {
+      dbUpdateData['category'] = updateData.category;
+    }
+    
     const { error } = await supabase
       .from('user_availability')
-      .update({
-        start_time: startTime,
-        end_time: endTime,
-        category: category,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', slotId);
+      .update(dbUpdateData)
+      .eq('id', id);
       
     if (error) {
       console.error('Error updating availability slot:', error);
@@ -72,12 +86,12 @@ export const updateAvailabilitySlot = async (
 /**
  * Delete an availability slot
  */
-export const deleteAvailabilitySlot = async (slotId: string): Promise<boolean> => {
+export const deleteAvailabilitySlot = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('user_availability')
       .delete()
-      .eq('id', slotId);
+      .eq('id', id);
       
     if (error) {
       console.error('Error deleting availability slot:', error);

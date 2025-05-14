@@ -14,8 +14,8 @@ export type SelectedUser = {
 // UserAvailability interface - updated to match service's interface
 export interface UserAvailability {
   id: string;
-  userId: string;  // Changed from required to match service type
-  user_id?: string; // Added to match service type
+  userId?: string;  // Make userId optional to match the service interface
+  user_id?: string; // Keep user_id optional as well
   dayOfWeek: number;
   startTime: string;
   endTime: string;

@@ -82,10 +82,16 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     if (Array.isArray(classTypesData) && classTypesData.length > 0) {
       // Use the highest max_students value from all class types
       maxStudents = classTypesData.reduce((max, classType) => {
-        // Ensure we're dealing with numbers, not JSON strings
-        const classTypeMaxStudents = typeof classType.max_students === 'number' 
-          ? classType.max_students 
-          : parseInt(classType.max_students as string, 10) || 0;
+        // Handle different types safely
+        let classTypeMaxStudents = 0;
+        
+        if (classType && typeof classType === 'object' && 'max_students' in classType) {
+          if (typeof classType.max_students === 'number') {
+            classTypeMaxStudents = classType.max_students;
+          } else if (typeof classType.max_students === 'string') {
+            classTypeMaxStudents = parseInt(classType.max_students, 10) || 0;
+          }
+        }
           
         return Math.max(max, classTypeMaxStudents);
       }, 0);
