@@ -2,104 +2,101 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Verifies if a user has a student role
+ * Check if a student is enrolled in a course
  */
-export const verifyStudentRole = async (studentId: string): Promise<boolean> => {
-  const { data: userData, error: userError } = await supabase
-    .from('custom_users')
-    .select('role')
-    .eq('id', studentId)
-    .single();
-
-  if (userError) {
-    console.error('Error fetching user role:', userError);
-    return false;
-  }
-
-  return userData.role === 'student';
-};
-
-/**
- * Checks if a student is enrolled in a course using multiple verification methods.
- * This function has been enhanced to make database verification the source of truth.
- */
-export const isStudentEnrolledInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
-  if (!courseId || !studentId) {
-    console.error('Missing courseId or studentId in isStudentEnrolledInCourse');
-    return false;
-  }
-  
+export const isStudentEnrolledInCourse = async (
+  studentId: string, 
+  courseId: string
+): Promise<boolean> => {
   try {
-    console.log(`Checking if student ${studentId} is enrolled in course ${courseId}`);
-    
-    // The primary and most reliable method: Check course.student_ids array
-    const { data: courseData, error: courseError } = await supabase
-      .from('courses')
-      .select('student_ids, students')
-      .eq('id', courseId)
-      .single();
-
-    if (courseError) {
-      console.error('Error checking enrollment via course data:', courseError);
-      // Don't proceed with alternative methods on DB error to avoid false positives
-      return false;
-    }
-    
-    // Verify student_ids is an array and the student ID is included
-    const isEnrolledViaCourseData = courseData && 
-                  Array.isArray(courseData.student_ids) && 
-                  courseData.student_ids.includes(studentId);
-    
-    if (isEnrolledViaCourseData) {
-      console.log('User is enrolled based on course.student_ids check');
-      return true;
-    }
-    
-    // If not enrolled according to the database, cache this result to avoid using stale session data
-    sessionStorage.setItem(`enrollment_${courseId}_${studentId}`, JSON.stringify({
-      enrolled: false,
-      timestamp: Date.now()
-    }));
-    
-    console.log('User is not enrolled after verification with database');
-    return false;
-    
-  } catch (error) {
-    console.error('Unexpected error checking enrollment:', error);
-    return false;
-  }
-};
-
-/**
- * Verifies enrollment by forcing a fresh database check and cleaning any session storage
- * that might be causing false enrollment status
- */
-export const forceVerifyEnrollment = async (courseId: string, studentId: string): Promise<boolean> => {
-  try {
-    // Clear any cached enrollment data in session storage
-    sessionStorage.removeItem(`enrollment_${courseId}_${studentId}`);
-    sessionStorage.removeItem(`payment_${courseId}`);
-    
-    // Perform a direct database check
-    const { data: courseData, error: courseError } = await supabase
+    const { data, error } = await supabase
       .from('courses')
       .select('student_ids')
       .eq('id', courseId)
       .single();
-
-    if (courseError) {
-      console.error('Error in force verification of enrollment:', courseError);
+    
+    if (error) {
+      console.error('Error checking enrollment:', error);
       return false;
     }
     
-    const isEnrolled = courseData && 
-                      Array.isArray(courseData.student_ids) && 
-                      courseData.student_ids.includes(studentId);
-    
-    console.log(`Force enrollment verification result for ${studentId} in course ${courseId}: ${isEnrolled}`);
-    return isEnrolled;
+    // Check if studentId is in the student_ids array
+    const studentIds = Array.isArray(data.student_ids) ? data.student_ids : [];
+    return studentIds.includes(studentId);
   } catch (error) {
-    console.error('Unexpected error during force enrollment verification:', error);
+    console.error('Error in isStudentEnrolledInCourse:', error);
+    return false;
+  }
+};
+
+/**
+ * Get all courses a student is enrolled in
+ */
+export const getStudentEnrolledCourses = async (
+  studentId: string
+): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('courses')
+      .select('id, student_ids')
+      .contains('student_ids', [studentId]);
+    
+    if (error) {
+      console.error('Error getting enrolled courses:', error);
+      return [];
+    }
+    
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // Return the course IDs
+    return data.map(course => course.id);
+  } catch (error) {
+    console.error('Error in getStudentEnrolledCourses:', error);
+    return [];
+  }
+};
+
+/**
+ * Check course enrollment limit
+ */
+export const checkCourseHasSpace = async (courseId: string): Promise<boolean> => {
+  try {
+    // Get the course with its current enrollment count and max students
+    const { data, error } = await supabase
+      .from('courses')
+      .select('students, class_types_data')
+      .eq('id', courseId)
+      .single();
+    
+    if (error) {
+      console.error('Error checking course capacity:', error);
+      return false;
+    }
+    
+    // Get max students from class types data
+    const classTypesData = data.class_types_data || [];
+    let maxStudents = 0;
+    
+    if (Array.isArray(classTypesData) && classTypesData.length > 0) {
+      // Use the highest max_students value from all class types
+      maxStudents = classTypesData.reduce((max, classType) => {
+        const classTypeMaxStudents = classType.max_students || 0;
+        return Math.max(max, classTypeMaxStudents);
+      }, 0);
+    }
+    
+    // If maxStudents is still 0, assume unlimited capacity
+    if (maxStudents === 0) {
+      return true;
+    }
+    
+    // Check if there's space available
+    const currentStudents = data.students || 0;
+    return currentStudents < maxStudents;
+  } catch (error) {
+    console.error('Error in checkCourseHasSpace:', error);
     return false;
   }
 };

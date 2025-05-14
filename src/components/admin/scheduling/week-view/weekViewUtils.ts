@@ -1,25 +1,6 @@
 
 import { CalendarEvent } from '../context/calendarTypes';
 
-// Position calculation for events
-export const calculateEventPosition = (event: CalendarEvent) => {
-  const startHour = event.start.getHours();
-  const startMinute = event.start.getMinutes();
-  const endHour = event.end.getHours();
-  const endMinute = event.end.getMinutes();
-  
-  const startPercentage = ((startHour - 7) + startMinute / 60) * 60; // 60px per hour
-  const duration = (endHour - startHour) + (endMinute - startMinute) / 60;
-  const height = duration * 60; // 60px per hour
-  
-  return {
-    top: `${startPercentage}px`,
-    height: `${height}px`,
-    backgroundColor: event.color || '#4285F4',
-  };
-};
-
-// Define AvailabilitySlot interface for use in utility functions
 export interface AvailabilitySlot {
   dayOfWeek: number;
   startHour: number;
@@ -28,32 +9,36 @@ export interface AvailabilitySlot {
   endMinute: number;
   userId: string;
   userName?: string;
-  category: string;
+  category?: string;
 }
 
-// Check if a time slot has availability for a specific day
-export const isTimeAvailable = (hour: number, dayOfWeek: number, availabilitySlots: AvailabilitySlot[]) => {
-  return availabilitySlots.some(slot => 
-    slot.dayOfWeek === dayOfWeek && (slot.startHour <= hour && slot.endHour > hour)
-  );
-};
+export function calculateEventPosition(event: CalendarEvent): React.CSSProperties {
+  const startHour = event.start.getHours();
+  const startMinute = event.start.getMinutes();
+  const endHour = event.end.getHours();
+  const endMinute = event.end.getMinutes();
+  
+  // Calculate start position from top (hours from 00:00)
+  const startFromMidnight = startHour + startMinute / 60;
+  
+  // Calculate event duration in hours
+  const durationHours = (endHour - startHour) + (endMinute - startMinute) / 60;
+  
+  return {
+    top: `${startFromMidnight * 60}px`,
+    height: `${durationHours * 60}px`,
+    width: 'calc(100% - 10px)',
+    left: '5px',
+    backgroundColor: event.color || '#4285F4',
+    zIndex: 10
+  };
+}
 
-// Map category to CSS classes for styling
-export const getCategoryColor = (category: string) => {
-  switch (category.toLowerCase()) {
-    case 'session':
-      return 'bg-green-100 border-green-300 text-green-800';
-    case 'break':
-      return 'bg-blue-100 border-blue-300 text-blue-800';
-    case 'office':
-      return 'bg-purple-100 border-purple-300 text-purple-800';
-    case 'meeting':
-      return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-    case 'class setup':
-      return 'bg-orange-100 border-orange-300 text-orange-800';
-    case 'qc':
-      return 'bg-pink-100 border-pink-300 text-pink-800';
-    default:
-      return 'bg-gray-100 border-gray-300 text-gray-800';
-  }
-};
+export function isTimeAvailable(hour: number, dayIndex: number, availabilitySlots: AvailabilitySlot[]): boolean {
+  // Check if any availability slot covers this time
+  return availabilitySlots.some(slot => 
+    slot.dayOfWeek === dayIndex && 
+    slot.startHour <= hour && 
+    slot.endHour > hour
+  );
+}

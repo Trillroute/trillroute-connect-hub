@@ -38,7 +38,6 @@ const DayAccordionItem: React.FC<DayAccordionItemProps> = ({
             e.stopPropagation();
             const startTime = "09:00:00";
             const endTime = "10:00:00";
-            // Make sure category is passed as a string
             const category = "general";
             onAddSlot(day.dayOfWeek, startTime, endTime, category);
           }}

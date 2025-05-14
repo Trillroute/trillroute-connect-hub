@@ -4,6 +4,7 @@ import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvail
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { useCalendarFilters } from './useCalendarFilters';
+import { fetchAllStaffAvailability } from '@/services/availability/api';
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
@@ -43,9 +44,23 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
   
-  // Load events when component mounts
+  // Load events and availabilities when component mounts
   useEffect(() => {
     refreshEvents();
+    
+    // Load staff availabilities - this will populate the availabilities state
+    const loadAvailabilities = async () => {
+      try {
+        const availabilityData = await fetchAllStaffAvailability();
+        console.log('Loaded availability data:', Object.keys(availabilityData).length, 'users');
+        setAvailabilities(availabilityData);
+      } catch (error) {
+        console.error('Failed to load availabilities:', error);
+      }
+    };
+    
+    loadAvailabilities();
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

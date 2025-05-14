@@ -1,9 +1,8 @@
 
-// Define the availability slot types
-
 export interface UserAvailability {
   id: string;
   user_id: string;
+  userId?: string; // Alias for better compatibility
   dayOfWeek: number;
   startTime: string;
   endTime: string;
@@ -16,19 +15,6 @@ export interface UserAvailabilityMap {
   [userId: string]: {
     slots: UserAvailability[];
     name: string;
-    role?: string;
+    role: string;
   };
 }
-
-// Categories for availability slots
-export const AVAILABILITY_CATEGORIES = [
-  'Session',
-  'Break',
-  'Office',
-  'Meeting',
-  'Class Setup',
-  'QC'
-];
-
-// Status types for availability slots
-export type AvailabilityStatus = 'available' | 'booked' | 'blocked';

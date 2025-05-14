@@ -1,84 +1,59 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { verifyStudentRole, isStudentEnrolledInCourse } from './enrollmentChecks';
-import { logUserActivity } from '../activity/activityLogger';
 
 /**
- * Enrolls a student in a course by updating the course's student_ids array
- * and incrementing the students count. Only allows student role to enroll.
+ * Enrolls a student in a course
  */
-export const enrollStudentInCourse = async (courseId: string, studentId: string): Promise<boolean> => {
-  console.log(`Enrolling student ${studentId} in course ${courseId}`);
-  
+export const enrollStudentInCourse = async (
+  studentId: string, 
+  courseId: string
+): Promise<boolean> => {
   try {
-    // Verify that the user has a student role
-    const isStudent = await verifyStudentRole(studentId);
-    if (!isStudent) {
-      console.error('User is not a student');
-      toast.error('Enrollment Failed', {
-        description: 'Only students can enroll in courses.'
-      });
+    // First check if the course exists
+    const { data: course, error: courseError } = await supabase
+      .from('courses')
+      .select('id, student_ids, students')
+      .eq('id', courseId)
+      .single();
+    
+    if (courseError) {
+      console.error('Error fetching course for enrollment:', courseError);
+      return false;
+    }
+    
+    if (!course) {
+      console.error('Course not found for enrollment');
       return false;
     }
     
     // Check if student is already enrolled
-    const isAlreadyEnrolled = await isStudentEnrolledInCourse(courseId, studentId);
-    if (isAlreadyEnrolled) {
-      console.log('Student is already enrolled in this course');
-      return true;
+    const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
+    
+    if (studentIds.includes(studentId)) {
+      console.warn('Student already enrolled in this course');
+      return true; // Already enrolled is considered success
     }
     
-    // If not enrolled, fetch the current course data
-    const { data: courseData, error: fetchError } = await supabase
-      .from('courses')
-      .select('student_ids, students')
-      .eq('id', courseId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching course data:', fetchError);
-      toast.error('Failed to enroll in course', {
-        description: 'There was an error processing your enrollment.'
-      });
-      return false;
-    }
-
-    console.log('Current course data:', courseData);
-    
-    // Add student to the course
-    const currentStudentIds = courseData.student_ids || [];
-    const newStudentIds = [...currentStudentIds, studentId];
-    const newStudentCount = (courseData.students || 0) + 1;
-
-    console.log(`Updating course with new student. New count: ${newStudentCount}`);
+    // Add student to course
+    const updatedStudentIds = [...studentIds, studentId];
+    const updatedStudentCount = (course.students || 0) + 1;
     
     const { error: updateError } = await supabase
       .from('courses')
       .update({
-        student_ids: newStudentIds,
-        students: newStudentCount
+        student_ids: updatedStudentIds,
+        students: updatedStudentCount
       })
       .eq('id', courseId);
-
+    
     if (updateError) {
-      console.error('Error updating course with enrollment:', updateError);
-      toast.error('Enrollment Failed', {
-        description: 'There was an error processing your enrollment.'
-      });
+      console.error('Error enrolling student in course:', updateError);
       return false;
     }
-
-    // Log the user activity
-    await logUserActivity(studentId, 'enrollment', 'Enrolled in course', courseId);
-    console.log('Enrollment successful');
     
     return true;
   } catch (error) {
-    console.error('Unexpected error during enrollment:', error);
-    toast.error('Enrollment Error', {
-      description: 'An unexpected error occurred. Please try again.'
-    });
+    console.error('Error in enrollStudentInCourse:', error);
     return false;
   }
 };
@@ -86,61 +61,56 @@ export const enrollStudentInCourse = async (courseId: string, studentId: string)
 /**
  * Unenrolls a student from a course
  */
-export const unenrollStudentFromCourse = async (courseId: string, studentId: string): Promise<boolean> => {
+export const unenrollStudentFromCourse = async (
+  studentId: string, 
+  courseId: string
+): Promise<boolean> => {
   try {
-    // First, fetch the current course data
-    const { data: courseData, error: fetchError } = await supabase
+    // Get the course first
+    const { data: course, error: courseError } = await supabase
       .from('courses')
-      .select('student_ids, students')
+      .select('id, student_ids, students')
       .eq('id', courseId)
       .single();
-
-    if (fetchError) {
-      console.error('Error fetching course data:', fetchError);
-      toast.error('Failed to unenroll from course', {
-        description: 'There was an error processing your request.'
-      });
+    
+    if (courseError) {
+      console.error('Error fetching course for unenrollment:', courseError);
       return false;
     }
-
-    // Check if student is enrolled
-    const currentStudentIds = courseData.student_ids || [];
-    if (!currentStudentIds.includes(studentId)) {
-      toast.info('Not Enrolled', {
-        description: 'You are not enrolled in this course.'
-      });
-      return true;
+    
+    if (!course) {
+      console.error('Course not found for unenrollment');
+      return false;
     }
-
-    // Remove student from the course
-    const newStudentIds = currentStudentIds.filter(id => id !== studentId);
-    const newStudentCount = Math.max((courseData.students || 0) - 1, 0);
-
+    
+    // Check if student is enrolled
+    const studentIds = Array.isArray(course.student_ids) ? course.student_ids : [];
+    
+    if (!studentIds.includes(studentId)) {
+      console.warn('Student not enrolled in this course');
+      return true; // Already not enrolled is considered success
+    }
+    
+    // Remove student from course
+    const updatedStudentIds = studentIds.filter(id => id !== studentId);
+    const updatedStudentCount = Math.max(0, (course.students || 1) - 1);
+    
     const { error: updateError } = await supabase
       .from('courses')
       .update({
-        student_ids: newStudentIds,
-        students: newStudentCount
+        student_ids: updatedStudentIds,
+        students: updatedStudentCount
       })
       .eq('id', courseId);
-
+    
     if (updateError) {
-      console.error('Error updating course with unenrollment:', updateError);
-      toast.error('Unenrollment Failed', {
-        description: 'There was an error processing your request.'
-      });
+      console.error('Error unenrolling student from course:', updateError);
       return false;
     }
-
-    // Log the user activity
-    await logUserActivity(studentId, 'unenrollment', 'Unenrolled from course', courseId);
-
+    
     return true;
   } catch (error) {
-    console.error('Unexpected error during unenrollment:', error);
-    toast.error('Unenrollment Error', {
-      description: 'An unexpected error occurred. Please try again.'
-    });
+    console.error('Error in unenrollStudentFromCourse:', error);
     return false;
   }
 };
