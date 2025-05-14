@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useCalendar } from './context/CalendarContext';
 import { getHourCells } from './calendarUtils';
@@ -14,6 +13,15 @@ interface DayViewProps {
   onCreateEvent?: () => void;
   onEditEvent?: (event: CalendarEvent) => void;
   onDeleteEvent?: (event: CalendarEvent) => void;
+  availabilitySlots?: Array<{
+    startHour: number;
+    startMinute: number;
+    endHour: number;
+    endMinute: number;
+    userId: string;
+    userName?: string;
+    category: string;
+  }>;
 }
 
 interface AvailabilitySlotType {
@@ -26,7 +34,12 @@ interface AvailabilitySlotType {
   category: string;
 }
 
-const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteEvent }) => {
+const DayView: React.FC<DayViewProps> = ({ 
+  onCreateEvent, 
+  onEditEvent, 
+  onDeleteEvent,
+  availabilitySlots: propAvailabilitySlots 
+}) => {
   const { currentDate, events, availabilities } = useCalendar();
   const hours = getHourCells();
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlotType[]>([]);
@@ -35,10 +48,16 @@ const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteE
   useEffect(() => {
     console.log("Processing availabilities for day view, data:", 
       { date: currentDate, availabilitiesCount: Object.keys(availabilities || {}).length });
-    const slots = processAvailabilities(currentDate, availabilities);
-    console.log(`Processed ${slots.length} availability slots for day ${currentDate.toDateString()}`);
-    setAvailabilitySlots(slots);
-  }, [currentDate, availabilities]);
+    
+    // Use prop availability slots if provided, otherwise process them from context
+    if (propAvailabilitySlots) {
+      setAvailabilitySlots(propAvailabilitySlots);
+    } else {
+      const slots = processAvailabilities(currentDate, availabilities);
+      console.log(`Processed ${slots.length} availability slots for day ${currentDate.toDateString()}`);
+      setAvailabilitySlots(slots);
+    }
+  }, [currentDate, availabilities, propAvailabilitySlots]);
   
   // Filter events for the current day
   const todayEvents = filterTodayEvents(events, currentDate);
