@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CalendarViewMode } from '../context/calendarTypes';
+import { CalendarViewMode } from '../types';
 
 interface CalendarTitleProps {
   viewMode: CalendarViewMode;

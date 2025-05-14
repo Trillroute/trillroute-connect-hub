@@ -38,7 +38,7 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
     case 'week':
       return <WeekViewComponent showAvailability={showAvailability} />;
     case 'month':
-      return <MonthViewComponent />;
+      return <MonthViewComponent onDateClick={onDateClick} />;
     case 'list':
       return (
         <EventListViewComponent 

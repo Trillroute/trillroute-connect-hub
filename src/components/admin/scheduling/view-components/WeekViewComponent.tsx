@@ -54,5 +54,9 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
     return slots;
   }, [availabilities, showAvailability]);
   
-  return <WeekView events={events} availabilitySlots={availabilitySlots} currentDate={currentDate} />;
+  return (
+    <WeekView 
+      onCreateEvent={undefined}
+    />
+  );
 };

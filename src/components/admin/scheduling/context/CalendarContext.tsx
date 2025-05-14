@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
@@ -46,7 +45,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
     toggleLayer,
     toggleUser,
     filterEventsByRole,
-    filterEventsByUser
+    filterEventsByUser: originalFilterEventsByUser
   } = useCalendarFilters(setEvents);
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
@@ -68,6 +67,11 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
     return;
   };
   
+  // Wrapper for filterEventsByUser to match expected type
+  const filterEventsByUser = (user: SelectedUser): void => {
+    originalFilterEventsByUser(user.id);
+  };
+
   // Load events and availabilities when component mounts
   useEffect(() => {
     refreshEvents();

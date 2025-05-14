@@ -1,4 +1,3 @@
-
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -14,6 +13,8 @@ export interface CalendarEvent {
 }
 
 export type EventLayer = 'teachers' | 'students' | 'admins' | 'superadmins';
+
+export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
 
 export interface SelectedUser {
   id: string;
@@ -42,7 +43,7 @@ export interface UserAvailabilityMap {
 
 export interface CalendarContextType {
   currentDate: Date;
-  viewMode: 'day' | 'week' | 'month' | 'list';
+  viewMode: CalendarViewMode;
   events: CalendarEvent[];
   isCreateEventOpen: boolean;
   isLoading: boolean;
@@ -52,7 +53,7 @@ export interface CalendarContextType {
   showAvailability?: boolean;
   
   setCurrentDate: (date: Date) => void;
-  setViewMode: (mode: 'day' | 'week' | 'month' | 'list') => void;
+  setViewMode: (mode: CalendarViewMode) => void;
   setEvents: (events: CalendarEvent[]) => void;
   setIsCreateEventOpen: (isOpen: boolean) => void;
   setActiveLayers: (layers: EventLayer[]) => void;
