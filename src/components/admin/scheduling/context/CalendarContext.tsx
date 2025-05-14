@@ -1,12 +1,76 @@
-
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { CalendarEvent, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
 import { useCalendarFilters } from './useCalendarFilters';
 import { fetchAllStaffAvailability } from '@/services/availability/api';
 
-const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
+// Update the CalendarContextType interface
+interface CalendarContextType {
+  currentDate: string;
+  viewMode: string;
+  events: CalendarEvent[];
+  isCreateEventOpen: boolean;
+  isLoading: boolean;
+  activeLayers: EventLayer[];
+  selectedUsers: SelectedUser[];
+  availabilities: UserAvailabilityMap;
+  setCurrentDate: (date: string) => void;
+  setViewMode: (mode: string) => void;
+  setEvents: (events: CalendarEvent[]) => void;
+  setIsCreateEventOpen: (open: boolean) => void;
+  setActiveLayers: (layers: EventLayer[]) => void;
+  setSelectedUsers: (users: SelectedUser[]) => void;
+  setAvailabilities: (availabilities: UserAvailabilityMap) => void;
+  toggleLayer: (layer: EventLayer) => void;
+  toggleUser: (user: SelectedUser) => void;
+  goToToday: () => void;
+  goToPrevious: () => void;
+  goToNext: () => void;
+  handleCreateEvent: (event: any) => Promise<void>;
+  handleUpdateEvent: (id: string, event: any) => Promise<void>;
+  handleDeleteEvent: (id: string) => Promise<void>;
+  handleDateSelect: (date: string) => void;
+  refreshEvents: () => void;
+  filterEventsByRole: (role: string) => void;
+  filterEventsByUser: (user: SelectedUser) => void;
+  showAvailability: boolean; // New property to control availability display
+}
+
+// Default context
+const defaultContextValue: CalendarContextType = {
+  currentDate: '',
+  viewMode: '',
+  events: [],
+  isCreateEventOpen: false,
+  isLoading: false,
+  activeLayers: [],
+  selectedUsers: [],
+  availabilities: {},
+  setCurrentDate: () => {},
+  setViewMode: () => {},
+  setEvents: () => {},
+  setIsCreateEventOpen: () => {},
+  setActiveLayers: () => {},
+  setSelectedUsers: () => {},
+  setAvailabilities: () => {},
+  toggleLayer: () => {},
+  toggleUser: () => {},
+  goToToday: () => {},
+  goToPrevious: () => {},
+  goToNext: () => {},
+  handleCreateEvent: () => Promise.resolve(),
+  handleUpdateEvent: () => Promise.resolve(),
+  handleDeleteEvent: () => Promise.resolve(),
+  handleDateSelect: () => {},
+  refreshEvents: () => {},
+  filterEventsByRole: () => {},
+  filterEventsByUser: () => {},
+  showAvailability: true, // Default to showing availability
+};
+
+// Create context
+const CalendarContext = createContext<CalendarContextType>(defaultContextValue);
 
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const {
@@ -110,6 +174,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         refreshEvents,
         filterEventsByRole,
         filterEventsByUser,
+        showAvailability,
       }}
     >
       {children}
@@ -124,3 +189,5 @@ export const useCalendar = () => {
   }
   return context;
 };
+
+export default CalendarContext;

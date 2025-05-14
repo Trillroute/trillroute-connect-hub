@@ -14,9 +14,9 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   onEditEvent,
   onDeleteEvent
 }) => {
-  const { events } = useCalendar();
+  const { events, showAvailability } = useCalendar();
   
-  console.log(`EventListViewComponent rendering with ${events.length} events`);
+  console.log(`EventListViewComponent rendering with ${events.length} events, showAvailability: ${showAvailability}`);
   
   return (
     <ScrollArea className="h-full">
@@ -24,6 +24,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
         events={events}
         onEditEvent={onEditEvent} 
         onDeleteEvent={onDeleteEvent} 
+        showAvailability={showAvailability}
       />
     </ScrollArea>
   );

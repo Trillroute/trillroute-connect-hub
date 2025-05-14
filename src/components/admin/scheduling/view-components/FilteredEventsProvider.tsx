@@ -31,6 +31,11 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   ): ContextUserAvailabilityMap => {
     const result: ContextUserAvailabilityMap = {};
     
+    // If we're filtering for students, don't include any availability slots
+    if (filterType === 'student') {
+      return result; // Return empty availability map for students
+    }
+    
     Object.entries(serviceMap).forEach(([userId, userData]) => {
       result[userId] = {
         slots: userData.slots.map(slot => ({
