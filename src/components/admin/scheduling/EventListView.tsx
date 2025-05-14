@@ -25,6 +25,8 @@ interface AvailabilityItem {
   userName?: string;
   category?: string;
   color?: string;
+  location?: string; // Add location to match EventItem
+  description?: string; // Add description to match EventItem
 }
 
 interface EventItem {
@@ -174,25 +176,33 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
                         {format(item.start, 'h:mm a')} - {format(item.end, 'h:mm a')}
                       </span>
                     </div>
-                    {item.location && (
+                    
+                    {/* Only display location if the item type is event and has location */}
+                    {item.type === 'event' && item.location && (
                       <div className="flex items-center text-gray-500 mt-1">
                         <MapPin className="w-4 h-4 mr-1" />
                         <span className="text-sm">{item.location}</span>
                       </div>
                     )}
+                    
+                    {/* Display user name for availability items */}
                     {item.type === 'availability' && item.userName && (
                       <div className="flex items-center text-gray-500 mt-1">
                         <Users className="w-4 h-4 mr-1" />
                         <span className="text-sm">{item.userName}</span>
                       </div>
                     )}
+                    
+                    {/* Display category for availability items */}
                     {item.type === 'availability' && item.category && (
                       <div className="flex items-center text-gray-500 mt-1">
                         <Tag className="w-4 h-4 mr-1" />
                         <span className="text-sm">{item.category}</span>
                       </div>
                     )}
-                    {item.description && (
+                    
+                    {/* Only display description if the item type is event and has description */}
+                    {item.type === 'event' && item.description && (
                       <p className="mt-2 text-sm text-gray-600">{item.description}</p>
                     )}
                   </div>
