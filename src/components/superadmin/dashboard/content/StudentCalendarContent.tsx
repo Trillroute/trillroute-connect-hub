@@ -19,6 +19,7 @@ const StudentCalendarContent: React.FC = () => {
           filterType="role"
           filterValues={['student']}
           hasAdminAccess={hasAdminAccess}
+          showAvailability={false} // Explicitly disable showing availability slots
         />
       </div>
     </ContentWrapper>

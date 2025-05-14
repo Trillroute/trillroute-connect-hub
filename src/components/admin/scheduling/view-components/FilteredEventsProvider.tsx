@@ -64,7 +64,14 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       ids: allIds,
       staffUserIds,
       setEvents,
-      setAvailabilities,
+      setAvailabilities: (availabilities) => {
+        // If filter type is 'student', set availabilities to an empty object
+        if (filterType === 'student') {
+          setAvailabilities({});
+        } else {
+          setAvailabilities(availabilities);
+        }
+      },
       convertAvailabilityMap
     });
     

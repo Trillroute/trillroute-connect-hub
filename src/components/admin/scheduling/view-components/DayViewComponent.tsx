@@ -1,17 +1,28 @@
 
 import React from 'react';
 import DayView from '../DayView';
+import { useCalendar } from '../context/CalendarContext';
+import { processAvailabilities } from '../day-view/dayViewUtils';
 
 interface DayViewComponentProps {
-  onCreateEvent?: () => void;
+  showAvailability?: boolean;
 }
 
 export const DayViewComponent: React.FC<DayViewComponentProps> = ({
-  onCreateEvent
+  showAvailability = true
 }) => {
+  const { currentDate, events, availabilities } = useCalendar();
+  
+  // Process availability data for the current day
+  const availabilitySlots = showAvailability 
+    ? processAvailabilities(currentDate, availabilities)
+    : [];
+  
   return (
-    <div className="h-full overflow-auto">
-      <DayView onCreateEvent={onCreateEvent} />
-    </div>
+    <DayView 
+      date={currentDate} 
+      events={events} 
+      availabilitySlots={availabilitySlots}
+    />
   );
 };

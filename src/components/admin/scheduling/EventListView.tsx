@@ -12,6 +12,7 @@ interface EventListViewProps {
   events: CalendarEvent[];
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
+  showAvailability?: boolean;
 }
 
 // Define a type for list items that can be either events or availability slots
@@ -42,13 +43,19 @@ interface EventItem {
 
 type ListItem = AvailabilityItem | EventItem;
 
-const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDeleteEvent }) => {
+const EventListView: React.FC<EventListViewProps> = ({ 
+  events, 
+  onEditEvent, 
+  onDeleteEvent,
+  showAvailability = true
+}) => {
   const { currentDate, availabilities } = useCalendar();
   const [displayCount, setDisplayCount] = useState<number>(20);
   
   // Convert availability slots to list items format
   const availabilityItems = useMemo(() => {
-    if (!availabilities) return [];
+    // Return empty array if showAvailability is false or no availabilities
+    if (!showAvailability || !availabilities) return [];
     
     const items: AvailabilityItem[] = [];
     const now = new Date();
@@ -94,7 +101,7 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
     });
     
     return items;
-  }, [availabilities, currentDate]);
+  }, [availabilities, currentDate, showAvailability]);
   
   // Convert calendar events to list items format
   const eventItems = useMemo(() => {
@@ -107,7 +114,10 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
   
   // Combine and sort both types of items
   const combinedItems = useMemo(() => {
-    const allItems = [...eventItems, ...availabilityItems];
+    // If showAvailability is false, only include event items
+    const allItems = showAvailability 
+      ? [...eventItems, ...availabilityItems]
+      : [...eventItems];
     
     // Get current time for filtering
     const now = new Date();
@@ -120,7 +130,7 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
                (isAfter(item.start, now));
       })
       .sort((a, b) => a.start.getTime() - b.start.getTime());
-  }, [eventItems, availabilityItems, currentDate]);
+  }, [eventItems, availabilityItems, currentDate, showAvailability]);
   
   // Get the limited set of items to display based on the displayCount
   const displayedItems = combinedItems.slice(0, displayCount);
@@ -132,7 +142,8 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
   
   // Get an appropriate title based on current date
   const getViewTitle = () => {
-    return `Events & Availability for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
+    const baseTitle = `Events${showAvailability ? ' & Availability' : ''} for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
+    return baseTitle;
   };
 
   return (
@@ -145,7 +156,7 @@ const EventListView: React.FC<EventListViewProps> = ({ events, onEditEvent, onDe
         {combinedItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
             <div className="text-gray-500 text-center mb-6">
-              <div className="text-lg mb-2">No events or availability scheduled</div>
+              <div className="text-lg mb-2">No events{showAvailability ? ' or availability' : ''} scheduled</div>
               <div className="text-sm">Click on the calendar to add a new event</div>
             </div>
           </div>

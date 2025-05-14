@@ -1,69 +1,54 @@
 
 import React from 'react';
+import DayView from './DayView';
+import WeekView from './WeekView';
+import MonthView from './MonthView';
+import EventListView from './EventListView';
+import { CalendarEvent } from './context/calendarTypes';
 import { DayViewComponent } from './view-components/DayViewComponent';
 import { WeekViewComponent } from './view-components/WeekViewComponent';
 import { MonthViewComponent } from './view-components/MonthViewComponent';
 import { EventListViewComponent } from './view-components/EventListViewComponent';
-import { LegacyViewComponent } from './view-components/LegacyViewComponent';
-import { CalendarEvent, CalendarViewMode } from './types';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CalendarViewRendererProps {
-  viewMode: CalendarViewMode;
-  onDateClick?: (date: Date) => void;
-  onCreateEvent?: () => void;
-  onEditEvent?: (event: CalendarEvent) => void;
-  onDeleteEvent?: (event: CalendarEvent) => void;
+  viewMode: 'day' | 'week' | 'month' | 'list';
+  onCreateEvent: () => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onDateClick: () => void;
   filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterIds?: string[];
+  showAvailability?: boolean;
 }
 
 const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   viewMode,
-  onDateClick,
   onCreateEvent,
   onEditEvent,
   onDeleteEvent,
+  onDateClick,
   filterType,
-  filterIds
+  filterIds,
+  showAvailability = true
 }) => {
+  // Return appropriate calendar view based on viewMode
   switch (viewMode) {
     case 'day':
-      return (
-        <ScrollArea className="h-full">
-          <DayViewComponent onCreateEvent={onCreateEvent} />
-        </ScrollArea>
-      );
+      return <DayViewComponent showAvailability={showAvailability} />;
     case 'week':
-      return (
-        <ScrollArea className="h-full">
-          <WeekViewComponent onCreateEvent={onCreateEvent} />
-        </ScrollArea>
-      );
+      return <WeekViewComponent showAvailability={showAvailability} />;
     case 'month':
-      return (
-        <ScrollArea className="h-full">
-          <MonthViewComponent onDateClick={onDateClick || (() => {})} />
-        </ScrollArea>
-      );
-    case 'legacy':
-      return (
-        <ScrollArea className="h-full">
-          <LegacyViewComponent 
-            onCreateEvent={onCreateEvent} 
-            onEditEvent={onEditEvent} 
-            onDeleteEvent={onDeleteEvent} 
-          />
-        </ScrollArea>
-      );
+      return <MonthViewComponent />;
     case 'list':
-    default:
       return (
         <EventListViewComponent 
-          onEditEvent={onEditEvent || (() => {})} 
-          onDeleteEvent={onDeleteEvent || (() => {})} 
+          onEditEvent={onEditEvent} 
+          onDeleteEvent={onDeleteEvent}
+          showAvailability={showAvailability}
         />
       );
+    default:
+      return <DayViewComponent showAvailability={showAvailability} />;
   }
 };
 

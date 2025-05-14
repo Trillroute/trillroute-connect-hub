@@ -8,7 +8,15 @@ import { fetchAllStaffAvailability } from '@/services/availability/api';
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
-export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface CalendarProviderProps {
+  children: ReactNode;
+  showAvailability?: boolean;
+}
+
+export const CalendarProvider: React.FC<CalendarProviderProps> = ({ 
+  children,
+  showAvailability = true
+}) => {
   const {
     events,
     setEvents,
@@ -65,17 +73,20 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     refreshEvents();
     
     // Load staff availabilities - this will populate the availabilities state
-    const loadAvailabilities = async () => {
-      try {
-        const availabilityData = await fetchAllStaffAvailability();
-        console.log('Loaded availability data:', Object.keys(availabilityData).length, 'users');
-        setAvailabilities(availabilityData);
-      } catch (error) {
-        console.error('Failed to load availabilities:', error);
-      }
-    };
-    
-    loadAvailabilities();
+    // Only if showAvailability is true
+    if (showAvailability) {
+      const loadAvailabilities = async () => {
+        try {
+          const availabilityData = await fetchAllStaffAvailability();
+          console.log('Loaded availability data:', Object.keys(availabilityData).length, 'users');
+          setAvailabilities(availabilityData);
+        } catch (error) {
+          console.error('Failed to load availabilities:', error);
+        }
+      };
+      
+      loadAvailabilities();
+    }
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -91,6 +102,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         activeLayers,
         selectedUsers,
         availabilities,
+        showAvailability,
         setCurrentDate,
         setViewMode,
         setEvents,

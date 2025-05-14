@@ -14,6 +14,7 @@ interface CalendarMainContentProps {
   description?: string;
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   showFilterTabs?: boolean;
+  showAvailability?: boolean;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
@@ -23,7 +24,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   title,
   description,
   initialFilterType = null,
-  showFilterTabs = true
+  showFilterTabs = true,
+  showAvailability = true
 }) => {
   const { viewMode } = useCalendar();
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
@@ -112,6 +114,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           onDateClick={handleDateClick}
           filterType={effectiveFilterType}
           filterIds={filterIds}
+          showAvailability={showAvailability}
         />
       </div>
       <EventFormDialog 

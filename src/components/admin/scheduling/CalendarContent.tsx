@@ -9,7 +9,8 @@ interface CalendarContentProps {
   title?: string;
   description?: string;
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
-  showFilterTabs?: boolean; // Added prop to control filter tabs visibility
+  showFilterTabs?: boolean;
+  showAvailability?: boolean;
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({
@@ -19,7 +20,8 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   title,
   description,
   initialFilterType = null,
-  showFilterTabs = true // Default to true for backward compatibility
+  showFilterTabs = true,
+  showAvailability = true
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -30,7 +32,8 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         title={title}
         description={description}
         initialFilterType={initialFilterType}
-        showFilterTabs={showFilterTabs} // Pass down the control prop
+        showFilterTabs={showFilterTabs}
+        showAvailability={showAvailability}
       />
     </div>
   );

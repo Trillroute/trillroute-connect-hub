@@ -83,9 +83,8 @@ export const applyFilter = async ({
           userIds: ids.length > 0 ? ids : undefined,
           setEvents 
         });
-        // For students view, still fetch teacher availabilities
-        const teacherAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
-        setAvailabilities(convertAvailabilityMap(teacherAvailabilities));
+        // For students view, don't fetch teacher availabilities - set an empty object
+        setAvailabilities({});
         break;
         
       case 'admin':
