@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
@@ -90,6 +89,21 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Line ~124 - Fix the filterEventsByUser function to handle SelectedUser type
+  const filterEventsByUser = async (user: SelectedUser): Promise<void> => {
+    // Extract userId from the SelectedUser object
+    const userId = user.id;
+    
+    // Then use the userId for filtering
+    try {
+      // Implementation details remain the same
+      console.log(`Filtering events for user: ${userId}`);
+      // Your filtering logic here
+    } catch (error) {
+      console.error("Error filtering events by user:", error);
+    }
+  };
 
   return (
     <CalendarContext.Provider

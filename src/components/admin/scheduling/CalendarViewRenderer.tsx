@@ -15,10 +15,11 @@ interface CalendarViewRendererProps {
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
-  onDateClick: () => void;
+  onDateClick: (date: Date) => void;
   filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   filterIds?: string[];
   showAvailability?: boolean;
+  allowEventCreation?: boolean;
 }
 
 const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
@@ -29,16 +30,17 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   onDateClick,
   filterType,
   filterIds,
-  showAvailability = true
+  showAvailability = true,
+  allowEventCreation = true
 }) => {
   // Return appropriate calendar view based on viewMode
   switch (viewMode) {
     case 'day':
-      return <DayViewComponent showAvailability={showAvailability} />;
+      return <DayViewComponent showAvailability={showAvailability} allowEventCreation={allowEventCreation} />;
     case 'week':
-      return <WeekViewComponent showAvailability={showAvailability} />;
+      return <WeekViewComponent showAvailability={showAvailability} allowEventCreation={allowEventCreation} />;
     case 'month':
-      return <MonthViewComponent />;
+      return <MonthViewComponent onDateClick={onDateClick} />;
     case 'list':
       return (
         <EventListViewComponent 
@@ -48,7 +50,7 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
         />
       );
     default:
-      return <DayViewComponent showAvailability={showAvailability} />;
+      return <DayViewComponent showAvailability={showAvailability} allowEventCreation={allowEventCreation} />;
   }
 };
 

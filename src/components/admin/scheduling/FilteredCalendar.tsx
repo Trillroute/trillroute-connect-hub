@@ -12,6 +12,7 @@ interface FilteredCalendarProps {
   description?: string;
   showFilterTabs?: boolean;
   showAvailability?: boolean;
+  allowEventCreation?: boolean;
 }
 
 const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
@@ -21,7 +22,8 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
   title = "Calendar",
   description,
   showFilterTabs = true,
-  showAvailability = true
+  showAvailability = true,
+  allowEventCreation = true
 }) => {
   // Process filter props to map to the right properties
   const mapFilterTypeToProvider = () => {
@@ -64,6 +66,7 @@ const FilteredCalendar: React.FC<FilteredCalendarProps> = ({
             initialFilterType={filterType || null}
             showFilterTabs={showFilterTabs}
             showAvailability={showAvailability}
+            allowEventCreation={allowEventCreation}
           />
         </div>
       </FilteredEventsProvider>
