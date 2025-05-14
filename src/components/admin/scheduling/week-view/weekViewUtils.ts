@@ -40,7 +40,7 @@ export const isTimeAvailable = (
   });
 };
 
-export const calculateEventPosition = (event: CalendarEvent) => {
+export const calculateEventPosition = (event: CalendarEvent): React.CSSProperties => {
   const start = event.start;
   const end = event.end;
   
@@ -52,18 +52,17 @@ export const calculateEventPosition = (event: CalendarEvent) => {
   
   // Calculate in minutes for precise positioning
   // Each hour is 60px height
-  const top = (startHour * 60) + startMinute;
+  const top = ((startHour - 7) * 60) + startMinute; // Adjust for 7am start
   const height = ((endHour - startHour) * 60) + (endMinute - startMinute);
   
   // Ensure minimal height for visibility
   const minHeight = 20; // 20px minimum height
   
   return {
-    top: `${top}px`,
+    top: `${Math.max(0, top)}px`,
     height: `${Math.max(height, minHeight)}px`,
-    left: '10%',
-    width: '80%',
-    backgroundColor: event.color || '#4285F4',
+    left: '5%', 
+    width: '90%',
     zIndex: 20, // Ensure events appear above availability indicators
   };
 };

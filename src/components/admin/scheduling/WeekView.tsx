@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { isSameDay, format } from 'date-fns';
+import { isSameDay } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
 import { getWeekDays, getHourCells } from './calendarUtils';
 import { CalendarEvent } from './context/calendarTypes';
@@ -42,22 +42,33 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
       const processedSlots: AvailabilitySlot[] = [];
       
       // Process all user availabilities
-      Object.entries(availabilities).forEach(([userId, userData]) => {
-        userData.slots.forEach(slot => {
-          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-          
-          processedSlots.push({
-            dayOfWeek: slot.dayOfWeek,
-            startHour,
-            startMinute,
-            endHour,
-            endMinute,
-            userId: slot.userId,
-            userName: userData.name,
-            category: slot.category
+      Object.entries(availabilities || {}).forEach(([userId, userData]) => {
+        if (userData?.slots && Array.isArray(userData.slots)) {
+          userData.slots.forEach(slot => {
+            if (slot.startTime && slot.endTime && typeof slot.dayOfWeek === 'number') {
+              const startTimeParts = slot.startTime.split(':');
+              const endTimeParts = slot.endTime.split(':');
+              
+              if (startTimeParts.length >= 2 && endTimeParts.length >= 2) {
+                const startHour = parseInt(startTimeParts[0], 10);
+                const startMinute = parseInt(startTimeParts[1], 10);
+                const endHour = parseInt(endTimeParts[0], 10);
+                const endMinute = parseInt(endTimeParts[1], 10);
+                
+                processedSlots.push({
+                  dayOfWeek: slot.dayOfWeek,
+                  startHour,
+                  startMinute,
+                  endHour,
+                  endMinute,
+                  userId: slot.userId || userId,
+                  userName: userData.name,
+                  category: slot.category || 'General'
+                });
+              }
+            }
           });
-        });
+        }
       });
       
       setAvailabilitySlots(processedSlots);
@@ -68,9 +79,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   
   // Getting events for each day
   const getEventsForDay = (date: Date) => {
-    return events.filter(event => 
-      isSameDay(event.start, date)
-    );
+    return events.filter(event => isSameDay(event.start, date));
   };
 
   const openEventActions = (event: CalendarEvent) => {
@@ -103,96 +112,104 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   const handleCellClick = (dayIndex: number, hour: number) => {
     // Only create event if the time slot is available
     if (onCreateEvent && isTimeAvailable(hour, dayIndex, availabilitySlots)) {
+      // Store hour in session storage for event creation dialog
+      const newEventDate = new Date(weekDays[dayIndex]);
+      newEventDate.setHours(hour, 0, 0, 0);
+      sessionStorage.setItem('newEventStartTime', newEventDate.toISOString());
+      
+      const endTime = new Date(newEventDate);
+      endTime.setHours(hour + 1, 0, 0, 0);
+      sessionStorage.setItem('newEventEndTime', endTime.toISOString());
+      
       onCreateEvent();
     }
   };
   
   const handleAvailabilityClick = (slot: AvailabilitySlot) => {
     if (onCreateEvent) {
-      // Store slot data in session storage for the create event dialog to use
-      sessionStorage.setItem('availabilitySlot', JSON.stringify(slot));
+      // Create a date object for this slot
+      const slotDate = new Date(weekDays[slot.dayOfWeek]);
+      slotDate.setHours(slot.startHour, slot.startMinute, 0, 0);
+      
+      const endDate = new Date(weekDays[slot.dayOfWeek]);
+      endDate.setHours(slot.endHour, slot.endMinute, 0, 0);
+      
+      // Store data for event creation
+      sessionStorage.setItem('newEventStartTime', slotDate.toISOString());
+      sessionStorage.setItem('newEventEndTime', endDate.toISOString());
+      sessionStorage.setItem('newEventTitle', `Session with ${slot.userName || 'Instructor'}`);
+      
       onCreateEvent();
+    }
+  };
+  
+  // Get availability class for a cell
+  const getAvailabilityClass = (dayIndex: number, hour: number) => {
+    const isAvailable = isTimeAvailable(hour, dayIndex, availabilitySlots);
+    const isToday = isSameDay(weekDays[dayIndex], new Date());
+    
+    if (isAvailable) {
+      return `cursor-pointer hover:bg-blue-50 ${isToday ? 'bg-blue-50/50' : ''}`;
+    } else {
+      return 'bg-gray-100 cursor-not-allowed';
     }
   };
 
   return (
-    <div className="relative h-full">
-      {/* Time column */}
-      <div className="flex">
+    <div className="relative h-full overflow-hidden flex flex-col">
+      {/* Day headers */}
+      <div className="flex border-b">
         {/* Corner cell */}
-        <div className="w-16 border-b border-r border-gray-200 bg-white">
+        <div className="w-16 border-r border-gray-200 bg-white">
           <div className="text-xs text-gray-500 h-12 flex items-center justify-center">
-            GMT+05:30
+            Hours
           </div>
         </div>
         
         {/* Day headers */}
         {weekDays.map((day, i) => (
-          <WeekDayHeader key={i} day={day} currentDate={new Date()} />
+          <WeekDayHeader key={i} day={day} />
         ))}
       </div>
       
-      {/* Time grid */}
-      <div className="flex h-[calc(100%-48px)]">
-        {/* Time labels */}
-        <div className="w-16 flex-shrink-0">
-          {hours.map(hour => (
-            <div 
-              key={hour} 
-              className="relative h-[60px] border-b border-r border-gray-200"
-            >
-              <div className="absolute -top-3 right-2 text-xs text-gray-500">
-                {hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour-12} PM`}
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Day columns */}
+      {/* Time grid with events */}
+      <WeekTimeGrid
+        hours={hours}
+        weekDays={weekDays}
+        onCellClick={handleCellClick}
+        getAvailabilityClass={getAvailabilityClass}
+      />
+      
+      {/* Day columns with events and availability slots */}
+      <div className="absolute top-12 left-16 right-0 bottom-0">
         {weekDays.map((day, dayIndex) => (
           <div 
             key={dayIndex} 
-            className="flex-1 relative"
+            className="absolute top-0 bottom-0"
+            style={{
+              left: `${(dayIndex * 100) / weekDays.length}%`,
+              width: `${100 / weekDays.length}%`
+            }}
           >
-            {/* Hour cells - with improved availability indication */}
-            <div>
-              {hours.map(hour => (
-                <div
-                  key={hour}
-                  className={`h-[60px] border-b border-r border-gray-200 ${
-                    isTimeAvailable(hour, dayIndex, availabilitySlots) 
-                      ? 'cursor-pointer hover:bg-blue-50' 
-                      : 'bg-gray-300 cursor-not-allowed'
-                  } ${isSameDay(day, new Date()) ? 'bg-blue-50' : ''}`}
-                  onClick={() => handleCellClick(dayIndex, hour)}
-                  aria-disabled={!isTimeAvailable(hour, dayIndex, availabilitySlots)}
-                ></div>
-              ))}
-            </div>
-            
             {/* Availability slots */}
-            <div className="absolute top-0 left-0 right-0">
-              <WeekAvailabilitySlots 
-                availabilitySlots={availabilitySlots}
-                dayIndex={dayIndex}
-                onAvailabilityClick={handleAvailabilityClick}
-              />
-            </div>
+            <WeekAvailabilitySlots
+              availabilitySlots={availabilitySlots}
+              dayIndex={dayIndex}
+              onAvailabilityClick={handleAvailabilityClick}
+            />
             
             {/* Events */}
-            <div className="absolute top-0 left-0 right-0">
-              {getEventsForDay(day).map((event, eventIndex) => (
-                <WeekViewEvent
-                  key={eventIndex}
-                  event={event}
-                  isSelected={selectedEvent?.id === event.id}
-                  onSelect={openEventActions}
-                  onEdit={handleEdit}
-                  onDelete={confirmDelete}
-                  style={calculateEventPosition(event)}
-                />
-              ))}
-            </div>
+            {getEventsForDay(day).map((event, eventIndex) => (
+              <WeekViewEvent
+                key={`${eventIndex}-${event.id}`}
+                event={event}
+                isSelected={selectedEvent?.id === event.id}
+                onSelect={openEventActions}
+                onEdit={handleEdit}
+                onDelete={confirmDelete}
+                style={calculateEventPosition(event)}
+              />
+            ))}
           </div>
         ))}
       </div>

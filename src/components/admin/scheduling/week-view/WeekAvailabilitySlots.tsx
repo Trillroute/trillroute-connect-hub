@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { AvailabilitySlot } from './weekViewUtils';
+import { getCategoryColor } from './weekViewUtils';
 
 interface WeekAvailabilitySlotsProps {
   availabilitySlots: AvailabilitySlot[];
@@ -13,52 +14,48 @@ const WeekAvailabilitySlots: React.FC<WeekAvailabilitySlotsProps> = ({
   dayIndex,
   onAvailabilityClick
 }) => {
-  // Filter slots for the current day
-  const daySlots = availabilitySlots.filter(slot => slot.dayOfWeek === dayIndex);
-
-  // Convert time values to position
-  const calculateSlotPosition = (slot: AvailabilitySlot) => {
-    const startMinutes = slot.startHour * 60 + slot.startMinute;
-    const endMinutes = slot.endHour * 60 + slot.endMinute;
-    const duration = endMinutes - startMinutes;
+  // Filter slots for this day
+  const slotsForThisDay = availabilitySlots.filter(slot => slot.dayOfWeek === dayIndex);
+  
+  const calculatePosition = (slot: AvailabilitySlot) => {
+    // Calculate position relative to calendar start time (7:00 AM)
+    const startHour = slot.startHour - 7; // Adjust for calendar starting at 7 AM
+    const startPosition = (startHour * 60) + slot.startMinute; // Convert to minutes position
     
-    // Start position from top in pixels (1 hour = 60px)
-    const top = (startMinutes / 60) * 60;
-    // Height in pixels
-    const height = (duration / 60) * 60;
+    // Calculate duration in minutes
+    const startTimeInMinutes = (slot.startHour * 60) + slot.startMinute;
+    const endTimeInMinutes = (slot.endHour * 60) + slot.endMinute;
+    const durationInMinutes = endTimeInMinutes - startTimeInMinutes;
     
+    // Convert to pixels (1 minute = 1px)
     return {
-      top: `${top}px`,
-      height: `${height}px`
+      top: `${startPosition}px`,
+      height: `${durationInMinutes}px`,
+      left: '10%',
+      width: '80%',
     };
   };
   
-  if (daySlots.length === 0) {
-    return null;
-  }
-
   return (
-    <div>
-      {daySlots.map((slot, index) => {
-        const styles = calculateSlotPosition(slot);
-        
-        return (
-          <div
-            key={`available-${dayIndex}-${index}`}
-            className="absolute left-0 right-0 bg-green-100 border border-green-300 rounded-sm opacity-50"
-            style={{
-              ...styles,
-              zIndex: 5
-            }}
-            onClick={() => onAvailabilityClick(slot)}
-          >
-            <div className="truncate text-xs px-1 text-green-800">
-              {slot.userName ? `${slot.userName} - Available` : 'Available'}
+    <>
+      {slotsForThisDay.map((slot, index) => (
+        <div
+          key={index}
+          className={`absolute rounded-md border overflow-hidden text-sm cursor-pointer hover:opacity-90 z-10 ${getCategoryColor(slot.category)}`}
+          style={calculatePosition(slot)}
+          onClick={() => onAvailabilityClick(slot)}
+        >
+          <div className="px-2 py-1">
+            <div className="text-xs font-semibold truncate">
+              {slot.userName || 'Available'}
+            </div>
+            <div className="text-xs opacity-90">
+              {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
             </div>
           </div>
-        );
-      })}
-    </div>
+        </div>
+      ))}
+    </>
   );
 };
 
