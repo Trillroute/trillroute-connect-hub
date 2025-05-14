@@ -27,7 +27,8 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
 
   return (
     <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 py-2">
-      <CalendarTitle viewMode={viewMode} currentDate={currentDate} />
+      {/* Pass only the props that CalendarTitle expects */}
+      <CalendarTitle />
       
       <div className="flex items-center gap-2">
         <ViewModeSelector 

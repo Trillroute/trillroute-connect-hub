@@ -78,7 +78,7 @@ export function useCalendarFilters(setEvents: (events: CalendarEvent[]) => void)
     }
   };
   
-  // Filter events by user ID
+  // Filter events by user ID - accept string parameter for backward compatibility
   const filterEventsByUser = async (userId: string) => {
     try {
       const { data, error } = await supabase
