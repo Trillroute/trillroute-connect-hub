@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 /**
  * Check if a student is enrolled in a course
@@ -77,7 +78,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     
     // Get max students from class types data
     const classTypesData = data.class_types_data || [];
-    let maxStudents = 0;
+    let maxStudents: number = 0;
     
     if (Array.isArray(classTypesData) && classTypesData.length > 0) {
       // Use the highest max_students value from all class types
@@ -86,7 +87,7 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
         let classTypeMaxStudents = 0;
         
         if (classType && typeof classType === 'object' && 'max_students' in classType) {
-          const maxStudentsValue = classType.max_students;
+          const maxStudentsValue: Json = classType.max_students;
           
           if (typeof maxStudentsValue === 'number') {
             classTypeMaxStudents = maxStudentsValue;
