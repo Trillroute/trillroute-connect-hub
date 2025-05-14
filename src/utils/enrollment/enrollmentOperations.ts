@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { isStudentEnrolledInCourse } from './enrollment/enrollmentQueries';
 
 /**
  * Enrolls a student in a course by adding their ID to the course's student_ids array

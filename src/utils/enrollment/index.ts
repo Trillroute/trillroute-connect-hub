@@ -1,13 +1,18 @@
 
 // Export from enrollmentOperations
 export {
-  enrollStudentInCourse
-} from './enrollmentOperations';
+  enrollStudentInCourse,
+  forceVerifyEnrollment
+} from './enrollment/enrollmentOperations';
 
-// Export from enrollmentChecks
+// Export enrollment queries
 export {
   isStudentEnrolledInCourse,
   getStudentEnrolledCourses,
+} from './enrollment/enrollmentQueries';
+
+// Export capacity checks
+export {
   checkCourseHasSpace,
-  forceVerifyEnrollment
-} from './enrollmentChecks';
+  isClassAtCapacity
+} from './capacity/checkCapacity';
