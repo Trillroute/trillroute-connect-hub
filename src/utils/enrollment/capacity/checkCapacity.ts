@@ -22,7 +22,9 @@ export const checkCourseHasSpace = async (courseId: string): Promise<boolean> =>
     
     // Get max students from class types data
     const classTypesData = data.class_types_data || [];
-    const maxStudents = parseMaxStudents(classTypesData);
+    // Ensure we're passing an array to parseMaxStudents
+    const dataArray = Array.isArray(classTypesData) ? classTypesData : [];
+    const maxStudents = parseMaxStudents(dataArray);
     
     // If maxStudents is still 0, assume unlimited capacity
     if (maxStudents === 0) {
@@ -73,7 +75,9 @@ export async function isClassAtCapacity(classId: string): Promise<boolean> {
     
     // Get max students from class types data
     const classTypesData = data.class_types_data || [];
-    const maxStudents = parseMaxStudents(classTypesData);
+    // Ensure we're passing an array to parseMaxStudents
+    const dataArray = Array.isArray(classTypesData) ? classTypesData : [];
+    const maxStudents = parseMaxStudents(dataArray);
     
     // If no max students specified or zero, assume unlimited capacity
     if (maxStudents <= 0) {
