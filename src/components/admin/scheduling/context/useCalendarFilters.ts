@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CalendarEvent, EventLayer, SelectedUser } from './calendarTypes';
@@ -79,6 +78,7 @@ export function useCalendarFilters(setEvents: (events: CalendarEvent[]) => void)
   };
   
   // Filter events by user ID
+  // Keep this as a separate exported function that takes a string ID
   const filterEventsByUser = async (userId: string) => {
     try {
       const { data, error } = await supabase

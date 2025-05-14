@@ -103,7 +103,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     toggleLayer,
     toggleUser,
     filterEventsByRole,
-    filterEventsByUser
+    filterEventsByUser: originalFilterEventsByUser
   } = useCalendarFilters(setEvents);
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
@@ -124,6 +124,12 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
   const handleDeleteEvent = async (id: string): Promise<void> => {
     await originalDeleteEvent(id);
     return;
+  };
+  
+  // Fix the type mismatch by creating a wrapper for filterEventsByUser that takes a SelectedUser
+  const filterEventsByUser = (user: SelectedUser): void => {
+    // Extract the userId from the SelectedUser object
+    originalFilterEventsByUser(user.id);
   };
   
   // Load events and availabilities when component mounts
