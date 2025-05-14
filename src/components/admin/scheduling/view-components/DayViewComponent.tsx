@@ -24,7 +24,8 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
     <div className="h-full overflow-auto">
       <DayView 
         onCreateEvent={() => {}}
-        availabilitySlots={availabilitySlots}
+        onEditEvent={() => {}}
+        onDeleteEvent={() => {}}
         allowEventCreation={allowEventCreation}
       />
     </div>
