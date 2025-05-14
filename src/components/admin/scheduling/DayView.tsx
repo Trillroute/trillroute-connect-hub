@@ -14,7 +14,6 @@ interface DayViewProps {
   onCreateEvent?: () => void;
   onEditEvent?: (event: CalendarEvent) => void;
   onDeleteEvent?: (event: CalendarEvent) => void;
-  allowEventCreation?: boolean;
 }
 
 interface AvailabilitySlotType {
@@ -27,12 +26,7 @@ interface AvailabilitySlotType {
   category: string;
 }
 
-const DayView: React.FC<DayViewProps> = ({ 
-  onCreateEvent, 
-  onEditEvent, 
-  onDeleteEvent,
-  allowEventCreation = true
-}) => {
+const DayView: React.FC<DayViewProps> = ({ onCreateEvent, onEditEvent, onDeleteEvent }) => {
   const { currentDate, events, availabilities } = useCalendar();
   const hours = getHourCells();
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlotType[]>([]);
@@ -51,7 +45,7 @@ const DayView: React.FC<DayViewProps> = ({
   console.log(`Displaying ${todayEvents.length} events for day ${currentDate.toDateString()}`);
   
   const handleCellClick = (hour: number) => {
-    if (onCreateEvent && allowEventCreation) {
+    if (onCreateEvent) {
       // Store hour in session storage for event creation dialog
       const newEventDate = new Date(currentDate);
       newEventDate.setHours(hour, 0, 0, 0);
@@ -62,7 +56,7 @@ const DayView: React.FC<DayViewProps> = ({
   };
   
   const handleAvailabilityClick = (slot: AvailabilitySlotType) => {
-    if (onCreateEvent && allowEventCreation) {
+    if (onCreateEvent) {
       // Store slot data in session storage for the create event dialog to use
       const newEventDate = new Date(currentDate);
       newEventDate.setHours(slot.startHour, slot.startMinute, 0, 0);
@@ -90,7 +84,6 @@ const DayView: React.FC<DayViewProps> = ({
     }
   };
 
-  // No conditional coloring based on availability for student calendar
   return (
     <div className="flex h-full">
       {/* Time column */}
@@ -112,18 +105,16 @@ const DayView: React.FC<DayViewProps> = ({
             />
           ))}
           
-          {/* Availability slots - only if we're showing availability */}
-          {availabilitySlots.length > 0 && (
-            <div className="absolute top-0 left-0 right-0">
-              {availabilitySlots.map((slot, index) => (
-                <AvailabilitySlot 
-                  key={`availability-${index}`} 
-                  slot={slot} 
-                  onClick={handleAvailabilityClick} 
-                />
-              ))}
-            </div>
-          )}
+          {/* Availability slots */}
+          <div className="absolute top-0 left-0 right-0">
+            {availabilitySlots.map((slot, index) => (
+              <AvailabilitySlot 
+                key={`availability-${index}`} 
+                slot={slot} 
+                onClick={handleAvailabilityClick} 
+              />
+            ))}
+          </div>
           
           {/* Events */}
           <div className="absolute top-0 left-0 right-0">

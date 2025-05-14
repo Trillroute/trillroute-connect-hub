@@ -11,7 +11,6 @@ interface CalendarContentProps {
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   showFilterTabs?: boolean;
   showAvailability?: boolean;
-  allowEventCreation?: boolean;
 }
 
 const CalendarContent: React.FC<CalendarContentProps> = ({
@@ -22,8 +21,7 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
   description,
   initialFilterType = null,
   showFilterTabs = true,
-  showAvailability = true,
-  allowEventCreation = true
+  showAvailability = true
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -36,7 +34,6 @@ const CalendarContent: React.FC<CalendarContentProps> = ({
         initialFilterType={initialFilterType}
         showFilterTabs={showFilterTabs}
         showAvailability={showAvailability}
-        allowEventCreation={allowEventCreation}
       />
     </div>
   );

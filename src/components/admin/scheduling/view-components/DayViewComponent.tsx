@@ -6,12 +6,10 @@ import { processAvailabilities } from '../day-view/dayViewUtils';
 
 interface DayViewComponentProps {
   showAvailability?: boolean;
-  allowEventCreation?: boolean;
 }
 
 export const DayViewComponent: React.FC<DayViewComponentProps> = ({
-  showAvailability = true,
-  allowEventCreation = true
+  showAvailability = true
 }) => {
   const { currentDate, events, availabilities } = useCalendar();
   
@@ -21,13 +19,10 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
     : [];
   
   return (
-    <div className="h-full overflow-auto">
-      <DayView 
-        onCreateEvent={() => {}}
-        onEditEvent={() => {}}
-        onDeleteEvent={() => {}}
-        allowEventCreation={allowEventCreation}
-      />
-    </div>
+    <DayView 
+      date={currentDate} 
+      events={events} 
+      availabilitySlots={availabilitySlots}
+    />
   );
 };

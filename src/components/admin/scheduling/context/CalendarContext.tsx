@@ -46,8 +46,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
     toggleLayer,
     toggleUser,
     filterEventsByRole,
-    // Import the original function with a different name
-    filterEventsByUser: originalFilterEventsByUser
+    filterEventsByUser
   } = useCalendarFilters(setEvents);
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
@@ -91,15 +90,6 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Wrap the original function to handle SelectedUser type
-  const filterEventsByUser = (user: SelectedUser) => {
-    // Extract userId from the SelectedUser object
-    const userId = user.id;
-    
-    // Then use the userId for filtering with the original function
-    return originalFilterEventsByUser(userId);
-  };
 
   return (
     <CalendarContext.Provider

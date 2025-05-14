@@ -15,7 +15,6 @@ interface CalendarMainContentProps {
   initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
   showFilterTabs?: boolean;
   showAvailability?: boolean;
-  allowEventCreation?: boolean;
 }
 
 const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
@@ -26,8 +25,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
   description,
   initialFilterType = null,
   showFilterTabs = true,
-  showAvailability = true,
-  allowEventCreation = true
+  showAvailability = true
 }) => {
   const { viewMode } = useCalendar();
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
@@ -35,13 +33,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     initialFilterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null
   );
 
-  // Use both hasAdminAccess and allowEventCreation to determine if events can be created
-  const canCreateEvents = hasAdminAccess && allowEventCreation;
-
   const handleCreateEvent = () => {
-    if (canCreateEvents) {
-      setIsCreateEventDialogOpen(true);
-    }
+    setIsCreateEventDialogOpen(true);
   };
 
   const handleEventEdit = () => {
@@ -52,11 +45,8 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
     // Implement event delete logic here
   };
 
-  const handleDateClick = (date: Date) => {
-    // Handle date click only if we can create events
-    if (canCreateEvents) {
-      setIsCreateEventDialogOpen(true);
-    }
+  const handleDateClick = () => {
+    // Implement date click logic here
   };
   
   // Handle filter type change with correct type casting
@@ -125,7 +115,6 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
           filterType={effectiveFilterType}
           filterIds={filterIds}
           showAvailability={showAvailability}
-          allowEventCreation={canCreateEvents}
         />
       </div>
       <EventFormDialog 

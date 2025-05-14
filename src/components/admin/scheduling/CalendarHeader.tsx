@@ -1,72 +1,47 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import ViewModeSelector from './components/ViewModeSelector';
-import { useCalendar } from './context/CalendarContext';
+import { PlusCircle } from 'lucide-react';
 import CalendarTitle from './components/CalendarTitle';
+import ViewModeSelector, { ViewOption } from './components/ViewModeSelector';
+import { useCalendar } from './context/CalendarContext';
 
 interface CalendarHeaderProps {
-  onCreateEvent?: () => void;
+  onCreateEvent: () => void;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = ({ onCreateEvent }) => {
-  const { 
-    viewMode,
-    currentDate,
-    goToToday,
-    goToPrevious,
-    goToNext,
-    setViewMode
-  } = useCalendar();
+  const { viewMode, setViewMode, currentDate } = useCalendar();
+
+  const viewOptions: ViewOption[] = [
+    { value: 'day', label: 'Day View' },
+    { value: 'week', label: 'Week View' },
+    { value: 'month', label: 'Month View' },
+    { value: 'list', label: 'List View' }
+  ];
+  
+  const handleViewModeChange = (mode: string) => {
+    console.log('Setting view mode from header:', mode);
+    setViewMode(mode as 'day' | 'week' | 'month' | 'list');
+  };
 
   return (
     <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 py-2">
-      {/* Use the CalendarTitle component correctly */}
-      <CalendarTitle />
+      <CalendarTitle viewMode={viewMode} currentDate={currentDate} />
       
       <div className="flex items-center gap-2">
         <ViewModeSelector 
-          value={viewMode} 
-          onChange={setViewMode} 
+          viewMode={viewMode} 
+          setViewMode={handleViewModeChange} 
+          viewOptions={viewOptions}
         />
-        
-        <div className="flex items-center gap-1 ml-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={goToPrevious}
-          >
-            Previous
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={goToToday}
-          >
-            Today
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={goToNext}
-          >
-            Next
-          </Button>
-        </div>
-        
-        {onCreateEvent && (
-          <Button 
-            onClick={onCreateEvent}
-            size="sm"
-            className="ml-2"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Event
-          </Button>
-        )}
+        <Button 
+          onClick={onCreateEvent}
+          className="bg-primary text-white hover:bg-primary-darker"
+        >
+          <PlusCircle className="h-4 w-4 mr-1" />
+          Add Event
+        </Button>
       </div>
     </div>
   );

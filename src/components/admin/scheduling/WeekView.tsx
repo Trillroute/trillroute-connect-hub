@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { isSameDay } from 'date-fns';
 import { useCalendar } from './context/CalendarContext';
@@ -61,7 +62,7 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
                   startMinute,
                   endHour,
                   endMinute,
-                  userId: slot.user_id || userId, // Fixed: use user_id instead of userId
+                  userId: slot.userId || userId,
                   userName: userData.name,
                   category: slot.category || 'General'
                 });
