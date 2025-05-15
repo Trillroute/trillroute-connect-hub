@@ -4,6 +4,7 @@ import { fetchUserAvailabilityForUsers } from '@/services/availability/availabil
 import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 import { CalendarEvent } from '../types';
+import { fetchStaffForSkill } from '@/services/skills/skillStaffService';
 
 type SetEventsFunction = (events: CalendarEvent[]) => void;
 type SetAvailabilitiesFunction = (availabilities: ContextUserAvailabilityMap) => void;
@@ -48,9 +49,12 @@ export const applyFilter = async ({
       case 'skill':
         await fetchFilteredEvents({ skillIds: ids, setEvents });
         
+        // Get teachers who have these skills
+        const teacherIds = await fetchStaffForSkill(ids);
+        
         // Also fetch availabilities for staff teaching these skills
-        if (staffUserIds.length > 0) {
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers(staffUserIds);
+        if (teacherIds.length > 0) {
+          const serviceAvailabilities = await fetchUserAvailabilityForUsers(teacherIds);
           setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         } else {
           // Even with no staff, we should fetch all teacher availabilities for this skill

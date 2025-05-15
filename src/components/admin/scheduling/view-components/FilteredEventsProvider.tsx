@@ -58,6 +58,9 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     if (filterId) allIds.push(filterId);
     if (filterIds && Array.isArray(filterIds)) allIds.push(...filterIds);
     
+    // Log filter application
+    console.log(`FilteredEventsProvider applying ${filterType} filter with IDs:`, allIds);
+    
     // Apply the filter
     applyFilter({
       filterType,

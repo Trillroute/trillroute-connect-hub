@@ -150,6 +150,7 @@ export function useFilteredEvents({
       combinedFilter.skills = [...(combinedFilter.skills || [])];
       if (filterId) combinedFilter.skills.push(filterId);
       if (filterIds && filterIds.length > 0) combinedFilter.skills.push(...filterIds);
+      console.log('Added skill filters:', combinedFilter.skills);
     }
     
     const { filteredEvents: newFilteredEvents } = filterEvents(events, combinedFilter);
