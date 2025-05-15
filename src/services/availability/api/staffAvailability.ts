@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvailability, UserAvailabilityMap } from '../types';
 import { buildAvailabilityMap } from './availabilityCore';
@@ -70,7 +71,7 @@ export const fetchUserAvailabilityForUsers = async (
     
     if (roles.length > 0) {
       if (userIds.length > 0) {
-        // If we already have user IDs, use OR to combine with roles
+        // If we have user IDs, use OR to combine with roles
         query = query.or(`id.in.(${userIds.join(',')}),role.in.(${roles.join(',')})`);
       } else {
         // Otherwise just filter by roles

@@ -47,28 +47,29 @@ export const applyFilter = async ({
         break;
         
       case 'skill':
-        // Get all users (not just teachers) who have these skills
+        // First, get all users with these skills
         const usersWithSkills = await getUsersBySkills(ids);
+        console.log('Users with selected skills:', usersWithSkills);
         
-        // First, fetch events that are associated with these skill IDs directly
+        // Get teachers who have these skills (for availability)
+        const teacherIds = await fetchStaffForSkill(ids);
+        console.log('Teachers with selected skills:', teacherIds);
+        
+        // Fetch events for users who have these skills
         await fetchFilteredEvents({ 
           skillIds: ids,
-          // Also include events belonging to users with these skills
           userIds: usersWithSkills.length > 0 ? usersWithSkills : undefined,
           setEvents 
         });
         
-        // Get teachers who have these skills (for availability)
-        const teacherIds = await fetchStaffForSkill(ids);
-        
-        console.log(`Fetching availability for ${teacherIds.length} teachers with this skill`);
-        
-        // Also fetch availabilities for staff teaching these skills
+        // Also fetch availabilities for teachers with these skills
         if (teacherIds.length > 0) {
+          console.log(`Fetching availability for ${teacherIds.length} teachers with this skill`);
           const serviceAvailabilities = await fetchUserAvailabilityForUsers(teacherIds);
           setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         } else {
-          // Even with no staff, we should fetch all teacher availabilities for this skill
+          // If no teachers have this skill, fetch all teacher availabilities
+          console.log('No teachers with this skill, fetching all teacher availabilities');
           const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
           setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         }

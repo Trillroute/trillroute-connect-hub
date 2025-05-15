@@ -1,3 +1,4 @@
+
 // Importing the necessary modules
 import { supabase } from '@/integrations/supabase/client';
 import { CalendarEvent } from '../context/calendarTypes';
@@ -18,13 +19,7 @@ export const fetchFilteredEvents = async ({
   skillIds,
   roleFilter,
   setEvents
-}: {
-  userIds?: string[];
-  courseIds?: string[];
-  skillIds?: string[];
-  roleFilter?: string[];
-  setEvents: (events: CalendarEvent[]) => void;
-}): Promise<void> => {
+}: EventFilterParams): Promise<void> => {
   try {
     console.log('Fetching filtered events with params:', { 
       userIds: userIds?.length || 0, 

@@ -5,6 +5,7 @@ import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import { useSkills } from '@/hooks/useSkills';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
 
 const SkillCalendarContent: React.FC = () => {
   const { role, isAdmin, isSuperAdmin } = useAuth();
@@ -19,6 +20,18 @@ const SkillCalendarContent: React.FC = () => {
     }
   }, [skills, selectedSkillId]);
   
+  const handleSkillChange = (value: string) => {
+    console.log('Skill selected:', value);
+    setSelectedSkillId(value);
+    
+    // Show toast for debugging
+    const skillName = skills.find(s => s.id === value)?.name || 'Unknown';
+    toast({
+      title: "Skill Selected",
+      description: `Filtering calendar for skill: ${skillName}`,
+    });
+  };
+  
   return (
     <ContentWrapper
       title="Skill Calendar"
@@ -27,7 +40,7 @@ const SkillCalendarContent: React.FC = () => {
       <div className="mb-6">
         <Select 
           value={selectedSkillId} 
-          onValueChange={setSelectedSkillId}
+          onValueChange={handleSkillChange}
           disabled={loading || skills.length === 0}
         >
           <SelectTrigger className="w-full sm:w-[300px]">

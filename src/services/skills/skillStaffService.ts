@@ -10,6 +10,8 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
   try {
     if (!skillIds.length) return [];
     
+    console.log('Fetching staff for skills:', skillIds);
+    
     // Query custom_users table to get teachers with these skills
     const { data, error } = await supabase
       .from('custom_users')
@@ -47,6 +49,8 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
 export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Promise<string[]> => {
   try {
     if (!skillIds.length) return [];
+    
+    console.log('Fetching users with skills:', skillIds, 'roles filter:', roles || 'none');
     
     let query = supabase
       .from('custom_users')
