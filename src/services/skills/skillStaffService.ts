@@ -68,10 +68,10 @@ export const seedUserSkills = async (): Promise<boolean> => {
 
     console.log('Successfully seeded user skills for testing', data);
     
-    if (data && Array.isArray(data) && data.length > 0) {
+    if (data && Array.isArray(data) && (data as any[]).length > 0) {
       toast({
         title: "Development Mode",
-        description: `Created ${data.length} skill assignments for testing.`
+        description: `Created ${(data as any[]).length} skill assignments for testing.`
       });
       return true;
     }
