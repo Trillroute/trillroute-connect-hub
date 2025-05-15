@@ -52,9 +52,12 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
   
-  // Create a wrapper for setViewMode to ensure it works with all view modes
+  // Create a wrapper for setViewMode that properly handles the type conversion
   const setViewMode = useCallback((mode: string) => {
-    originalSetViewMode(mode as any);
+    // Ensure we're passing a valid CalendarViewMode
+    if (['day', 'week', 'month', 'list', 'legacy'].includes(mode)) {
+      originalSetViewMode(mode as 'day' | 'week' | 'month' | 'list' | 'legacy');
+    }
   }, [originalSetViewMode]);
   
   // Wrapper functions to ensure correct return types (Promise<void>)
@@ -126,8 +129,8 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
         goToPrevious,
         goToNext,
         handleCreateEvent,
-        handleUpdateEvent,
-        handleDeleteEvent,
+        handleUpdateEvent: originalUpdateEvent,
+        handleDeleteEvent: originalDeleteEvent,
         handleDateSelect,
         refreshEvents,
         filterEventsByRole,

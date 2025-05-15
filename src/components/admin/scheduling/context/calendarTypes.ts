@@ -50,7 +50,7 @@ export interface CalendarContextType {
   availabilities: UserAvailabilityMap;
   showAvailability: boolean;
   setCurrentDate: (date: Date) => void;
-  setViewMode: (viewMode: CalendarViewMode) => void;
+  setViewMode: (viewMode: string) => void;
   setEvents: (events: CalendarEvent[]) => void;
   setIsCreateEventOpen: (isOpen: boolean) => void;
   setActiveLayers: (layers: EventLayer[]) => void;

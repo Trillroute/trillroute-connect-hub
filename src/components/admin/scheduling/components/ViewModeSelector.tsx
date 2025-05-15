@@ -31,7 +31,8 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
     { value: 'day', label: 'Day View' },
     { value: 'week', label: 'Week View' },
     { value: 'month', label: 'Month View' },
-    { value: 'list', label: 'List View' }
+    { value: 'list', label: 'List View' },
+    { value: 'legacy', label: 'Legacy View' }
   ];
   
   const currentView = options.find(opt => opt.value === viewMode)?.label || 'Select View';
