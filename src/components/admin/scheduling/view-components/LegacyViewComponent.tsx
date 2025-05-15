@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useCalendar } from '../context/CalendarContext';
 import { CalendarEvent } from '../types';
-import { format, isSameDay } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface LegacyViewComponentProps {
   onCreateEvent?: () => void;
@@ -23,13 +23,6 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = ({
   const [expandedDays, setExpandedDays] = useState<number[]>([]);
   const [displayMode, setDisplayMode] = useState<'both' | 'events' | 'slots'>('both');
   
-  // Time slots to display
-  const timeSlots = useMemo(() => {
-    return ["8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
-           "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", 
-           "6:00 PM", "7:00 PM", "8:00 PM"];
-  }, []);
-  
   // Days of week
   const daysOfWeek = useMemo(() => {
     return [
@@ -43,9 +36,9 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = ({
     ];
   }, []);
   
-  // Initialize with Monday expanded
+  // Initialize with all days expanded
   useEffect(() => {
-    setExpandedDays([1]); // Monday = 1
+    setExpandedDays([0, 1, 2, 3, 4, 5, 6]);
   }, []);
   
   // Toggle day expansion
@@ -57,56 +50,102 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = ({
     );
   };
   
-  // Process available slots
-  const availabilitySlotsByDay = useMemo(() => {
-    const slotsByDay: Record<number, any[]> = {
+  // Get time slots from availability and events
+  const timeSlotsByDay = useMemo(() => {
+    const slotsByDay: Record<number, {
+      time: string;
+      items: Array<{
+        userId: string;
+        userName: string;
+        status: 'available' | 'expired' | 'booked';
+        type: string;
+        color: string;
+      }>;
+    }[]> = {
       0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []
     };
     
-    if (!availabilities) return slotsByDay;
-    
-    Object.entries(availabilities).forEach(([userId, userData]) => {
-      if (!userData || !userData.slots || !Array.isArray(userData.slots)) return;
-      
-      userData.slots.forEach(slot => {
-        if (typeof slot.dayOfWeek !== 'number' || 
-            !slot.startTime || !slot.endTime) return;
+    // Process availabilities
+    if (availabilities && displayMode !== 'events') {
+      Object.entries(availabilities).forEach(([userId, userData]) => {
+        if (!userData || !userData.slots) return;
         
-        try {
-          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+        userData.slots.forEach(slot => {
+          if (typeof slot.dayOfWeek !== 'number' || 
+              !slot.startTime || !slot.endTime) return;
           
-          if (isNaN(startHour) || isNaN(startMinute) || 
-              isNaN(endHour) || isNaN(endMinute)) return;
-          
-          // Format for display
-          const formattedStartTime = formatTime(startHour, startMinute);
-          const formattedEndTime = formatTime(endHour, endMinute);
-          
-          slotsByDay[slot.dayOfWeek].push({
-            userId: slot.user_id || userId,
-            userName: userData.name || 'Unknown',
-            startTime: formattedStartTime,
-            endTime: formattedEndTime,
-            category: slot.category || 'General',
-            dayOfWeek: slot.dayOfWeek
-          });
-        } catch (error) {
-          console.error('Error processing availability slot:', error);
-        }
+          try {
+            const [startHour, startMinute] = slot.startTime.split(':').map(Number);
+            
+            if (isNaN(startHour) || isNaN(startMinute)) return;
+            
+            // Format for display
+            const formattedTime = formatTime(startHour, startMinute);
+            
+            // Find if time slot already exists
+            let timeSlot = slotsByDay[slot.dayOfWeek].find(s => s.time === formattedTime);
+            
+            if (!timeSlot) {
+              timeSlot = {
+                time: formattedTime,
+                items: []
+              };
+              slotsByDay[slot.dayOfWeek].push(timeSlot);
+            }
+            
+            timeSlot.items.push({
+              userId: userId,
+              userName: userData.name || 'Unknown',
+              status: 'available',
+              type: slot.category || 'Regular slot',
+              color: getCategoryColor(slot.category || 'default')
+            });
+          } catch (error) {
+            console.error('Error processing availability slot:', error);
+          }
+        });
       });
-    });
+    }
     
-    // Sort slots by time
+    // Process events
+    if (events && displayMode !== 'slots') {
+      events.forEach(event => {
+        const dayOfWeek = event.start.getDay();
+        const hour = event.start.getHours();
+        const minute = event.start.getMinutes();
+        const formattedTime = formatTime(hour, minute);
+        
+        // Find if time slot already exists
+        let timeSlot = slotsByDay[dayOfWeek].find(s => s.time === formattedTime);
+        
+        if (!timeSlot) {
+          timeSlot = {
+            time: formattedTime,
+            items: []
+          };
+          slotsByDay[dayOfWeek].push(timeSlot);
+        }
+        
+        timeSlot.items.push({
+          userId: event.userId || '',
+          userName: event.title,
+          status: 'booked',
+          type: event.description || 'Event',
+          color: event.color || '#4285F4'
+        });
+      });
+    }
+    
+    // Sort slots by time for each day
     Object.keys(slotsByDay).forEach(key => {
       const dayIndex = Number(key);
       slotsByDay[dayIndex].sort((a, b) => {
-        return a.startTime.localeCompare(b.startTime);
+        return a.time.localeCompare(b.time);
       });
     });
     
     return slotsByDay;
-  }, [availabilities]);
+  }, [availabilities, events, displayMode]);
   
   // Helper function to format time
   const formatTime = (hour: number, minute: number): string => {
@@ -115,60 +154,73 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = ({
     return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
   };
   
-  // Get category style
-  const getCategoryStyle = (category: string) => {
+  // Get category color
+  const getCategoryColor = (category: string): string => {
     switch(category.toLowerCase()) {
       case 'teaching':
-        return 'bg-green-600 text-white';
+        return '#10B981';
       case 'meeting':
-        return 'bg-blue-600 text-white';
+        return '#3B82F6';
       case 'practice':
-        return 'bg-amber-600 text-white';
+        return '#F59E0B';
       case 'performance':
-        return 'bg-purple-600 text-white';
+        return '#8B5CF6';
       case 'session':
-        return 'bg-indigo-600 text-white';
+        return '#6366F1';
+      case 'expired':
+        return '#9B2C2C';
       default:
-        return 'bg-emerald-600 text-white';
+        return '#10B981';
     }
   };
   
-  // Events filtered by day
-  const eventsByDay = useMemo(() => {
-    const byDay: Record<number, CalendarEvent[]> = {
-      0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []
-    };
+  // Get item background style based on status/category
+  const getItemStyle = (item: { status: string; color: string }) => {
+    if (item.status === 'expired') {
+      return 'bg-red-700/90 text-white';
+    }
     
-    events.forEach(event => {
-      const dayOfWeek = event.start.getDay();
-      byDay[dayOfWeek].push(event);
+    if (item.status === 'booked') {
+      return `bg-blue-600 text-white`;
+    }
+    
+    return 'bg-green-700 text-white';
+  };
+  
+  // Get day counts for collapsed view
+  const getDayCounts = (dayIndex: number) => {
+    const slots = timeSlotsByDay[dayIndex];
+    let availableCount = 0;
+    let bookedCount = 0;
+    let expiredCount = 0;
+    
+    slots.forEach(slot => {
+      slot.items.forEach(item => {
+        if (item.status === 'available') availableCount++;
+        else if (item.status === 'booked') bookedCount++;
+        else if (item.status === 'expired') expiredCount++;
+      });
     });
     
-    // Sort events by time
-    Object.keys(byDay).forEach(key => {
-      const dayIndex = Number(key);
-      byDay[dayIndex].sort((a, b) => a.start.getTime() - b.start.getTime());
-    });
-    
-    return byDay;
-  }, [events]);
+    return { availableCount, bookedCount, expiredCount };
+  };
   
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 bg-blue-50 border-b">
-        <h3 className="font-medium text-blue-800">Legacy Calendar View</h3>
+      <div className="p-4 bg-card border-b">
+        <h3 className="font-medium text-primary">Schedule View</h3>
         <p className="text-sm text-muted-foreground">
-          This view shows both availability slots and events in a table format.
+          Shows consolidated availability and events in a day-based view
         </p>
         
         <div className="flex items-center space-x-2 mt-2">
           <button 
             onClick={() => setDisplayMode('both')}
             className={cn(
-              "px-2 py-1 text-xs rounded", 
+              "px-2 py-1 text-xs rounded",
               displayMode === 'both' 
-                ? "bg-blue-600 text-white" 
-                : "bg-blue-100 text-blue-700"
+                ? "bg-primary text-primary-foreground" 
+                : "bg-secondary text-secondary-foreground"
             )}
           >
             Both
@@ -178,8 +230,8 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = ({
             className={cn(
               "px-2 py-1 text-xs rounded", 
               displayMode === 'events' 
-                ? "bg-blue-600 text-white" 
-                : "bg-blue-100 text-blue-700"
+                ? "bg-primary text-primary-foreground" 
+                : "bg-secondary text-secondary-foreground"
             )}
           >
             Events Only
@@ -189,8 +241,8 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = ({
             className={cn(
               "px-2 py-1 text-xs rounded", 
               displayMode === 'slots' 
-                ? "bg-blue-600 text-white" 
-                : "bg-blue-100 text-blue-700"
+                ? "bg-primary text-primary-foreground" 
+                : "bg-secondary text-secondary-foreground"
             )}
           >
             Slots Only
@@ -200,77 +252,123 @@ export const LegacyViewComponent: React.FC<LegacyViewComponentProps> = ({
       
       <ScrollArea className="flex-grow">
         <div className="min-w-[800px]">
-          <div className="grid grid-cols-[120px_1fr] border-b">
-            <div className="p-3 font-medium bg-gray-100">Day</div>
-            <div className="grid grid-cols-4 divide-x">
-              {timeSlots.map((slot, index) => (
-                <div key={index} className="p-3 font-medium text-center bg-gray-100">
-                  {slot}
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-[120px_1fr] border-b bg-muted/30">
+            <div className="p-3 font-medium">Day</div>
+            <div className="p-3 font-medium text-center">Time Slots</div>
           </div>
           
           {daysOfWeek.map(day => (
-            <div key={day.index} className="grid grid-cols-[120px_1fr] border-b">
-              <div 
-                className="p-3 flex items-center justify-between cursor-pointer hover:bg-gray-50"
-                onClick={() => toggleDay(day.index)}
-              >
-                <span className="font-medium">{day.name}</span>
-                {expandedDays.includes(day.index) 
-                  ? <ChevronUp className="h-4 w-4" /> 
-                  : <ChevronDown className="h-4 w-4" />}
+            <div key={day.index} className="border-b">
+              <div className="grid grid-cols-[120px_1fr]">
+                <div 
+                  className="p-3 flex items-center justify-between cursor-pointer hover:bg-muted/30"
+                  onClick={() => toggleDay(day.index)}
+                >
+                  <div className="flex items-center space-x-2">
+                    {expandedDays.includes(day.index) 
+                      ? <ChevronUp className="h-4 w-4" /> 
+                      : <ChevronDown className="h-4 w-4" />}
+                    <span className="font-medium">{day.name}</span>
+                  </div>
+                  <span className="text-sm bg-muted rounded-full w-6 h-6 flex items-center justify-center">
+                    {timeSlotsByDay[day.index].reduce((count, slot) => count + slot.items.length, 0)}
+                  </span>
+                </div>
+                
+                {!expandedDays.includes(day.index) && (
+                  <div className="p-3 text-center text-muted-foreground flex items-center justify-center">
+                    {(() => {
+                      const { availableCount, bookedCount, expiredCount } = getDayCounts(day.index);
+                      return (
+                        <div className="flex space-x-4">
+                          {availableCount > 0 && (
+                            <span className="text-sm">
+                              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                                {availableCount} available
+                              </Badge>
+                            </span>
+                          )}
+                          {bookedCount > 0 && (
+                            <span className="text-sm">
+                              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                                {bookedCount} booked
+                              </Badge>
+                            </span>
+                          )}
+                          {expiredCount > 0 && (
+                            <span className="text-sm">
+                              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
+                                {expiredCount} expired
+                              </Badge>
+                            </span>
+                          )}
+                          {availableCount === 0 && bookedCount === 0 && expiredCount === 0 && (
+                            <span className="text-sm">No slots</span>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
               
-              {expandedDays.includes(day.index) ? (
-                <div className="divide-y">
-                  {/* Show combined events and slots */}
-                  {displayMode !== 'events' && availabilitySlotsByDay[day.index].map((slot, idx) => (
-                    <div key={`slot-${day.index}-${idx}`} className="p-0">
-                      <div className={cn("m-1 p-2 rounded", getCategoryStyle(slot.category))}>
-                        <div className="font-medium">{slot.userName}</div>
-                        <div className="text-sm">
-                          {slot.startTime} - {slot.endTime}
-                        </div>
-                        <Badge className="mt-1 bg-white/20 hover:bg-white/30 text-white">
-                          {slot.category}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Show events */}
-                  {displayMode !== 'slots' && eventsByDay[day.index].map((event, idx) => (
-                    <div key={`event-${day.index}-${idx}`} className="p-0">
-                      <div 
-                        className="m-1 p-2 rounded cursor-pointer"
-                        style={{ backgroundColor: event.color || '#4285F4' }}
-                        onClick={() => onEditEvent && onEditEvent(event)}
-                      >
-                        <div className="font-medium text-white">{event.title}</div>
-                        <div className="text-sm text-white/90">
-                          {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                        </div>
-                        {event.location && (
-                          <div className="text-xs text-white/80 mt-1">
-                            Location: {event.location}
+              {expandedDays.includes(day.index) && (
+                <div className="grid grid-cols-[120px_1fr]">
+                  <div className="bg-muted/10"></div>
+                  <div className="divide-y">
+                    {timeSlotsByDay[day.index].length > 0 ? (
+                      timeSlotsByDay[day.index].map((slot, slotIdx) => (
+                        <div key={`${day.index}-${slotIdx}`} className="grid grid-cols-[120px_1fr]">
+                          <div className="p-3 border-r font-medium text-muted-foreground">
+                            {slot.time}
                           </div>
-                        )}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 p-2">
+                            {slot.items.map((item, idx) => (
+                              <div 
+                                key={`${day.index}-${slotIdx}-${idx}`}
+                                className={cn(
+                                  "p-3 rounded shadow-sm cursor-pointer",
+                                  getItemStyle(item)
+                                )}
+                                onClick={() => {
+                                  if (item.status === 'booked' && onEditEvent) {
+                                    // Find the event to edit
+                                    const eventToEdit = events.find(e => 
+                                      e.title === item.userName && 
+                                      format(e.start, 'h:mm a') === slot.time
+                                    );
+                                    if (eventToEdit) {
+                                      onEditEvent(eventToEdit);
+                                    }
+                                  }
+                                }}
+                              >
+                                <div className="font-medium">{item.userName}</div>
+                                <div className="text-sm">
+                                  {item.status === 'expired' ? 'Expired' : item.type}
+                                </div>
+                                {item.status === 'available' && (
+                                  <Badge className="mt-1 text-xs bg-white/20 hover:bg-white/30">
+                                    {item.type}
+                                  </Badge>
+                                )}
+                              </div>
+                            ))}
+                            
+                            {slot.items.length === 0 && (
+                              <div className="p-3 border border-dashed rounded text-center text-muted-foreground">
+                                Open slot
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-muted-foreground">
+                        No slots available for this day
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 divide-x">
-                  <div className="p-3 text-center text-gray-500">
-                    {displayMode !== 'events' && `${availabilitySlotsByDay[day.index].length} slots`}
-                    {displayMode === 'both' && ', '}
-                    {displayMode !== 'slots' && `${eventsByDay[day.index].length} events`}
+                    )}
                   </div>
-                  <div className="p-3"></div>
-                  <div className="p-3"></div>
-                  <div className="p-3"></div>
                 </div>
               )}
             </div>
