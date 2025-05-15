@@ -5,6 +5,7 @@ import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/av
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 import { CalendarEvent } from '../types';
 import { fetchStaffForSkill, getUsersBySkills } from '@/services/skills/skillStaffService';
+import { toast } from '@/components/ui/use-toast';
 
 type SetEventsFunction = (events: CalendarEvent[]) => void;
 type SetAvailabilitiesFunction = (availabilities: ContextUserAvailabilityMap) => void;
@@ -55,7 +56,14 @@ export const applyFilter = async ({
         break;
         
       case 'skill':
+        console.log('==== SKILL FILTER ====');
         console.log('Processing skill filter for IDs:', ids);
+        
+        // Show toast to indicate filtering is in progress
+        toast({
+          title: "Filtering by skills",
+          description: `Finding users with selected skills...`,
+        });
         
         // First, get all users with these skills
         const usersWithSkills = await getUsersBySkills(ids);
@@ -63,23 +71,39 @@ export const applyFilter = async ({
         
         if (usersWithSkills.length === 0) {
           console.log('No users found with the selected skills, clearing calendar');
+          toast({
+            title: "No matching users",
+            description: "No users with the selected skills were found.",
+          });
           setEvents([]);
           setAvailabilities({});
           return;
         }
         
-        // Get teachers who have these skills (for availability)
-        const teacherIds = await fetchStaffForSkill(ids);
-        console.log('Teachers with selected skills:', teacherIds);
+        // Get teachers with these skills (for availability)
+        const teachersWithSkills = await getUsersBySkills(ids, ['teacher']);
+        console.log('Teachers with selected skills:', teachersWithSkills);
         
         // Fetch events for users who have these skills
         await fetchFilteredEvents({ 
           userIds: usersWithSkills,
+          skillIds: ids,  // Pass skill IDs directly to event processing
           setEvents 
         });
         
-        // Also fetch availabilities for teachers with these skills
-        const serviceAvailabilities = await fetchUserAvailabilityForUsers(teacherIds.length > 0 ? teacherIds : usersWithSkills);
+        // Use teachers for availability if found, otherwise use all users with skills
+        const userIdsForAvailability = teachersWithSkills.length > 0 ? teachersWithSkills : usersWithSkills;
+        
+        console.log('Fetching availability for users:', userIdsForAvailability);
+        
+        // Fetch availabilities for users with these skills
+        const serviceAvailabilities = await fetchUserAvailabilityForUsers(userIdsForAvailability);
+        
+        console.log('Retrieved availability data:', 
+          Object.keys(serviceAvailabilities).length, 
+          'users with availability'
+        );
+        
         setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         break;
         
@@ -156,6 +180,11 @@ export const applyFilter = async ({
     }
   } catch (error) {
     console.error("Error applying filter:", error);
+    toast({
+      title: "Error applying filter",
+      description: "An error occurred while filtering. Please try again.",
+      variant: "destructive"
+    });
     // Set empty data in case of error to prevent UI from breaking
     setEvents([]);
     setAvailabilities({});

@@ -31,7 +31,7 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
       return skillIds.some(skillId => teacher.skills.includes(skillId));
     }).map(teacher => teacher.id) || [];
     
-    console.log(`Found ${teachersWithSkills.length} teachers with requested skills:`, skillIds);
+    console.log(`Found ${teachersWithSkills.length} teachers with requested skills:`, teachersWithSkills);
     
     return teachersWithSkills;
   } catch (error) {
@@ -69,23 +69,30 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
       throw error;
     }
 
-    console.log('Raw users data:', data?.map(u => ({ id: u.id, role: u.role, skills: u.skills })));
+    // Debug users and their skills
+    console.log(`Raw data: Found ${data?.length} total users`);
     
     // Filter users who have ANY of the requested skills
     const usersWithSkills = data?.filter(user => {
-      if (!Array.isArray(user.skills)) {
+      // Skip users without skills array
+      if (!user.skills || !Array.isArray(user.skills) || user.skills.length === 0) {
         return false;
       }
       
+      // Debug individual user skills
+      console.log(`User ${user.id} (${user.role}) has skills:`, user.skills);
+      
       // Check if any of the user's skills match our skillIds
-      const hasSkill = skillIds.some(skillId => user.skills.includes(skillId));
-      if (hasSkill) {
-        console.log(`User ${user.id} has requested skill. User skills:`, user.skills);
+      const hasMatchingSkill = skillIds.some(skillId => user.skills.includes(skillId));
+      
+      if (hasMatchingSkill) {
+        console.log(`✓ User ${user.id} has at least one of the requested skills`);
       }
-      return hasSkill;
+      
+      return hasMatchingSkill;
     }).map(user => user.id) || [];
     
-    console.log(`Found ${usersWithSkills.length} users with requested skills:`, skillIds);
+    console.log(`Found ${usersWithSkills.length} users with requested skills:`, usersWithSkills);
     
     return usersWithSkills;
   } catch (error) {

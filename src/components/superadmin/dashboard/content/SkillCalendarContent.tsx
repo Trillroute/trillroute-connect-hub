@@ -24,11 +24,11 @@ const SkillCalendarContent: React.FC = () => {
     console.log('Skill selected:', value);
     setSelectedSkillId(value);
     
-    // Show toast for debugging
+    // Show debug information in toast
     const skillName = skills.find(s => s.id === value)?.name || 'Unknown';
     toast({
       title: "Skill Selected",
-      description: `Filtering calendar for skill: ${skillName}`,
+      description: `Filtering calendar for skill: ${skillName} (ID: ${value})`,
     });
   };
   

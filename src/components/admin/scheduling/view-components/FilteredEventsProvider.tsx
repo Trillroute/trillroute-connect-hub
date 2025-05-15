@@ -4,6 +4,7 @@ import { useCalendar } from '../context/CalendarContext';
 import { applyFilter } from '../utils/filterUtils';
 import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
+import { toast } from '@/components/ui/use-toast';
 
 interface FilteredEventsProviderProps {
   children: React.ReactNode;
@@ -58,6 +59,13 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     
     // Log filter application
     console.log(`FilteredEventsProvider applying ${filterType} filter with IDs:`, allIds);
+    
+    if (filterType === 'skill' && allIds.length > 0) {
+      toast({
+        title: "Applying skill filter",
+        description: `Filtering calendar for ${allIds.length} selected skills`,
+      });
+    }
     
     // Apply the filter
     applyFilter({

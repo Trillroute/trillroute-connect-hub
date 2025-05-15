@@ -21,6 +21,7 @@ export const fetchFilteredEvents = async ({
   setEvents
 }: EventFilterParams): Promise<void> => {
   try {
+    console.log('==== FETCH FILTERED EVENTS ====');
     console.log('Fetching filtered events with params:', { 
       userIds: userIds?.length || 0, 
       courseIds: courseIds?.length || 0, 
@@ -81,6 +82,22 @@ export const fetchFilteredEvents = async ({
         return userRole && roleFilter.includes(userRole);
       });
       console.log(`After role filtering: ${filteredData.length} events`);
+    }
+
+    // Filter by skills if specified
+    if (skillIds && skillIds.length > 0) {
+      filteredData = filteredData.filter(event => {
+        const userSkills = event.custom_users?.skills;
+        
+        // Skip if user has no skills or skills is not an array
+        if (!userSkills || !Array.isArray(userSkills)) {
+          return false;
+        }
+        
+        // Check if user has ANY of the specified skills
+        return skillIds.some(skillId => userSkills.includes(skillId));
+      });
+      console.log(`After skills filtering: ${filteredData.length} events`);
     }
     
     // Map to calendar events format with appropriate color coding
