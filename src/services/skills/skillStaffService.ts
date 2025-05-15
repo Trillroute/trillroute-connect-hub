@@ -23,12 +23,12 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
       throw error;
     }
     
-    // Filter teachers who have any of the requested skills
+    // Filter teachers who have ANY of the requested skills
     const teachersWithSkills = data?.filter(teacher => {
       if (!Array.isArray(teacher.skills)) return false;
       
       // Check if any of the teacher's skills match our skillIds
-      return teacher.skills.some(skillId => skillIds.includes(skillId));
+      return skillIds.some(skillId => teacher.skills.includes(skillId));
     }).map(teacher => teacher.id) || [];
     
     console.log(`Found ${teachersWithSkills.length} teachers with requested skills:`, skillIds);
@@ -68,12 +68,12 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
       throw error;
     }
     
-    // Filter users who have any of the requested skills
+    // Filter users who have ANY of the requested skills
     const usersWithSkills = data?.filter(user => {
       if (!Array.isArray(user.skills)) return false;
       
       // Check if any of the user's skills match our skillIds
-      return user.skills.some(skillId => skillIds.includes(skillId));
+      return skillIds.some(skillId => user.skills.includes(skillId));
     }).map(user => user.id) || [];
     
     console.log(`Found ${usersWithSkills.length} users with requested skills:`, skillIds);

@@ -61,7 +61,7 @@ const SkillCalendarContent: React.FC = () => {
           <FilteredCalendar
             title={`Calendar for ${skills.find(s => s.id === selectedSkillId)?.name || "Selected"} Skill`}
             filterType="skill"
-            filterValues={[selectedSkillId]}
+            filterValues={selectedSkillId ? [selectedSkillId] : []}
             hasAdminAccess={hasAdminAccess}
           />
         ) : (

@@ -30,6 +30,14 @@ export const applyFilter = async ({
   console.log(`Applying ${filterType} filter with IDs:`, ids);
   
   try {
+    // Only proceed with filtering if we have IDs to filter by
+    if (!ids || ids.length === 0) {
+      // If no ids provided, clear the events and availabilities
+      setEvents([]);
+      setAvailabilities({});
+      return;
+    }
+    
     // Fetch events based on filter type
     switch (filterType) {
       case 'course':
@@ -47,9 +55,22 @@ export const applyFilter = async ({
         break;
         
       case 'skill':
+        if (ids.length === 0) {
+          setEvents([]);
+          setAvailabilities({});
+          return;
+        }
+        
         // First, get all users with these skills
         const usersWithSkills = await getUsersBySkills(ids);
         console.log('Users with selected skills:', usersWithSkills);
+        
+        if (usersWithSkills.length === 0) {
+          console.log('No users found with the selected skills, clearing calendar');
+          setEvents([]);
+          setAvailabilities({});
+          return;
+        }
         
         // Get teachers who have these skills (for availability)
         const teacherIds = await fetchStaffForSkill(ids);
@@ -57,8 +78,7 @@ export const applyFilter = async ({
         
         // Fetch events for users who have these skills
         await fetchFilteredEvents({ 
-          skillIds: ids,
-          userIds: usersWithSkills.length > 0 ? usersWithSkills : undefined,
+          userIds: usersWithSkills,
           setEvents 
         });
         
@@ -68,10 +88,9 @@ export const applyFilter = async ({
           const serviceAvailabilities = await fetchUserAvailabilityForUsers(teacherIds);
           setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         } else {
-          // If no teachers have this skill, fetch all teacher availabilities
-          console.log('No teachers with this skill, fetching all teacher availabilities');
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
+          // If no teachers have this skill, clear availabilities
+          console.log('No teachers with this skill, clearing availabilities');
+          setAvailabilities({});
         }
         break;
         
