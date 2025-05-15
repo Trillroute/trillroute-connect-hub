@@ -58,7 +58,7 @@ export const setupDatabaseFunctions = async (): Promise<void> => {
     // Check if the function already exists to avoid recreation
     const { data: existingFunction, error: checkError } = await supabase.rpc('get_users_with_skills', {
       skill_ids: [] as string[],
-      role_filter: ''
+      role_filter: null as string | null
     }).maybeSingle();
     
     if (checkError && !checkError.message.includes('does not exist')) {

@@ -22,7 +22,7 @@ export const getUsersBySkills = async (
 
     // Call the database function to get users with these skills
     const { data, error } = await supabase.rpc('get_users_with_skills', {
-      skill_ids: skillIds,
+      skill_ids: skillIds as string[],
       role_filter: roleFilter.length > 0 ? roleFilter.join(',') : null
     });
 
