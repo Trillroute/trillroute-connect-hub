@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useCalendar } from '../context/CalendarContext';
-import { applyFilter } from '../utils/filterUtils';
+import { applyFilter, convertAvailabilityMap } from '../utils/filters';
 import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 import { toast } from '@/components/ui/use-toast';
@@ -23,30 +23,6 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   filterIds = []
 }) => {
   const { setEvents, setAvailabilities } = useCalendar();
-  
-  // Convert service availability map to context availability map
-  const convertAvailabilityMap = (
-    serviceMap: ServiceUserAvailabilityMap
-  ): ContextUserAvailabilityMap => {
-    const result: ContextUserAvailabilityMap = {};
-    
-    Object.entries(serviceMap).forEach(([userId, userData]) => {
-      result[userId] = {
-        slots: userData.slots.map(slot => ({
-          id: slot.id,
-          user_id: slot.user_id,
-          dayOfWeek: slot.dayOfWeek,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          category: slot.category || 'Default'
-        })),
-        name: userData.name,
-        role: userData.role
-      };
-    });
-    
-    return result;
-  };
 
   // Apply filters when filterType or filterIds change
   useEffect(() => {
