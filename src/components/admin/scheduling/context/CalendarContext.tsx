@@ -31,7 +31,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
     currentDate,
     viewMode,
     setCurrentDate,
-    setViewMode,
+    setViewMode: originalSetViewMode,
     goToToday,
     goToPrevious,
     goToNext,
@@ -51,6 +51,11 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
 
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
+  
+  // Create a wrapper for setViewMode to ensure it works with all view modes
+  const setViewMode = useCallback((mode: string) => {
+    originalSetViewMode(mode as any);
+  }, [originalSetViewMode]);
   
   // Wrapper functions to ensure correct return types (Promise<void>)
   const handleCreateEvent = async (event: Omit<CalendarEvent, "id">): Promise<void> => {
@@ -109,7 +114,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
         availabilities,
         showAvailability,
         setCurrentDate,
-        setViewMode: (mode) => setViewMode(mode),
+        setViewMode,
         setEvents,
         setIsCreateEventOpen,
         setActiveLayers,

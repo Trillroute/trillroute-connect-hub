@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 
-export type CalendarViewMode = 'day' | 'week' | 'month' | 'list';
+export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
 
 export const useCalendarNavigation = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -18,7 +18,7 @@ export const useCalendarNavigation = () => {
     } else if (viewMode === 'month') {
       setCurrentDate(prev => new Date(prev.setFullYear(prev.getFullYear(), prev.getMonth() - 1, 1)));
     }
-    // For list view, we don't change the date as it shows events across all dates
+    // For list view and legacy view, we don't change the date as they show events across all dates
   }, [viewMode]);
   
   const goToNext = useCallback(() => {
@@ -29,7 +29,7 @@ export const useCalendarNavigation = () => {
     } else if (viewMode === 'month') {
       setCurrentDate(prev => new Date(prev.setFullYear(prev.getFullYear(), prev.getMonth() + 1, 1)));
     }
-    // For list view, we don't change the date as it shows events across all dates
+    // For list view and legacy view, we don't change the date as they show events across all dates
   }, [viewMode]);
 
   const handleDateSelect = useCallback((date: Date | undefined) => {
