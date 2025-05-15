@@ -23,6 +23,7 @@ export const LegacyViewComponent: React.FC<LegacyViewProps> = ({
   
   return (
     <div className="h-full flex flex-col">
+      {/* Header has been simplified */}
       <LegacyViewHeader 
         displayMode={displayMode} 
         setDisplayMode={setDisplayMode} 
