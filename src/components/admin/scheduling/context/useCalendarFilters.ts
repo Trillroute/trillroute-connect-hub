@@ -11,16 +11,16 @@ export function useCalendarFilters(setEvents: (events: CalendarEvent[]) => void)
   const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
   
   // Toggle a specific layer on/off
-  const toggleLayer = (layer: EventLayer) => {
+  const toggleLayer = (layerId: EventLayer) => {
     setActiveLayers(prev => 
-      prev.includes(layer)
-        ? prev.filter(l => l !== layer)
-        : [...prev, layer]
+      prev.includes(layerId)
+        ? prev.filter(l => l !== layerId)
+        : [...prev, layerId]
     );
     
     // If layer is turned off, remove all users from that layer
-    if (activeLayers.includes(layer)) {
-      setSelectedUsers(prev => prev.filter(user => user.layer !== layer));
+    if (activeLayers.includes(layerId)) {
+      setSelectedUsers(prev => prev.filter(user => user.layer !== layerId));
     }
   };
   
@@ -38,7 +38,7 @@ export function useCalendarFilters(setEvents: (events: CalendarEvent[]) => void)
   };
   
   // Filter events by role
-  const filterEventsByRole = async (roles: string[]) => {
+  const filterEventsByRole = async (role: string) => {
     try {
       const { data, error } = await supabase
         .from('user_events')
@@ -55,7 +55,7 @@ export function useCalendarFilters(setEvents: (events: CalendarEvent[]) => void)
       // Filter events by user role
       const filteredEvents = data.filter(event => {
         const userRole = event.custom_users?.role;
-        return userRole && roles.includes(userRole);
+        return userRole && role === userRole;
       });
       
       // Map to calendar events format
@@ -64,7 +64,7 @@ export function useCalendarFilters(setEvents: (events: CalendarEvent[]) => void)
         title: event.title,
         start: new Date(event.start_time),
         end: new Date(event.end_time),
-        description: event.description,
+        description: event.description || '',
         color: event.custom_users?.role === 'teacher' ? '#4f46e5' : 
                event.custom_users?.role === 'admin' ? '#0891b2' : 
                event.custom_users?.role === 'student' ? '#16a34a' : 
@@ -97,7 +97,7 @@ export function useCalendarFilters(setEvents: (events: CalendarEvent[]) => void)
         title: event.title,
         start: new Date(event.start_time),
         end: new Date(event.end_time),
-        description: event.description,
+        description: event.description || '',
       }));
       
       setEvents(mappedEvents);

@@ -37,7 +37,7 @@ const UserSearchList: React.FC<UserSearchListProps> = ({
     <>
       <div className="p-2">
         <Input
-          placeholder={`Search ${layerId.toLowerCase()}`}
+          placeholder={`Search ${layerId}`}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="mb-2"

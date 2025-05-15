@@ -1,10 +1,12 @@
 
 import { ReactNode } from "react";
 
+export type EventLayer = string;
+
 export interface CalendarEvent {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   location?: string;
   start: Date;
   end: Date;
@@ -14,17 +16,12 @@ export interface CalendarEvent {
 
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
 
-export interface EventLayer {
-  id: string;
-  name: string;
-  active: boolean;
-}
-
 export interface SelectedUser {
   id: string;
   name: string;
   role?: string;
   email?: string;
+  layer?: EventLayer;
 }
 
 export interface UserAvailabilityMap {
@@ -59,7 +56,7 @@ export interface CalendarContextType {
   setActiveLayers: (layers: EventLayer[]) => void;
   setSelectedUsers: (users: SelectedUser[]) => void;
   setAvailabilities: (availabilities: UserAvailabilityMap) => void;
-  toggleLayer: (layerId: string) => void;
+  toggleLayer: (layerId: EventLayer) => void;
   toggleUser: (user: SelectedUser) => void;
   goToToday: () => void;
   goToPrevious: () => void;

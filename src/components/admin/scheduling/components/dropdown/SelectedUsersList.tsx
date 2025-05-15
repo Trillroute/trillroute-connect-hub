@@ -28,7 +28,7 @@ const SelectedUsersList: React.FC<SelectedUsersListProps> = ({
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => toggleUser(user)}
         >
-          <div className={`w-2 h-2 rounded-full ${getLevelColor(user.layer)}`} />
+          <div className={`w-2 h-2 rounded-full ${getLevelColor(user.layer || '')}`} />
           <span className="text-sm">{user.name}</span>
           <Button
             variant="ghost"

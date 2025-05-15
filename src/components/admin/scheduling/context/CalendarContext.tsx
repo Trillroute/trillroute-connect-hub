@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+
+import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { useCalendarNavigation } from '../hooks/useCalendarNavigation';
@@ -52,12 +53,12 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
   const [availabilities, setAvailabilities] = useState<UserAvailabilityMap>({});
   
   // Wrapper functions to ensure correct return types (Promise<void>)
-  const handleCreateEvent = async (event: any): Promise<void> => {
+  const handleCreateEvent = async (event: Omit<CalendarEvent, "id">): Promise<void> => {
     await originalCreateEvent(event);
     return;
   };
   
-  const handleUpdateEvent = async (id: string, event: any): Promise<void> => {
+  const handleUpdateEvent = async (id: string, event: Omit<CalendarEvent, "id">): Promise<void> => {
     await originalUpdateEvent(id, event);
     return;
   };
@@ -68,8 +69,8 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
   };
   
   // Wrapper for filterEventsByUser to match expected type
-  const filterEventsByUser = (user: SelectedUser): void => {
-    originalFilterEventsByUser(user.id);
+  const filterEventsByUser = (userId: string): void => {
+    originalFilterEventsByUser(userId);
   };
 
   // Load events and availabilities when component mounts
@@ -108,7 +109,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
         availabilities,
         showAvailability,
         setCurrentDate,
-        setViewMode,
+        setViewMode: (mode) => setViewMode(mode),
         setEvents,
         setIsCreateEventOpen,
         setActiveLayers,

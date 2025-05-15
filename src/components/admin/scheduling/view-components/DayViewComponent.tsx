@@ -28,7 +28,14 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
   
   const handleCreateEventClick = () => {
     if (handleCreateEvent) {
-      handleCreateEvent({});
+      const newEvent: Omit<CalendarEvent, 'id'> = {
+        title: 'New Event',
+        description: '',
+        start: new Date(),
+        end: new Date(Date.now() + 3600000), // 1 hour later
+      };
+      
+      handleCreateEvent(newEvent);
     }
   };
   

@@ -30,10 +30,10 @@ export const useLayersDropdown = () => {
   const [activeLayerForSearch, setActiveLayerForSearch] = useState<EventLayer | null>(null);
 
   // Filter users based on layer and search query
-  const getFilteredUsers = (layer: EventLayer) => {
+  const getFilteredUsers = (layerId: EventLayer) => {
     let users: { id: string; name: string }[] = [];
 
-    switch (layer) {
+    switch (layerId) {
       case 'teachers':
         users = Array.isArray(teachers) ? teachers.map(teacher => ({
           id: teacher.id,
@@ -62,11 +62,11 @@ export const useLayersDropdown = () => {
   };
 
   // Handle user toggle
-  const handleUserToggle = (user: { id: string; name: string }, layer: EventLayer) => {
+  const handleUserToggle = (user: { id: string; name: string }, layerId: EventLayer) => {
     toggleUser({
       id: user.id,
       name: user.name,
-      layer
+      layer: layerId
     });
   };
 
