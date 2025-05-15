@@ -23,7 +23,7 @@ export const getUsersBySkills = async (
     // Call the database function to get users with these skills
     const { data, error } = await supabase.rpc('get_users_with_skills', {
       skill_ids: skillIds,
-      role_filter: roleFilter.length > 0 ? roleFilter.join(',') : ''
+      role_filter: roleFilter.length > 0 ? roleFilter.join(',') : null
     });
 
     if (error) {
@@ -37,7 +37,7 @@ export const getUsersBySkills = async (
     }
 
     console.log(`Found ${data.length} users with the requested skills`);
-    return data.map(user => user.id);
+    return data.map((user: any) => user.id);
   } catch (error) {
     console.error('Error in getUsersBySkills:', error);
     return [];
