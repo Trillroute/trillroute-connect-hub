@@ -1,10 +1,9 @@
-
 import { fetchFilteredEvents } from './eventProcessing';
 import { fetchUserAvailabilityForUsers } from '@/services/availability/api';
 import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 import { CalendarEvent } from '../types';
-import { fetchStaffForSkill, getUsersBySkills } from '@/services/skills/skillStaffService';
+import { getUsersBySkills, seedUserSkills } from '@/services/skills/skillStaffService';
 import { toast } from '@/components/ui/use-toast';
 
 type SetEventsFunction = (events: CalendarEvent[]) => void;
@@ -60,15 +59,32 @@ export const applyFilter = async ({
         console.log('==== SKILL FILTER ====');
         console.log('Processing skill filter for IDs:', ids);
         
+        // Try to seed skills for testing if no users are found
+        const shouldSeedSkills = process.env.NODE_ENV === 'development';
+        
         // Show toast to indicate filtering is in progress
         toast({
           title: "Filtering by skills",
           description: `Finding users with selected skills...`,
         });
         
-        // First, get all users with these skills
+        // First, get all users with these skills (no role filter initially)
         const usersWithSkills = await getUsersBySkills(ids);
         console.log('Users with selected skills:', usersWithSkills);
+        
+        if (usersWithSkills.length === 0 && shouldSeedSkills) {
+          console.log('No users found with skills, attempting to seed skill data...');
+          await seedUserSkills();
+          // Try again after seeding
+          const usersAfterSeed = await getUsersBySkills(ids);
+          if (usersAfterSeed.length > 0) {
+            console.log('Found users after seeding:', usersAfterSeed);
+            toast({
+              title: "Development mode",
+              description: "Seeded skill data for testing. Please refresh.",
+            });
+          }
+        }
         
         if (usersWithSkills.length === 0) {
           console.log('No users found with the selected skills, clearing calendar');

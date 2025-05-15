@@ -89,17 +89,19 @@ export const fetchFilteredEvents = async ({
       console.log('Filtering events by skills:', skillIds);
       filteredData = filteredData.filter(event => {
         const userSkills = event.custom_users?.skills;
-        console.log(`Event ${event.id} - User ${event.user_id} skills:`, userSkills);
         
         // Skip if user has no skills or skills is not an array
         if (!userSkills || !Array.isArray(userSkills)) {
-          console.log(`User ${event.user_id} has no valid skills array`);
           return false;
         }
         
-        // Check if user has ANY of the specified skills
+        // Check if user has ANY of the specified skills (intersection)
         const hasMatchingSkill = skillIds.some(skillId => userSkills.includes(skillId));
-        console.log(`User ${event.user_id} has matching skill: ${hasMatchingSkill}`);
+        
+        if (hasMatchingSkill) {
+          console.log(`Event ${event.id} - User ${event.user_id} has matching skill`);
+        }
+        
         return hasMatchingSkill;
       });
       console.log(`After skills filtering: ${filteredData.length} events`);

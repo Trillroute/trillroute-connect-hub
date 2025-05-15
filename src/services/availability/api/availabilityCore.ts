@@ -1,46 +1,36 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserAvailability, UserAvailabilityMap } from '../types';
+import { toast } from '@/components/ui/use-toast';
 
 /**
- * Maps a database availability slot to our internal format
+ * Create a database function for efficiently retrieving users with specific skills
+ * This is done when the app initializes
  */
-export const mapDbAvailabilitySlot = (dbSlot: any): UserAvailability => {
-  return {
-    id: dbSlot.id,
-    user_id: dbSlot.user_id,
-    dayOfWeek: dbSlot.day_of_week,
-    startTime: dbSlot.start_time,
-    endTime: dbSlot.end_time,
-    category: dbSlot.category || 'Default'
-  };
-};
-
-/**
- * Build availability map from users and slots
- */
-export const buildAvailabilityMap = (
-  users: any[],
-  availabilitySlots: any[]
-): UserAvailabilityMap => {
-  const result: UserAvailabilityMap = {};
-  
-  // Initialize entries for each user
-  users.forEach(user => {
-    result[user.id] = {
-      slots: [],
-      name: `${user.first_name} ${user.last_name}`.trim(),
-      role: user.role || 'unknown'
-    };
-  });
-  
-  // Add slots to the respective users
-  availabilitySlots.forEach(slot => {
-    const userId = slot.user_id;
-    if (result[userId]) {
-      result[userId].slots.push(mapDbAvailabilitySlot(slot));
+export const setupDatabaseFunctions = async (): Promise<void> => {
+  try {
+    // Check if the function already exists to avoid recreation
+    const { data: existingFunction } = await supabase.rpc('get_users_with_skills', {
+      skill_ids: [],
+      role_filter: ''
+    }).catch(() => ({ data: null }));
+    
+    if (existingFunction !== null) {
+      console.log('get_users_with_skills function already exists');
+      return;
     }
-  });
-  
-  return result;
+
+    // Create the database function for efficiently getting users with skills
+    const { error } = await supabase.rpc('create_get_users_with_skills_function');
+    
+    if (error) {
+      console.error('Error creating database function:', error);
+    } else {
+      console.log('Successfully created get_users_with_skills database function');
+    }
+  } catch (error) {
+    console.error('Error in setupDatabaseFunctions:', error);
+  }
 };
+
+// Call this function when the app initializes
+setupDatabaseFunctions().catch(console.error);
