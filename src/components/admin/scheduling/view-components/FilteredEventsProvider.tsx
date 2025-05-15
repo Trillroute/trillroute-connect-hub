@@ -57,13 +57,15 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     if (filterId) allIds.push(filterId);
     if (filterIds && Array.isArray(filterIds)) allIds.push(...filterIds);
     
-    // Log filter application
-    console.log(`FilteredEventsProvider applying ${filterType} filter with IDs:`, allIds);
+    // Log filter application with more detail
+    console.log(`==== FILTERED EVENTS PROVIDER ====`);
+    console.log(`Applying ${filterType || 'null'} filter with ${allIds.length} IDs:`, allIds);
     
     if (filterType === 'skill' && allIds.length > 0) {
+      // Inform user that filter is being applied
       toast({
         title: "Applying skill filter",
-        description: `Filtering calendar for ${allIds.length} selected skills`,
+        description: `Filtering calendar for ${allIds.length} selected skills...`,
       });
     }
     

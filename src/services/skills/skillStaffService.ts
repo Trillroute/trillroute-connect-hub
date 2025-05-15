@@ -23,12 +23,22 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
       throw error;
     }
     
+    // Debug full data set before filtering
+    console.log(`Total teachers found: ${data?.length || 0}`);
+    
     // Filter teachers who have ANY of the requested skills
     const teachersWithSkills = data?.filter(teacher => {
-      if (!Array.isArray(teacher.skills)) return false;
+      if (!Array.isArray(teacher.skills)) {
+        console.log(`Teacher ${teacher.id} has no skills array`);
+        return false;
+      }
       
       // Check if any of the teacher's skills match our skillIds
-      return skillIds.some(skillId => teacher.skills.includes(skillId));
+      const hasMatch = skillIds.some(skillId => teacher.skills.includes(skillId));
+      console.log(`Teacher ${teacher.id} has skills: ${teacher.skills.join(', ')}`);
+      console.log(`Matching requested skills: ${hasMatch ? 'YES' : 'NO'}`);
+      
+      return hasMatch;
     }).map(teacher => teacher.id) || [];
     
     console.log(`Found ${teachersWithSkills.length} teachers with requested skills:`, teachersWithSkills);
@@ -50,12 +60,14 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
   try {
     if (!skillIds.length) return [];
     
-    console.log('Fetching users with skills:', skillIds, 'roles filter:', roles || 'none');
+    console.log('==== FETCHING USERS BY SKILLS ====');
+    console.log('Skill IDs:', skillIds);
+    console.log('Roles filter:', roles || 'none');
     
     // We need to properly debug the query
     let query = supabase
       .from('custom_users')
-      .select('id, skills, role');
+      .select('id, skills, role, first_name, last_name');
       
     // Add role filter if specified
     if (roles && roles.length > 0) {
@@ -70,23 +82,26 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
     }
 
     // Debug users and their skills
-    console.log(`Raw data: Found ${data?.length} total users`);
+    console.log(`Total users fetched: ${data?.length || 0}`);
     
     // Filter users who have ANY of the requested skills
     const usersWithSkills = data?.filter(user => {
       // Skip users without skills array
       if (!user.skills || !Array.isArray(user.skills) || user.skills.length === 0) {
+        console.log(`User ${user.id} (${user.role}) has no skills`);
         return false;
       }
       
       // Debug individual user skills
-      console.log(`User ${user.id} (${user.role}) has skills:`, user.skills);
+      console.log(`User ${user.id} (${user.first_name} ${user.last_name}, ${user.role}) has skills:`, user.skills);
       
       // Check if any of the user's skills match our skillIds
       const hasMatchingSkill = skillIds.some(skillId => user.skills.includes(skillId));
       
       if (hasMatchingSkill) {
         console.log(`✓ User ${user.id} has at least one of the requested skills`);
+      } else {
+        console.log(`✗ User ${user.id} has no matching skills`);
       }
       
       return hasMatchingSkill;

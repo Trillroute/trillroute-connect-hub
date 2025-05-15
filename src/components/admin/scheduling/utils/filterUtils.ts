@@ -28,7 +28,8 @@ export const applyFilter = async ({
   setAvailabilities,
   convertAvailabilityMap
 }: ApplyFilterOptions): Promise<void> => {
-  console.log(`Applying ${filterType} filter with IDs:`, ids);
+  console.log(`==== APPLYING ${filterType?.toUpperCase() || 'UNKNOWN'} FILTER ====`);
+  console.log('Filter IDs:', ids);
   
   try {
     // If no filter type or ids, clear everything
@@ -74,11 +75,18 @@ export const applyFilter = async ({
           toast({
             title: "No matching users",
             description: "No users with the selected skills were found.",
+            variant: "destructive"
           });
           setEvents([]);
           setAvailabilities({});
           return;
         }
+        
+        // Show success toast with number of users found
+        toast({
+          title: "Users found",
+          description: `Found ${usersWithSkills.length} users with the selected skills.`,
+        });
         
         // Get teachers with these skills (for availability)
         const teachersWithSkills = await getUsersBySkills(ids, ['teacher']);
