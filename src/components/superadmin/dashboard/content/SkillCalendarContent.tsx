@@ -20,7 +20,6 @@ const SkillCalendarContent: React.FC = () => {
   useEffect(() => {
     if (skills.length > 0 && !selectedSkillId) {
       setSelectedSkillId(skills[0].id);
-      console.log('Auto-selected first skill:', skills[0].id, skills[0].name);
     }
   }, [skills, selectedSkillId]);
   
@@ -36,9 +35,6 @@ const SkillCalendarContent: React.FC = () => {
       title: "Skill Selected",
       description: `Filtering calendar for skill: ${skillName} (ID: ${value})`,
     });
-    
-    // Force a refresh on skill change
-    setRefreshKey(prev => prev + 1);
   };
 
   const handleRefresh = () => {
@@ -50,21 +46,6 @@ const SkillCalendarContent: React.FC = () => {
   };
   
   const selectedSkill = skills.find(s => s.id === selectedSkillId);
-  
-  // If we have no skills at all, show a message
-  if (!loading && skills.length === 0) {
-    return (
-      <ContentWrapper
-        title="Skill Calendar"
-        description="View and manage schedule by skill"
-      >
-        <div className="flex flex-col items-center justify-center h-64 text-center">
-          <p className="text-gray-500 mb-4">No skills found in the system.</p>
-          <p className="text-gray-500">Please add skills before using this view.</p>
-        </div>
-      </ContentWrapper>
-    );
-  }
   
   return (
     <ContentWrapper
@@ -100,12 +81,13 @@ const SkillCalendarContent: React.FC = () => {
       </div>
       
       {/* Debug info */}
-      <div className="mb-4 p-2 bg-gray-100 text-xs rounded-md">
-        <p>Selected Skill: {selectedSkill?.name || 'Unknown'}</p>
-        <p>Skill ID: {selectedSkillId}</p>
-        <p>Total Skills Available: {skills.length}</p>
-        <p>Refresh Key: {refreshKey}</p>
-      </div>
+      {selectedSkillId && (
+        <div className="mb-4 p-2 bg-gray-100 text-xs rounded-md">
+          <p>Selected Skill: {selectedSkill?.name || 'Unknown'}</p>
+          <p>Skill ID: {selectedSkillId}</p>
+          <p>Total Skills Available: {skills.length}</p>
+        </div>
+      )}
       
       <div className="h-[calc(100vh-280px)]">
         {selectedSkillId ? (

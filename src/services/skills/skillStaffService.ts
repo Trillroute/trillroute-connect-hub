@@ -1,84 +1,117 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
 
 /**
- * Get users that have specific skills
- * @param skillIds - Array of skill IDs
- * @param roleFilter - Optional array of roles to filter by
- * @returns Array of user IDs
+ * Fetches staff (teachers) associated with specific skills
+ * @param skillIds Array of skill IDs
+ * @returns Array of staff user IDs
  */
-export const getUsersBySkills = async (
-  skillIds: string[] = [],
-  roleFilter: string[] = []
-): Promise<string[]> => {
+export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> => {
   try {
-    console.log(`Getting users with skills: [${skillIds.join(', ')}], role filter: [${roleFilter.join(', ')}]`);
+    if (!skillIds.length) return [];
     
-    if (!skillIds.length) {
-      console.log('No skill IDs provided, returning empty array');
-      return [];
-    }
-
-    // Call the database function to get users with these skills
-    const { data, error } = await supabase.rpc('get_users_with_skills', {
-      skill_ids: skillIds,
-      role_filter: roleFilter.length > 0 ? roleFilter.join(',') : null as unknown as string
-    });
-
+    console.log('Fetching staff for skills:', skillIds);
+    
+    // Query custom_users table to get teachers with these skills
+    const { data, error } = await supabase
+      .from('custom_users')
+      .select('id, skills')
+      .eq('role', 'teacher');
+      
     if (error) {
-      console.error('Error fetching users with skills:', error);
-      return [];
+      console.error('Error fetching teachers by skill:', error);
+      throw error;
     }
-
-    if (!data || !Array.isArray(data) || (data as any[]).length === 0) {
-      console.log(`No users found with skills [${skillIds.join(', ')}]`);
-      return [];
-    }
-
-    console.log(`Found ${(data as any[]).length} users with the requested skills`);
-    return (data as any[]).map((user: any) => user.id);
+    
+    // Debug full data set before filtering
+    console.log(`Total teachers found: ${data?.length || 0}`);
+    
+    // Filter teachers who have ANY of the requested skills
+    const teachersWithSkills = data?.filter(teacher => {
+      if (!Array.isArray(teacher.skills)) {
+        console.log(`Teacher ${teacher.id} has no skills array`);
+        return false;
+      }
+      
+      // Check if any of the teacher's skills match our skillIds
+      const hasMatch = skillIds.some(skillId => teacher.skills.includes(skillId));
+      console.log(`Teacher ${teacher.id} has skills: ${teacher.skills.join(', ')}`);
+      console.log(`Matching requested skills: ${hasMatch ? 'YES' : 'NO'}`);
+      
+      return hasMatch;
+    }).map(teacher => teacher.id) || [];
+    
+    console.log(`Found ${teachersWithSkills.length} teachers with requested skills:`, teachersWithSkills);
+    
+    return teachersWithSkills;
   } catch (error) {
-    console.error('Error in getUsersBySkills:', error);
+    console.error('Error in fetchStaffForSkill:', error);
     return [];
   }
 };
 
 /**
- * Seed user skills for testing purposes (DEV ONLY)
+ * Get users who have specific skill IDs
+ * @param skillIds Array of skill IDs
+ * @param roles Optional array of roles to filter by
+ * @returns Array of user IDs
  */
-export const seedUserSkills = async (): Promise<boolean> => {
+export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Promise<string[]> => {
   try {
-    console.log('Seeding user skills for testing...');
-
-    // Call the database function to seed user skills
-    const { data, error } = await supabase.rpc('seed_skill_data', {
-      param_name: null as unknown as string
-    });
-
+    if (!skillIds.length) return [];
+    
+    console.log('==== FETCHING USERS BY SKILLS ====');
+    console.log('Skill IDs:', skillIds);
+    console.log('Roles filter:', roles || 'none');
+    
+    // We need to properly debug the query
+    let query = supabase
+      .from('custom_users')
+      .select('id, skills, role, first_name, last_name');
+      
+    // Add role filter if specified
+    if (roles && roles.length > 0) {
+      query = query.in('role', roles);
+    }
+    
+    const { data, error } = await query;
+      
     if (error) {
-      console.error('Error seeding user skills:', error);
-      toast({
-        title: "Error",
-        description: "Failed to seed skill data for testing.",
-        variant: "destructive"
-      });
-      return false;
+      console.error('Error fetching users by skill:', error);
+      throw error;
     }
 
-    console.log('Successfully seeded user skills for testing', data);
+    // Debug users and their skills
+    console.log(`Total users fetched: ${data?.length || 0}`);
     
-    if (data && Array.isArray(data) && (data as any[]).length > 0) {
-      toast({
-        title: "Development Mode",
-        description: `Created ${(data as any[]).length} skill assignments for testing.`
-      });
-      return true;
-    }
+    // Filter users who have ANY of the requested skills
+    const usersWithSkills = data?.filter(user => {
+      // Skip users without skills array
+      if (!user.skills || !Array.isArray(user.skills) || user.skills.length === 0) {
+        console.log(`User ${user.id} (${user.role}) has no skills`);
+        return false;
+      }
+      
+      // Debug individual user skills
+      console.log(`User ${user.id} (${user.first_name} ${user.last_name}, ${user.role}) has skills:`, user.skills);
+      
+      // Check if any of the user's skills match our skillIds
+      const hasMatchingSkill = skillIds.some(skillId => user.skills.includes(skillId));
+      
+      if (hasMatchingSkill) {
+        console.log(`✓ User ${user.id} has at least one of the requested skills`);
+      } else {
+        console.log(`✗ User ${user.id} has no matching skills`);
+      }
+      
+      return hasMatchingSkill;
+    }).map(user => user.id) || [];
     
-    return false;
+    console.log(`Found ${usersWithSkills.length} users with requested skills:`, usersWithSkills);
+    
+    return usersWithSkills;
   } catch (error) {
-    console.error('Error in seedUserSkills:', error);
-    return false;
+    console.error('Error in getUsersBySkills:', error);
+    return [];
   }
 };
