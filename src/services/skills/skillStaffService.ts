@@ -31,12 +31,12 @@ export const getUsersBySkills = async (
       return [];
     }
 
-    if (!data || !Array.isArray(data) || data.length === 0) {
+    if (!data || !Array.isArray(data) || (data as any[]).length === 0) {
       console.log(`No users found with skills [${skillIds.join(', ')}]`);
       return [];
     }
 
-    console.log(`Found ${data.length} users with the requested skills`);
+    console.log(`Found ${(data as any[]).length} users with the requested skills`);
     return (data as any[]).map((user: any) => user.id);
   } catch (error) {
     console.error('Error in getUsersBySkills:', error);
