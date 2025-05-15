@@ -27,86 +27,14 @@ export const fetchFilteredEvents = async ({
       skillIds: skillIds?.length || 0, 
       roleFilter 
     });
-    
-    // If filtering by skills and we have user IDs, use those for filtering
-    if (skillIds?.length > 0 && userIds?.length > 0) {
-      // Base query to get events for specific users
-      let query = supabase
-        .from('user_events')
-        .select(`
-          *,
-          custom_users:user_id (
-            id,
-            first_name,
-            last_name,
-            role
-          )
-        `)
-        .in('user_id', userIds);
-        
-      // Fetch the data
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error fetching skill-filtered events:', error);
-        throw error;
-      }
-      
-      if (!data || !Array.isArray(data)) {
-        console.log('No skill-filtered events data returned');
-        setEvents([]);
-        return;
-      }
-      
-      console.log(`Fetched ${data.length} skill-filtered events`);
-      
-      // Apply role filter if specified
-      let filteredData = data;
-      if (roleFilter && roleFilter.length > 0) {
-        filteredData = filteredData.filter(event => {
-          const userRole = event.custom_users?.role;
-          return userRole && roleFilter.includes(userRole);
-        });
-      }
-      
-      // Map to calendar events format
-      const mappedEvents: CalendarEvent[] = filteredData.map(event => {
-        // Determine color based on user role
-        let color;
-        switch (event.custom_users?.role) {
-          case 'teacher':
-            color = '#4f46e5'; // indigo-600
-            break;
-          case 'admin':
-            color = '#0891b2'; // cyan-600
-            break;
-          case 'student':
-            color = '#16a34a'; // green-600
-            break;
-          case 'superadmin':
-            color = '#9333ea'; // purple-600
-            break;
-          default:
-            color = '#6b7280'; // gray-500
-        }
-        
-        return {
-          id: event.id,
-          title: event.title,
-          start: new Date(event.start_time),
-          end: new Date(event.end_time),
-          description: event.description || '',
-          userId: event.user_id,
-          color
-        };
-      });
-      
-      console.log(`Setting ${mappedEvents.length} skill-filtered events`);
-      setEvents(mappedEvents);
+
+    // If no filter criteria are provided, clear the events
+    if (!userIds?.length && !courseIds?.length && !skillIds?.length && !roleFilter?.length) {
+      console.log('No filter criteria, clearing events');
+      setEvents([]);
       return;
     }
     
-    // Regular filtering if not filtering by skill or no matching users found
     // Base query to get events
     let query = supabase
       .from('user_events')
@@ -124,6 +52,7 @@ export const fetchFilteredEvents = async ({
     // Apply filters if provided
     if (userIds && userIds.length > 0) {
       query = query.in('user_id', userIds);
+      console.log('Filtering events by user IDs:', userIds);
     }
     
     // Fetch the data

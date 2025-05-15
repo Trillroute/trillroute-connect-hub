@@ -1,9 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useCalendar } from '../context/CalendarContext';
-import { useFilteredEvents } from '../hooks/useFilteredEvents';
 import { applyFilter } from '../utils/filterUtils';
-import { fetchAllStaffAvailability } from '@/services/availability/api';
 import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 
@@ -67,14 +65,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       ids: allIds,
       staffUserIds,
       setEvents,
-      setAvailabilities: (availabilities) => {
-        // If filter type is 'student', set availabilities to an empty object
-        if (filterType === 'student') {
-          setAvailabilities({});
-        } else {
-          setAvailabilities(availabilities);
-        }
-      },
+      setAvailabilities,
       convertAvailabilityMap
     });
     

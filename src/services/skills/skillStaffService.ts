@@ -52,9 +52,10 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
     
     console.log('Fetching users with skills:', skillIds, 'roles filter:', roles || 'none');
     
+    // We need to properly debug the query
     let query = supabase
       .from('custom_users')
-      .select('id, skills');
+      .select('id, skills, role');
       
     // Add role filter if specified
     if (roles && roles.length > 0) {
@@ -67,13 +68,21 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
       console.error('Error fetching users by skill:', error);
       throw error;
     }
+
+    console.log('Raw users data:', data?.map(u => ({ id: u.id, role: u.role, skills: u.skills })));
     
     // Filter users who have ANY of the requested skills
     const usersWithSkills = data?.filter(user => {
-      if (!Array.isArray(user.skills)) return false;
+      if (!Array.isArray(user.skills)) {
+        return false;
+      }
       
       // Check if any of the user's skills match our skillIds
-      return skillIds.some(skillId => user.skills.includes(skillId));
+      const hasSkill = skillIds.some(skillId => user.skills.includes(skillId));
+      if (hasSkill) {
+        console.log(`User ${user.id} has requested skill. User skills:`, user.skills);
+      }
+      return hasSkill;
     }).map(user => user.id) || [];
     
     console.log(`Found ${usersWithSkills.length} users with requested skills:`, skillIds);

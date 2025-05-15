@@ -30,9 +30,9 @@ export const applyFilter = async ({
   console.log(`Applying ${filterType} filter with IDs:`, ids);
   
   try {
-    // Only proceed with filtering if we have IDs to filter by
-    if (!ids || ids.length === 0) {
-      // If no ids provided, clear the events and availabilities
+    // If no filter type or ids, clear everything
+    if (!filterType || !ids || ids.length === 0) {
+      console.log('No filter type or IDs, clearing data');
       setEvents([]);
       setAvailabilities({});
       return;
@@ -55,11 +55,7 @@ export const applyFilter = async ({
         break;
         
       case 'skill':
-        if (ids.length === 0) {
-          setEvents([]);
-          setAvailabilities({});
-          return;
-        }
+        console.log('Processing skill filter for IDs:', ids);
         
         // First, get all users with these skills
         const usersWithSkills = await getUsersBySkills(ids);
@@ -83,15 +79,8 @@ export const applyFilter = async ({
         });
         
         // Also fetch availabilities for teachers with these skills
-        if (teacherIds.length > 0) {
-          console.log(`Fetching availability for ${teacherIds.length} teachers with this skill`);
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers(teacherIds);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        } else {
-          // If no teachers have this skill, clear availabilities
-          console.log('No teachers with this skill, clearing availabilities');
-          setAvailabilities({});
-        }
+        const serviceAvailabilities = await fetchUserAvailabilityForUsers(teacherIds.length > 0 ? teacherIds : usersWithSkills);
+        setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
         break;
         
       case 'teacher':
