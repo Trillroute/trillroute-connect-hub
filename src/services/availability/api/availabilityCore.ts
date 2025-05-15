@@ -72,7 +72,9 @@ export const setupDatabaseFunctions = async (): Promise<void> => {
     }
 
     // Create the database function for efficiently getting users with skills
-    const { error } = await supabase.rpc('create_get_users_with_skills_function');
+    const { error } = await supabase.rpc('create_get_users_with_skills_function', {
+      param_name: null as unknown as string
+    });
     
     if (error) {
       console.error('Error creating database function:', error);

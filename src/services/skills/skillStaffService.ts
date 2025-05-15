@@ -22,7 +22,7 @@ export const getUsersBySkills = async (
 
     // Call the database function to get users with these skills
     const { data, error } = await supabase.rpc('get_users_with_skills', {
-      skill_ids: skillIds as string[],
+      skill_ids: skillIds as unknown as string[],
       role_filter: roleFilter.length > 0 ? roleFilter.join(',') : null
     });
 
@@ -37,7 +37,7 @@ export const getUsersBySkills = async (
     }
 
     console.log(`Found ${data.length} users with the requested skills`);
-    return data.map((user: any) => user.id);
+    return (data as any[]).map((user: any) => user.id);
   } catch (error) {
     console.error('Error in getUsersBySkills:', error);
     return [];
@@ -52,7 +52,9 @@ export const seedUserSkills = async (): Promise<boolean> => {
     console.log('Seeding user skills for testing...');
 
     // Call the database function to seed user skills
-    const { data, error } = await supabase.rpc('seed_skill_data');
+    const { data, error } = await supabase.rpc('seed_skill_data', {
+      param_name: null as unknown as string
+    });
 
     if (error) {
       console.error('Error seeding user skills:', error);
@@ -66,10 +68,10 @@ export const seedUserSkills = async (): Promise<boolean> => {
 
     console.log('Successfully seeded user skills for testing', data);
     
-    if (data && Array.isArray(data) && data.length > 0) {
+    if (data && Array.isArray(data) && (data as any[]).length > 0) {
       toast({
         title: "Development Mode",
-        description: `Created ${data.length} skill assignments for testing.`
+        description: `Created ${(data as any[]).length} skill assignments for testing.`
       });
       return true;
     }
