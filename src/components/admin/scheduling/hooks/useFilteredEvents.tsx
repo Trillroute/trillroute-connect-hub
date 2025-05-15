@@ -163,6 +163,8 @@ export function useFilteredEvents({
       setFilteredAvailability([]);
       return;
     }
+    
+    console.log(`Filtering ${availabilityArray.length} availability slots with filterType: ${filterType}`);
 
     // Filter availabilities based on user filters
     const filtered = availabilityArray.filter(avail => {
@@ -181,6 +183,7 @@ export function useFilteredEvents({
       return true;
     });
 
+    console.log(`After filtering: ${filtered.length} availability slots remain`);
     setFilteredAvailability(filtered);
   }, [availabilityArray, filters, filterType, filterIds]);
 

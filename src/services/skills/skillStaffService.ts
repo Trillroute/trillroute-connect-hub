@@ -29,9 +29,54 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
       return teacher.skills.some(skillId => skillIds.includes(skillId));
     }).map(teacher => teacher.id) || [];
     
+    console.log(`Found ${teachersWithSkills.length} teachers with requested skills:`, skillIds);
+    
     return teachersWithSkills;
   } catch (error) {
     console.error('Error in fetchStaffForSkill:', error);
+    return [];
+  }
+};
+
+/**
+ * Get users who have specific skill IDs
+ * @param skillIds Array of skill IDs
+ * @param roles Optional array of roles to filter by
+ * @returns Array of user IDs
+ */
+export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Promise<string[]> => {
+  try {
+    if (!skillIds.length) return [];
+    
+    let query = supabase
+      .from('custom_users')
+      .select('id, skills');
+      
+    // Add role filter if specified
+    if (roles && roles.length > 0) {
+      query = query.in('role', roles);
+    }
+    
+    const { data, error } = await query;
+      
+    if (error) {
+      console.error('Error fetching users by skill:', error);
+      throw error;
+    }
+    
+    // Filter users who have any of the requested skills
+    const usersWithSkills = data?.filter(user => {
+      if (!Array.isArray(user.skills)) return false;
+      
+      // Check if any of the user's skills match our skillIds
+      return user.skills.some(skillId => skillIds.includes(skillId));
+    }).map(user => user.id) || [];
+    
+    console.log(`Found ${usersWithSkills.length} users with requested skills:`, skillIds);
+    
+    return usersWithSkills;
+  } catch (error) {
+    console.error('Error in getUsersBySkills:', error);
     return [];
   }
 };

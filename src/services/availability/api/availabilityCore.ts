@@ -1,79 +1,46 @@
 
+import { supabase } from '@/integrations/supabase/client';
 import { UserAvailability, UserAvailabilityMap } from '../types';
 
-// Helper to map from database availability slot to UserAvailability type
+/**
+ * Maps a database availability slot to our internal format
+ */
 export const mapDbAvailabilitySlot = (dbSlot: any): UserAvailability => {
-  if (!dbSlot) {
-    console.error('Attempted to map null or undefined db slot');
-    throw new Error('Cannot map null or undefined slot');
-  }
-
-  // Debug log
-  console.log('Mapping DB slot:', dbSlot);
-
-  const result: UserAvailability = {
+  return {
     id: dbSlot.id,
     user_id: dbSlot.user_id,
-    dayOfWeek: typeof dbSlot.day_of_week === 'number' ? dbSlot.day_of_week : parseInt(dbSlot.day_of_week),
+    dayOfWeek: dbSlot.day_of_week,
     startTime: dbSlot.start_time,
     endTime: dbSlot.end_time,
-    category: dbSlot.category || 'Session'
+    category: dbSlot.category || 'Default'
   };
-
-  if (dbSlot.created_at) {
-    result.created_at = dbSlot.created_at;
-  }
-
-  if (dbSlot.updated_at) {
-    result.updated_at = dbSlot.updated_at;
-  }
-
-  // Debug log the result
-  console.log('Mapped to UserAvailability:', result);
-
-  return result;
 };
 
 /**
- * Builds an availability map from user data and availability slots
- * 
- * @param users - Array of user objects with id, first_name, last_name, and role properties
- * @param availabilityData - Array of raw availability slot data from database
- * @returns A UserAvailabilityMap with user info and their availability slots
+ * Build availability map from users and slots
  */
-export const buildAvailabilityMap = (users: any[], availabilityData: any[]): UserAvailabilityMap => {
-  console.log(`Building availability map for ${users.length} users and ${availabilityData.length} slots`);
+export const buildAvailabilityMap = (
+  users: any[],
+  availabilitySlots: any[]
+): UserAvailabilityMap => {
+  const result: UserAvailabilityMap = {};
   
-  const availabilityMap: UserAvailabilityMap = {};
-  
-  // Initialize map with user info
+  // Initialize entries for each user
   users.forEach(user => {
-    availabilityMap[user.id] = {
+    result[user.id] = {
+      slots: [],
       name: `${user.first_name} ${user.last_name}`.trim(),
-      role: user.role || 'unknown',
-      slots: []
+      role: user.role || 'unknown'
     };
   });
   
-  // Add availability slots to appropriate users
-  if (availabilityData.length > 0) {
-    availabilityData.forEach(slot => {
-      try {
-        const userId = slot.user_id;
-        
-        if (availabilityMap[userId]) {
-          const mappedSlot = mapDbAvailabilitySlot(slot);
-          availabilityMap[userId].slots.push(mappedSlot);
-        } else {
-          console.warn(`No user found for availability slot with user_id: ${userId}`);
-        }
-      } catch (error) {
-        console.error('Error processing availability slot:', error, slot);
-      }
-    });
-  }
+  // Add slots to the respective users
+  availabilitySlots.forEach(slot => {
+    const userId = slot.user_id;
+    if (result[userId]) {
+      result[userId].slots.push(mapDbAvailabilitySlot(slot));
+    }
+  });
   
-  // Log the result for debugging
-  console.log('Availability map built:', Object.keys(availabilityMap).length, 'users');
-  return availabilityMap;
+  return result;
 };

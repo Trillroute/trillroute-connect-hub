@@ -1,10 +1,10 @@
 
 import { fetchFilteredEvents } from './eventProcessing';
-import { fetchUserAvailabilityForUsers } from '@/services/availability/availabilityApi';
+import { fetchUserAvailabilityForUsers } from '@/services/availability/api';
 import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 import { CalendarEvent } from '../types';
-import { fetchStaffForSkill } from '@/services/skills/skillStaffService';
+import { fetchStaffForSkill, getUsersBySkills } from '@/services/skills/skillStaffService';
 
 type SetEventsFunction = (events: CalendarEvent[]) => void;
 type SetAvailabilitiesFunction = (availabilities: ContextUserAvailabilityMap) => void;
@@ -47,10 +47,21 @@ export const applyFilter = async ({
         break;
         
       case 'skill':
-        await fetchFilteredEvents({ skillIds: ids, setEvents });
+        // Get all users (not just teachers) who have these skills
+        const usersWithSkills = await getUsersBySkills(ids);
         
-        // Get teachers who have these skills
+        // First, fetch events that are associated with these skill IDs directly
+        await fetchFilteredEvents({ 
+          skillIds: ids,
+          // Also include events belonging to users with these skills
+          userIds: usersWithSkills.length > 0 ? usersWithSkills : undefined,
+          setEvents 
+        });
+        
+        // Get teachers who have these skills (for availability)
         const teacherIds = await fetchStaffForSkill(ids);
+        
+        console.log(`Fetching availability for ${teacherIds.length} teachers with this skill`);
         
         // Also fetch availabilities for staff teaching these skills
         if (teacherIds.length > 0) {
