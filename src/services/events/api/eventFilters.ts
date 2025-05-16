@@ -60,48 +60,45 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
           break;
         default:
           // If filterType doesn't match any case, fetch all events
-          const allEventsQuery = await supabase.from(tableName).select('*');
-          if (allEventsQuery.error) throw allEventsQuery.error;
-          return allEventsQuery.data as CalendarEvent[];
+          const { data, error } = await supabase.from(tableName).select('*');
+          if (error) throw error;
+          return data as CalendarEvent[];
       }
       
-      // Break the filtering into separate code paths to avoid deep type instantiation
+      // Handle filtering based on number of IDs
       if (filterIds.length === 1) {
-        // For a single ID, use direct equality check
-        const singleIdQuery = await supabase
+        // For a single ID, create and execute a query with equality filter
+        const { data, error } = await supabase
           .from(tableName)
-          .select('*');
+          .select('*')
+          .eq(columnName, filterIds[0]);
         
-        // Apply the filter after the select to avoid chaining that causes deep types
-        const filteredQuery = singleIdQuery.eq(columnName, filterIds[0]);
-        const result = await filteredQuery;
-        
-        if (result.error) throw result.error;
-        return result.data as CalendarEvent[];
+        if (error) throw error;
+        return data as CalendarEvent[];
       } else {
-        // For multiple IDs, use a simpler approach
-        // Build the query in steps to avoid deep nesting of types
-        const baseQuery = supabase.from(tableName).select('*');
-        const result = await baseQuery.in(columnName, filterIds);
+        // For multiple IDs, create and execute a query with "in" filter
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('*')
+          .in(columnName, filterIds);
         
-        if (result.error) throw result.error;
-        return result.data as CalendarEvent[];
+        if (error) throw error;
+        return data as CalendarEvent[];
       }
     }
     
     // If no specific filters or filterIds is empty, return all events
-    // Use a simpler query approach to avoid deep type instantiation
-    const baseQuery = supabase.from(tableName);
-    const selectQuery = baseQuery.select('*');
-    const result = await selectQuery;
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*');
     
-    if (result.error) {
-      console.error('Error fetching filtered events:', result.error);
+    if (error) {
+      console.error('Error fetching filtered events:', error);
       return [];
     }
     
-    console.log(`Found ${result.data?.length || 0} events for filter type ${filterType || 'none'}`);
-    return result.data as CalendarEvent[] || [];
+    console.log(`Found ${data?.length || 0} events for filter type ${filterType || 'none'}`);
+    return data as CalendarEvent[] || [];
   } catch (error) {
     console.error('Exception fetching filtered events:', error);
     return [];
