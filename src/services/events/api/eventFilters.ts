@@ -37,85 +37,123 @@ export async function fetchEventsByFilter(props: FilterEventsProps): Promise<Cal
   const { filterType, filterIds = [] } = props;
   
   try {
-    console.log(`Fetching events with filter type: ${filterType || 'none'}, IDs: ${filterIds.join(',') || 'none'}`);
+    console.log(`Fetching events with filter type: ${filterType || 'none'}, IDs: ${filterIds.length ? filterIds.join(',') : 'none'}`);
     
-    // Handle case with no filters - return all events
+    // Handle case with no filters
     if (!filterType || filterIds.length === 0) {
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*');
-      
-      if (error) {
-        console.error('Error fetching all events:', error);
-        return [];
-      }
-      
-      console.log(`Found ${data?.length || 0} events (no filters)`);
-      return data || [];
+      return await fetchAllEvents();
     }
     
-    // Determine column name for filtering
-    let columnName: string;
+    // Map filter type to column name
+    const columnName = mapFilterTypeToColumnName(filterType);
     
-    switch (filterType) {
-      case 'course':
-        columnName = 'course_id';
-        break;
-      case 'skill':
-        columnName = 'skill_id';
-        break;
-      case 'teacher':
-      case 'student':
-      case 'admin':
-      case 'staff':
-        columnName = 'user_id';
-        break;
-      default:
-        // Fallback for unknown filter types
-        const { data, error } = await supabase
-          .from('calendar_events')
-          .select('*');
-          
-        if (error) {
-          console.error('Error fetching events with unknown filter:', error);
-          return [];
-        }
-        
-        return data || [];
+    // If column name couldn't be determined, return all events
+    if (!columnName) {
+      return await fetchAllEvents();
     }
     
     // Handle filtering by IDs
-    if (filterIds.length === 1) {
-      // Filter by a single ID
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .eq(columnName, filterIds[0]);
-      
-      if (error) {
-        console.error(`Error fetching events for ${filterType} with ID ${filterIds[0]}:`, error);
-        return [];
-      }
-      
-      console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterIds[0]}`);
-      return data || [];
-    } else {
-      // Filter by multiple IDs
-      const { data, error } = await supabase
-        .from('calendar_events')
-        .select('*')
-        .in(columnName, filterIds);
-      
-      if (error) {
-        console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
-        return [];
-      }
-      
-      console.log(`Found ${data?.length || 0} events for ${filterType}`);
-      return data || [];
-    }
+    return await fetchEventsByColumn(columnName, filterType, filterIds);
+    
   } catch (error) {
     console.error('Exception fetching filtered events:', error);
     return [];
   }
+}
+
+/**
+ * Fetch all calendar events with no filtering
+ */
+async function fetchAllEvents(): Promise<CalendarEvent[]> {
+  const { data, error } = await supabase
+    .from('calendar_events')
+    .select('*');
+  
+  if (error) {
+    console.error('Error fetching all events:', error);
+    return [];
+  }
+  
+  console.log(`Found ${data?.length || 0} events (no filters)`);
+  return data || [];
+}
+
+/**
+ * Map filter type to the corresponding column name for database queries
+ */
+function mapFilterTypeToColumnName(filterType: FilterType): string | null {
+  switch (filterType) {
+    case 'course':
+      return 'course_id';
+    case 'skill':
+      return 'skill_id';
+    case 'teacher':
+    case 'student':
+    case 'admin':
+    case 'staff':
+      return 'user_id';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Fetch events filtered by a specific column and values
+ */
+async function fetchEventsByColumn(
+  columnName: string, 
+  filterType: FilterType, 
+  filterIds: string[]
+): Promise<CalendarEvent[]> {
+  // Handle single ID filter
+  if (filterIds.length === 1) {
+    return await fetchEventsBySingleValue(columnName, filterType, filterIds[0]);
+  } 
+  
+  // Handle multiple IDs filter
+  return await fetchEventsByMultipleValues(columnName, filterType, filterIds);
+}
+
+/**
+ * Fetch events matching a single value in the specified column
+ */
+async function fetchEventsBySingleValue(
+  columnName: string, 
+  filterType: FilterType, 
+  filterId: string
+): Promise<CalendarEvent[]> {
+  const queryResult = await supabase
+    .from('calendar_events')
+    .select('*')
+    .eq(columnName, filterId);
+  
+  if (queryResult.error) {
+    console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, queryResult.error);
+    return [];
+  }
+  
+  console.log(`Found ${queryResult.data?.length || 0} events for ${filterType} with ID ${filterId}`);
+  return queryResult.data || [];
+}
+
+/**
+ * Fetch events matching multiple values in the specified column
+ */
+async function fetchEventsByMultipleValues(
+  columnName: string, 
+  filterType: FilterType, 
+  filterIds: string[]
+): Promise<CalendarEvent[]> {
+  const queryResult = await supabase
+    .from('calendar_events')
+    .select('*')
+    .in(columnName, filterIds);
+  
+  if (queryResult.error) {
+    console.error(`Error fetching events for ${filterType} with multiple IDs:`, queryResult.error);
+    return [];
+  }
+  
+  console.log(`Found ${queryResult.data?.length || 0} events for ${filterType}`);
+  return queryResult.data || [];
 }
