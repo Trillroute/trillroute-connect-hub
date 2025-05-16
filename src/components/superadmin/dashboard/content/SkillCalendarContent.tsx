@@ -5,7 +5,6 @@ import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import { useSkills } from '@/hooks/useSkills';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { RefreshCcw } from 'lucide-react';
 
@@ -26,22 +25,9 @@ const SkillCalendarContent: React.FC = () => {
   const handleSkillChange = (value: string) => {
     console.log('Skill selected:', value);
     setSelectedSkillId(value);
-    
-    // Find the selected skill name
-    const skillName = skills.find(s => s.id === value)?.name || 'Unknown';
-    
-    // Show toast with debugging info
-    toast({
-      title: "Skill Selected",
-      description: `Filtering calendar for skill: ${skillName} (ID: ${value})`,
-    });
   };
 
   const handleRefresh = () => {
-    toast({
-      title: "Refreshing Calendar",
-      description: "Reloading skill data and calendar...",
-    });
     setRefreshKey(prev => prev + 1);
   };
   

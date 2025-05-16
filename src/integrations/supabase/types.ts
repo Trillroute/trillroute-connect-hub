@@ -825,7 +825,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_skill_to_user: {
+        Args: { user_id: string; skill_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

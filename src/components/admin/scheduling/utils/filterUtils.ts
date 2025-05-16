@@ -5,7 +5,6 @@ import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/av
 import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
 import { CalendarEvent } from '../types';
 import { fetchStaffForSkill, getUsersBySkills } from '@/services/skills/skillStaffService';
-import { toast } from '@/components/ui/use-toast';
 
 type SetEventsFunction = (events: CalendarEvent[]) => void;
 type SetAvailabilitiesFunction = (availabilities: ContextUserAvailabilityMap) => void;
@@ -60,34 +59,16 @@ export const applyFilter = async ({
         console.log('==== SKILL FILTER ====');
         console.log('Processing skill filter for IDs:', ids);
         
-        // Show toast to indicate filtering is in progress
-        toast({
-          title: "Filtering by skills",
-          description: `Finding users with selected skills...`,
-          duration: 3000,
-        });
-        
         // First, get all users with these skills - with improved error handling
         const usersWithSkills = await getUsersBySkills(ids);
         console.log('Users with selected skills:', usersWithSkills);
         
         if (!usersWithSkills || usersWithSkills.length === 0) {
           console.log('No users found with the selected skills, clearing calendar');
-          toast({
-            title: "No matching users",
-            description: "No users with the selected skills were found.",
-            variant: "destructive"
-          });
           setEvents([]);
           setAvailabilities({});
           return;
         }
-        
-        // Show success toast with number of users found
-        toast({
-          title: "Users found",
-          description: `Found ${usersWithSkills.length} users with the selected skills.`,
-        });
         
         // Get teachers with these skills (for availability)
         const teachersWithSkills = await getUsersBySkills(ids, ['teacher']);
@@ -189,11 +170,6 @@ export const applyFilter = async ({
     }
   } catch (error) {
     console.error("Error applying filter:", error);
-    toast({
-      title: "Error applying filter",
-      description: "An error occurred while filtering. Please try again.",
-      variant: "destructive"
-    });
     // Set empty data in case of error to prevent UI from breaking
     setEvents([]);
     setAvailabilities({});
