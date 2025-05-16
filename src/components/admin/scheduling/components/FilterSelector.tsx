@@ -42,7 +42,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     });
   }, [filterType, selectedFilter, selectedFilters, showFilterTypeTabs, filterOptions]);
 
-  // Reset selected filters when filter type changes
+  // Reset selected filters when filter type changes, but don't reset to empty
+  // This allows default behavior of showing all users when no specific selection is made
   useEffect(() => {
     setSelectedFilter(null);
     setSelectedFilters([]);

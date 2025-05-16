@@ -47,9 +47,27 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     return result;
   };
 
-  // Apply filters when filterType or filterIds change - add filterId to dependency array
+  // Apply filters when filterType or filterIds change
   useEffect(() => {
-    const staffUserIds: string[] = [];
+    // Define default roles based on filterType
+    let defaultRoles: string[] = [];
+    
+    // Set appropriate default roles for each filter type when no specific IDs are selected
+    if ((filterIds && filterIds.length === 0) || !filterIds) {
+      switch(filterType) {
+        case 'teacher':
+          defaultRoles = ['teacher'];
+          break;
+        case 'admin':
+          defaultRoles = ['admin', 'superadmin'];
+          break;
+        case 'staff':
+          defaultRoles = ['teacher', 'admin', 'superadmin'];
+          break;
+        default:
+          defaultRoles = [];
+      }
+    }
     
     // Combine filterId and filterIds
     const allIds: string[] = [];
@@ -58,13 +76,13 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     
     // Log filter application with more detail
     console.log(`==== FILTERED EVENTS PROVIDER ====`);
-    console.log(`Applying ${filterType || 'null'} filter with ${allIds.length} IDs:`, allIds);
+    console.log(`Applying ${filterType || 'null'} filter with ${allIds.length} IDs and default roles:`, defaultRoles);
     
     // Apply the filter
     applyFilter({
       filterType,
       ids: allIds,
-      staffUserIds,
+      defaultRoles,
       setEvents,
       setAvailabilities,
       convertAvailabilityMap

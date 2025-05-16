@@ -1,176 +1,61 @@
 
-import { fetchFilteredEvents } from './eventProcessing';
-import { fetchUserAvailabilityForUsers } from '@/services/availability/api';
-import { UserAvailabilityMap as ServiceUserAvailabilityMap } from '@/services/availability/types';
-import { UserAvailabilityMap as ContextUserAvailabilityMap } from '../context/calendarTypes';
-import { CalendarEvent } from '../types';
-import { fetchStaffForSkill, getUsersBySkills } from '@/services/skills/skillStaffService';
+import { fetchEventsByFilter } from '@/services/events/api/eventFilters';
+import { fetchUserAvailabilityForUsers } from '@/services/availability/api/staffAvailability';
 
-type SetEventsFunction = (events: CalendarEvent[]) => void;
-type SetAvailabilitiesFunction = (availabilities: ContextUserAvailabilityMap) => void;
-
-interface ApplyFilterOptions {
-  filterType: string | null;
-  ids: string[];
-  staffUserIds: string[];
-  setEvents: SetEventsFunction;
-  setAvailabilities: SetAvailabilitiesFunction;
-  convertAvailabilityMap: (serviceMap: ServiceUserAvailabilityMap) => ContextUserAvailabilityMap;
+interface ApplyFilterProps {
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  ids?: string[];
+  defaultRoles?: string[];
+  setEvents: (events: any[]) => void;
+  setAvailabilities: (availabilities: any) => void;
+  convertAvailabilityMap: (map: any) => any;
 }
 
-// Apply filters based on type and fetch appropriate data
+/**
+ * Apply event and availability filters based on provided filter parameters
+ */
 export const applyFilter = async ({
   filterType,
-  ids,
-  staffUserIds,
+  ids = [],
+  defaultRoles = [],
   setEvents,
   setAvailabilities,
   convertAvailabilityMap
-}: ApplyFilterOptions): Promise<void> => {
-  console.log(`==== APPLYING ${filterType?.toUpperCase() || 'UNKNOWN'} FILTER ====`);
-  console.log('Filter IDs:', ids);
-  
+}: ApplyFilterProps) => {
   try {
-    // If no filter type or ids, clear everything
-    if (!filterType || !ids || ids.length === 0) {
-      console.log('No filter type or IDs, clearing data');
-      setEvents([]);
-      setAvailabilities({});
-      return;
-    }
+    console.log(`Applying ${filterType || 'null'} filter with ${ids.length} IDs and ${defaultRoles.length} default roles`);
     
-    // Fetch events based on filter type
-    switch (filterType) {
-      case 'course':
-        await fetchFilteredEvents({ courseIds: ids, setEvents });
-        
-        // Also fetch availabilities for staff teaching these courses
-        if (staffUserIds.length > 0) {
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers(staffUserIds);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        } else {
-          // Even with no staff, we should fetch all teacher availabilities for this course
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        }
-        break;
-        
-      case 'skill':
-        console.log('==== SKILL FILTER ====');
-        console.log('Processing skill filter for IDs:', ids);
-        
-        // First, get all users with these skills - with improved error handling
-        const usersWithSkills = await getUsersBySkills(ids);
-        console.log('Users with selected skills:', usersWithSkills);
-        
-        if (!usersWithSkills || usersWithSkills.length === 0) {
-          console.log('No users found with the selected skills, clearing calendar');
-          setEvents([]);
-          setAvailabilities({});
-          return;
-        }
-        
-        // Get teachers with these skills (for availability)
-        const teachersWithSkills = await getUsersBySkills(ids, ['teacher']);
-        console.log('Teachers with selected skills:', teachersWithSkills);
-        
-        // Fetch events for users who have these skills - use both user IDs and skill IDs
-        await fetchFilteredEvents({ 
-          userIds: usersWithSkills,
-          skillIds: ids,
-          setEvents 
-        });
-        
-        // Use teachers for availability if found, otherwise use all users with skills
-        const userIdsForAvailability = teachersWithSkills.length > 0 ? teachersWithSkills : usersWithSkills;
-        
-        console.log('Fetching availability for users:', userIdsForAvailability);
-        
-        // Fetch availabilities for users with these skills
-        const serviceAvailabilities = await fetchUserAvailabilityForUsers(userIdsForAvailability);
-        
-        console.log('Retrieved availability data:', 
-          Object.keys(serviceAvailabilities).length, 
-          'users with availability'
-        );
-        
-        setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        break;
-        
-      case 'teacher':
-        await fetchFilteredEvents({ 
-          roleFilter: ['teacher'],
-          userIds: ids.length > 0 ? ids : undefined,
-          setEvents 
-        });
-        
-        // Fetch availabilities for these specific teachers
-        if (ids.length > 0) {
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers(ids);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        } else {
-          // If no specific teachers, fetch all teacher availabilities
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher']);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        }
-        break;
-        
-      case 'student':
-        await fetchFilteredEvents({ 
-          roleFilter: ['student'],
-          userIds: ids.length > 0 ? ids : undefined,
-          setEvents 
-        });
-        // For students view, don't fetch teacher availabilities - set an empty object
+    // Fetch events based on filter type and IDs
+    const events = await fetchEventsByFilter({ filterType, filterIds: ids });
+    console.log(`Fetched ${events.length} events after applying filter`);
+    setEvents(events);
+    
+    // Fetch user availability based on filter type
+    if (filterType === 'teacher' || filterType === 'admin' || filterType === 'staff' || filterType === 'student') {
+      // If specific IDs are provided, fetch for those users
+      if (ids && ids.length > 0) {
+        const userAvailability = await fetchUserAvailabilityForUsers(ids);
+        console.log(`Fetched availability for ${Object.keys(userAvailability).length} users by ID`);
+        setAvailabilities(convertAvailabilityMap(userAvailability));
+      }
+      // If no IDs are specified but we have default roles, fetch for those roles
+      else if (defaultRoles && defaultRoles.length > 0) {
+        const userAvailability = await fetchUserAvailabilityForUsers([], defaultRoles);
+        console.log(`Fetched availability for ${Object.keys(userAvailability).length} users by roles: ${defaultRoles.join(', ')}`);
+        setAvailabilities(convertAvailabilityMap(userAvailability));
+      }
+      // If neither IDs nor defaultRoles are specified, clear availabilities
+      else {
+        console.log('No IDs or default roles specified, clearing availabilities');
         setAvailabilities({});
-        break;
-        
-      case 'admin':
-        await fetchFilteredEvents({ 
-          roleFilter: ['admin', 'superadmin'], 
-          userIds: ids.length > 0 ? ids : undefined,
-          setEvents 
-        });
-        
-        // Fetch availabilities for these specific admins
-        if (ids.length > 0) {
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers(ids);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        } else {
-          // If no specific admins, fetch all admin availabilities
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['admin', 'superadmin']);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        }
-        break;
-        
-      case 'staff':
-        await fetchFilteredEvents({ 
-          roleFilter: ['teacher', 'admin', 'superadmin'], 
-          userIds: ids.length > 0 ? ids : undefined,
-          setEvents 
-        });
-        
-        // Fetch availabilities for these specific staff members
-        if (ids.length > 0) {
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers(ids);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        } else {
-          // If no specific staff, fetch all staff availabilities
-          const serviceAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher', 'admin', 'superadmin']);
-          setAvailabilities(convertAvailabilityMap(serviceAvailabilities));
-        }
-        break;
-        
-      default:
-        // Default case - fetch all events and all staff availabilities
-        await fetchFilteredEvents({ setEvents });
-        const allAvailabilities = await fetchUserAvailabilityForUsers([], ['teacher', 'admin', 'superadmin']);
-        setAvailabilities(convertAvailabilityMap(allAvailabilities));
-        break;
+      }
+    } else {
+      // For non-user filter types (like courses, skills), clear availabilities
+      setAvailabilities({});
     }
   } catch (error) {
-    console.error("Error applying filter:", error);
-    // Set empty data in case of error to prevent UI from breaking
+    console.error('Error applying filter:', error);
+    // Set empty arrays/objects on error
     setEvents([]);
     setAvailabilities({});
   }

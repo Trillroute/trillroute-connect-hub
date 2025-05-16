@@ -51,32 +51,38 @@ export const fetchAllStaffAvailability = async (): Promise<UserAvailabilityMap> 
 };
 
 /**
- * Fetch availability for specific users
+ * Fetch availability for specific users or by roles
+ * 
+ * @param userIds - Array of user IDs to fetch availability for
+ * @param roles - Array of roles to fetch availability for (e.g., ['teacher', 'admin'])
  */
 export const fetchUserAvailabilityForUsers = async (
   userIds: string[] = [], 
   roles: string[] = []
 ): Promise<UserAvailabilityMap> => {
   try {
-    console.log(`Fetching availability for ${userIds.length} specific users and roles: ${roles.join(', ')}`);
+    console.log(`Fetching availability for ${userIds.length} specific users and/or roles: ${roles.join(', ')}`);
     
     let query = supabase
       .from('custom_users')
       .select('id, first_name, last_name, role');
     
-    // Add filters based on provided parameters
-    if (userIds.length > 0) {
-      query = query.in('id', userIds);
+    // if neither userIds nor roles are provided, return empty result
+    if (userIds.length === 0 && roles.length === 0) {
+      console.log('No user IDs or roles provided for availability lookup');
+      return {};
     }
     
-    if (roles.length > 0) {
-      if (userIds.length > 0) {
-        // If we have user IDs, use OR to combine with roles
-        query = query.or(`id.in.(${userIds.join(',')}),role.in.(${roles.join(',')})`);
-      } else {
-        // Otherwise just filter by roles
-        query = query.in('role', roles);
-      }
+    // Add filters based on provided parameters
+    if (userIds.length > 0 && roles.length > 0) {
+      // If we have both user IDs and roles, use OR to combine them
+      query = query.or(`id.in.(${userIds.join(',')}),role.in.(${roles.join(',')})`);
+    } else if (userIds.length > 0) {
+      // Just filter by user IDs
+      query = query.in('id', userIds);
+    } else if (roles.length > 0) {
+      // Just filter by roles
+      query = query.in('role', roles);
     }
     
     const { data: users, error: userError } = await query;
