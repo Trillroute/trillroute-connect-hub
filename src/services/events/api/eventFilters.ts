@@ -40,76 +40,71 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
     // Base table name
     const tableName = 'calendar_events';
     
-    // If there's a filter type and IDs, apply the filter
-    if (filterType && filterIds && filterIds.length > 0) {
-      let columnName: string;
+    // If no filter type or empty filter IDs, return all events
+    if (!filterType || !filterIds.length) {
+      const result = await supabase.from(tableName).select('*');
       
-      // Determine which column to filter on based on the filter type
-      switch (filterType) {
-        case 'course':
-          columnName = 'course_id';
-          break;
-        case 'skill':
-          columnName = 'skill_id';
-          break;
-        case 'teacher':
-        case 'admin':
-        case 'staff':
-        case 'student':
-          columnName = 'user_id';
-          break;
-        default:
-          // Default case - no need to apply any filter
-          const defaultResult = await supabase.from(tableName).select('*');
-          
-          if (defaultResult.error) {
-            console.error('Error fetching events:', defaultResult.error);
-            return [];
-          }
-          
-          return defaultResult.data as CalendarEvent[];
+      if (result.error) {
+        console.error('Error fetching all events:', result.error);
+        return [];
       }
       
-      // Apply filter and execute query
-      if (filterIds.length === 1) {
-        // Single ID filter - execute as a separate complete query
-        const singleFilterResult = await supabase
-          .from(tableName)
-          .select('*')
-          .eq(columnName, filterIds[0]);
-        
-        if (singleFilterResult.error) {
-          console.error('Error fetching filtered events:', singleFilterResult.error);
-          return [];
-        }
-        
-        return singleFilterResult.data as CalendarEvent[];
-      } else {
-        // Multiple IDs filter - execute as a separate complete query
-        const multiFilterResult = await supabase
-          .from(tableName)
-          .select('*')
-          .in(columnName, filterIds);
-        
-        if (multiFilterResult.error) {
-          console.error('Error fetching filtered events:', multiFilterResult.error);
-          return [];
-        }
-        
-        return multiFilterResult.data as CalendarEvent[];
-      }
+      console.log(`Found ${result.data?.length || 0} events (no filters)`);
+      return result.data || [];
     }
     
-    // No specific filters, return all events
-    const allEventsResult = await supabase.from(tableName).select('*');
+    // Determine which column to filter on based on the filter type
+    let columnName: string;
+    switch (filterType) {
+      case 'course':
+        columnName = 'course_id';
+        break;
+      case 'skill':
+        columnName = 'skill_id';
+        break;
+      case 'teacher':
+      case 'admin':
+      case 'staff':
+      case 'student':
+        columnName = 'user_id';
+        break;
+      default:
+        // Default case - no need to apply any filter
+        const defaultResult = await supabase.from(tableName).select('*');
+        
+        if (defaultResult.error) {
+          console.error('Error fetching events:', defaultResult.error);
+          return [];
+        }
+        
+        return defaultResult.data || [];
+    }
     
-    if (allEventsResult.error) {
-      console.error('Error fetching all events:', allEventsResult.error);
+    // Execute query with single ID filter
+    if (filterIds.length === 1) {
+      const query = supabase.from(tableName).select('*').eq(columnName, filterIds[0]);
+      const result = await query;
+      
+      if (result.error) {
+        console.error('Error fetching filtered events:', result.error);
+        return [];
+      }
+      
+      return result.data || [];
+    } 
+    
+    // Execute query with multiple ID filter
+    const query = supabase.from(tableName).select('*').in(columnName, filterIds);
+    const result = await query;
+    
+    if (result.error) {
+      console.error('Error fetching filtered events:', result.error);
       return [];
     }
     
-    console.log(`Found ${allEventsResult.data?.length || 0} events for filter type ${filterType || 'none'}`);
-    return allEventsResult.data as CalendarEvent[] || [];
+    console.log(`Found ${result.data?.length || 0} events for filter type ${filterType}`);
+    return result.data || [];
+    
   } catch (error) {
     console.error('Exception fetching filtered events:', error);
     return [];
