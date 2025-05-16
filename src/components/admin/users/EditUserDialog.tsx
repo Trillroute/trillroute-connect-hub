@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -16,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { fetchAdminRoles } from '@/components/superadmin/AdminRoleService';
 import { AdminLevel } from '@/utils/adminPermissions';
 import { convertToAdminLevels } from '@/utils/permissions/typeConverters';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface EditUserDialogProps {
   user: UserManagementUser | null;
@@ -88,6 +90,14 @@ const EditUserDialog = ({
     parentName?: string;
     guardianRelation?: string;
     adminRoleName?: string;
+    gender?: string;
+    personalEmail?: string;
+    permanentAddress?: string;
+    emergencyContactName?: string;
+    emergencyContactRelation?: string;
+    emergencyContactNumber?: string;
+    nationality?: string;
+    whatsappEnabled?: boolean;
   }>({
     firstName: '',
     lastName: '',
@@ -99,6 +109,14 @@ const EditUserDialog = ({
     parentName: '',
     guardianRelation: '',
     adminRoleName: '',
+    gender: '',
+    personalEmail: '',
+    permanentAddress: '',
+    emergencyContactName: '',
+    emergencyContactRelation: '',
+    emergencyContactNumber: '',
+    nationality: '',
+    whatsappEnabled: false,
   });
   
   const [adminLevels, setAdminLevels] = useState<AdminLevel[]>([]);
@@ -128,6 +146,14 @@ const EditUserDialog = ({
         parentName: user.parentName || '',
         guardianRelation: user.guardianRelation || '',
         adminRoleName: user.adminRoleName || '',
+        gender: user.gender || '',
+        personalEmail: user.personalEmail || '',
+        permanentAddress: user.permanentAddress || '',
+        emergencyContactName: user.emergencyContactName || '',
+        emergencyContactRelation: user.emergencyContactRelation || '',
+        emergencyContactNumber: user.emergencyContactNumber || '',
+        nationality: user.nationality || '',
+        whatsappEnabled: user.whatsappEnabled || false,
       });
       
       // If this is an admin user and admin level selector should be shown, load the admin roles
@@ -176,6 +202,14 @@ const EditUserDialog = ({
         dateOfBirth: formData.dateOfBirth,
         parentName: formData.parentName,
         guardianRelation: formData.guardianRelation,
+        gender: formData.gender,
+        personalEmail: formData.personalEmail,
+        permanentAddress: formData.permanentAddress,
+        emergencyContactName: formData.emergencyContactName,
+        emergencyContactRelation: formData.emergencyContactRelation,
+        emergencyContactNumber: formData.emergencyContactNumber,
+        nationality: formData.nationality,
+        whatsappEnabled: formData.whatsappEnabled,
       });
       
       // If admin level changed and we have the function to update it
@@ -207,6 +241,10 @@ const EditUserDialog = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  const handleCheckboxChange = (name: string, checked: boolean) => {
+    setFormData((prev) => ({ ...prev, [name]: checked }));
   };
   
   const handleAdminLevelChange = (value: string) => {
@@ -300,6 +338,22 @@ const EditUserDialog = ({
               />
             </div>
 
+            {userRole === 'Teacher' && (
+              <div className="grid gap-2">
+                <label htmlFor="personalEmail" className="text-sm font-medium">
+                  Personal Email
+                </label>
+                <input
+                  id="personalEmail"
+                  name="personalEmail"
+                  type="email"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.personalEmail || ''}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <label htmlFor="primaryPhone" className="text-sm font-medium">
@@ -327,10 +381,23 @@ const EditUserDialog = ({
                 />
               </div>
             </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox 
+                id="whatsappEnabled"
+                checked={formData.whatsappEnabled || false}
+                onCheckedChange={(checked) => 
+                  handleCheckboxChange('whatsappEnabled', checked === true)
+                }
+              />
+              <Label htmlFor="whatsappEnabled" className="text-sm font-medium">
+                WhatsApp enabled on primary phone
+              </Label>
+            </div>
 
             <div className="grid gap-2">
               <label htmlFor="address" className="text-sm font-medium">
-                Address
+                Current Address
               </label>
               <input
                 id="address"
@@ -340,6 +407,21 @@ const EditUserDialog = ({
                 onChange={handleChange}
               />
             </div>
+            
+            {userRole === 'Teacher' && (
+              <div className="grid gap-2">
+                <label htmlFor="permanentAddress" className="text-sm font-medium">
+                  Permanent Address
+                </label>
+                <input
+                  id="permanentAddress"
+                  name="permanentAddress"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.permanentAddress || ''}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
 
             <div className="grid gap-2">
               <label htmlFor="dateOfBirth" className="text-sm font-medium">
@@ -354,6 +436,42 @@ const EditUserDialog = ({
                 placeholder="YYYY-MM-DD"
               />
             </div>
+            
+            {(userRole === 'Teacher' || userRole === 'Student') && (
+              <div className="grid gap-2">
+                <label htmlFor="gender" className="text-sm font-medium">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  name="gender"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.gender || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                </select>
+              </div>
+            )}
+            
+            {userRole === 'Teacher' && (
+              <div className="grid gap-2">
+                <label htmlFor="nationality" className="text-sm font-medium">
+                  Nationality
+                </label>
+                <input
+                  id="nationality"
+                  name="nationality"
+                  className="px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.nationality || ''}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
 
             {userRole === 'Student' && (
               <>
@@ -383,6 +501,50 @@ const EditUserDialog = ({
                   />
                 </div>
               </>
+            )}
+            
+            {userRole === 'Teacher' && (
+              <div className="border-t pt-4 mt-2">
+                <h3 className="font-medium mb-3">Emergency Contact</h3>
+                <div className="grid gap-2">
+                  <label htmlFor="emergencyContactName" className="text-sm font-medium">
+                    Emergency Contact Name
+                  </label>
+                  <input
+                    id="emergencyContactName"
+                    name="emergencyContactName"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.emergencyContactName || ''}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="grid gap-2 mt-2">
+                  <label htmlFor="emergencyContactRelation" className="text-sm font-medium">
+                    Relationship to Teacher
+                  </label>
+                  <input
+                    id="emergencyContactRelation"
+                    name="emergencyContactRelation"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.emergencyContactRelation || ''}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="grid gap-2 mt-2">
+                  <label htmlFor="emergencyContactNumber" className="text-sm font-medium">
+                    Emergency Contact Number
+                  </label>
+                  <input
+                    id="emergencyContactNumber"
+                    name="emergencyContactNumber"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
+                    value={formData.emergencyContactNumber || ''}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
             )}
 
             {/* Admin Level Selector for Admin users */}

@@ -21,5 +21,14 @@ export const mapDatabaseUserToUserModel = (user: any): UserManagementUser => ({
   address: user.address,
   idProof: user.id_proof,
   adminLevel: undefined, // Keep for backward compatibility, but set to undefined
-  adminRoleName: user.admin_level_name || (user.role === 'admin' ? "Limited View" : undefined)
+  adminRoleName: user.admin_level_name || (user.role === 'admin' ? "Limited View" : undefined),
+  
+  // Additional fields for teachers
+  gender: user.gender,
+  personalEmail: user.personal_email,
+  permanentAddress: user.permanent_address,
+  emergencyContactName: user.emergency_contact_name,
+  emergencyContactRelation: user.emergency_contact_relation,
+  emergencyContactNumber: user.emergency_contact_number,
+  nationality: user.nationality
 });

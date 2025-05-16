@@ -1,4 +1,3 @@
-
 export interface StudentProfile {
   id: string;
   firstName: string;
@@ -21,16 +20,25 @@ export interface UserManagementUser {
   lastName: string;
   email: string;
   role: string;
-  createdAt: string;
-  dateOfBirth?: string;
   profilePhoto?: string;
-  parentName?: string;
-  guardianRelation?: string;
   primaryPhone?: string;
   secondaryPhone?: string;
-  whatsappEnabled?: boolean;
+  dateOfBirth?: string;
   address?: string;
+  createdAt?: string;
+  parentName?: string;
+  guardianRelation?: string;
   idProof?: string;
-  adminLevel?: number; // Keep for backward compatibility
-  adminRoleName?: string; // New field for admin level name
+  adminLevel?: number;
+  adminRoleName?: string;
+  whatsappEnabled?: boolean;
+  
+  // Additional fields for teachers
+  gender?: string;
+  personalEmail?: string;
+  permanentAddress?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactNumber?: string;
+  nationality?: string;
 }
