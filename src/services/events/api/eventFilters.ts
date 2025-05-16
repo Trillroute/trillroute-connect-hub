@@ -60,14 +60,17 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
           break;
         default:
           // If filterType doesn't match any case, fetch all events
-          const { data, error } = await supabase.from(tableName).select('*');
-          if (error) throw error;
-          return data as CalendarEvent[];
+          const { data: allData, error: allError } = await supabase
+            .from(tableName)
+            .select('*');
+          
+          if (allError) throw allError;
+          return allData as CalendarEvent[];
       }
       
-      // Handle filtering based on number of IDs
+      // Execute one query at a time with proper await to avoid deep type instantiation
       if (filterIds.length === 1) {
-        // For a single ID, create and execute a query with equality filter
+        // For a single ID, use a simple query
         const { data, error } = await supabase
           .from(tableName)
           .select('*')
@@ -76,7 +79,7 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
         if (error) throw error;
         return data as CalendarEvent[];
       } else {
-        // For multiple IDs, create and execute a query with "in" filter
+        // For multiple IDs, use the 'in' filter
         const { data, error } = await supabase
           .from(tableName)
           .select('*')
