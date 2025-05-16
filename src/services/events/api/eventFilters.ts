@@ -41,16 +41,16 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
     const tableName = 'calendar_events';
     
     // If no filter type or empty filter IDs, return all events
-    if (!filterType || !filterIds.length) {
-      const result = await supabase.from(tableName).select('*');
+    if (!filterType || filterIds.length === 0) {
+      const { data, error } = await supabase.from(tableName).select('*');
       
-      if (result.error) {
-        console.error('Error fetching all events:', result.error);
+      if (error) {
+        console.error('Error fetching all events:', error);
         return [];
       }
       
-      console.log(`Found ${result.data?.length || 0} events (no filters)`);
-      return result.data || [];
+      console.log(`Found ${data?.length || 0} events (no filters)`);
+      return data || [];
     }
     
     // Determine which column to filter on based on the filter type
@@ -69,42 +69,46 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
         columnName = 'user_id';
         break;
       default:
-        // Default case - no need to apply any filter
-        const defaultResult = await supabase.from(tableName).select('*');
+        // Default case - fetch all events without filtering
+        const { data: defaultData, error: defaultError } = await supabase.from(tableName).select('*');
         
-        if (defaultResult.error) {
-          console.error('Error fetching events:', defaultResult.error);
+        if (defaultError) {
+          console.error('Error fetching events:', defaultError);
           return [];
         }
         
-        return defaultResult.data || [];
+        return defaultData || [];
     }
     
-    // Execute query with single ID filter
+    // Execute query based on number of IDs
     if (filterIds.length === 1) {
-      const query = supabase.from(tableName).select('*').eq(columnName, filterIds[0]);
-      const result = await query;
+      // For a single ID, use eq operator
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq(columnName, filterIds[0]);
       
-      if (result.error) {
-        console.error('Error fetching filtered events:', result.error);
+      if (error) {
+        console.error('Error fetching filtered events:', error);
         return [];
       }
       
-      return result.data || [];
-    } 
-    
-    // Execute query with multiple ID filter
-    const query = supabase.from(tableName).select('*').in(columnName, filterIds);
-    const result = await query;
-    
-    if (result.error) {
-      console.error('Error fetching filtered events:', result.error);
-      return [];
+      return data || [];
+    } else {
+      // For multiple IDs, use in operator
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .in(columnName, filterIds);
+      
+      if (error) {
+        console.error('Error fetching filtered events:', error);
+        return [];
+      }
+      
+      console.log(`Found ${data?.length || 0} events for filter type ${filterType}`);
+      return data || [];
     }
-    
-    console.log(`Found ${result.data?.length || 0} events for filter type ${filterType}`);
-    return result.data || [];
-    
   } catch (error) {
     console.error('Exception fetching filtered events:', error);
     return [];
