@@ -27,7 +27,7 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
     console.log(`Total teachers found: ${data?.length || 0}`);
     
     // Filter teachers who have ANY of the requested skills
-    const teachersWithSkills = data?.filter(teacher => {
+    const teachersWithSkills = (data || []).filter(teacher => {
       if (!Array.isArray(teacher.skills)) {
         console.log(`Teacher ${teacher.id} has no skills array`);
         return false;
@@ -85,7 +85,7 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
     console.log(`Total users fetched: ${data?.length || 0}`);
     
     // Filter users who have ANY of the requested skills
-    const usersWithSkills = data?.filter(user => {
+    const usersWithSkills = (data || []).filter(user => {
       // Skip users without skills array
       if (!user.skills || !Array.isArray(user.skills) || user.skills.length === 0) {
         console.log(`User ${user.id} (${user.role}) has no skills`);
