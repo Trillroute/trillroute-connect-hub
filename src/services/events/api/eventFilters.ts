@@ -41,15 +41,15 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
     
     // Case 1: No filter type or empty filter IDs - return all events
     if (!filterType || filterIds.length === 0) {
-      const { data, error } = await supabase.from(tableName).select('*');
+      const result = await supabase.from(tableName).select('*');
       
-      if (error) {
-        console.error('Error fetching all events:', error);
+      if (result.error) {
+        console.error('Error fetching all events:', result.error);
         return [];
       }
       
-      console.log(`Found ${data?.length || 0} events (no filters)`);
-      return data as CalendarEvent[] || [];
+      console.log(`Found ${result.data?.length || 0} events (no filters)`);
+      return result.data as CalendarEvent[] || [];
     }
     
     // Determine which column to filter on based on the filter type
@@ -70,46 +70,39 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
         break;
       default:
         // Default case - return all events for unknown filter types
-        const { data: defaultData, error: defaultError } = await supabase.from(tableName).select('*');
-        if (defaultError) {
-          console.error('Error fetching events:', defaultError);
+        const defaultResult = await supabase.from(tableName).select('*');
+        if (defaultResult.error) {
+          console.error('Error fetching events:', defaultResult.error);
           return [];
         }
-        return defaultData as CalendarEvent[] || [];
+        return defaultResult.data as CalendarEvent[] || [];
     }
     
-    // Handle filtering with simplified query approach
-    let data: any[] = [];
-    let error: any = null;
+    // Execute query based on filter condition
+    let result;
     
+    // Use separate execution paths to avoid deep type nesting
     if (filterIds.length === 1) {
-      // For single ID, use simple equality filter
-      const filterId = filterIds[0];
-      const result = await supabase
+      // Single ID filter
+      result = await supabase
         .from(tableName)
         .select('*')
-        .eq(columnName, filterId);
-        
-      data = result.data || [];
-      error = result.error;
+        .eq(columnName, filterIds[0]);
     } else {
-      // For multiple IDs, use IN filter
-      const result = await supabase
+      // Multiple IDs filter
+      result = await supabase
         .from(tableName)
         .select('*')
         .in(columnName, filterIds);
-        
-      data = result.data || [];
-      error = result.error;
     }
     
-    if (error) {
-      console.error('Error fetching filtered events:', error);
+    if (result.error) {
+      console.error('Error fetching filtered events:', result.error);
       return [];
     }
     
-    console.log(`Found ${data.length || 0} events for filter type ${filterType}`);
-    return data as CalendarEvent[];
+    console.log(`Found ${result.data?.length || 0} events for filter type ${filterType}`);
+    return result.data as CalendarEvent[] || [];
     
   } catch (error) {
     console.error('Exception fetching filtered events:', error);
