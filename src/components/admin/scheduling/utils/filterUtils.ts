@@ -1,9 +1,9 @@
 
-import { fetchEventsByFilter } from '@/services/events/api/eventFilters';
+import { fetchEventsByFilter, FilterType } from '@/services/events/api/eventFilters';
 import { fetchUserAvailabilityForUsers } from '@/services/availability/api/staffAvailability';
 
 interface ApplyFilterProps {
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterType?: FilterType;
   ids?: string[];
   defaultRoles?: string[];
   setEvents: (events: any[]) => void;
