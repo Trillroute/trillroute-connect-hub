@@ -19,6 +19,13 @@ const prepareCourseDataForDb = (courseData: Partial<Course>) => {
 
 export const createCourse = async (courseData: Partial<Course>): Promise<{ data: Course | null, error: Error | null }> => {
   try {
+    // Validate required fields are present for course creation
+    if (!courseData.title || !courseData.description || !courseData.level || 
+        !courseData.skill || !courseData.image || !courseData.duration) {
+      console.error('Missing required fields for course creation');
+      return { data: null, error: new Error('Missing required fields for course creation') };
+    }
+    
     // Create a prepared data object while preserving the original courseData structure
     const preparedData = prepareCourseDataForDb(courseData);
     
