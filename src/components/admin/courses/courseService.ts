@@ -31,7 +31,27 @@ export const createCourse = async (courseData: Partial<Course>): Promise<{ data:
     
     const { data, error } = await supabase
       .from('courses')
-      .insert(preparedData)
+      .insert({
+        title: courseData.title,
+        description: courseData.description,
+        level: courseData.level,
+        skill: courseData.skill,
+        image: courseData.image,
+        duration: courseData.duration,
+        duration_type: courseData.duration_type || 'fixed',
+        instructor_ids: courseData.instructor_ids || [],
+        student_ids: courseData.student_ids || [],
+        students: courseData.students || 0,
+        class_types_data: preparedData.class_types_data,
+        base_price: courseData.base_price,
+        discount_value: courseData.discount_value,
+        discount_metric: courseData.discount_metric,
+        discount_code: courseData.discount_code,
+        discount_validity: courseData.discount_validity,
+        is_gst_applicable: courseData.is_gst_applicable,
+        gst_rate: courseData.gst_rate,
+        final_price: courseData.final_price
+      })
       .select()
       .single();
       
