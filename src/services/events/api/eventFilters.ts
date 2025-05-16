@@ -37,44 +37,46 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
   try {
     console.log(`Fetching events with filter type: ${filterType || 'none'}, IDs: ${filterIds.join(',') || 'none'}`);
     
-    // Start with a base query - explicitly typed to return CalendarEvents
+    // Start with a base query
     let query = supabase.from('calendar_events').select('*');
     
     // Apply filters based on filter type and IDs
     if (filterType && filterIds && filterIds.length > 0) {
       switch (filterType) {
         case 'course':
-          query = query.eq('course_id', filterIds[0]);
-          if (filterIds.length > 1) {
-            for (let i = 1; i < filterIds.length; i++) {
-              query = query.or(`course_id.eq.${filterIds[i]}`);
-            }
+          // Handle course filtering
+          if (filterIds.length === 1) {
+            query = query.eq('course_id', filterIds[0]);
+          } else {
+            // Use in() for multiple IDs - more efficient than chaining or conditions
+            query = query.in('course_id', filterIds);
           }
           break;
+          
         case 'skill':
-          query = query.eq('skill_id', filterIds[0]);
-          if (filterIds.length > 1) {
-            for (let i = 1; i < filterIds.length; i++) {
-              query = query.or(`skill_id.eq.${filterIds[i]}`);
-            }
+          // Handle skill filtering
+          if (filterIds.length === 1) {
+            query = query.eq('skill_id', filterIds[0]);
+          } else {
+            query = query.in('skill_id', filterIds);
           }
           break;
+          
         case 'teacher':
         case 'admin':
         case 'staff':
         case 'student':
-          // User-related filters (teacher, admin, student) filter by user_id
-          query = query.eq('user_id', filterIds[0]);
-          if (filterIds.length > 1) {
-            for (let i = 1; i < filterIds.length; i++) {
-              query = query.or(`user_id.eq.${filterIds[i]}`);
-            }
+          // User-related filters filter by user_id
+          if (filterIds.length === 1) {
+            query = query.eq('user_id', filterIds[0]);
+          } else {
+            query = query.in('user_id', filterIds);
           }
           break;
       }
     }
     
-    // Execute the query with explicit typing
+    // Execute the query
     const { data: events, error } = await query;
     
     if (error) {
