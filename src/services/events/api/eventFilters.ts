@@ -37,33 +37,30 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
   try {
     console.log(`Fetching events with filter type: ${filterType || 'none'}, IDs: ${filterIds.join(',') || 'none'}`);
     
-    // Create a type-safe query builder with explicit typing
-    const query = supabase.from('calendar_events');
+    // Start with a base query - explicitly typed to return CalendarEvents
+    let query = supabase.from('calendar_events').select('*');
     
     // Apply filters based on filter type and IDs
-    let filteredQuery = query;
     if (filterType && filterIds && filterIds.length > 0) {
       switch (filterType) {
         case 'course':
-          // Use type assertion to avoid complex type inference
-          filteredQuery = query.in('course_id', filterIds) as typeof query;
+          query = query.filter('course_id', 'in', filterIds);
           break;
         case 'skill':
-          // Use type assertion to avoid complex type inference
-          filteredQuery = query.in('skill_id', filterIds) as typeof query;
+          query = query.filter('skill_id', 'in', filterIds);
           break;
         case 'teacher':
         case 'admin':
         case 'staff':
         case 'student':
           // User-related filters (teacher, admin, student) filter by user_id
-          filteredQuery = query.in('user_id', filterIds) as typeof query;
+          query = query.filter('user_id', 'in', filterIds);
           break;
       }
     }
     
     // Execute the query with explicit typing
-    const { data: events, error } = await filteredQuery.select('*');
+    const { data: events, error } = await query;
     
     if (error) {
       console.error('Error fetching filtered events:', error);
