@@ -2,12 +2,27 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/types/course';
 import { updateTeacherSkillsForCourse } from '@/services/skills/teacherSkillUpdater';
+import { Json } from '@/integrations/supabase/types';
+import { formatClassTypesData } from '@/utils/courseHelpers';
+
+// Helper function to prepare course data for Supabase
+const prepareCourseDataForDb = (courseData: Partial<Course>): Record<string, any> => {
+  const { class_types_data, ...rest } = courseData;
+  
+  return {
+    ...rest,
+    // Convert ClassTypeData[] to Json for storage
+    class_types_data: class_types_data ? JSON.parse(JSON.stringify(class_types_data)) : null
+  };
+};
 
 export const createCourse = async (courseData: Partial<Course>): Promise<{ data: Course | null, error: Error | null }> => {
   try {
+    const preparedData = prepareCourseDataForDb(courseData);
+    
     const { data, error } = await supabase
       .from('courses')
-      .insert(courseData)
+      .insert(preparedData)
       .select()
       .single();
       
@@ -16,17 +31,25 @@ export const createCourse = async (courseData: Partial<Course>): Promise<{ data:
       return { data: null, error };
     }
     
+    // Process the returned data to match Course type
+    const processedCourse: Course = {
+      ...data,
+      class_types_data: formatClassTypesData(data.class_types_data),
+      instructor_ids: data.instructor_ids || [],
+      student_ids: data.student_ids || [],
+    } as Course;
+    
     // After course creation, update teacher skills
-    if (data && data.id) {
+    if (processedCourse && processedCourse.id) {
       try {
-        await updateTeacherSkillsForCourse(data.id);
+        await updateTeacherSkillsForCourse(processedCourse.id);
       } catch (skillError) {
         console.error('Error updating teacher skills after course creation:', skillError);
         // Don't fail the course creation if skill update fails
       }
     }
     
-    return { data, error: null };
+    return { data: processedCourse, error: null };
   } catch (error) {
     console.error('Unexpected error creating course:', error);
     return { data: null, error: error as Error };
@@ -35,9 +58,11 @@ export const createCourse = async (courseData: Partial<Course>): Promise<{ data:
 
 export const updateCourse = async (courseId: string, courseData: Partial<Course>): Promise<{ success: boolean, error: Error | null }> => {
   try {
+    const preparedData = prepareCourseDataForDb(courseData);
+    
     const { error } = await supabase
       .from('courses')
-      .update(courseData)
+      .update(preparedData)
       .eq('id', courseId);
       
     if (error) {
