@@ -88,7 +88,14 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  * Fetch all calendar events with no filtering
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
-  const response = await supabase
+  // Define the response type explicitly to avoid deep type inference
+  type SupabaseResponse = {
+    data: CalendarEvent[] | null;
+    error: any;
+  };
+  
+  // Execute the query with explicit typing
+  const response: SupabaseResponse = await supabase
     .from('calendar_events')
     .select('*');
   
@@ -109,7 +116,14 @@ async function fetchEventsBySingleValue(
   filterType: FilterType, 
   filterId: string
 ): Promise<CalendarEvent[]> {
-  const response = await supabase
+  // Define the response type explicitly
+  type SupabaseResponse = {
+    data: CalendarEvent[] | null;
+    error: any;
+  };
+  
+  // Execute the query with explicit typing
+  const response: SupabaseResponse = await supabase
     .from('calendar_events')
     .select('*')
     .eq(columnName, filterId);
@@ -131,7 +145,14 @@ async function fetchEventsByMultipleValues(
   filterType: FilterType, 
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
-  const response = await supabase
+  // Define the response type explicitly
+  type SupabaseResponse = {
+    data: CalendarEvent[] | null;
+    error: any;
+  };
+  
+  // Execute the query with explicit typing
+  const response: SupabaseResponse = await supabase
     .from('calendar_events')
     .select('*')
     .in(columnName, filterIds);
