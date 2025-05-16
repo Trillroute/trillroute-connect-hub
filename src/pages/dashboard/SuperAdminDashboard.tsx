@@ -11,16 +11,12 @@ import DeleteLeadDialog from "@/components/admin/leads/DeleteLeadDialog";
 import DashboardContent from '@/components/superadmin/dashboard/DashboardContent';
 import { useActivityLogger } from "@/hooks/useActivityLogger";
 import { Lead } from "@/types/lead";
-import { Button } from '@/components/ui/button';
-import { Guitar } from 'lucide-react';
-import { addGuitarSkillToGlenn } from '@/scripts/addGuitarSkillToGlenn';
 
 const SuperAdminDashboard = () => {
   const { user, isSuperAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
   const { logActivity } = useActivityLogger();
   const { toast } = useToast();
-  const [isAddingSkill, setIsAddingSkill] = useState(false);
 
   useEffect(() => {
     console.log("Current activeTab in SuperAdminDashboard:", activeTab);
@@ -61,24 +57,6 @@ const SuperAdminDashboard = () => {
     }
   };
 
-  // Function to add Guitar skill to Glenn
-  const handleAddGuitarSkill = async () => {
-    setIsAddingSkill(true);
-    try {
-      const result = await addGuitarSkillToGlenn();
-      if (result) {
-        logActivity({
-          userId: user?.id || '',
-          action: "ADD_SKILL",
-          component: "Add Guitar Skill to Glenn",
-          pageUrl: window.location.pathname
-        });
-      }
-    } finally {
-      setIsAddingSkill(false);
-    }
-  };
-
   // Dialog handlers for lead management
   const openEditDialog = (lead: Lead) => {
     setSelectedLead(lead);
@@ -115,16 +93,6 @@ const SuperAdminDashboard = () => {
                 {activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + ' Module'}
               </p>
             </div>
-            
-            {/* Add Guitar skill button */}
-            <Button
-              onClick={handleAddGuitarSkill}
-              disabled={isAddingSkill}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              <Guitar className="h-4 w-4 mr-2" />
-              {isAddingSkill ? 'Adding...' : 'Add Guitar Skill to Glenn'}
-            </Button>
           </div>
         </div>
 
