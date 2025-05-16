@@ -11,7 +11,7 @@ export function convertAvailabilityMapToArray(availabilities?: UserAvailabilityM
   const result: CalendarUserAvailability[] = [];
   
   Object.entries(availabilities).forEach(([userId, userData]) => {
-    const userName = userData?.name;
+    const userName = userData.name; // Now guaranteed to be non-null
     
     if (!userData.slots || !Array.isArray(userData.slots)) return;
     

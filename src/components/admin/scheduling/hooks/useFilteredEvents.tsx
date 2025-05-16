@@ -21,7 +21,7 @@ export function useFilteredEvents({
 
   // Convert availability map to array for filtering and compatibility with calendar
   const availabilityArray = useMemo(() => 
-    convertAvailabilityMapToArray(availabilities), 
+    convertAvailabilityMapToArray(availabilities as UserAvailabilityMap), 
     [availabilities]
   );
 

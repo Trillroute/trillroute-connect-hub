@@ -44,17 +44,32 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
     if (filterType && filterIds && filterIds.length > 0) {
       switch (filterType) {
         case 'course':
-          query = query.filter('course_id', 'in', filterIds);
+          query = query.eq('course_id', filterIds[0]);
+          if (filterIds.length > 1) {
+            for (let i = 1; i < filterIds.length; i++) {
+              query = query.or(`course_id.eq.${filterIds[i]}`);
+            }
+          }
           break;
         case 'skill':
-          query = query.filter('skill_id', 'in', filterIds);
+          query = query.eq('skill_id', filterIds[0]);
+          if (filterIds.length > 1) {
+            for (let i = 1; i < filterIds.length; i++) {
+              query = query.or(`skill_id.eq.${filterIds[i]}`);
+            }
+          }
           break;
         case 'teacher':
         case 'admin':
         case 'staff':
         case 'student':
           // User-related filters (teacher, admin, student) filter by user_id
-          query = query.filter('user_id', 'in', filterIds);
+          query = query.eq('user_id', filterIds[0]);
+          if (filterIds.length > 1) {
+            for (let i = 1; i < filterIds.length; i++) {
+              query = query.or(`user_id.eq.${filterIds[i]}`);
+            }
+          }
           break;
       }
     }

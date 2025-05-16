@@ -42,10 +42,11 @@ export interface UseFilteredEventsProps {
   filterIds?: string[];
 }
 
+// Updated to match the required properties in service/availability/types.ts
 export interface UserAvailabilityMap {
   [userId: string]: {
-    name?: string;
-    role?: string;
+    name: string;
+    role: string;
     slots: UserAvailability[];
   };
 }
