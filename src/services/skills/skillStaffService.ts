@@ -126,3 +126,142 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
     return [];
   }
 };
+
+/**
+ * Add a skill to a specific user
+ * @param userId User ID to add skill to
+ * @param skillId Skill ID to add
+ * @returns Boolean indicating success
+ */
+export const addSkillToUser = async (userId: string, skillId: string): Promise<boolean> => {
+  try {
+    console.log(`Adding skill ${skillId} to user ${userId}`);
+    
+    // First, get the current skills array for the user
+    const { data: userData, error: fetchError } = await supabase
+      .from('custom_users')
+      .select('skills')
+      .eq('id', userId)
+      .single();
+      
+    if (fetchError) {
+      console.error('Error fetching user skills:', fetchError);
+      throw fetchError;
+    }
+    
+    // Ensure we have a valid skills array
+    const currentSkills = Array.isArray(userData?.skills) ? userData.skills : [];
+    console.log('Current user skills:', currentSkills);
+    
+    // Check if user already has this skill
+    if (currentSkills.includes(skillId)) {
+      console.log('User already has this skill');
+      return true; // Already done, so return success
+    }
+    
+    // Add the new skill to the array
+    const updatedSkills = [...currentSkills, skillId];
+    console.log('Updated skills array:', updatedSkills);
+    
+    // Update the user record
+    const { error: updateError } = await supabase
+      .from('custom_users')
+      .update({ skills: updatedSkills })
+      .eq('id', userId);
+      
+    if (updateError) {
+      console.error('Error updating user skills:', updateError);
+      throw updateError;
+    }
+    
+    console.log('Successfully added skill to user');
+    return true;
+    
+  } catch (error) {
+    console.error('Error in addSkillToUser:', error);
+    return false;
+  }
+};
+
+/**
+ * Find a user by name (first name + last name)
+ * @param name Full name to search for (first name + last name)
+ * @returns User ID if found, null otherwise
+ */
+export const findUserByName = async (name: string): Promise<string | null> => {
+  try {
+    console.log(`Searching for user with name: ${name}`);
+    
+    // Clean up the name for comparison
+    const cleanName = name.trim().toLowerCase();
+    
+    // Get all users
+    const { data, error } = await supabase
+      .from('custom_users')
+      .select('id, first_name, last_name');
+      
+    if (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+    
+    // Find the user with matching name (case insensitive)
+    const user = data?.find(user => {
+      const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+      return fullName === cleanName;
+    });
+    
+    if (user) {
+      console.log(`Found user ${user.first_name} ${user.last_name} with ID ${user.id}`);
+      return user.id;
+    }
+    
+    console.log('User not found');
+    return null;
+    
+  } catch (error) {
+    console.error('Error in findUserByName:', error);
+    return null;
+  }
+};
+
+/**
+ * Find a skill by name
+ * @param name Skill name to search for
+ * @returns Skill ID if found, null otherwise
+ */
+export const findSkillByName = async (name: string): Promise<string | null> => {
+  try {
+    console.log(`Searching for skill with name: ${name}`);
+    
+    // Clean up the name for comparison
+    const cleanName = name.trim().toLowerCase();
+    
+    // Get all skills
+    const { data, error } = await supabase
+      .from('skills')
+      .select('id, name');
+      
+    if (error) {
+      console.error('Error fetching skills:', error);
+      throw error;
+    }
+    
+    // Find the skill with matching name (case insensitive)
+    const skill = data?.find(skill => 
+      skill.name.toLowerCase() === cleanName
+    );
+    
+    if (skill) {
+      console.log(`Found skill ${skill.name} with ID ${skill.id}`);
+      return skill.id;
+    }
+    
+    console.log('Skill not found');
+    return null;
+    
+  } catch (error) {
+    console.error('Error in findSkillByName:', error);
+    return null;
+  }
+};
