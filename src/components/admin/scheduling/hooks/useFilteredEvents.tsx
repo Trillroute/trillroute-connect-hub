@@ -1,82 +1,9 @@
 
 import { useMemo, useEffect, useState } from 'react';
-import { UserAvailabilityMap, UserAvailability } from '@/services/availability/types';
-
-interface FilterState {
-  users: string[];
-  startDate?: Date;
-  endDate?: Date;
-  courses: string[];
-  skills: string[];
-}
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  allDay?: boolean;
-  userId?: string;
-  courseId?: string;
-  skillId?: string;
-  color?: string;
-}
-
-interface CalendarUserAvailability {
-  id: string;
-  userId: string;
-  userName?: string;
-  dayOfWeek: number;
-  startHour: number;
-  startMinute: number;
-  endHour: number;
-  endMinute: number;
-  category?: string;
-}
-
-interface UseFilteredEventsProps {
-  events?: CalendarEvent[];
-  filters?: FilterState;
-  availabilities?: UserAvailabilityMap | null;
-  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
-  filterId?: string | null;
-  filterIds?: string[];
-}
-
-// Improved filtering function for events
-function filterEvents(events: CalendarEvent[] = [], filters: FilterState = { users: [], courses: [], skills: [] }) {
-  const filteredEvents = events.filter(event => {
-    if (!event) return false;
-    
-    // Filter by users
-    if (filters.users && filters.users.length > 0 && event.userId && !filters.users.includes(event.userId)) {
-      return false;
-    }
-    
-    // Filter by courses
-    if (filters.courses && filters.courses.length > 0 && event.courseId && !filters.courses.includes(event.courseId)) {
-      return false;
-    }
-    
-    // Filter by skills
-    if (filters.skills && filters.skills.length > 0 && event.skillId && !filters.skills.includes(event.skillId)) {
-      return false;
-    }
-    
-    // Filter by date range
-    if (filters.startDate && event.start < filters.startDate) {
-      return false;
-    }
-    
-    if (filters.endDate && event.end > filters.endDate) {
-      return false;
-    }
-    
-    return true;
-  });
-  
-  return { filteredEvents };
-}
+import { UserAvailabilityMap } from '@/services/availability/types';
+import { filterEvents } from './utils/eventFilterUtils';
+import { convertAvailabilityMapToArray, filterAvailability } from './utils/availabilityUtils';
+import { CalendarEvent, CalendarUserAvailability, FilterState, UseFilteredEventsProps } from './types/filterTypes';
 
 /**
  * Custom hook to filter calendar events and availabilities based on filter criteria
@@ -93,44 +20,10 @@ export function useFilteredEvents({
   const [filteredAvailability, setFilteredAvailability] = useState<CalendarUserAvailability[]>([]);
 
   // Convert availability map to array for filtering and compatibility with calendar
-  const availabilityArray = useMemo(() => {
-    if (!availabilities) return [];
-
-    const result: CalendarUserAvailability[] = [];
-    
-    Object.entries(availabilities).forEach(([userId, userData]) => {
-      const userName = userData?.name;
-      
-      if (!userData.slots || !Array.isArray(userData.slots)) return;
-      
-      userData.slots.forEach((slot: UserAvailability) => {
-        if (!slot.startTime || !slot.endTime) return;
-        
-        try {
-          const startParts = slot.startTime.split(':');
-          const endParts = slot.endTime.split(':');
-          
-          if (startParts.length !== 2 || endParts.length !== 2) return;
-          
-          result.push({
-            id: slot.id,
-            userId: slot.user_id || userId,
-            userName,
-            dayOfWeek: slot.dayOfWeek,
-            startHour: parseInt(startParts[0], 10),
-            startMinute: parseInt(startParts[1], 10),
-            endHour: parseInt(endParts[0], 10),
-            endMinute: parseInt(endParts[1], 10),
-            category: slot.category
-          });
-        } catch (error) {
-          console.error('Error parsing availability time slot:', error);
-        }
-      });
-    });
-    
-    return result;
-  }, [availabilities]);
+  const availabilityArray = useMemo(() => 
+    convertAvailabilityMapToArray(availabilities), 
+    [availabilities]
+  );
 
   // Filter events whenever filters or events change
   useEffect(() => {
@@ -159,42 +52,13 @@ export function useFilteredEvents({
 
   // Filter availabilities whenever filters or availabilities change
   useEffect(() => {
-    if (!availabilityArray.length) {
-      setFilteredAvailability([]);
-      return;
-    }
-    
-    console.log(`Filtering ${availabilityArray.length} availability slots with filterType: ${filterType}`);
-
-    // Special case: if no filterIds are provided but filterType is set, 
-    // show all availabilities for that role (don't filter them)
-    const shouldShowAllForType = filterIds && filterIds.length === 0 && filterType && 
-      (filterType === 'teacher' || filterType === 'admin' || filterType === 'staff');
-      
-    // Filter availabilities based on user filters
-    const filtered = availabilityArray.filter(avail => {
-      // If we should show all for the selected filter type, don't filter by user IDs
-      if (shouldShowAllForType) {
-        return true;
-      }
-      
-      // If specific users are selected, check if this availability belongs to one of them
-      if (filters.users && filters.users.length > 0 && avail.userId && !filters.users.includes(avail.userId)) {
-        return false;
-      }
-      
-      // Also filter by filterIds if filterType is user-related and filterIds is not empty
-      if ((filterType === 'teacher' || filterType === 'student' || filterType === 'admin' || filterType === 'staff') && 
-          filterIds && filterIds.length > 0 && 
-          avail.userId && !filterIds.includes(avail.userId)) {
-        return false;
-      }
-      
-      return true;
-    });
-
-    console.log(`After filtering: ${filtered.length} availability slots remain`);
-    setFilteredAvailability(filtered);
+    const filteredAvailabilitySlots = filterAvailability(
+      availabilityArray,
+      filters, 
+      filterType, 
+      filterIds
+    );
+    setFilteredAvailability(filteredAvailabilitySlots);
   }, [availabilityArray, filters, filterType, filterIds]);
 
   return {
