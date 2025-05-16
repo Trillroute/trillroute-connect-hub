@@ -11,18 +11,18 @@ export const formatTime = (hour: number, minute: number): string => {
 // Get category color
 export const getCategoryColor = (category: string): string => {
   switch(category.toLowerCase()) {
-    case 'teaching':
-      return '#10B981';
-    case 'meeting':
-      return '#3B82F6';
-    case 'practice':
-      return '#F59E0B';
-    case 'performance':
-      return '#8B5CF6';
     case 'session':
-      return '#6366F1';
-    case 'expired':
-      return '#9B2C2C';
+      return '#10B981';
+    case 'break':
+      return '#3B82F6';
+    case 'office':
+      return '#8B5CF6';
+    case 'meeting':
+      return '#F59E0B';
+    case 'class setup':
+      return '#F97316';
+    case 'qc':
+      return '#EC4899';
     default:
       return '#10B981';
   }

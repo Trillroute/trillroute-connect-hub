@@ -21,9 +21,9 @@ export interface UserAvailabilityMap {
 
 export const AVAILABILITY_CATEGORIES = [
   'Session', 
-  'General', 
-  'Teaching', 
-  'Practice', 
-  'Performance', 
-  'Meeting'
+  'Break', 
+  'Office', 
+  'Meeting', 
+  'Class Setup', 
+  'QC'
 ];
