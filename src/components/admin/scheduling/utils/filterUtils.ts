@@ -64,13 +64,14 @@ export const applyFilter = async ({
         toast({
           title: "Filtering by skills",
           description: `Finding users with selected skills...`,
+          duration: 3000,
         });
         
-        // First, get all users with these skills
+        // First, get all users with these skills - with improved error handling
         const usersWithSkills = await getUsersBySkills(ids);
         console.log('Users with selected skills:', usersWithSkills);
         
-        if (usersWithSkills.length === 0) {
+        if (!usersWithSkills || usersWithSkills.length === 0) {
           console.log('No users found with the selected skills, clearing calendar');
           toast({
             title: "No matching users",
@@ -92,10 +93,10 @@ export const applyFilter = async ({
         const teachersWithSkills = await getUsersBySkills(ids, ['teacher']);
         console.log('Teachers with selected skills:', teachersWithSkills);
         
-        // Fetch events for users who have these skills
+        // Fetch events for users who have these skills - use both user IDs and skill IDs
         await fetchFilteredEvents({ 
           userIds: usersWithSkills,
-          skillIds: ids,  // Pass skill IDs directly to event processing
+          skillIds: ids,
           setEvents 
         });
         

@@ -48,7 +48,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     return result;
   };
 
-  // Apply filters when filterType or filterIds change
+  // Apply filters when filterType or filterIds change - add filterId to dependency array
   useEffect(() => {
     const staffUserIds: string[] = [];
     
@@ -61,11 +61,12 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     console.log(`==== FILTERED EVENTS PROVIDER ====`);
     console.log(`Applying ${filterType || 'null'} filter with ${allIds.length} IDs:`, allIds);
     
+    // Show user that filtering is in progress
     if (filterType === 'skill' && allIds.length > 0) {
-      // Inform user that filter is being applied
       toast({
         title: "Applying skill filter",
         description: `Filtering calendar for ${allIds.length} selected skills...`,
+        duration: 2000,
       });
     }
     
@@ -79,7 +80,6 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       convertAvailabilityMap
     });
     
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterType, filterId, JSON.stringify(filterIds), setEvents, setAvailabilities]);
 
   // Return children without additional wrapping

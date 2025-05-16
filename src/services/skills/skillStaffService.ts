@@ -28,15 +28,22 @@ export const fetchStaffForSkill = async (skillIds: string[]): Promise<string[]> 
     
     // Filter teachers who have ANY of the requested skills
     const teachersWithSkills = (data || []).filter(teacher => {
-      if (!Array.isArray(teacher.skills)) {
-        console.log(`Teacher ${teacher.id} has no skills array`);
+      // Ensure skills is an array before attempting to use it
+      const teacherSkills = Array.isArray(teacher.skills) ? teacher.skills : [];
+      
+      if (teacherSkills.length === 0) {
+        console.log(`Teacher ${teacher.id} has no skills array or empty skills`);
         return false;
       }
       
-      // Check if any of the teacher's skills match our skillIds
-      const hasMatch = skillIds.some(skillId => teacher.skills.includes(skillId));
-      console.log(`Teacher ${teacher.id} has skills: ${teacher.skills.join(', ')}`);
-      console.log(`Matching requested skills: ${hasMatch ? 'YES' : 'NO'}`);
+      // Check if any of the teacher's skills match our skillIds - improved debugging
+      console.log(`Teacher ${teacher.id} has skills:`, teacherSkills);
+      
+      // More detailed intersection check
+      const matchingSkills = skillIds.filter(skillId => teacherSkills.includes(skillId));
+      const hasMatch = matchingSkills.length > 0;
+      
+      console.log(`Teacher ${teacher.id} matching skills: ${matchingSkills.join(', ')} - Match: ${hasMatch ? 'YES' : 'NO'}`);
       
       return hasMatch;
     }).map(teacher => teacher.id) || [];
@@ -84,22 +91,26 @@ export const getUsersBySkills = async (skillIds: string[], roles?: string[]): Pr
     // Debug users and their skills
     console.log(`Total users fetched: ${data?.length || 0}`);
     
-    // Filter users who have ANY of the requested skills
+    // Filter users who have ANY of the requested skills - with improved checking
     const usersWithSkills = (data || []).filter(user => {
+      // Ensure skills is a valid array before proceeding
+      const userSkills = Array.isArray(user.skills) ? user.skills : [];
+      
       // Skip users without skills array
-      if (!user.skills || !Array.isArray(user.skills) || user.skills.length === 0) {
-        console.log(`User ${user.id} (${user.role}) has no skills`);
+      if (userSkills.length === 0) {
+        console.log(`User ${user.id} (${user.role}) has no skills or empty skills array`);
         return false;
       }
       
       // Debug individual user skills
-      console.log(`User ${user.id} (${user.first_name} ${user.last_name}, ${user.role}) has skills:`, user.skills);
+      console.log(`User ${user.id} (${user.first_name} ${user.last_name}, ${user.role}) has skills:`, userSkills);
       
-      // Check if any of the user's skills match our skillIds
-      const hasMatchingSkill = skillIds.some(skillId => user.skills.includes(skillId));
+      // More detailed intersection check
+      const matchingSkills = skillIds.filter(skillId => userSkills.includes(skillId));
+      const hasMatchingSkill = matchingSkills.length > 0;
       
       if (hasMatchingSkill) {
-        console.log(`✓ User ${user.id} has at least one of the requested skills`);
+        console.log(`✓ User ${user.id} has matching skills: ${matchingSkills.join(', ')}`);
       } else {
         console.log(`✗ User ${user.id} has no matching skills`);
       }
