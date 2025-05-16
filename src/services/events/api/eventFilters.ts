@@ -37,8 +37,8 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
   try {
     console.log(`Fetching events with filter type: ${filterType || 'none'}, IDs: ${filterIds.join(',') || 'none'}`);
     
-    // Start with a base query
-    let query = supabase.from('calendar_events').select('*');
+    // Create a base query without chaining initially to avoid deep type instantiation
+    const baseQuery = supabase.from('calendar_events').select('*');
     
     // Apply filters based on filter type and IDs
     if (filterType && filterIds && filterIds.length > 0) {
@@ -46,21 +46,28 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
         case 'course':
           // Handle course filtering
           if (filterIds.length === 1) {
-            query = query.eq('course_id', filterIds[0]);
+            // For single ID, use simple equality check
+            const { data, error } = await baseQuery.eq('course_id', filterIds[0]);
+            if (error) throw error;
+            return data as CalendarEvent[];
           } else {
-            // Use in() for multiple IDs - more efficient than chaining or conditions
-            query = query.in('course_id', filterIds);
+            // For multiple IDs, use the in() operator instead of chaining or conditions
+            const { data, error } = await baseQuery.in('course_id', filterIds);
+            if (error) throw error;
+            return data as CalendarEvent[];
           }
-          break;
           
         case 'skill':
           // Handle skill filtering
           if (filterIds.length === 1) {
-            query = query.eq('skill_id', filterIds[0]);
+            const { data, error } = await baseQuery.eq('skill_id', filterIds[0]);
+            if (error) throw error;
+            return data as CalendarEvent[];
           } else {
-            query = query.in('skill_id', filterIds);
+            const { data, error } = await baseQuery.in('skill_id', filterIds);
+            if (error) throw error;
+            return data as CalendarEvent[];
           }
-          break;
           
         case 'teacher':
         case 'admin':
@@ -68,16 +75,19 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
         case 'student':
           // User-related filters filter by user_id
           if (filterIds.length === 1) {
-            query = query.eq('user_id', filterIds[0]);
+            const { data, error } = await baseQuery.eq('user_id', filterIds[0]);
+            if (error) throw error;
+            return data as CalendarEvent[];
           } else {
-            query = query.in('user_id', filterIds);
+            const { data, error } = await baseQuery.in('user_id', filterIds);
+            if (error) throw error;
+            return data as CalendarEvent[];
           }
-          break;
       }
     }
     
-    // Execute the query
-    const { data: events, error } = await query;
+    // If no specific filters or filterType doesn't match any case, return all events
+    const { data: events, error } = await baseQuery;
     
     if (error) {
       console.error('Error fetching filtered events:', error);
