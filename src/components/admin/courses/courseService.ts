@@ -6,9 +6,10 @@ import { Json } from '@/integrations/supabase/types';
 import { formatClassTypesData } from '@/utils/courseHelpers';
 
 // Helper function to prepare course data for Supabase
-const prepareCourseDataForDb = (courseData: Partial<Course>): Record<string, any> => {
+const prepareCourseDataForDb = (courseData: Partial<Course>) => {
   const { class_types_data, ...rest } = courseData;
   
+  // Return a properly typed object with class_types_data converted to JSON
   return {
     ...rest,
     // Convert ClassTypeData[] to Json for storage
@@ -18,6 +19,7 @@ const prepareCourseDataForDb = (courseData: Partial<Course>): Record<string, any
 
 export const createCourse = async (courseData: Partial<Course>): Promise<{ data: Course | null, error: Error | null }> => {
   try {
+    // Create a prepared data object while preserving the original courseData structure
     const preparedData = prepareCourseDataForDb(courseData);
     
     const { data, error } = await supabase
@@ -58,6 +60,7 @@ export const createCourse = async (courseData: Partial<Course>): Promise<{ data:
 
 export const updateCourse = async (courseId: string, courseData: Partial<Course>): Promise<{ success: boolean, error: Error | null }> => {
   try {
+    // Create a prepared data object while preserving the original courseData structure
     const preparedData = prepareCourseDataForDb(courseData);
     
     const { error } = await supabase
