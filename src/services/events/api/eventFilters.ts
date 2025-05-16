@@ -68,40 +68,40 @@ export const fetchEventsByFilter = async ({ filterType, filterIds = [] }: Filter
           return allEvents as CalendarEvent[];
       }
       
-      // Execute the query based on the number of filter IDs
+      // Create separate query instances for different conditions to avoid deep type instantiation
       if (filterIds.length === 1) {
-        // For a single ID
-        const { data, error } = await supabase
+        // For a single ID, use simple equality check
+        const result = await supabase
           .from(tableName)
           .select('*')
           .eq(columnName, filterIds[0]);
         
-        if (error) throw error;
-        return data as CalendarEvent[];
+        if (result.error) throw result.error;
+        return result.data as CalendarEvent[];
       } else {
-        // For multiple IDs
-        const { data, error } = await supabase
+        // For multiple IDs, use "in" operator
+        const result = await supabase
           .from(tableName)
           .select('*')
           .in(columnName, filterIds);
         
-        if (error) throw error;
-        return data as CalendarEvent[];
+        if (result.error) throw result.error;
+        return result.data as CalendarEvent[];
       }
     }
     
     // If no specific filters or filterIds is empty, return all events
-    const { data: events, error } = await supabase
+    const result = await supabase
       .from(tableName)
       .select('*');
     
-    if (error) {
-      console.error('Error fetching filtered events:', error);
+    if (result.error) {
+      console.error('Error fetching filtered events:', result.error);
       return [];
     }
     
-    console.log(`Found ${events?.length || 0} events for filter type ${filterType || 'none'}`);
-    return events as CalendarEvent[] || [];
+    console.log(`Found ${result.data?.length || 0} events for filter type ${filterType || 'none'}`);
+    return result.data as CalendarEvent[] || [];
   } catch (error) {
     console.error('Exception fetching filtered events:', error);
     return [];
