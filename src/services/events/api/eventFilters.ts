@@ -89,18 +89,19 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Use a basic query approach that avoids deep type checking
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .select("*");
+    // Break type checking chain by using separate execution steps
+    const query = supabase.from("calendar_events").select("*");
     
-    if (error) {
-      console.error('Error fetching all events:', error);
+    // Execute query separately from its definition
+    const response = await query;
+    
+    if (response.error) {
+      console.error('Error fetching all events:', response.error);
       return [];
     }
 
     // Safely cast to CalendarEvent array
-    const events = Array.isArray(data) ? data as CalendarEvent[] : [];
+    const events = Array.isArray(response.data) ? response.data as CalendarEvent[] : [];
     console.log(`Found ${events.length} events (no filters)`);
     return events;
   } catch (error) {
@@ -118,24 +119,26 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Use type assertion with any to break the deep typing chain
-    const query = supabase
-      .from("calendar_events")
-      .select("*")
-      .eq(columnName, filterId);
+    // Break type checking chain completely by separating into simple steps
+    // Step 1: Create the base query object without type checking
+    const baseQuery = supabase.from("calendar_events");
+    
+    // Step 2: Add the select method
+    const selectQuery = baseQuery.select("*");
+    
+    // Step 3: Add the filter condition
+    const finalQuery = selectQuery.eq(columnName, filterId);
+    
+    // Step 4: Execute the query separately
+    const response = await finalQuery;
       
-    // Type assertion after query execution to avoid deep type instantiation
-    const result = await query;
-    const data = result.data;
-    const error = result.error;
-      
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
+    if (response.error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
       return [];
     }
 
     // Safely cast to CalendarEvent array
-    const events = Array.isArray(data) ? data as CalendarEvent[] : [];
+    const events = Array.isArray(response.data) ? response.data as CalendarEvent[] : [];
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -153,24 +156,26 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Use type assertion with any to break the deep typing chain
-    const query = supabase
-      .from("calendar_events")
-      .select("*")
-      .in(columnName, filterIds);
+    // Break type checking chain completely by separating into simple steps
+    // Step 1: Create the base query object without type checking
+    const baseQuery = supabase.from("calendar_events");
+    
+    // Step 2: Add the select method
+    const selectQuery = baseQuery.select("*");
+    
+    // Step 3: Add the filter condition
+    const finalQuery = selectQuery.in(columnName, filterIds);
+    
+    // Step 4: Execute the query separately
+    const response = await finalQuery;
       
-    // Execute query separately from type checking
-    const result = await query;
-    const data = result.data;
-    const error = result.error;
-      
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
+    if (response.error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
       return [];
     }
 
     // Safely cast to CalendarEvent array
-    const events = Array.isArray(data) ? data as CalendarEvent[] : [];
+    const events = Array.isArray(response.data) ? response.data as CalendarEvent[] : [];
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
