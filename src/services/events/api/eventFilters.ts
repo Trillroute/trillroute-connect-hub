@@ -31,14 +31,6 @@ export interface CalendarEvent {
 }
 
 /**
- * Interface for database response to avoid deep type inference
- */
-interface SupabaseResponse<T> {
-  data: T | null;
-  error: any;
-}
-
-/**
  * Main function to fetch events based on specified filter type and IDs
  */
 export async function fetchEventsByFilter(props: FilterEventsProps): Promise<CalendarEvent[]> {
@@ -97,8 +89,7 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Using typed response to avoid deep type inference
-    const response: SupabaseResponse<CalendarEvent[]> = await supabase
+    const response = await supabase
       .from('calendar_events')
       .select('*');
 
@@ -108,7 +99,7 @@ async function fetchAllEvents(): Promise<CalendarEvent[]> {
     }
 
     console.log(`Found ${response.data?.length || 0} events (no filters)`);
-    return response.data || [];
+    return response.data as CalendarEvent[] || [];
   } catch (error) {
     console.error('Unexpected error in fetchAllEvents:', error);
     return [];
@@ -124,8 +115,7 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Using typed response to avoid deep type inference
-    const response: SupabaseResponse<CalendarEvent[]> = await supabase
+    const response = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
@@ -136,7 +126,7 @@ async function fetchEventsBySingleValue(
     }
 
     console.log(`Found ${response.data?.length || 0} events for ${filterType} with ID ${filterId}`);
-    return response.data || [];
+    return response.data as CalendarEvent[] || [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsBySingleValue:`, error);
     return [];
@@ -152,8 +142,7 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Using typed response to avoid deep type inference
-    const response: SupabaseResponse<CalendarEvent[]> = await supabase
+    const response = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
@@ -164,7 +153,7 @@ async function fetchEventsByMultipleValues(
     }
 
     console.log(`Found ${response.data?.length || 0} events for ${filterType}`);
-    return response.data || [];
+    return response.data as CalendarEvent[] || [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
     return [];

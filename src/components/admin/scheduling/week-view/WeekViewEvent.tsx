@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { CalendarEvent } from '../context/calendarTypes';
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from 'lucide-react';
+import { getEventColor } from './weekViewUtils';
 
 interface WeekViewEventProps {
   event: CalendarEvent;
@@ -22,12 +23,23 @@ const WeekViewEvent: React.FC<WeekViewEventProps> = ({
   onDelete,
   style
 }) => {
+  // Determine color based on event category if available in description
+  const getCategoryFromDescription = (): string | null => {
+    if (!event.description) return null;
+    
+    const categoryMatch = event.description.match(/category:([\w\s]+)/i);
+    return categoryMatch ? categoryMatch[1].trim() : null;
+  };
+  
+  const category = getCategoryFromDescription();
+  const eventColor = event.color || (category ? getEventColor(category) : '#4285F4');
+  
   return (
     <div
       className={`absolute rounded px-2 py-1 text-white text-xs overflow-hidden z-20 cursor-pointer group ${isSelected ? 'ring-2 ring-white' : ''}`}
       style={{
         ...style,
-        backgroundColor: event.color || '#4285F4',
+        backgroundColor: eventColor,
       }}
       onClick={() => onSelect(event)}
     >

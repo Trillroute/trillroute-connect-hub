@@ -12,7 +12,7 @@ export interface AvailabilitySlot {
   category: string;
 }
 
-// Get color based on category
+// Get color based on category - using the same colors as in legacy-view/utils.ts
 export const getCategoryColor = (category: string) => {
   switch (category.toLowerCase()) {
     case 'session':
@@ -69,4 +69,24 @@ export const isTimeAvailable = (hour: number, dayIndex: number, availabilitySlot
   return slotsForDay.some(slot => {
     return (hour >= slot.startHour && hour < slot.endHour);
   });
+};
+
+// Align event colors with legacy view colors
+export const getEventColor = (category: string): string => {
+  switch(category?.toLowerCase() || '') {
+    case 'session':
+      return '#10B981'; // green-700
+    case 'break':
+      return '#3B82F6'; // blue-600
+    case 'office':
+      return '#8B5CF6'; // purple-600
+    case 'meeting':
+      return '#F59E0B'; // yellow-500
+    case 'class setup':
+      return '#F97316'; // orange-500
+    case 'qc':
+      return '#EC4899'; // pink-600
+    default:
+      return '#4285F4'; // Default blue color
+  }
 };

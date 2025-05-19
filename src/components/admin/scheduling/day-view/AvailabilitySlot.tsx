@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { getCategoryBackgroundClass } from '../view-components/legacy-view/utils';
 
 interface AvailabilitySlotProps {
   slot: {
@@ -15,26 +16,6 @@ interface AvailabilitySlotProps {
 }
 
 const AvailabilitySlot: React.FC<AvailabilitySlotProps> = ({ slot, onClick }) => {
-  // Get color based on category
-  const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'session':
-        return 'bg-green-100 border-green-300 text-green-800';
-      case 'break':
-        return 'bg-blue-100 border-blue-300 text-blue-800';
-      case 'office':
-        return 'bg-purple-100 border-purple-300 text-purple-800';
-      case 'meeting':
-        return 'bg-yellow-100 border-yellow-300 text-yellow-800';
-      case 'class setup':
-        return 'bg-orange-100 border-orange-300 text-orange-800';
-      case 'qc':
-        return 'bg-pink-100 border-pink-300 text-pink-800';
-      default:
-        return 'bg-gray-100 border-gray-300 text-gray-800';
-    }
-  };
-
   const calculatePosition = () => {
     // Calculate position relative to calendar start time (7:00 AM)
     const hourOffset = slot.startHour - 7; // Adjust for calendar starting at 7 AM
@@ -54,7 +35,7 @@ const AvailabilitySlot: React.FC<AvailabilitySlotProps> = ({ slot, onClick }) =>
   
   return (
     <div
-      className={`absolute left-1 right-1 rounded px-2 py-1 border overflow-hidden text-sm group cursor-pointer hover:opacity-90 ${getCategoryColor(slot.category)}`}
+      className={`absolute left-1 right-1 rounded px-2 py-1 border overflow-hidden text-sm group cursor-pointer hover:opacity-90 ${getCategoryBackgroundClass(slot.category)}`}
       style={calculatePosition()}
       onClick={() => onClick(slot)}
     >
