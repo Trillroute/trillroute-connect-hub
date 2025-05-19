@@ -23,7 +23,7 @@ export const useWeekView = (
       // Process all user availabilities
       if (availabilities) {
         Object.entries(availabilities).forEach(([userId, userData]) => {
-          if (userData && userData.slots && Array.isArray(userData.slots)) {
+          if (userData && typeof userData === 'object' && 'slots' in userData && Array.isArray(userData.slots)) {
             userData.slots.forEach(slot => {
               if (slot.startTime && slot.endTime && typeof slot.dayOfWeek === 'number') {
                 const startTimeParts = slot.startTime.split(':');
@@ -42,7 +42,7 @@ export const useWeekView = (
                     endHour,
                     endMinute,
                     userId: slot.user_id || userId,
-                    userName: userData.name,
+                    userName: typeof userData === 'object' && 'name' in userData ? String(userData.name) : 'Unknown',
                     category: slot.category || 'General'
                   });
                 }

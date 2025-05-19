@@ -8,6 +8,7 @@ import WeekViewLayout from './week-view/WeekViewLayout';
 import WeekViewContent from './week-view/WeekViewContent';
 import WeekViewEventDialogs from './week-view/WeekViewEventDialogs';
 import { useWeekView } from './week-view/useWeekView';
+import { handleAvailabilitySlotClick } from './utils/availabilitySlotHandlers';
 
 interface WeekViewProps {
   onCreateEvent?: () => void;
@@ -52,17 +53,19 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   
   const handleAvailabilityClick = (slot: AvailabilitySlot) => {
     if (onCreateEvent) {
-      // Create a date object for this slot
+      // First use the shared handler to store availability information
+      handleAvailabilitySlotClick(slot);
+      
+      // Then create a date object for this slot
       const slotDate = new Date(weekDays[slot.dayOfWeek]);
       slotDate.setHours(slot.startHour, slot.startMinute, 0, 0);
       
       const endDate = new Date(weekDays[slot.dayOfWeek]);
       endDate.setHours(slot.endHour, slot.endMinute, 0, 0);
       
-      // Store data for event creation
+      // Store additional data for event creation
       sessionStorage.setItem('newEventStartTime', slotDate.toISOString());
       sessionStorage.setItem('newEventEndTime', endDate.toISOString());
-      sessionStorage.setItem('newEventTitle', `Session with ${slot.userName || 'Instructor'}`);
       
       onCreateEvent();
     }

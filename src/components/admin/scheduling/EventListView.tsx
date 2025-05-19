@@ -1,267 +1,152 @@
 
-import React, { useState, useMemo } from 'react';
-import { format, isSameDay, isAfter } from 'date-fns';
-import { useCalendar } from './context/CalendarContext';
+import React from 'react';
+import { format } from 'date-fns';
 import { CalendarEvent } from './context/calendarTypes';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Pencil, Trash2, Calendar, Users, Tag } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
+import { Pencil, Trash2, Calendar } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { handleAvailabilitySlotClick } from './utils/availabilitySlotHandlers';
 
 interface EventListViewProps {
   events: CalendarEvent[];
-  onEditEvent: (event: CalendarEvent) => void;
-  onDeleteEvent: (event: CalendarEvent) => void;
+  onEditEvent?: (event: CalendarEvent) => void;
+  onDeleteEvent?: (event: CalendarEvent) => void;
   showAvailability?: boolean;
+  availabilitySlots?: Array<{
+    dayOfWeek: number;
+    startHour: number;
+    startMinute: number;
+    endHour: number;
+    endMinute: number;
+    userId: string;
+    userName?: string;
+    category: string;
+  }>;
 }
-
-// Define a type for list items that can be either events or availability slots
-interface AvailabilityItem {
-  id: string;
-  type: 'availability';
-  title: string;
-  start: Date;
-  end: Date;
-  userId?: string;
-  userName?: string;
-  category?: string;
-  color?: string;
-  location?: string; // Add location to match EventItem
-  description?: string; // Add description to match EventItem
-}
-
-interface EventItem {
-  id: string;
-  type: 'event';
-  title: string;
-  start: Date;
-  end: Date;
-  location?: string;
-  description?: string;
-  color?: string;
-}
-
-type ListItem = AvailabilityItem | EventItem;
 
 const EventListView: React.FC<EventListViewProps> = ({ 
   events, 
   onEditEvent, 
   onDeleteEvent,
-  showAvailability = true
+  showAvailability = true,
+  availabilitySlots = []
 }) => {
-  const { currentDate, availabilities } = useCalendar();
-  const [displayCount, setDisplayCount] = useState<number>(20);
-  
-  // Convert availability slots to list items format
-  const availabilityItems = useMemo(() => {
-    // Return empty array if showAvailability is false or no availabilities
-    if (!showAvailability || !availabilities) return [];
-    
-    const items: AvailabilityItem[] = [];
-    const now = new Date();
-    const dayOfWeek = currentDate.getDay(); // 0 for Sunday, 1 for Monday, etc.
-    
-    // Process all user availabilities
-    Object.entries(availabilities).forEach(([userId, userData]) => {
-      if (!userData || !userData.slots) return;
-      
-      userData.slots.forEach(slot => {
-        // Only include slots for the current day of week
-        if (slot.dayOfWeek !== dayOfWeek) return;
-        
-        try {
-          // Parse time strings to extract hours and minutes
-          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-          
-          // Create date objects for today with the slot's hours and minutes
-          const startDate = new Date(currentDate);
-          startDate.setHours(startHour, startMinute, 0);
-          
-          const endDate = new Date(currentDate);
-          endDate.setHours(endHour, endMinute, 0);
-          
-          // Only include availability slots that haven't ended yet
-          if (isAfter(endDate, now)) {
-            items.push({
-              id: slot.id,
-              type: 'availability',
-              title: `Available: ${userData.name || 'User'}`,
-              start: startDate,
-              end: endDate,
-              userId,
-              userName: userData.name,
-              category: slot.category || 'Default',
-              color: '#4ade80' // light green for availability
-            });
-          }
-        } catch (error) {
-          console.error('Error processing availability slot:', error);
-        }
-      });
-    });
-    
-    return items;
-  }, [availabilities, currentDate, showAvailability]);
-  
-  // Convert calendar events to list items format
-  const eventItems = useMemo(() => {
-    return events.map(event => ({
-      ...event,
-      type: 'event' as const,
-      title: event.title
-    }));
-  }, [events]);
-  
-  // Combine and sort both types of items
-  const combinedItems = useMemo(() => {
-    // If showAvailability is false, only include event items
-    const allItems = showAvailability 
-      ? [...eventItems, ...availabilityItems]
-      : [...eventItems];
-    
-    // Get current time for filtering
-    const now = new Date();
-    
-    // Filter and sort items
-    return allItems
-      .filter(item => {
-        // Keep items that are either on the current selected date or in the future
-        return (isSameDay(item.start, currentDate) && isAfter(item.end, now)) || 
-               (isAfter(item.start, now));
-      })
-      .sort((a, b) => a.start.getTime() - b.start.getTime());
-  }, [eventItems, availabilityItems, currentDate, showAvailability]);
-  
-  // Get the limited set of items to display based on the displayCount
-  const displayedItems = combinedItems.slice(0, displayCount);
-  
-  // Function to load more items
-  const handleShowMore = () => {
-    setDisplayCount(prevCount => prevCount + 20);
-  };
-  
-  // Get an appropriate title based on current date
-  const getViewTitle = () => {
-    const baseTitle = `Events${showAvailability ? ' & Availability' : ''} for ${format(currentDate, 'EEEE, MMMM d, yyyy')}`;
-    return baseTitle;
+  if (events.length === 0 && availabilitySlots.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <Calendar className="h-12 w-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium">No events found</h3>
+        <p className="text-gray-500 mt-1">
+          There are no events scheduled for the selected period.
+        </p>
+      </div>
+    );
+  }
+
+  const handleAvailabilityClick = (slot: any) => {
+    handleAvailabilitySlotClick(slot);
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <h2 className="text-lg font-semibold px-6 py-4">
-        {getViewTitle()}
-      </h2>
-      
-      <ScrollArea className="flex-1 px-6 pb-6">
-        {combinedItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-            <div className="text-gray-500 text-center mb-6">
-              <div className="text-lg mb-2">No events{showAvailability ? ' or availability' : ''} scheduled</div>
-              <div className="text-sm">Click on the calendar to add a new event</div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4 pb-4">
-            {displayedItems.map((item, index) => (
-              <div 
-                key={`${item.type}-${item.id}-${index}`} 
-                className="border rounded-md p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+    <div className="space-y-4">
+      {/* Events section */}
+      {events.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-3">Events</h3>
+          <div className="divide-y divide-gray-200">
+            {events.map(event => (
+              <div
+                key={event.id}
+                className="flex justify-between items-center py-4 px-2 hover:bg-gray-50"
               >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      {item.type === 'availability' ? (
-                        <Badge className="mr-2 bg-green-100 text-green-800 border-green-300">
-                          Available
-                        </Badge>
-                      ) : (
-                        <Badge className="mr-2 bg-blue-100 text-blue-800 border-blue-300">
-                          Event
-                        </Badge>
-                      )}
-                      <h3 className="text-lg font-medium">{item.title}</h3>
-                    </div>
-                    <div className="flex items-center text-gray-500 mt-2">
-                      <Clock className="w-4 h-4 mr-1" />
-                      <span className="text-sm">
-                        {format(item.start, 'h:mm a')} - {format(item.end, 'h:mm a')}
-                      </span>
-                    </div>
-                    
-                    {/* Only display location if the item type is event and has location */}
-                    {item.type === 'event' && item.location && (
-                      <div className="flex items-center text-gray-500 mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{item.location}</span>
-                      </div>
-                    )}
-                    
-                    {/* Display user name for availability items */}
-                    {item.type === 'availability' && item.userName && (
-                      <div className="flex items-center text-gray-500 mt-1">
-                        <Users className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{item.userName}</span>
-                      </div>
-                    )}
-                    
-                    {/* Display category for availability items */}
-                    {item.type === 'availability' && item.category && (
-                      <div className="flex items-center text-gray-500 mt-1">
-                        <Tag className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{item.category}</span>
-                      </div>
-                    )}
-                    
-                    {/* Only display description if the item type is event and has description */}
-                    {item.type === 'event' && item.description && (
-                      <p className="mt-2 text-sm text-gray-600">{item.description}</p>
-                    )}
+                <div>
+                  <h4 className="font-medium text-gray-900">{event.title}</h4>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {format(event.start, 'MMM d, yyyy')} • {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
                   </div>
-                  {item.type === 'event' && (
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8" 
-                        onClick={() => onEditEvent(item as CalendarEvent)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 text-red-500 hover:text-red-600" 
-                        onClick={() => onDeleteEvent(item as CalendarEvent)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  {event.location && (
+                    <div className="text-sm text-gray-600 mt-1">
+                      📍 {event.location}
                     </div>
                   )}
                 </div>
-                
-                <div
-                  className="w-full h-1 mt-4"
-                  style={{ backgroundColor: item.color || '#4285F4' }}
-                ></div>
+                <div className="flex space-x-2">
+                  {onEditEvent && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEditEvent(event)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                  )}
+                  {onDeleteEvent && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-500 border-red-200 hover:bg-red-50"
+                      onClick={() => onDeleteEvent(event)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
-            
-            {/* Show more button - only visible if there are more items to show */}
-            {displayedItems.length < combinedItems.length && (
-              <div className="flex justify-center mt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={handleShowMore}
-                  className="w-full max-w-sm"
-                >
-                  Show More ({combinedItems.length - displayedItems.length} items remaining)
-                </Button>
-              </div>
-            )}
           </div>
-        )}
-      </ScrollArea>
+        </div>
+      )}
+      
+      {/* Availability slots section */}
+      {showAvailability && availabilitySlots.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3">Available Time Slots</h3>
+          <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+            {availabilitySlots.map((slot, index) => {
+              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+              const dayName = dayNames[slot.dayOfWeek];
+              
+              return (
+                <TooltipProvider key={`${slot.userId}-${index}`}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div 
+                        className="p-3 rounded-md shadow-sm border cursor-pointer hover:shadow-md transition-shadow"
+                        style={{ 
+                          backgroundColor: `${slot.category === 'Session' ? '#e6f7ed' : 
+                                          slot.category === 'Break' ? '#e6f1fa' :
+                                          slot.category === 'Office' ? '#f0e6fa' : '#f0f0f0'}`,
+                          borderColor: `${slot.category === 'Session' ? '#9be6c0' : 
+                                        slot.category === 'Break' ? '#9bc5e6' :
+                                        slot.category === 'Office' ? '#c59be6' : '#d0d0d0'}`
+                        }}
+                        onClick={() => handleAvailabilityClick(slot)}
+                      >
+                        <div className="font-medium">{slot.userName || 'Available'}</div>
+                        <div className="text-xs font-semibold mt-1">{dayName}</div>
+                        <div className="text-sm mt-1">
+                          {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
+                        </div>
+                        <div className="mt-2">
+                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-white/50">
+                            {slot.category}
+                          </span>
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p><strong>{slot.category}</strong> - {slot.userName || 'Available'}</p>
+                      <p className="text-xs">Click to create an event</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -89,9 +89,9 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    let { data, error } = await supabase
-      .from('calendar_events')
-      .select('*');
+    // Fix: Use explicit typing to avoid deep type instantiation
+    const result = await supabase.from("calendar_events").select("*");
+    const { data, error } = result;
     
     if (error) {
       console.error('Error fetching all events:', error);
@@ -115,10 +115,13 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    let { data, error } = await supabase
-      .from('calendar_events')
-      .select('*')
+    // Fix: Use explicit typing to avoid deep type instantiation
+    const result = await supabase
+      .from("calendar_events")
+      .select("*")
       .eq(columnName, filterId);
+      
+    const { data, error } = result;
     
     if (error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
@@ -142,10 +145,13 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    let { data, error } = await supabase
-      .from('calendar_events')
-      .select('*')
+    // Fix: Use explicit typing to avoid deep type instantiation
+    const result = await supabase
+      .from("calendar_events")
+      .select("*")
       .in(columnName, filterIds);
+      
+    const { data, error } = result;
     
     if (error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
