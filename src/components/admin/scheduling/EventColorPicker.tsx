@@ -3,12 +3,14 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// Aligned with our category colors for consistency
 const colorOptions = [
-  { name: 'Blue', value: '#4285F4' },
-  { name: 'Green', value: '#0F9D58' },
-  { name: 'Yellow', value: '#F4B400' },
-  { name: 'Red', value: '#DB4437' },
-  { name: 'Purple', value: '#9C27B0' },
+  { name: 'Green (Session)', value: '#10B981' },  // green-700
+  { name: 'Blue (Break)', value: '#3B82F6' },     // blue-600
+  { name: 'Purple (Office)', value: '#8B5CF6' },  // purple-600
+  { name: 'Yellow (Meeting)', value: '#F59E0B' }, // yellow-500
+  { name: 'Orange (Setup)', value: '#F97316' },   // orange-500
+  { name: 'Pink (QC)', value: '#EC4899' },        // pink-600
 ];
 
 interface EventColorPickerProps {

@@ -87,6 +87,6 @@ export const getEventColor = (category: string): string => {
     case 'qc':
       return '#EC4899'; // pink-600
     default:
-      return '#4285F4'; // Default blue color
+      return '#10B981'; // Default to green
   }
 };

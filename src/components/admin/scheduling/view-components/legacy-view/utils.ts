@@ -49,14 +49,37 @@ export const getCategoryBackgroundClass = (category: string) => {
 };
 
 // Get item background style based on status/category
-export const getItemStyle = (item: { status: string; color: string }) => {
+export const getItemStyle = (item: { status: string; color: string; type?: string }) => {
+  // Handle expired status 
   if (item.status === 'expired') {
     return 'bg-red-700/90 text-white';
   }
   
+  // Handle booked status
   if (item.status === 'booked') {
     return `bg-blue-600 text-white`;
   }
   
+  // Use category-specific color if available and for available slots
+  if (item.status === 'available' && item.type) {
+    switch(item.type.toLowerCase()) {
+      case 'session':
+        return 'bg-green-700 text-white';
+      case 'break':
+        return 'bg-blue-600 text-white';
+      case 'office':
+        return 'bg-purple-600 text-white';
+      case 'meeting':
+        return 'bg-yellow-500 text-white';
+      case 'class setup':
+        return 'bg-orange-500 text-white';
+      case 'qc':
+        return 'bg-pink-600 text-white';
+      default:
+        return 'bg-green-700 text-white';
+    }
+  }
+  
+  // Default to green if no match
   return 'bg-green-700 text-white';
 };

@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { getItemStyle } from './utils';
+import { getItemStyle, getCategoryColor } from './utils';
 import { CalendarEvent } from '../../types';
 import { format } from 'date-fns';
 

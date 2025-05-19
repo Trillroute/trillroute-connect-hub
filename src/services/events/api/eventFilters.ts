@@ -30,12 +30,6 @@ export interface CalendarEvent {
   updated_at?: string;
 }
 
-// Define a simple interface for Supabase response to avoid complex type inference
-interface SupabaseResponse {
-  data: any; // Using any to prevent deep type instantiation
-  error: Error | null;
-}
-
 /**
  * Main function to fetch events based on specified filter type and IDs
  */
@@ -105,7 +99,7 @@ async function fetchAllEvents(): Promise<CalendarEvent[]> {
     }
 
     console.log(`Found ${response.data?.length || 0} events (no filters)`);
-    return (response.data as CalendarEvent[]) || [];
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Unexpected error in fetchAllEvents:', error);
     return [];
@@ -132,7 +126,7 @@ async function fetchEventsBySingleValue(
     }
 
     console.log(`Found ${response.data?.length || 0} events for ${filterType} with ID ${filterId}`);
-    return (response.data as CalendarEvent[]) || [];
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsBySingleValue:`, error);
     return [];
@@ -159,7 +153,7 @@ async function fetchEventsByMultipleValues(
     }
 
     console.log(`Found ${response.data?.length || 0} events for ${filterType}`);
-    return (response.data as CalendarEvent[]) || [];
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
     return [];
