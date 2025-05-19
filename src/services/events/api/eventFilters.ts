@@ -89,10 +89,13 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Break the deep type instantiation by using a simpler approach
-    const { data, error } = await supabase
+    // Simplify the type handling to avoid deep instantiation
+    const result = await supabase
       .from("calendar_events")
-      .select("*") as { data: any; error: any };
+      .select("*");
+    
+    // Cast the result to avoid TypeScript deep instantiation
+    const { data, error } = result as unknown as { data: any; error: any };
     
     if (error) {
       console.error('Error fetching all events:', error);
@@ -118,11 +121,14 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Break the deep type instantiation by using a simpler approach
-    const { data, error } = await supabase
+    // Simplify the type handling to avoid deep instantiation
+    const result = await supabase
       .from("calendar_events")
       .select("*")
-      .eq(columnName, filterId) as { data: any; error: any };
+      .eq(columnName, filterId);
+    
+    // Cast the result to avoid TypeScript deep instantiation
+    const { data, error } = result as unknown as { data: any; error: any };
       
     if (error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
@@ -148,11 +154,14 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Break the deep type instantiation by using a simpler approach
-    const { data, error } = await supabase
+    // Simplify the type handling to avoid deep instantiation
+    const result = await supabase
       .from("calendar_events")
       .select("*")
-      .in(columnName, filterIds) as { data: any; error: any };
+      .in(columnName, filterIds);
+    
+    // Cast the result to avoid TypeScript deep instantiation
+    const { data, error } = result as unknown as { data: any; error: any };
       
     if (error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
