@@ -71,7 +71,7 @@ export const isTimeAvailable = (hour: number, dayIndex: number, availabilitySlot
   });
 };
 
-// Align event colors with legacy view colors
+// Get event color - matching exactly with the colors in legacy-view/utils.ts
 export const getEventColor = (category: string): string => {
   switch(category?.toLowerCase() || '') {
     case 'session':

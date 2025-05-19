@@ -3,7 +3,7 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Aligned with our category colors for consistency
+// Using the exact same hex values as in weekViewUtils and legacy-view/utils
 const colorOptions = [
   { name: 'Green (Session)', value: '#10B981' },  // green-700
   { name: 'Blue (Break)', value: '#3B82F6' },     // blue-600

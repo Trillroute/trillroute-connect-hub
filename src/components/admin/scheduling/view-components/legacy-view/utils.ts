@@ -8,7 +8,7 @@ export const formatTime = (hour: number, minute: number): string => {
   return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
 };
 
-// Get category color - matching the same colors used in weekViewUtils.ts
+// Get category color - matching the exact same colors used in weekViewUtils.ts
 export const getCategoryColor = (category: string): string => {
   switch(category.toLowerCase()) {
     case 'session':
