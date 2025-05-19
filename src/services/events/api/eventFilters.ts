@@ -88,9 +88,13 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  * Fetch all calendar events with no filtering
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
-  const { data, error } = await supabase
+  // Use explicit type destructuring instead of complex type inference
+  const response = await supabase
     .from('calendar_events')
     .select('*');
+    
+  // Extract data and error from response
+  const { data, error } = response;
   
   if (error) {
     console.error('Error fetching all events:', error);
@@ -98,7 +102,7 @@ async function fetchAllEvents(): Promise<CalendarEvent[]> {
   }
   
   console.log(`Found ${data?.length || 0} events (no filters)`);
-  return (data || []) as CalendarEvent[];
+  return data as CalendarEvent[] || [];
 }
 
 /**
@@ -109,10 +113,14 @@ async function fetchEventsBySingleValue(
   filterType: FilterType, 
   filterId: string
 ): Promise<CalendarEvent[]> {
-  const { data, error } = await supabase
+  // Use explicit type destructuring
+  const response = await supabase
     .from('calendar_events')
     .select('*')
     .eq(columnName, filterId);
+  
+  // Extract data and error from response
+  const { data, error } = response;
   
   if (error) {
     console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
@@ -120,7 +128,7 @@ async function fetchEventsBySingleValue(
   }
   
   console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterId}`);
-  return (data || []) as CalendarEvent[];
+  return data as CalendarEvent[] || [];
 }
 
 /**
@@ -131,10 +139,14 @@ async function fetchEventsByMultipleValues(
   filterType: FilterType, 
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
-  const { data, error } = await supabase
+  // Use explicit type destructuring
+  const response = await supabase
     .from('calendar_events')
     .select('*')
     .in(columnName, filterIds);
+  
+  // Extract data and error from response
+  const { data, error } = response;
   
   if (error) {
     console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
@@ -142,5 +154,5 @@ async function fetchEventsByMultipleValues(
   }
   
   console.log(`Found ${data?.length || 0} events for ${filterType}`);
-  return (data || []) as CalendarEvent[];
+  return data as CalendarEvent[] || [];
 }
