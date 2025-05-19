@@ -89,8 +89,8 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Fix the type instantiation issue by using type assertion with any
-    const response: any = await supabase
+    // Fix the type instantiation issue by avoiding complex type inference
+    const response = await supabase
       .from("calendar_events")
       .select("*");
     
@@ -100,9 +100,9 @@ async function fetchAllEvents(): Promise<CalendarEvent[]> {
     }
 
     // Safely convert data to CalendarEvent array
-    const events: CalendarEvent[] = Array.isArray(response.data) ? response.data : [];
-    console.log(`Found ${events.length} events (no filters)`);
-    return events;
+    const events = response.data as CalendarEvent[];
+    console.log(`Found ${events?.length || 0} events (no filters)`);
+    return events || [];
   } catch (error) {
     console.error('Unexpected error in fetchAllEvents:', error);
     return [];
@@ -118,8 +118,8 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Fix the type instantiation issue by using type assertion with any
-    const response: any = await supabase
+    // Fix the type instantiation issue by avoiding complex type inference
+    const response = await supabase
       .from("calendar_events")
       .select("*")
       .eq(columnName, filterId);
@@ -130,9 +130,9 @@ async function fetchEventsBySingleValue(
     }
 
     // Safely convert data to CalendarEvent array
-    const events: CalendarEvent[] = Array.isArray(response.data) ? response.data : [];
-    console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
-    return events;
+    const events = response.data as CalendarEvent[];
+    console.log(`Found ${events?.length || 0} events for ${filterType} with ID ${filterId}`);
+    return events || [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsBySingleValue:`, error);
     return [];
@@ -148,8 +148,8 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Fix the type instantiation issue by using type assertion with any
-    const response: any = await supabase
+    // Fix the type instantiation issue by avoiding complex type inference
+    const response = await supabase
       .from("calendar_events")
       .select("*")
       .in(columnName, filterIds);
@@ -160,9 +160,9 @@ async function fetchEventsByMultipleValues(
     }
 
     // Safely convert data to CalendarEvent array
-    const events: CalendarEvent[] = Array.isArray(response.data) ? response.data : [];
-    console.log(`Found ${events.length} events for ${filterType}`);
-    return events;
+    const events = response.data as CalendarEvent[];
+    console.log(`Found ${events?.length || 0} events for ${filterType}`);
+    return events || [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
     return [];
