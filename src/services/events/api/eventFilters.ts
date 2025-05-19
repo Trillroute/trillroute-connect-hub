@@ -89,11 +89,10 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Break type checking chain by using separate execution steps
-    const query = supabase.from("calendar_events").select("*");
-    
-    // Execute query separately from its definition
-    const response = await query;
+    // Use any type to break the deep typing chain
+    const response: any = await supabase
+      .from("calendar_events")
+      .select("*");
     
     if (response.error) {
       console.error('Error fetching all events:', response.error);
@@ -119,18 +118,11 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Break type checking chain completely by separating into simple steps
-    // Step 1: Create the base query object without type checking
-    const baseQuery = supabase.from("calendar_events");
-    
-    // Step 2: Add the select method
-    const selectQuery = baseQuery.select("*");
-    
-    // Step 3: Add the filter condition
-    const finalQuery = selectQuery.eq(columnName, filterId);
-    
-    // Step 4: Execute the query separately
-    const response = await finalQuery;
+    // Use any type to completely avoid TypeScript's type checking for Supabase client
+    const response: any = await supabase
+      .from("calendar_events")
+      .select("*")
+      .eq(columnName, filterId);
       
     if (response.error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
@@ -156,18 +148,11 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Break type checking chain completely by separating into simple steps
-    // Step 1: Create the base query object without type checking
-    const baseQuery = supabase.from("calendar_events");
-    
-    // Step 2: Add the select method
-    const selectQuery = baseQuery.select("*");
-    
-    // Step 3: Add the filter condition
-    const finalQuery = selectQuery.in(columnName, filterIds);
-    
-    // Step 4: Execute the query separately
-    const response = await finalQuery;
+    // Use any type to completely avoid TypeScript's type checking for Supabase client
+    const response: any = await supabase
+      .from("calendar_events")
+      .select("*")
+      .in(columnName, filterIds);
       
     if (response.error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
