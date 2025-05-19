@@ -117,9 +117,11 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Completely bypass TypeScript's type system using a simple function call pattern
-    const query = supabase.from("calendar_events").select("*").eq(columnName, filterId);
-    const { data, error } = await query;
+    // Use type assertion to avoid TypeScript's deep type checking
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .select("*")
+      .eq(columnName, filterId) as unknown as { data: any, error: any };
       
     if (error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
