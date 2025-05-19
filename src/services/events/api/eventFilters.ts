@@ -30,12 +30,6 @@ export interface CalendarEvent {
   updated_at?: string;
 }
 
-// Define SupabaseResponse type once at the top level to prevent deep instantiation
-interface SupabaseResponse {
-  data: CalendarEvent[] | null;
-  error: any;
-}
-
 /**
  * Main function to fetch events based on specified filter type and IDs
  */
@@ -94,18 +88,17 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  * Fetch all calendar events with no filtering
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
-  // Execute the query with explicit typing
-  const response = await supabase
+  const { data, error } = await supabase
     .from('calendar_events')
-    .select('*') as unknown as SupabaseResponse;
+    .select('*');
   
-  if (response.error) {
-    console.error('Error fetching all events:', response.error);
+  if (error) {
+    console.error('Error fetching all events:', error);
     return [];
   }
   
-  console.log(`Found ${response.data?.length || 0} events (no filters)`);
-  return response.data || [];
+  console.log(`Found ${data?.length || 0} events (no filters)`);
+  return data as CalendarEvent[] || [];
 }
 
 /**
@@ -116,19 +109,18 @@ async function fetchEventsBySingleValue(
   filterType: FilterType, 
   filterId: string
 ): Promise<CalendarEvent[]> {
-  // Execute the query with explicit typing
-  const response = await supabase
+  const { data, error } = await supabase
     .from('calendar_events')
     .select('*')
-    .eq(columnName, filterId) as unknown as SupabaseResponse;
+    .eq(columnName, filterId);
   
-  if (response.error) {
-    console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
+  if (error) {
+    console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
     return [];
   }
   
-  console.log(`Found ${response.data?.length || 0} events for ${filterType} with ID ${filterId}`);
-  return response.data || [];
+  console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterId}`);
+  return data as CalendarEvent[] || [];
 }
 
 /**
@@ -139,17 +131,16 @@ async function fetchEventsByMultipleValues(
   filterType: FilterType, 
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
-  // Execute the query with explicit typing
-  const response = await supabase
+  const { data, error } = await supabase
     .from('calendar_events')
     .select('*')
-    .in(columnName, filterIds) as unknown as SupabaseResponse;
+    .in(columnName, filterIds);
   
-  if (response.error) {
-    console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
+  if (error) {
+    console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
     return [];
   }
   
-  console.log(`Found ${response.data?.length || 0} events for ${filterType}`);
-  return response.data || [];
+  console.log(`Found ${data?.length || 0} events for ${filterType}`);
+  return data as CalendarEvent[] || [];
 }
