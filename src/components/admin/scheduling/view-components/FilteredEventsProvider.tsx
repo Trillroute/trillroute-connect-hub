@@ -21,7 +21,7 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   filterId,
   filterIds = []
 }) => {
-  const { setEvents, setAvailabilities } = useCalendar();
+  const { setEvents, setAvailabilities, refreshEvents } = useCalendar();
   
   // Convert service availability map to context availability map
   const convertAvailabilityMap = (
@@ -49,6 +49,13 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
 
   // Apply filters when filterType or filterIds change
   useEffect(() => {
+    // If no filters are applied, use refreshEvents to get all events
+    if ((!filterType || filterType === null) && (!filterIds || filterIds.length === 0) && !filterId) {
+      console.log("No filters applied, fetching all events");
+      refreshEvents();
+      return;
+    }
+    
     // Define default roles based on filterType
     let defaultRoles: string[] = [];
     
@@ -85,10 +92,11 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       defaultRoles,
       setEvents,
       setAvailabilities,
-      convertAvailabilityMap
+      convertAvailabilityMap,
+      refreshEvents
     });
     
-  }, [filterType, filterId, JSON.stringify(filterIds), setEvents, setAvailabilities]);
+  }, [filterType, filterId, JSON.stringify(filterIds), setEvents, setAvailabilities, refreshEvents]);
 
   // Return children without additional wrapping
   return <>{children}</>;

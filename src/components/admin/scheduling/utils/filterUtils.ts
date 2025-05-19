@@ -10,6 +10,7 @@ interface ApplyFilterProps {
   setEvents: (events: any[]) => void;
   setAvailabilities: (availabilities: any) => void;
   convertAvailabilityMap: (map: any) => any;
+  refreshEvents?: () => Promise<void>;
 }
 
 /**
@@ -21,10 +22,25 @@ export const applyFilter = async ({
   defaultRoles = [],
   setEvents,
   setAvailabilities,
-  convertAvailabilityMap
+  convertAvailabilityMap,
+  refreshEvents
 }: ApplyFilterProps) => {
   try {
     console.log(`Applying ${filterType || 'null'} filter with ${ids.length} IDs and ${defaultRoles.length} default roles`);
+    
+    // If no filter type is specified or it's null, fetch all events
+    if (!filterType) {
+      console.log('No filter type specified, fetching all events');
+      if (refreshEvents) {
+        await refreshEvents();
+      } else {
+        const events = await fetchEventsByFilter({ filterType: null });
+        console.log(`Fetched ${events.length} events (all events)`);
+        setEvents(events);
+        setAvailabilities({});
+      }
+      return;
+    }
     
     // Handle skill filter specially - we need to find users with these skills first
     if (filterType === 'skill' && ids.length > 0) {
