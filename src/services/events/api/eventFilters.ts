@@ -89,16 +89,15 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Fix: Use explicit typing with type assertion to avoid deep type instantiation
-    const { data, error } = await supabase
-      .from("calendar_events")
-      .select("*") as { data: CalendarEvent[] | null, error: any };
+    // Completely avoid type inference by using a simple approach
+    const result = await supabase.from("calendar_events").select("*");
     
-    if (error) {
-      console.error('Error fetching all events:', error);
+    if (result.error) {
+      console.error('Error fetching all events:', result.error);
       return [];
     }
 
+    const data = result.data as CalendarEvent[];
     console.log(`Found ${data?.length || 0} events (no filters)`);
     return data || [];
   } catch (error) {
@@ -116,17 +115,18 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Fix: Use explicit typing with type assertion to avoid deep type instantiation
-    const { data, error } = await supabase
+    // Completely avoid type inference by using a simple approach
+    const result = await supabase
       .from("calendar_events")
       .select("*")
-      .eq(columnName, filterId) as { data: CalendarEvent[] | null, error: any };
+      .eq(columnName, filterId);
       
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
+    if (result.error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, result.error);
       return [];
     }
 
+    const data = result.data as CalendarEvent[];
     console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterId}`);
     return data || [];
   } catch (error) {
@@ -144,17 +144,18 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Fix: Use explicit typing with type assertion to avoid deep type instantiation
-    const { data, error } = await supabase
+    // Completely avoid type inference by using a simple approach
+    const result = await supabase
       .from("calendar_events")
       .select("*")
-      .in(columnName, filterIds) as { data: CalendarEvent[] | null, error: any };
+      .in(columnName, filterIds);
       
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
+    if (result.error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, result.error);
       return [];
     }
 
+    const data = result.data as CalendarEvent[];
     console.log(`Found ${data?.length || 0} events for ${filterType}`);
     return data || [];
   } catch (error) {
