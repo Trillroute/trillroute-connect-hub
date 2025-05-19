@@ -40,7 +40,7 @@ export async function fetchEventsByFilter(props: FilterEventsProps): Promise<Cal
     console.log(`Fetching events with filter type: ${filterType || 'none'}, IDs: ${filterIds.length ? filterIds.join(',') : 'none'}`);
     
     // Handle case with no filters - return all events
-    if (!filterType || filterIds.length === 0) {
+    if (!filterType || filterType === null) {
       return await fetchAllEvents();
     }
     
@@ -53,7 +53,9 @@ export async function fetchEventsByFilter(props: FilterEventsProps): Promise<Cal
     }
     
     // Handle filtering by IDs
-    if (filterIds.length === 1) {
+    if (filterIds.length === 0) {
+      return await fetchAllEvents();
+    } else if (filterIds.length === 1) {
       return await fetchEventsBySingleValue(columnName, filterType, filterIds[0]);
     } else {
       return await fetchEventsByMultipleValues(columnName, filterType, filterIds);
@@ -89,18 +91,18 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Use any type to break the deep typing chain
-    const response: any = await supabase
-      .from("calendar_events")
-      .select("*");
+    // Create raw query to avoid TypeScript inference issues
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*') as { data: any; error: any };
     
-    if (response.error) {
-      console.error('Error fetching all events:', response.error);
+    if (error) {
+      console.error('Error fetching all events:', error);
       return [];
     }
 
     // Safely cast to CalendarEvent array
-    const events = Array.isArray(response.data) ? response.data as CalendarEvent[] : [];
+    const events = Array.isArray(data) ? data as CalendarEvent[] : [];
     console.log(`Found ${events.length} events (no filters)`);
     return events;
   } catch (error) {
@@ -118,19 +120,19 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Use any type to completely avoid TypeScript's type checking for Supabase client
-    const response: any = await supabase
-      .from("calendar_events")
-      .select("*")
-      .eq(columnName, filterId);
+    // Create raw query to avoid TypeScript inference issues
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .eq(columnName, filterId) as { data: any; error: any };
       
-    if (response.error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
       return [];
     }
 
     // Safely cast to CalendarEvent array
-    const events = Array.isArray(response.data) ? response.data as CalendarEvent[] : [];
+    const events = Array.isArray(data) ? data as CalendarEvent[] : [];
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -148,19 +150,19 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Use any type to completely avoid TypeScript's type checking for Supabase client
-    const response: any = await supabase
-      .from("calendar_events")
-      .select("*")
-      .in(columnName, filterIds);
+    // Create raw query to avoid TypeScript inference issues
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .in(columnName, filterIds) as { data: any; error: any };
       
-    if (response.error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
       return [];
     }
 
     // Safely cast to CalendarEvent array
-    const events = Array.isArray(response.data) ? response.data as CalendarEvent[] : [];
+    const events = Array.isArray(data) ? data as CalendarEvent[] : [];
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
