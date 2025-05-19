@@ -91,10 +91,12 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Create raw query to avoid TypeScript inference issues
-    const { data, error } = await supabase
-      .from('calendar_events')
-      .select('*') as { data: any; error: any };
+    // Execute the query directly without chaining to avoid deep type inference
+    let query = supabase.from('calendar_events');
+    query = query.select('*');
+    const result = await query;
+    
+    const { data, error } = result;
     
     if (error) {
       console.error('Error fetching all events:', error);
@@ -120,11 +122,13 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Create raw query to avoid TypeScript inference issues
-    const { data, error } = await supabase
-      .from('calendar_events')
-      .select('*')
-      .eq(columnName, filterId) as { data: any; error: any };
+    // Execute the query directly without chaining to avoid deep type inference
+    let query = supabase.from('calendar_events');
+    query = query.select('*');
+    query = query.eq(columnName, filterId);
+    const result = await query;
+    
+    const { data, error } = result;
       
     if (error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
@@ -150,11 +154,13 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Create raw query to avoid TypeScript inference issues
-    const { data, error } = await supabase
-      .from('calendar_events')
-      .select('*')
-      .in(columnName, filterIds) as { data: any; error: any };
+    // Execute the query directly without chaining to avoid deep type inference
+    let query = supabase.from('calendar_events');
+    query = query.select('*');
+    query = query.in(columnName, filterIds);
+    const result = await query;
+    
+    const { data, error } = result;
       
     if (error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
