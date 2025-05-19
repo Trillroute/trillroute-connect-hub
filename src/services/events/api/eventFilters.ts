@@ -30,6 +30,12 @@ export interface CalendarEvent {
   updated_at?: string;
 }
 
+// Define SupabaseResponse type once at the top level to prevent deep instantiation
+interface SupabaseResponse {
+  data: CalendarEvent[] | null;
+  error: any;
+}
+
 /**
  * Main function to fetch events based on specified filter type and IDs
  */
@@ -88,16 +94,10 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  * Fetch all calendar events with no filtering
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
-  // Define the response type explicitly to avoid deep type inference
-  type SupabaseResponse = {
-    data: CalendarEvent[] | null;
-    error: any;
-  };
-  
   // Execute the query with explicit typing
-  const response: SupabaseResponse = await supabase
+  const response = await supabase
     .from('calendar_events')
-    .select('*');
+    .select('*') as unknown as SupabaseResponse;
   
   if (response.error) {
     console.error('Error fetching all events:', response.error);
@@ -116,17 +116,11 @@ async function fetchEventsBySingleValue(
   filterType: FilterType, 
   filterId: string
 ): Promise<CalendarEvent[]> {
-  // Define the response type explicitly
-  type SupabaseResponse = {
-    data: CalendarEvent[] | null;
-    error: any;
-  };
-  
   // Execute the query with explicit typing
-  const response: SupabaseResponse = await supabase
+  const response = await supabase
     .from('calendar_events')
     .select('*')
-    .eq(columnName, filterId);
+    .eq(columnName, filterId) as unknown as SupabaseResponse;
   
   if (response.error) {
     console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
@@ -145,17 +139,11 @@ async function fetchEventsByMultipleValues(
   filterType: FilterType, 
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
-  // Define the response type explicitly
-  type SupabaseResponse = {
-    data: CalendarEvent[] | null;
-    error: any;
-  };
-  
   // Execute the query with explicit typing
-  const response: SupabaseResponse = await supabase
+  const response = await supabase
     .from('calendar_events')
     .select('*')
-    .in(columnName, filterIds);
+    .in(columnName, filterIds) as unknown as SupabaseResponse;
   
   if (response.error) {
     console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
