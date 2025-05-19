@@ -12,7 +12,7 @@ export interface AvailabilitySlot {
   category: string;
 }
 
-// Get color based on category - using the same colors as in legacy-view/utils.ts
+// Get category background class - matching the same function in legacy-view/utils.ts
 export const getCategoryColor = (category: string) => {
   switch (category.toLowerCase()) {
     case 'session':

@@ -32,7 +32,7 @@ export interface CalendarEvent {
 
 // Define a simple interface for Supabase response to avoid complex type inference
 interface SupabaseResponse {
-  data: CalendarEvent[] | null;
+  data: any;
   error: Error | null;
 }
 
@@ -160,8 +160,5 @@ async function fetchEventsByMultipleValues(
 
     console.log(`Found ${response.data?.length || 0} events for ${filterType}`);
     return response.data as CalendarEvent[] || [];
-  } catch (error) {
-    console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
-    return [];
   }
 }
