@@ -89,21 +89,17 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Fix the TypeScript error by using type annotations
-    const response = await supabase
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*');
     
-    const data = response.data;
-    const error = response.error;
-
     if (error) {
       console.error('Error fetching all events:', error);
       return [];
     }
 
     console.log(`Found ${data?.length || 0} events (no filters)`);
-    return (data || []) as CalendarEvent[];
+    return data || [];
   } catch (error) {
     console.error('Unexpected error in fetchAllEvents:', error);
     return [];
@@ -119,22 +115,18 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Fix the TypeScript error by using type annotations
-    const response = await supabase
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
     
-    const data = response.data;
-    const error = response.error;
-
     if (error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
       return [];
     }
 
     console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterId}`);
-    return (data || []) as CalendarEvent[];
+    return data || [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsBySingleValue:`, error);
     return [];
@@ -150,22 +142,18 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Fix the TypeScript error by using type annotations
-    const response = await supabase
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
     
-    const data = response.data;
-    const error = response.error;
-
     if (error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
       return [];
     }
 
     console.log(`Found ${data?.length || 0} events for ${filterType}`);
-    return (data || []) as CalendarEvent[];
+    return data || [];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
     return [];
