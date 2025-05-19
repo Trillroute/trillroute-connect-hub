@@ -90,7 +90,7 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
     // Use a basic query approach that avoids deep type checking
-    let { data, error } = await supabase
+    const { data, error } = await supabase
       .from("calendar_events")
       .select("*");
     
@@ -118,9 +118,16 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Break the type inference chain with a temporary any type
-    let query: any = supabase.from("calendar_events").select("*").eq(columnName, filterId);
-    let { data, error } = await query;
+    // Use type assertion with any to break the deep typing chain
+    const query = supabase
+      .from("calendar_events")
+      .select("*")
+      .eq(columnName, filterId);
+      
+    // Type assertion after query execution to avoid deep type instantiation
+    const result = await query;
+    const data = result.data;
+    const error = result.error;
       
     if (error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
@@ -146,9 +153,16 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Break the type inference chain with a temporary any type
-    let query: any = supabase.from("calendar_events").select("*").in(columnName, filterIds);
-    let { data, error } = await query;
+    // Use type assertion with any to break the deep typing chain
+    const query = supabase
+      .from("calendar_events")
+      .select("*")
+      .in(columnName, filterIds);
+      
+    // Execute query separately from type checking
+    const result = await query;
+    const data = result.data;
+    const error = result.error;
       
     if (error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
