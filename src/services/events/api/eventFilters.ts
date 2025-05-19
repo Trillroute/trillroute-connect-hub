@@ -89,7 +89,7 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('calendar_events')
       .select('*');
     
@@ -99,7 +99,7 @@ async function fetchAllEvents(): Promise<CalendarEvent[]> {
     }
 
     console.log(`Found ${data?.length || 0} events (no filters)`);
-    return data || [];
+    return (data || []) as CalendarEvent[];
   } catch (error) {
     console.error('Unexpected error in fetchAllEvents:', error);
     return [];
@@ -115,7 +115,7 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
@@ -126,7 +126,7 @@ async function fetchEventsBySingleValue(
     }
 
     console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterId}`);
-    return data || [];
+    return (data || []) as CalendarEvent[];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsBySingleValue:`, error);
     return [];
@@ -142,7 +142,7 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
@@ -153,7 +153,7 @@ async function fetchEventsByMultipleValues(
     }
 
     console.log(`Found ${data?.length || 0} events for ${filterType}`);
-    return data || [];
+    return (data || []) as CalendarEvent[];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
     return [];
