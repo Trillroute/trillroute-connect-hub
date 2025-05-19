@@ -115,7 +115,7 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Completely avoid type inference by using a simple approach
+    // Use a type assertion after the query to avoid deep type instantiation
     const result = await supabase
       .from("calendar_events")
       .select("*")
@@ -126,6 +126,7 @@ async function fetchEventsBySingleValue(
       return [];
     }
 
+    // Explicitly cast the data to CalendarEvent[] to avoid complex type inference
     const data = result.data as CalendarEvent[];
     console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterId}`);
     return data || [];
