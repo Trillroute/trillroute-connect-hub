@@ -30,6 +30,12 @@ export interface CalendarEvent {
   updated_at?: string;
 }
 
+// Define a simple interface for Supabase response to avoid complex type inference
+interface SupabaseResponse {
+  data: CalendarEvent[] | null;
+  error: Error | null;
+}
+
 /**
  * Main function to fetch events based on specified filter type and IDs
  */
@@ -89,7 +95,7 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    const response = await supabase
+    const response: SupabaseResponse = await supabase
       .from('calendar_events')
       .select('*');
 
@@ -115,7 +121,7 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    const response = await supabase
+    const response: SupabaseResponse = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
@@ -142,7 +148,7 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    const response = await supabase
+    const response: SupabaseResponse = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
