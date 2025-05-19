@@ -89,18 +89,17 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Avoid type annotations on the response to prevent deep type instantiation
-    const response = await supabase
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*');
 
-    if (response.error) {
-      console.error('Error fetching all events:', response.error);
+    if (error) {
+      console.error('Error fetching all events:', error);
       return [];
     }
 
-    console.log(`Found ${response.data?.length || 0} events (no filters)`);
-    return Array.isArray(response.data) ? response.data : [];
+    console.log(`Found ${data?.length || 0} events (no filters)`);
+    return (data || []) as CalendarEvent[];
   } catch (error) {
     console.error('Unexpected error in fetchAllEvents:', error);
     return [];
@@ -116,19 +115,18 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Avoid type annotations on the response to prevent deep type instantiation
-    const response = await supabase
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
 
-    if (response.error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
       return [];
     }
 
-    console.log(`Found ${response.data?.length || 0} events for ${filterType} with ID ${filterId}`);
-    return Array.isArray(response.data) ? response.data : [];
+    console.log(`Found ${data?.length || 0} events for ${filterType} with ID ${filterId}`);
+    return (data || []) as CalendarEvent[];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsBySingleValue:`, error);
     return [];
@@ -144,19 +142,18 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Avoid type annotations on the response to prevent deep type instantiation
-    const response = await supabase
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
 
-    if (response.error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
       return [];
     }
 
-    console.log(`Found ${response.data?.length || 0} events for ${filterType}`);
-    return Array.isArray(response.data) ? response.data : [];
+    console.log(`Found ${data?.length || 0} events for ${filterType}`);
+    return (data || []) as CalendarEvent[];
   } catch (error) {
     console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
     return [];
