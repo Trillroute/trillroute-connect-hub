@@ -160,5 +160,8 @@ async function fetchEventsByMultipleValues(
 
     console.log(`Found ${response.data?.length || 0} events for ${filterType}`);
     return response.data as CalendarEvent[] || [];
+  } catch (error) {
+    console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
+    return [];
   }
 }
