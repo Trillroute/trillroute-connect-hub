@@ -89,6 +89,7 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
+    // Avoid type annotations on the response to prevent deep type instantiation
     const response = await supabase
       .from('calendar_events')
       .select('*');
@@ -115,6 +116,7 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
+    // Avoid type annotations on the response to prevent deep type instantiation
     const response = await supabase
       .from('calendar_events')
       .select('*')
@@ -142,6 +144,7 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
+    // Avoid type annotations on the response to prevent deep type instantiation
     const response = await supabase
       .from('calendar_events')
       .select('*')
