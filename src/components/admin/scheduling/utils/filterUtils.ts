@@ -1,6 +1,7 @@
 
 import { fetchEventsByFilter, FilterType } from '@/services/events/api/eventFilters';
 import { fetchUserAvailabilityForUsers } from '@/services/availability/api/staffAvailability';
+import { getUsersBySkills } from '@/services/skills/skillStaffService';
 
 interface ApplyFilterProps {
   filterType?: FilterType;
@@ -25,7 +26,38 @@ export const applyFilter = async ({
   try {
     console.log(`Applying ${filterType || 'null'} filter with ${ids.length} IDs and ${defaultRoles.length} default roles`);
     
-    // Fetch events based on filter type and IDs
+    // Handle skill filter specially - we need to find users with these skills first
+    if (filterType === 'skill' && ids.length > 0) {
+      console.log('Processing skill filter by finding users with these skills');
+      
+      // Get users who have the selected skills
+      const userIds = await getUsersBySkills(ids);
+      console.log(`Found ${userIds.length} users with selected skills`);
+      
+      if (userIds.length > 0) {
+        // Fetch events for these users
+        const events = await fetchEventsByFilter({ 
+          filterType: 'teacher', 
+          filterIds: userIds 
+        });
+        console.log(`Fetched ${events.length} events for users with selected skills`);
+        setEvents(events);
+        
+        // Also fetch availability for these users
+        const userAvailability = await fetchUserAvailabilityForUsers(userIds);
+        console.log(`Fetched availability for ${Object.keys(userAvailability).length} users with selected skills`);
+        setAvailabilities(convertAvailabilityMap(userAvailability));
+      } else {
+        // No users found with these skills, return empty data
+        console.log('No users found with selected skills, returning empty data');
+        setEvents([]);
+        setAvailabilities({});
+      }
+      
+      return;
+    }
+    
+    // Standard filtering approach for other filter types
     const events = await fetchEventsByFilter({ filterType, filterIds: ids });
     console.log(`Fetched ${events.length} events after applying filter`);
     setEvents(events);
