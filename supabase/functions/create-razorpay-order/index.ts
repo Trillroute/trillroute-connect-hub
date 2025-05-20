@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.188.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.20.0'
 
@@ -104,12 +105,17 @@ serve(async (req) => {
     if (!razorpayKeyId || !razorpayKeySecret) {
       console.error('Razorpay API keys not found');
       return new Response(
-        JSON.stringify({ error: 'Razorpay API keys not configured' }),
+        JSON.stringify({ 
+          error: 'Razorpay API keys not configured',
+          message: 'Please check environment variables' 
+        }),
         { headers: responseHeaders, status: 500 }
       );
     }
 
     console.log('Sending request to Razorpay API');
+    console.log('Using API Key ID:', razorpayKeyId.substring(0, 5) + '...');
+    
     const response = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
@@ -119,7 +125,11 @@ serve(async (req) => {
       body: JSON.stringify(orderData)
     });
 
+    // Log response status
+    console.log('Razorpay API response status:', response.status);
+    
     const razorpayOrder = await response.json();
+    console.log('Razorpay API response body:', razorpayOrder);
 
     if (!razorpayOrder.id) {
       console.error('Razorpay API error:', razorpayOrder);
@@ -170,7 +180,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error during order creation:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to create order' }),
+      JSON.stringify({ 
+        error: error.message || 'Failed to create order',
+        message: 'Please check Razorpay configuration' 
+      }),
       {
         headers: responseHeaders,
         status: 400,

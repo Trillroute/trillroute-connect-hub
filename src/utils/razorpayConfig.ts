@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -15,6 +14,7 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
     // Check if all required parameters are provided
     if (!amount || !courseId || !userId) {
       console.error('Missing required parameters:', { amount, courseId, userId });
+      toast.error('Missing payment information');
       return null;
     }
     
@@ -25,21 +25,28 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
 
     if (orderError) {
       console.error('Error creating order:', orderError);
-      toast.error('Failed to create payment order');
-      throw new Error('Failed to create payment order');
+      toast.error('Payment gateway error', {
+        description: 'Please check Razorpay configuration'
+      });
+      return null;
     }
 
     if (!orderData || !orderData.orderId || !orderData.key) {
       console.error('Invalid order data received:', orderData);
-      toast.error('Invalid payment configuration');
-      throw new Error('Invalid payment configuration');
+      toast.error('Payment gateway configuration error', {
+        description: 'Please check Razorpay API keys'
+      });
+      return null;
     }
 
     console.log('Order created successfully:', orderData.orderId);
     return orderData;
   } catch (error) {
     console.error('Exception in createRazorpayOrder:', error);
-    throw error;
+    toast.error('Payment system error', {
+      description: 'Please try again later or contact support'
+    });
+    return null;
   }
 };
 
