@@ -52,7 +52,7 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
           // Group slots by day for better UI organization
           const grouped: Record<string, UserAvailability[]> = {};
           slots.forEach(slot => {
-            const dayName = getDayName(slot.day_of_week);
+            const dayName = getDayName(slot.dayOfWeek);
             if (!grouped[dayName]) {
               grouped[dayName] = [];
             }
@@ -110,7 +110,7 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
                       <div className="px-2 py-1.5 text-sm font-semibold text-primary-foreground bg-primary/20 my-1">{day}</div>
                       {slots.map((slot) => (
                         <SelectItem key={slot.id} value={slot.id}>
-                          {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                          {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                         </SelectItem>
                       ))}
                     </React.Fragment>

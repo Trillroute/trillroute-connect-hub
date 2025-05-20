@@ -103,9 +103,9 @@ const EnrollmentPage: React.FC = () => {
       // Additional metadata to include availability slot information if selected
       const additionalMetadata = selectedAvailabilitySlot ? {
         availabilitySlotId: selectedAvailabilitySlot.id,
-        dayOfWeek: selectedAvailabilitySlot.day_of_week,
-        startTime: selectedAvailabilitySlot.start_time,
-        endTime: selectedAvailabilitySlot.end_time
+        dayOfWeek: selectedAvailabilitySlot.dayOfWeek,
+        startTime: selectedAvailabilitySlot.startTime,
+        endTime: selectedAvailabilitySlot.endTime
       } : undefined;
       
       const success = await addStudentToCourse(
@@ -189,7 +189,7 @@ const EnrollmentPage: React.FC = () => {
     
     // Show success message
     toast.success("Time slot selected", {
-      description: `Selected ${getDayName(slot.day_of_week)} from ${formatTime(slot.start_time)} to ${formatTime(slot.end_time)}`,
+      description: `Selected ${getDayName(slot.dayOfWeek)} from ${formatTime(slot.startTime)} to ${formatTime(slot.endTime)}`,
     });
     
     // Continue with enrollment now that we have the slot
@@ -290,7 +290,7 @@ const EnrollmentPage: React.FC = () => {
             <div className="p-3 bg-slate-50 rounded-md border">
               <p className="text-sm font-medium">Selected Time Slot</p>
               <p className="text-xs text-gray-600 mt-1">
-                {getDayName(selectedAvailabilitySlot.day_of_week)}, {formatTime(selectedAvailabilitySlot.start_time)} - {formatTime(selectedAvailabilitySlot.end_time)}
+                {getDayName(selectedAvailabilitySlot.dayOfWeek)}, {formatTime(selectedAvailabilitySlot.startTime)} - {formatTime(selectedAvailabilitySlot.endTime)}
               </p>
               <Button 
                 variant="ghost" 
