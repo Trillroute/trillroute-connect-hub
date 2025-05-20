@@ -8,7 +8,7 @@ import { formatEventData } from '../utils/eventFormatters';
  * @param filters Object containing field:value pairs to filter by
  */
 export const fetchEventsByMultipleValues = async (
-  filters: Partial<Record<keyof CalendarEvent, any>>
+  filters: Record<string, any>
 ): Promise<CalendarEvent[]> => {
   try {
     let query = supabase

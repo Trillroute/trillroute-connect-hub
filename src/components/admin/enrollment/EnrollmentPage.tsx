@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,9 @@ const EnrollmentPage: React.FC = () => {
       const isFixedCourse = selectedCourse?.duration_type === 'fixed';
       const amount = selectedCourse?.final_price || 0;
       
+      // Variable to store the generated payment link
+      let paymentLinkToDisplay: string | null = null;
+      
       // If fixed course, generate payment link first
       if (isFixedCourse && selectedCourse) {
         const paymentLink = await generatePaymentLink(
@@ -69,6 +73,7 @@ const EnrollmentPage: React.FC = () => {
         
         if (paymentLink) {
           setGeneratedLink(paymentLink);
+          paymentLinkToDisplay = paymentLink;
         }
       }
       
@@ -83,11 +88,11 @@ const EnrollmentPage: React.FC = () => {
         const student = students.find(s => s.id === selectedStudentId);
         const course = courses.find(c => c.id === selectedCourseId);
         
-        // SINGLE TOAST MESSAGE with payment link if applicable
-        const paymentLinkToShow = generatedLink || (isFixedCourse ? paymentLink : null);
+        // Use the stored link or the generated one
+        const finalPaymentLink = generatedLink || paymentLinkToDisplay;
         
         toast.success("Student enrollment processed", {
-          description: paymentLinkToShow ? (
+          description: finalPaymentLink ? (
             <div>
               <p>{student?.first_name} {student?.last_name} has been enrolled in {course?.title}</p>
               {isFixedCourse && (
@@ -95,19 +100,19 @@ const EnrollmentPage: React.FC = () => {
                   <p className="mt-1 text-sm">Payment link sent to {student?.email}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <a 
-                      href={paymentLinkToShow} 
+                      href={finalPaymentLink} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-500 underline truncate max-w-[200px]"
                     >
-                      {paymentLinkToShow}
+                      {finalPaymentLink}
                     </a>
                     <Button
                       variant="outline" 
                       size="icon"
                       className="h-6 w-6"
                       onClick={() => {
-                        navigator.clipboard.writeText(paymentLinkToShow);
+                        navigator.clipboard.writeText(finalPaymentLink);
                         toast.info("Link copied to clipboard");
                       }}
                     >
@@ -120,14 +125,14 @@ const EnrollmentPage: React.FC = () => {
           ) : (
             `${student?.first_name} ${student?.last_name} has been enrolled in ${course?.title}`
           ),
-          action: paymentLinkToShow ? {
+          action: finalPaymentLink ? {
             label: "Copy Link",
             onClick: () => {
-              navigator.clipboard.writeText(paymentLinkToShow);
+              navigator.clipboard.writeText(finalPaymentLink);
               toast.info("Link copied to clipboard");
             }
           } : undefined,
-          duration: paymentLinkToShow ? 10000 : 4000, // Longer duration if there's a payment link
+          duration: finalPaymentLink ? 10000 : 4000, // Longer duration if there's a payment link
         });
         
         // Reset selections after successful enrollment

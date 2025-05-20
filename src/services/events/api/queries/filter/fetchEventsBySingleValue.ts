@@ -8,15 +8,15 @@ import { formatEventData } from '../utils/eventFormatters';
  * @param field The field to filter by
  * @param value The value to filter for
  */
-export const fetchEventsBySingleValue = async <K extends keyof CalendarEvent>(
-  field: K, 
-  value: CalendarEvent[K]
+export const fetchEventsBySingleValue = async (
+  field: string, 
+  value: any
 ): Promise<CalendarEvent[]> => {
   try {
     const { data, error } = await supabase
       .from('user_events')
       .select('*')
-      .eq(field as string, value)
+      .eq(field, value)
       .order('start_time', { ascending: true });
 
     if (error) {

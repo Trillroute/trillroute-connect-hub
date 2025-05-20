@@ -34,9 +34,11 @@ export async function fetchEventsByFilter(props: FilterEventsProps): Promise<Cal
     if (filterIds.length === 0) {
       return await fetchAllEvents();
     } else if (filterIds.length === 1) {
-      return await fetchEventsBySingleValue(columnName, filterType, filterIds[0]);
+      return await fetchEventsBySingleValue(columnName, filterIds[0]);
     } else {
-      return await fetchEventsByMultipleValues(columnName, filterType, filterIds);
+      const filters: Record<string, any> = {};
+      filters[columnName] = filterIds;
+      return await fetchEventsByMultipleValues(filters);
     }
     
   } catch (error) {
