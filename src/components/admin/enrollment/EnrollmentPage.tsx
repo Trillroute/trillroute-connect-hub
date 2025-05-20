@@ -15,6 +15,7 @@ const EnrollmentPage: React.FC = () => {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [shouldShowTeacher, setShouldShowTeacher] = useState(false);
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
@@ -24,7 +25,24 @@ const EnrollmentPage: React.FC = () => {
   // Reset teacher selection when course changes
   useEffect(() => {
     setSelectedTeacherId('');
-  }, [selectedCourseId]);
+    
+    if (selectedCourseId) {
+      const selectedCourse = courses.find(course => course.id === selectedCourseId);
+      
+      // Determine if teacher selection should be shown based on course type and duration type
+      if (selectedCourse) {
+        const isRecurring = selectedCourse.duration_type === 'recurring';
+        const isSoloOrDuo = selectedCourse.course_type === 'solo' || selectedCourse.course_type === 'duo';
+        
+        // Show teacher selection only for recurring solo or duo courses
+        setShouldShowTeacher(isRecurring && isSoloOrDuo);
+      } else {
+        setShouldShowTeacher(false);
+      }
+    } else {
+      setShouldShowTeacher(false);
+    }
+  }, [selectedCourseId, courses]);
 
   const handleEnrollStudent = async () => {
     if (!selectedStudentId || !selectedCourseId) {
@@ -37,7 +55,7 @@ const EnrollmentPage: React.FC = () => {
       const success = await addStudentToCourse(
         selectedCourseId, 
         selectedStudentId, 
-        selectedTeacherId || undefined
+        shouldShowTeacher ? selectedTeacherId || undefined : undefined
       );
       
       if (success) {
@@ -56,8 +74,8 @@ const EnrollmentPage: React.FC = () => {
     }
   };
 
-  // Check if the selected course has teachers
-  const hasTeachers = teachers && teachers.length > 0;
+  // Check if teacher selection should be displayed and if there are available teachers
+  const shouldDisplayTeacherField = shouldShowTeacher && teachers && teachers.length > 0;
 
   return (
     <div className="container mx-auto py-8">
@@ -102,15 +120,15 @@ const EnrollmentPage: React.FC = () => {
               <SelectContent>
                 {courses.map((course) => (
                   <SelectItem key={course.id} value={course.id}>
-                    {course.title}
+                    {course.title} ({course.course_type}, {course.duration_type})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           
-          {/* Only render the teacher dropdown if there are teachers for this course */}
-          {selectedCourseId && hasTeachers && (
+          {/* Only render the teacher dropdown if it should be displayed */}
+          {shouldDisplayTeacherField && (
             <div className="space-y-2">
               <Label htmlFor="teacher">Select Teacher</Label>
               <Select 

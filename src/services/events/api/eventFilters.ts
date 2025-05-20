@@ -92,8 +92,8 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Use a simple query approach to avoid deep instantiation issues
-    const response = await supabase.from('calendar_events').select();
+    // Explicitly type the response to avoid deep instantiation issues
+    const response = await supabase.from('calendar_events').select('*');
     
     if (response.error) {
       console.error('Error fetching all events:', response.error);
@@ -119,10 +119,10 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Use a simple query approach to avoid deep instantiation issues
+    // Explicitly type the response to avoid deep instantiation issues
     const response = await supabase
       .from('calendar_events')
-      .select()
+      .select('*')
       .eq(columnName, filterId);
     
     if (response.error) {
@@ -149,10 +149,10 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Use a simple query approach to avoid deep instantiation issues
+    // Explicitly type the response to avoid deep instantiation issues
     const response = await supabase
       .from('calendar_events')
-      .select()
+      .select('*')
       .in(columnName, filterIds);
     
     if (response.error) {
