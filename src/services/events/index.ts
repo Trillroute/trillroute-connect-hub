@@ -1,3 +1,3 @@
 
 // Export all public functionality from events service
-export * from './api/eventFilters';
+export * from './api/eventFilterService';
