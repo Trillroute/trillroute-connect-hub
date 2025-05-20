@@ -14,7 +14,8 @@ export async function fetchAllEvents(): Promise<CalendarEvent[]> {
       return [];
     }
 
-    const events = (response.data || []) as CalendarEvent[];
+    // Use a more direct approach to cast data
+    const events = response.data as unknown as CalendarEvent[];
     console.log(`Found ${events.length} events (no filters)`);
     return events;
   } catch (error) {
@@ -32,26 +33,20 @@ export async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Explicitly destructure data and error to avoid type recursion
-    const result = await supabase
+    // Directly access the response without destructuring
+    const response = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
     
     // Handle error case
-    if (result.error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, result.error);
+    if (response.error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
       return [];
     }
 
-    // Safely cast the data using an intermediate array
-    const rawData = result.data || [];
-    const events: CalendarEvent[] = [];
-    
-    // Process each item individually to avoid deep type instantiation
-    rawData.forEach(item => {
-      events.push(item as CalendarEvent);
-    });
+    // Cast directly without intermediate steps to avoid type issues
+    const events = response.data as unknown as CalendarEvent[];
     
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
@@ -70,26 +65,20 @@ export async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Explicitly destructure data and error to avoid type recursion
-    const result = await supabase
+    // Directly access the response without destructuring
+    const response = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
     
     // Handle error case
-    if (result.error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, result.error);
+    if (response.error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
       return [];
     }
 
-    // Safely cast the data using an intermediate array
-    const rawData = result.data || [];
-    const events: CalendarEvent[] = [];
-    
-    // Process each item individually to avoid deep type instantiation
-    rawData.forEach(item => {
-      events.push(item as CalendarEvent);
-    });
+    // Cast directly without intermediate steps to avoid type issues
+    const events = response.data as unknown as CalendarEvent[];
     
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
@@ -104,24 +93,24 @@ export async function fetchEventsByMultipleValues(
  */
 export async function fetchUserEvents(userId: string): Promise<CalendarEvent[]> {
   try {
-    const result = await supabase
+    const response = await supabase
       .from('user_events')
       .select('*')
       .eq('user_id', userId);
     
-    if (result.error) {
-      console.error('Error fetching user events:', result.error);
+    if (response.error) {
+      console.error('Error fetching user events:', response.error);
       return [];
     }
     
-    if (!result.data || result.data.length === 0) {
+    if (!response.data || response.data.length === 0) {
       return [];
     }
     
-    // Map to calendar events with explicit typing
+    // Create events array explicitly instead of using .map()
     const events: CalendarEvent[] = [];
     
-    result.data.forEach((event: UserEventFromDB) => {
+    for (const event of response.data) {
       // Create a base CalendarEvent with required fields
       const calendarEvent: CalendarEvent = {
         id: event.id,
@@ -135,12 +124,12 @@ export async function fetchUserEvents(userId: string): Promise<CalendarEvent[]> 
       // Try to extract color and location from metadata if they exist
       if (event.metadata && typeof event.metadata === 'object') {
         const metadata = event.metadata as Record<string, any>;
-        if (metadata.color) calendarEvent.color = metadata.color as string;
-        if (metadata.location) calendarEvent.location = metadata.location as string;
+        if (metadata.color) calendarEvent.color = String(metadata.color);
+        if (metadata.location) calendarEvent.location = String(metadata.location);
       }
       
       events.push(calendarEvent);
-    });
+    }
     
     return events;
   } catch (error) {
