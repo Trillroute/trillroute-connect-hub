@@ -21,9 +21,15 @@ export interface CalendarEvent {
   id: string;
   title: string;
   description?: string;
-  start_time: string;
-  end_time: string;
-  user_id: string;
+  eventType?: string;
+  start: Date;
+  end: Date;
+  isBlocked?: boolean;
+  metadata?: any;
+  userId?: string;
+  start_time?: string;
+  end_time?: string;
+  user_id?: string;
   location?: string;
   color?: string;
   created_at?: string;

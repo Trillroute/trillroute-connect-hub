@@ -244,3 +244,99 @@ export const fetchEventsForUsers = async (
     return [];
   }
 };
+
+/**
+ * Fetch events by a single value for a specific column
+ */
+export const fetchEventsBySingleValue = async (
+  columnName: string,
+  filterType: string,
+  value: string
+): Promise<CalendarEvent[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_events')
+      .select('*')
+      .eq(columnName, value)
+      .order('start_time', { ascending: true });
+
+    if (error) {
+      console.error(`Error fetching events by ${columnName}:`, error);
+      return [];
+    }
+
+    // Create array of typed calendar events
+    const events: CalendarEvent[] = [];
+    
+    // Populate events array from data
+    for (let i = 0; i < (data?.length || 0); i++) {
+      const item = data?.[i];
+      if (!item) continue;
+      
+      events.push({
+        id: item.id,
+        title: item.title || '',
+        description: item.description || '',
+        eventType: item.event_type || 'general',
+        start: new Date(item.start_time),
+        end: new Date(item.end_time),
+        isBlocked: item.is_blocked || false,
+        metadata: item.metadata || {},
+        userId: item.user_id
+      });
+    }
+
+    return events;
+  } catch (error) {
+    console.error(`Exception in fetchEventsBySingleValue for ${columnName}:`, error);
+    return [];
+  }
+};
+
+/**
+ * Fetch events by multiple values for a specific column
+ */
+export const fetchEventsByMultipleValues = async (
+  columnName: string,
+  filterType: string,
+  values: string[]
+): Promise<CalendarEvent[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_events')
+      .select('*')
+      .in(columnName, values)
+      .order('start_time', { ascending: true });
+
+    if (error) {
+      console.error(`Error fetching events by multiple ${columnName} values:`, error);
+      return [];
+    }
+
+    // Create array of typed calendar events
+    const events: CalendarEvent[] = [];
+    
+    // Populate events array from data
+    for (let i = 0; i < (data?.length || 0); i++) {
+      const item = data?.[i];
+      if (!item) continue;
+      
+      events.push({
+        id: item.id,
+        title: item.title || '',
+        description: item.description || '',
+        eventType: item.event_type || 'general',
+        start: new Date(item.start_time),
+        end: new Date(item.end_time),
+        isBlocked: item.is_blocked || false,
+        metadata: item.metadata || {},
+        userId: item.user_id
+      });
+    }
+
+    return events;
+  } catch (error) {
+    console.error(`Exception in fetchEventsByMultipleValues for ${columnName}:`, error);
+    return [];
+  }
+};
