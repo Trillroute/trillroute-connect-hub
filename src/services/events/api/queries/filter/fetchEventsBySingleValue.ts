@@ -4,28 +4,29 @@ import { CalendarEvent } from '../../types/eventTypes';
 import { formatEventData } from '../utils/eventFormatters';
 
 /**
- * Fetch events by a single value for a specific column
+ * Fetch events filtered by a single value
+ * @param field The field to filter by
+ * @param value The value to filter for
  */
-export const fetchEventsBySingleValue = async (
-  columnName: string,
-  filterType: string,
-  value: string
+export const fetchEventsBySingleValue = async <K extends keyof CalendarEvent>(
+  field: K, 
+  value: CalendarEvent[K]
 ): Promise<CalendarEvent[]> => {
   try {
     const { data, error } = await supabase
       .from('user_events')
       .select('*')
-      .eq(columnName, value)
+      .eq(field as string, value)
       .order('start_time', { ascending: true });
 
     if (error) {
-      console.error(`Error fetching events by ${columnName}:`, error);
+      console.error(`Error fetching events by ${field}:`, error);
       return [];
     }
 
     return formatEventData(data || []);
   } catch (error) {
-    console.error(`Exception in fetchEventsBySingleValue for ${columnName}:`, error);
+    console.error(`Exception in fetchEventsBySingleValue:`, error);
     return [];
   }
 };

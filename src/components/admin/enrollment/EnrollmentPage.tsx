@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,46 +83,52 @@ const EnrollmentPage: React.FC = () => {
         const student = students.find(s => s.id === selectedStudentId);
         const course = courses.find(c => c.id === selectedCourseId);
         
-        if (isFixedCourse && generatedLink) {
-          toast.success("Student enrollment started", {
-            description: (
-              <div>
-                <p>Payment link sent to {student?.email}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <a 
-                    href={generatedLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 underline truncate max-w-[200px]"
-                  >
-                    {generatedLink}
-                  </a>
-                  <Button
-                    variant="outline" 
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedLink);
-                      toast.info("Link copied to clipboard");
-                    }}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
+        // SINGLE TOAST MESSAGE with payment link if applicable
+        const paymentLinkToShow = generatedLink || (isFixedCourse ? paymentLink : null);
+        
+        toast.success("Student enrollment processed", {
+          description: paymentLinkToShow ? (
+            <div>
+              <p>{student?.first_name} {student?.last_name} has been enrolled in {course?.title}</p>
+              {isFixedCourse && (
+                <div>
+                  <p className="mt-1 text-sm">Payment link sent to {student?.email}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <a 
+                      href={paymentLinkToShow} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-500 underline truncate max-w-[200px]"
+                    >
+                      {paymentLinkToShow}
+                    </a>
+                    <Button
+                      variant="outline" 
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => {
+                        navigator.clipboard.writeText(paymentLinkToShow);
+                        toast.info("Link copied to clipboard");
+                      }}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ),
-            action: {
-              label: "Copy Link",
-              onClick: () => {
-                navigator.clipboard.writeText(generatedLink);
-                toast.info("Link copied to clipboard");
-              }
-            },
-            duration: 10000, // 10 seconds
-          });
-        } else {
-          toast.success("Student has been enrolled in the course");
-        }
+              )}
+            </div>
+          ) : (
+            `${student?.first_name} ${student?.last_name} has been enrolled in ${course?.title}`
+          ),
+          action: paymentLinkToShow ? {
+            label: "Copy Link",
+            onClick: () => {
+              navigator.clipboard.writeText(paymentLinkToShow);
+              toast.info("Link copied to clipboard");
+            }
+          } : undefined,
+          duration: paymentLinkToShow ? 10000 : 4000, // Longer duration if there's a payment link
+        });
         
         // Reset selections after successful enrollment
         setSelectedStudentId('');
