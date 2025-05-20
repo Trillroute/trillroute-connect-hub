@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Filter types supported for event filtering
@@ -91,9 +92,13 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    const { data, error } = await supabase
+    // Fixing the deep instantiation issue by simplifying the query
+    const response = await supabase
       .from('calendar_events')
       .select('*');
+    
+    const data = response.data;
+    const error = response.error;
     
     if (error) {
       console.error('Error fetching all events:', error);
@@ -119,10 +124,14 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    const { data, error } = await supabase
+    // Fixing the deep instantiation issue by simplifying the query
+    const response = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
+    
+    const data = response.data;
+    const error = response.error;
     
     if (error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
@@ -148,10 +157,14 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    const { data, error } = await supabase
+    // Fixing the deep instantiation issue by simplifying the query
+    const response = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
+    
+    const data = response.data;
+    const error = response.error;
     
     if (error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
@@ -166,6 +179,24 @@ async function fetchEventsByMultipleValues(
     console.error(`Unexpected error in fetchEventsByMultipleValues:`, error);
     return [];
   }
+}
+
+/**
+ * Type definition for user events from the database
+ */
+interface UserEventFromDB {
+  id: string;
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  user_id: string;
+  event_type: string;
+  is_blocked: boolean;
+  created_at: string;
+  updated_at: string;
+  metadata: Json;
+  // The color and location might be in metadata or not present at all
 }
 
 /**
@@ -188,16 +219,27 @@ export const fetchUserEvents = async (userId: string): Promise<CalendarEvent[]> 
     }
     
     // Map to calendar events with explicit typing
-    return data.map((event): CalendarEvent => ({
-      id: event.id,
-      title: event.title,
-      start_time: event.start_time,
-      end_time: event.end_time,
-      description: event.description || '',
-      user_id: event.user_id,
-      color: event.color,
-      location: event.location
-    }));
+    // Safely mapping properties that might not exist in the source
+    return data.map((event: UserEventFromDB): CalendarEvent => {
+      // Create a base CalendarEvent with required fields
+      const calendarEvent: CalendarEvent = {
+        id: event.id,
+        title: event.title,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        description: event.description || '',
+        user_id: event.user_id
+      };
+      
+      // Try to extract color and location from metadata if they exist
+      if (event.metadata && typeof event.metadata === 'object') {
+        const metadata = event.metadata as Record<string, any>;
+        if (metadata.color) calendarEvent.color = metadata.color as string;
+        if (metadata.location) calendarEvent.location = metadata.location as string;
+      }
+      
+      return calendarEvent;
+    });
   } catch (error) {
     console.error('Error in fetchUserEvents:', error);
     return [];
