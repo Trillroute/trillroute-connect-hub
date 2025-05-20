@@ -21,9 +21,8 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       queryBuilder = queryBuilder.eq(column, value);
     }
     
-    // Execute query as unknown type first, then cast result
-    const response = await (queryBuilder as unknown as Promise<{data: any[], error: any}>);
-    const { data, error } = response;
+    // Cast to any to avoid type inference issues
+    const { data, error } = await (queryBuilder as any);
     
     if (error) {
       console.error('Error fetching events by multiple values:', error);
