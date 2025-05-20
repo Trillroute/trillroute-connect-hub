@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent } from '../../types/eventTypes';
+import { CalendarEvent, UserEventFromDB } from '../../types/eventTypes';
 
 /**
  * Fetch events based on multiple filter criteria
@@ -20,7 +20,7 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       query = query.eq(column, value);
     }
     
-    const { data, error } = await query;
+    const { data, error } = await query as { data: UserEventFromDB[] | null, error: any };
     
     if (error) {
       console.error('Error fetching events by multiple values:', error);

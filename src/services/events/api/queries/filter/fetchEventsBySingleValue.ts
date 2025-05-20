@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent } from '../../types/eventTypes';
+import { CalendarEvent, UserEventFromDB } from '../../types/eventTypes';
 
 /**
  * Fetch events where a specific column matches a single value
@@ -16,11 +16,11 @@ export async function fetchEventsBySingleValue(
   try {
     console.log(`Fetching events where ${columnName} = ${value}`);
     
-    // Use explicit typing for the query to avoid excessive type instantiation
+    // Use explicit typing to avoid excessive type instantiation
     const { data, error } = await supabase
       .from('user_events')
       .select('*')
-      .eq(columnName, value);
+      .eq(columnName, value) as { data: UserEventFromDB[] | null, error: any };
     
     if (error) {
       console.error('Error fetching events by single value:', error);
