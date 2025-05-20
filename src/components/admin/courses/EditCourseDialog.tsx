@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
@@ -35,6 +36,7 @@ const courseSchema = z.object({
     class_type_id: z.string(),
     quantity: z.number()
   })).optional(),
+  course_type: z.enum(["solo", "duo", "group"]), // Added validation for course_type
 }).refine((data) => {
   if (data.durationType === 'fixed') {
     return !!data.durationValue && !!data.durationMetric;
@@ -123,6 +125,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
       image: course.image,
       instructors: instructorIds,
       class_types_data: classTypesData || [],
+      course_type: (course.course_type as "solo" | "duo" | "group") || "group" // Set default for course_type
     }
   });
 
@@ -139,6 +142,7 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
         image: course.image,
         instructors: instructorIds,
         class_types_data: classTypesData || [],
+        course_type: (course.course_type as "solo" | "duo" | "group") || "group" // Reset course_type when dialog opens
       });
     }
   }, [course, open, durationValue, durationMetric, durationType, form, classTypesData]);
@@ -187,8 +191,8 @@ const EditCourseDialog: React.FC<EditCourseDialogProps> = ({
           instructor_ids: Array.isArray(data.instructors) ? data.instructors : [],
           student_ids: studentIds,
           students: studentIds.length,
-          // Cast to any to bypass TypeScript error
           class_types_data: data.class_types_data || [] as any,
+          course_type: data.course_type // Include course_type in update
         })
         .eq('id', course.id);
         

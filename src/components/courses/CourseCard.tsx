@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Users } from 'lucide-react';
+import { Clock, Users, UserCircle2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/types/course';
 import BookTrialDialog from './scheduler/BookTrialDialog';
 import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
 
 interface CourseCardProps {
   course: Course;
@@ -22,6 +23,27 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, getInstructorNames }) =
   };
   
   const isStudent = user?.role === 'student';
+  
+  // Define badge color based on course type
+  const getCourseTypeBadge = () => {
+    switch (course.course_type) {
+      case 'solo':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+          <UserCircle2 className="h-3 w-3 mr-1" />
+          Individual
+        </Badge>;
+      case 'duo':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
+          <Users className="h-3 w-3 mr-1" />
+          Pair
+        </Badge>;
+      default:
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+          <Users className="h-3 w-3 mr-1" />
+          Group
+        </Badge>;
+    }
+  };
   
   return (
     <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg">
@@ -39,7 +61,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, getInstructorNames }) =
         </div>
       </div>
       <CardHeader>
-        <CardTitle className="text-xl">{course.title}</CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-xl">{course.title}</CardTitle>
+          {getCourseTypeBadge()}
+        </div>
         <CardDescription className="flex items-center text-sm">
           <span className="mr-2">{getInstructorNames(course)}</span> • 
           <span className="mx-2">{course.level}</span>

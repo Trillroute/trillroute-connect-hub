@@ -30,6 +30,7 @@ export interface CourseFormValues {
   discount_value?: number;
   discount_validity?: string;
   discount_code?: string;
+  course_type: "solo" | "duo" | "group"; // Added course type field
 }
 
 interface CourseFormProps {
@@ -81,6 +82,33 @@ const CourseForm: React.FC<CourseFormProps> = ({
         <div className="space-y-6">
           <TabsContent value="basic" className="mt-4">
             <BasicCourseInfo form={form} skills={skills} />
+            
+            {/* Course Type field */}
+            <FormField
+              control={form.control}
+              name="course_type"
+              render={({ field }) => (
+                <FormItem className="mt-4">
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || "group"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select course type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="solo">Solo (Individual)</SelectItem>
+                      <SelectItem value="duo">Duo (Pairs)</SelectItem>
+                      <SelectItem value="group">Group</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <FormField
               control={form.control}
               name="instructors"

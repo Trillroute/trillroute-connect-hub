@@ -174,6 +174,7 @@ export type Database = {
         Row: {
           base_price: number | null
           class_types_data: Json | null
+          course_type: string
           created_at: string
           description: string
           discount_code: string | null
@@ -197,6 +198,7 @@ export type Database = {
         Insert: {
           base_price?: number | null
           class_types_data?: Json | null
+          course_type?: string
           created_at?: string
           description: string
           discount_code?: string | null
@@ -220,6 +222,7 @@ export type Database = {
         Update: {
           base_price?: number | null
           class_types_data?: Json | null
+          course_type?: string
           created_at?: string
           description?: string
           discount_code?: string | null

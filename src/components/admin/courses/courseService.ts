@@ -50,7 +50,8 @@ export const createCourse = async (courseData: Partial<Course>): Promise<{ data:
         discount_validity: courseData.discount_validity,
         is_gst_applicable: courseData.is_gst_applicable,
         gst_rate: courseData.gst_rate,
-        final_price: courseData.final_price
+        final_price: courseData.final_price,
+        course_type: courseData.course_type || 'group' // Add the course_type field
       })
       .select()
       .single();

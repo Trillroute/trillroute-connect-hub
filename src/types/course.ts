@@ -22,6 +22,8 @@ export interface Course {
   discount_validity?: string | null;
   gst_rate?: number | null;
   is_gst_applicable?: boolean | null;
+  // New field for course type
+  course_type: string;
   // Additional fields from database that might be causing type issues
   status?: string;
   category?: string;

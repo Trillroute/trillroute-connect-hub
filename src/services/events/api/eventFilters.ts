@@ -92,21 +92,16 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Fixing the deep instantiation issue by simplifying the query
-    const response = await supabase
-      .from('calendar_events')
-      .select('*');
+    // Use a simple query approach to avoid deep instantiation issues
+    const response = await supabase.from('calendar_events').select();
     
-    const data = response.data;
-    const error = response.error;
-    
-    if (error) {
-      console.error('Error fetching all events:', error);
+    if (response.error) {
+      console.error('Error fetching all events:', response.error);
       return [];
     }
 
     // Use type assertion with an explicitly declared empty array fallback
-    const events = (data || []) as CalendarEvent[];
+    const events = (response.data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events (no filters)`);
     return events;
   } catch (error) {
@@ -124,22 +119,19 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Fixing the deep instantiation issue by simplifying the query
+    // Use a simple query approach to avoid deep instantiation issues
     const response = await supabase
       .from('calendar_events')
-      .select('*')
+      .select()
       .eq(columnName, filterId);
     
-    const data = response.data;
-    const error = response.error;
-    
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
+    if (response.error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
       return [];
     }
 
     // Use type assertion with an explicitly declared empty array fallback
-    const events = (data || []) as CalendarEvent[];
+    const events = (response.data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -157,22 +149,19 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Fixing the deep instantiation issue by simplifying the query
+    // Use a simple query approach to avoid deep instantiation issues
     const response = await supabase
       .from('calendar_events')
-      .select('*')
+      .select()
       .in(columnName, filterIds);
     
-    const data = response.data;
-    const error = response.error;
-    
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
+    if (response.error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
       return [];
     }
 
     // Use type assertion with an explicitly declared empty array fallback
-    const events = (data || []) as CalendarEvent[];
+    const events = (response.data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
