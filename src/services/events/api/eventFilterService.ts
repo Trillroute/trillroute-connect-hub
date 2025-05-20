@@ -1,5 +1,5 @@
 
-import { CalendarEvent, FilterEventsProps, FilterType } from './types/eventTypes';
+import { FilterEventsProps, FilterType } from './types/eventTypes';
 import { getColumnNameFromFilterType } from './utils/filterUtils';
 import { 
   fetchAllEvents, 
@@ -11,7 +11,7 @@ import {
 /**
  * Main function to fetch events based on specified filter type and IDs
  */
-export async function fetchEventsByFilter(props: FilterEventsProps): Promise<CalendarEvent[]> {
+export async function fetchEventsByFilter(props: FilterEventsProps) {
   const { filterType, filterIds = [] } = props;
   
   try {
@@ -48,5 +48,5 @@ export async function fetchEventsByFilter(props: FilterEventsProps): Promise<Cal
 }
 
 // Re-export types and functions
-export type { CalendarEvent, FilterType, FilterEventsProps } from './types/eventTypes';
+export type { FilterEventsProps, FilterType } from './types/eventTypes';
 export { fetchUserEvents };

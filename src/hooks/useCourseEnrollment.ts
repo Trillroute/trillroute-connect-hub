@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { createRazorpayOrder } from '@/utils/razorpayConfig';
 
 export function useCourseEnrollment() {
@@ -11,18 +12,26 @@ export function useCourseEnrollment() {
    */
   const generatePaymentLink = async (courseId: string, studentId: string, amount: number): Promise<string | null> => {
     try {
+      console.log('Generating payment link for:', { courseId, studentId, amount });
+      
       // Create Razorpay order
       const orderData = await createRazorpayOrder(amount, courseId, studentId);
       
+      console.log('Order data received:', orderData);
+      
       if (!orderData || !orderData.orderId) {
+        console.error('Failed to create payment order, orderData:', orderData);
+        toast.error('Failed to generate payment link');
         throw new Error('Failed to create payment order');
       }
 
       // Generate a payment link that can be shared
       const paymentLink = `${window.location.origin}/payment/${courseId}?order_id=${orderData.orderId}&student_id=${studentId}`;
+      console.log('Generated payment link:', paymentLink);
       return paymentLink;
     } catch (error) {
       console.error('Error generating payment link:', error);
+      toast.error('Failed to generate payment link');
       return null;
     }
   };

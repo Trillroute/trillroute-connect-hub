@@ -12,17 +12,26 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
   try {
     console.log(`Creating Razorpay order for user ${userId}, course ${courseId}, amount ${amount}`);
     
+    // Check if all required parameters are provided
+    if (!amount || !courseId || !userId) {
+      console.error('Missing required parameters:', { amount, courseId, userId });
+      return null;
+    }
+    
+    // Call the edge function to create the order
     const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
       body: { amount, courseId, userId }
     });
 
     if (orderError) {
       console.error('Error creating order:', orderError);
+      toast.error('Failed to create payment order');
       throw new Error('Failed to create payment order');
     }
 
     if (!orderData || !orderData.orderId || !orderData.key) {
       console.error('Invalid order data received:', orderData);
+      toast.error('Invalid payment configuration');
       throw new Error('Invalid payment configuration');
     }
 

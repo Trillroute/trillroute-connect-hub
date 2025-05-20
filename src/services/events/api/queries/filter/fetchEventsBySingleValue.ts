@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent } from '../../types/eventTypes';
 import { formatEventData } from '../utils/eventFormatters';
 
 /**
@@ -11,7 +10,7 @@ import { formatEventData } from '../utils/eventFormatters';
 export const fetchEventsBySingleValue = async (
   field: string, 
   value: any
-): Promise<CalendarEvent[]> => {
+) => {
   try {
     const { data, error } = await supabase
       .from('user_events')

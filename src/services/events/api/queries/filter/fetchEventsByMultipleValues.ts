@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent } from '../../types/eventTypes';
 import { formatEventData } from '../utils/eventFormatters';
 
 /**
@@ -9,7 +8,7 @@ import { formatEventData } from '../utils/eventFormatters';
  */
 export const fetchEventsByMultipleValues = async (
   filters: Record<string, any>
-): Promise<CalendarEvent[]> => {
+) => {
   try {
     let query = supabase
       .from('user_events')
