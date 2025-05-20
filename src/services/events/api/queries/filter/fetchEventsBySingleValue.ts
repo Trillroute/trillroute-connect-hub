@@ -17,14 +17,14 @@ export async function fetchEventsBySingleValue(
   try {
     console.log(`Fetching events where ${columnName} = ${value}`);
     
-    // Create the Supabase query
-    const query = supabase.from('user_events').select('*');
-    
-    // Apply the filter condition
-    const filteredQuery = query.eq(columnName, value);
-    
-    // Execute the query as a generic request without TypeScript inference
-    const { data, error } = await filteredQuery;
+    // Using a simpler approach to avoid excessive type instantiation
+    // Cast to any to bypass TypeScript inference
+    const result = await (supabase
+      .from('user_events')
+      .select('*')
+      .eq(columnName, value) as any);
+      
+    const { data, error } = result;
     
     if (error) {
       console.error('Error fetching events by single value:', error);

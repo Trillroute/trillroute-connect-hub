@@ -13,24 +13,24 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
   try {
     console.log('Fetching events with multiple filters:', filters);
     
-    // Create the base query
-    const query = supabase.from('user_events').select('*');
+    // Build the query manually, avoiding deep type instantiation
+    let queryBuilder = supabase.from('user_events').select('*');
     
-    // Apply all filters as conditions
-    let filteredQuery = query;
+    // Apply filters
     for (const [column, value] of Object.entries(filters)) {
-      filteredQuery = filteredQuery.eq(column, value);
+      queryBuilder = queryBuilder.eq(column, value);
     }
     
-    // Execute the query as a generic request without TypeScript inference
-    const { data, error } = await filteredQuery;
+    // Execute the query with 'any' type to avoid TypeScript inference issues
+    const result = await (queryBuilder as any);
+    const { data, error } = result;
     
     if (error) {
       console.error('Error fetching events by multiple values:', error);
       return [];
     }
     
-    // Explicitly cast the result as UserEventFromDB[]
+    // Explicitly cast the result
     const events = (data || []) as UserEventFromDB[];
     return formatEventData(events);
   } catch (error) {
