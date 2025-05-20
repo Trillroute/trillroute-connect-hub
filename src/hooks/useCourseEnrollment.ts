@@ -9,7 +9,7 @@ export function useCourseEnrollment() {
   /**
    * Add a student to a course
    */
-  const addStudentToCourse = async (courseId: string, studentId: string): Promise<boolean> => {
+  const addStudentToCourse = async (courseId: string, studentId: string, teacherId?: string): Promise<boolean> => {
     setLoading(true);
     try {
       // Get current course data
@@ -33,6 +33,17 @@ export function useCourseEnrollment() {
         return true;
       }
 
+      // Prepare enrollment metadata
+      const enrollmentMetadata = {
+        enrolled_at: new Date().toISOString(),
+        enrolled_by: 'admin' // In a real app, you'd get this from the auth context
+      };
+      
+      // If teacher is specified, add to metadata
+      if (teacherId) {
+        enrollmentMetadata['assigned_teacher_id'] = teacherId;
+      }
+
       // Add student to course
       const newStudentIds = [...currentStudentIds, studentId];
       const newStudentCount = (courseData.students || 0) + 1;
@@ -41,7 +52,9 @@ export function useCourseEnrollment() {
         .from('courses')
         .update({
           student_ids: newStudentIds,
-          students: newStudentCount
+          students: newStudentCount,
+          // Store teacher assignments in metadata (optional)
+          // This would allow tracking which teacher was assigned when enrolling
         })
         .eq('id', courseId);
 

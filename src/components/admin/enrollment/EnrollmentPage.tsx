@@ -4,50 +4,53 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
+import { useCourseTeachers } from '@/hooks/useCourseTeachers';
 
 const EnrollmentPage: React.FC = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [isEnrolling, setIsEnrolling] = useState(false);
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
+  const { teachers, loading: teachersLoading } = useCourseTeachers(selectedCourseId);
   const { addStudentToCourse, loading: enrollmentLoading } = useCourseEnrollment();
+
+  // Reset teacher selection when course changes
+  useEffect(() => {
+    setSelectedTeacherId('');
+  }, [selectedCourseId]);
 
   const handleEnrollStudent = async () => {
     if (!selectedStudentId || !selectedCourseId) {
-      toast({
-        title: "Error",
-        description: "Please select both a student and a course",
-        variant: "destructive"
-      });
+      toast.error("Please select both a student and a course");
       return;
     }
 
     setIsEnrolling(true);
     try {
-      const success = await addStudentToCourse(selectedCourseId, selectedStudentId);
+      const success = await addStudentToCourse(
+        selectedCourseId, 
+        selectedStudentId, 
+        selectedTeacherId || undefined
+      );
+      
       if (success) {
-        toast({
-          title: "Success",
-          description: "Student has been enrolled in the course"
-        });
+        toast.success("Student has been enrolled in the course");
         
         // Reset selections after successful enrollment
         setSelectedStudentId('');
         setSelectedCourseId('');
+        setSelectedTeacherId('');
       }
     } catch (error) {
       console.error("Error enrolling student:", error);
-      toast({
-        title: "Error",
-        description: "Failed to enroll student. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to enroll student. Please try again.");
     } finally {
       setIsEnrolling(false);
     }
@@ -102,6 +105,35 @@ const EnrollmentPage: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
+          
+          {selectedCourseId && (
+            <div className="space-y-2">
+              <Label htmlFor="teacher">Select Teacher</Label>
+              <Select 
+                value={selectedTeacherId} 
+                onValueChange={setSelectedTeacherId}
+                disabled={teachersLoading || teachers.length === 0}
+              >
+                <SelectTrigger id="teacher">
+                  <SelectValue placeholder={
+                    teachersLoading ? "Loading teachers..." :
+                    teachers.length === 0 ? "No teachers available" :
+                    "Select a teacher"
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  {teachers.map((teacher) => (
+                    <SelectItem key={teacher.id} value={teacher.id}>
+                      {teacher.first_name} {teacher.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {teachers.length === 0 && !teachersLoading && (
+                <p className="text-xs text-amber-600">No teachers are assigned to this course</p>
+              )}
+            </div>
+          )}
         </CardContent>
         <CardFooter>
           <Button 

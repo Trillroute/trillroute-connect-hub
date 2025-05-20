@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -170,3 +169,38 @@ async function fetchEventsByMultipleValues(
     return [];
   }
 }
+
+/**
+ * Fetch events for a specific user
+ */
+export const fetchUserEvents = async (userId: string): Promise<CalendarEvent[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_events')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error fetching user events:', error);
+      return [];
+    }
+    
+    // Explicitly cast to any before mapping to avoid deep type instantiation
+    const events = (data || []) as any[];
+    
+    // Map to calendar events with explicit typing
+    return events.map((event): CalendarEvent => ({
+      id: event.id,
+      title: event.title,
+      start: new Date(event.start_time),
+      end: new Date(event.end_time),
+      description: event.description || '',
+      eventType: event.event_type,
+      userId: event.user_id,
+      metadata: event.metadata || {}
+    }));
+  } catch (error) {
+    console.error('Error in fetchUserEvents:', error);
+    return [];
+  }
+};
