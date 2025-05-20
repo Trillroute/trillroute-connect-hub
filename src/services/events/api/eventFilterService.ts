@@ -6,7 +6,7 @@ import {
   fetchEventsBySingleValue, 
   fetchEventsByMultipleValues,
   fetchUserEvents
-} from './queries/eventQueries';
+} from './queries';
 
 /**
  * Main function to fetch events based on specified filter type and IDs
@@ -45,6 +45,6 @@ export async function fetchEventsByFilter(props: FilterEventsProps): Promise<Cal
   }
 }
 
-// Re-export types
+// Re-export types and functions
 export type { CalendarEvent, FilterType, FilterEventsProps } from './types/eventTypes';
 export { fetchUserEvents };
