@@ -114,7 +114,8 @@ serve(async (req) => {
     }
 
     console.log('Sending request to Razorpay API');
-    console.log('Using API Key ID:', razorpayKeyId.substring(0, 5) + '...');
+    console.log('Using API Key ID:', razorpayKeyId);
+    console.log('Key Secret starts with:', razorpayKeySecret.substring(0, 4) + '...');
     
     try {
       const response = await fetch('https://api.razorpay.com/v1/orders', {
