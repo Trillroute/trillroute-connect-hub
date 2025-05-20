@@ -116,67 +116,84 @@ serve(async (req) => {
     console.log('Sending request to Razorpay API');
     console.log('Using API Key ID:', razorpayKeyId.substring(0, 5) + '...');
     
-    const response = await fetch('https://api.razorpay.com/v1/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + btoa(razorpayKeyId + ':' + razorpayKeySecret)
-      },
-      body: JSON.stringify(orderData)
-    });
-
-    // Log response status
-    console.log('Razorpay API response status:', response.status);
-    
-    const razorpayOrder = await response.json();
-    console.log('Razorpay API response body:', razorpayOrder);
-
-    if (!razorpayOrder.id) {
-      console.error('Razorpay API error:', razorpayOrder);
-      throw new Error('Failed to create Razorpay order: ' + JSON.stringify(razorpayOrder));
-    }
-
-    console.log('Razorpay order created:', razorpayOrder.id);
-
     try {
-      // Create order record in Supabase
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          id: orderId,
-          order_id: razorpayOrder.id,
-          user_id: userId,
-          course_id: courseId,
-          amount: amount,
-          metadata: {
-            razorpay_order_data: razorpayOrder
-          }
-        })
-        .select()
-        .single();
+      const response = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa(razorpayKeyId + ':' + razorpayKeySecret)
+        },
+        body: JSON.stringify(orderData)
+      });
 
-      if (orderError) {
-        console.error('Error creating order record:', orderError);
+      // Log response status
+      console.log('Razorpay API response status:', response.status);
+      
+      const razorpayOrder = await response.json();
+      console.log('Razorpay API response body:', razorpayOrder);
+
+      if (!razorpayOrder.id) {
+        console.error('Razorpay API error:', razorpayOrder);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to create Razorpay order',
+            message: razorpayOrder.error?.description || 'API authentication failed'
+          }),
+          { headers: responseHeaders, status: 400 }
+        );
+      }
+
+      console.log('Razorpay order created:', razorpayOrder.id);
+
+      try {
+        // Create order record in Supabase
+        const { data: order, error: orderError } = await supabase
+          .from('orders')
+          .insert({
+            id: orderId,
+            order_id: razorpayOrder.id,
+            user_id: userId,
+            course_id: courseId,
+            amount: amount,
+            metadata: {
+              razorpay_order_data: razorpayOrder
+            }
+          })
+          .select()
+          .single();
+
+        if (orderError) {
+          console.error('Error creating order record:', orderError);
+          throw new Error('Failed to create order record');
+        }
+
+        console.log('Order record created:', order);
+      } catch (orderError) {
+        console.error('Exception during order record creation:', orderError);
         throw new Error('Failed to create order record');
       }
 
-      console.log('Order record created:', order);
-    } catch (orderError) {
-      console.error('Exception during order record creation:', orderError);
-      throw new Error('Failed to create order record');
+      return new Response(
+        JSON.stringify({ 
+          orderId: razorpayOrder.id,
+          amount: amount,
+          key: razorpayKeyId
+        }),
+        {
+          headers: responseHeaders,
+          status: 200,
+        }
+      );
+    } catch (fetchError) {
+      console.error('Fetch error with Razorpay API:', fetchError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to connect to Razorpay API',
+          message: 'Check your network connection and API keys' 
+        }),
+        { headers: responseHeaders, status: 500 }
+      );
     }
-
-    return new Response(
-      JSON.stringify({ 
-        orderId: razorpayOrder.id,
-        amount: amount,
-        key: razorpayKeyId
-      }),
-      {
-        headers: responseHeaders,
-        status: 200,
-      }
-    );
   } catch (error) {
     console.error('Error during order creation:', error);
     return new Response(

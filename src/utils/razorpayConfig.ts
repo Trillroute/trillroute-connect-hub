@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -26,12 +27,29 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
     if (orderError) {
       console.error('Error creating order:', orderError);
       toast.error('Payment gateway error', {
-        description: 'Please check Razorpay configuration'
+        description: 'Please check Razorpay API configuration'
       });
       return null;
     }
 
-    if (!orderData || !orderData.orderId || !orderData.key) {
+    // Additional check for edge function response format
+    if (!orderData) {
+      console.error('No data received from edge function');
+      toast.error('Payment gateway configuration error');
+      return null;
+    }
+    
+    // Check if we got an error message in the response
+    if (orderData.error) {
+      console.error('Error in edge function response:', orderData.error);
+      toast.error('Razorpay API error', {
+        description: orderData.message || 'Please check your API keys'
+      });
+      return null;
+    }
+
+    // Validate the required fields in the order data
+    if (!orderData.orderId || !orderData.key) {
       console.error('Invalid order data received:', orderData);
       toast.error('Payment gateway configuration error', {
         description: 'Please check Razorpay API keys'

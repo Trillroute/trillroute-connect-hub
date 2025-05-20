@@ -1,37 +1,33 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { formatEventData } from '../utils/eventFormatters';
 
 /**
- * Fetch events filtered by multiple fields and values
- * @param filters Object containing field:value pairs to filter by
+ * Fetch events based on multiple filter criteria
+ * 
+ * @param filters Object containing column names as keys and filter values
+ * @returns Array of event objects or empty array if none found
  */
-export const fetchEventsByMultipleValues = async (
-  filters: Record<string, any>
-) => {
+export async function fetchEventsByMultipleValues(filters: Record<string, any>) {
   try {
-    let query = supabase
-      .from('user_events')
-      .select('*')
-      .order('start_time', { ascending: true });
-
-    // Apply each filter
-    Object.entries(filters).forEach(([field, value]) => {
-      if (value !== undefined && value !== null) {
-        query = query.eq(field, value);
-      }
-    });
-
+    console.log('Fetching events with multiple filters:', filters);
+    
+    let query = supabase.from('events').select('*');
+    
+    // Apply each filter to the query
+    for (const [column, value] of Object.entries(filters)) {
+      query = query.eq(column, value);
+    }
+    
     const { data, error } = await query;
-
+    
     if (error) {
       console.error('Error fetching events by multiple values:', error);
       return [];
     }
-
-    return formatEventData(data || []);
+    
+    return data || [];
   } catch (error) {
     console.error('Exception in fetchEventsByMultipleValues:', error);
     return [];
   }
-};
+}

@@ -1,31 +1,33 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { formatEventData } from '../utils/eventFormatters';
 
 /**
- * Fetch events filtered by a single value
- * @param field The field to filter by
- * @param value The value to filter for
+ * Fetch events where a specific column matches a single value
+ * 
+ * @param columnName The column name to filter by
+ * @param value The value to match against the column
+ * @returns Array of event objects or empty array if none found
  */
-export const fetchEventsBySingleValue = async (
-  field: string, 
+export async function fetchEventsBySingleValue(
+  columnName: string,
   value: any
-) => {
+) {
   try {
+    console.log(`Fetching events where ${columnName} = ${value}`);
+    
     const { data, error } = await supabase
-      .from('user_events')
+      .from('events')
       .select('*')
-      .eq(field, value)
-      .order('start_time', { ascending: true });
-
+      .eq(columnName, value);
+    
     if (error) {
-      console.error(`Error fetching events by ${field}:`, error);
+      console.error('Error fetching events by single value:', error);
       return [];
     }
-
-    return formatEventData(data || []);
+    
+    return data || [];
   } catch (error) {
-    console.error(`Exception in fetchEventsBySingleValue:`, error);
+    console.error('Exception in fetchEventsBySingleValue:', error);
     return [];
   }
-};
+}

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
@@ -89,7 +89,7 @@ const EnrollmentPage: React.FC = () => {
         const student = students.find(s => s.id === selectedStudentId);
         const course = courses.find(c => c.id === selectedCourseId);
         
-        // Use the stored link
+        // Use the stored link for the toast message
         const paymentLink = generatedLink || generatedPaymentLink;
         
         toast.success("Student enrollment processed", {
