@@ -1,10 +1,55 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
+import { createRazorpayOrder } from '@/utils/razorpayConfig';
 
 export function useCourseEnrollment() {
   const [loading, setLoading] = useState(false);
+
+  /**
+   * Generate a Razorpay payment link for fixed courses
+   */
+  const generatePaymentLink = async (courseId: string, studentId: string, amount: number): Promise<string | null> => {
+    try {
+      // Create Razorpay order
+      const orderData = await createRazorpayOrder(amount, courseId, studentId);
+      
+      if (!orderData || !orderData.orderId) {
+        throw new Error('Failed to create payment order');
+      }
+
+      // Generate a payment link that can be shared
+      const paymentLink = `${window.location.origin}/payment/${courseId}?order_id=${orderData.orderId}&student_id=${studentId}`;
+      return paymentLink;
+    } catch (error) {
+      console.error('Error generating payment link:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Send payment link via email
+   */
+  const sendPaymentEmail = async (studentId: string, courseId: string, paymentLink: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-payment-email', {
+        body: {
+          studentId,
+          courseId,
+          paymentLink
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error sending payment email:', error);
+      return false;
+    }
+  };
 
   /**
    * Add a student to a course
@@ -12,10 +57,10 @@ export function useCourseEnrollment() {
   const addStudentToCourse = async (courseId: string, studentId: string, teacherId?: string): Promise<boolean> => {
     setLoading(true);
     try {
-      // Get current course data
+      // Get current course data to check its type (fixed or recurring)
       const { data: courseData, error: fetchError } = await supabase
         .from('courses')
-        .select('student_ids, students')
+        .select('student_ids, students, duration_type, final_price')
         .eq('id', courseId)
         .single();
 
@@ -33,39 +78,67 @@ export function useCourseEnrollment() {
         return true;
       }
 
-      // Prepare enrollment metadata
-      const enrollmentMetadata = {
-        enrolled_at: new Date().toISOString(),
-        enrolled_by: 'admin' // In a real app, you'd get this from the auth context
-      };
+      // Check if this is a fixed course
+      const isFixedCourse = courseData.duration_type === 'fixed';
       
-      // If teacher is specified, add to metadata
-      if (teacherId) {
-        enrollmentMetadata['assigned_teacher_id'] = teacherId;
+      if (isFixedCourse) {
+        // For fixed courses, generate a payment link and send via email
+        const amount = courseData.final_price || 0;
+        
+        // Generate payment link
+        const paymentLink = await generatePaymentLink(courseId, studentId, amount);
+        
+        if (!paymentLink) {
+          toast.error('Failed to generate payment link');
+          return false;
+        }
+        
+        // Send payment link via email
+        const emailSent = await sendPaymentEmail(studentId, courseId, paymentLink);
+        
+        if (emailSent) {
+          toast.success('Payment link sent to student email');
+          
+          // For fixed courses, we don't enroll immediately - enrollment happens after payment
+          return true;
+        } else {
+          toast.error('Failed to send payment link to student');
+          return false;
+        }
+      } else {
+        // For recurring courses, proceed with direct enrollment
+        // Prepare enrollment metadata
+        const enrollmentMetadata = {
+          enrolled_at: new Date().toISOString(),
+          enrolled_by: 'admin'
+        };
+        
+        // If teacher is specified, add to metadata
+        if (teacherId) {
+          enrollmentMetadata['assigned_teacher_id'] = teacherId;
+        }
+
+        // Add student to course
+        const newStudentIds = [...currentStudentIds, studentId];
+        const newStudentCount = (courseData.students || 0) + 1;
+
+        const { error: updateError } = await supabase
+          .from('courses')
+          .update({
+            student_ids: newStudentIds,
+            students: newStudentCount,
+          })
+          .eq('id', courseId);
+
+        if (updateError) {
+          console.error('Error updating course:', updateError);
+          toast.error('Failed to add student to course');
+          return false;
+        }
+
+        toast.success('Student added to course successfully');
+        return true;
       }
-
-      // Add student to course
-      const newStudentIds = [...currentStudentIds, studentId];
-      const newStudentCount = (courseData.students || 0) + 1;
-
-      const { error: updateError } = await supabase
-        .from('courses')
-        .update({
-          student_ids: newStudentIds,
-          students: newStudentCount,
-          // Store teacher assignments in metadata (optional)
-          // This would allow tracking which teacher was assigned when enrolling
-        })
-        .eq('id', courseId);
-
-      if (updateError) {
-        console.error('Error updating course:', updateError);
-        toast.error('Failed to add student to course');
-        return false;
-      }
-
-      toast.success('Student added to course successfully');
-      return true;
     } catch (error) {
       console.error('Unexpected error:', error);
       toast.error('An unexpected error occurred');
@@ -165,6 +238,8 @@ export function useCourseEnrollment() {
     loading,
     addStudentToCourse,
     removeStudentFromCourse,
-    updateCourseInstructors
+    updateCourseInstructors,
+    generatePaymentLink,
+    sendPaymentEmail
   };
 }

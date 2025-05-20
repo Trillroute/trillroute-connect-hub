@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthenticationProvider } from "@/providers/AuthenticationProvider";
 import { AdminPermission } from '@/utils/adminPermissions';
 
@@ -37,86 +36,94 @@ import Profile from "./pages/profile/Profile";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+// Import the PaymentPage
+import PaymentPage from './pages/payment/PaymentPage';
+
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthenticationProvider>
-        <TooltipProvider>
-          <Layout>
-            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-            <Routes>
-              {/* Main Pages */}
-              <Route path="/" element={<Index />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/courses/:courseId" element={<CourseDetail />} />
-              
-              {/* Auth Pages */}
-              <Route path="/auth/login" element={<Login />} />
-              <Route path="/auth/register" element={<Register />} />
-              <Route path="/auth/student-registration" element={<StudentRegistration />} />
-              
-              {/* Dashboard Pages */}
-              <Route 
-                path="/dashboard/student" 
-                element={
-                  <ProtectedRoute allowedRoles={['student']}>
-                    <StudentDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard/teacher" 
-                element={
-                  <ProtectedRoute allowedRoles={['teacher']}>
-                    <TeacherDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard/admin" 
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard/superadmin" 
-                element={
-                  <ProtectedRoute requireSuperAdmin={true}>
-                    <SuperAdminDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Admin Pages */}
-              <Route
-                path="/admin/teacher-onboarding"
-                element={<TeacherOnboarding />}
-              />
-              
-              {/* Profile Page */}
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute isProfileRoute={true}>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              
-              {/* Catch-all 404 route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
-      </AuthenticationProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthenticationProvider>
+          <TooltipProvider>
+            <Layout>
+              <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+              <Routes>
+                {/* Main Pages */}
+                <Route path="/" element={<Index />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:courseId" element={<CourseDetail />} />
+                
+                {/* Auth Pages */}
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/register" element={<Register />} />
+                <Route path="/auth/student-registration" element={<StudentRegistration />} />
+                
+                {/* Dashboard Pages */}
+                <Route 
+                  path="/dashboard/student" 
+                  element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <StudentDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/dashboard/teacher" 
+                  element={
+                    <ProtectedRoute allowedRoles={['teacher']}>
+                      <TeacherDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/dashboard/admin" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/dashboard/superadmin" 
+                  element={
+                    <ProtectedRoute requireSuperAdmin={true}>
+                      <SuperAdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Admin Pages */}
+                <Route
+                  path="/admin/teacher-onboarding"
+                  element={<TeacherOnboarding />}
+                />
+                
+                {/* Profile Page */}
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute isProfileRoute={true}>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                
+                {/* Add the payment route */}
+                <Route path="/payment/:courseId" element={<PaymentPage />} />
+                
+                {/* Catch-all 404 route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </AuthenticationProvider>
+      </Router>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
