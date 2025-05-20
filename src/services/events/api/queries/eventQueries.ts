@@ -32,18 +32,19 @@ export async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    const response = await supabase
+    // Use a simpler approach to fetch data to avoid type recursion issues
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
     
-    if (response.error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, response.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
       return [];
     }
 
-    // Use explicit type assertion instead of generic parameter
-    const events = response.data as CalendarEvent[];
+    // Use a simple type assertion without complex generics
+    const events = data as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -61,18 +62,19 @@ export async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    const response = await supabase
+    // Simplify the query to avoid type recursion issues
+    const { data, error } = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
     
-    if (response.error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, response.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
       return [];
     }
 
-    // Use explicit type assertion instead of generic parameter
-    const events = response.data as CalendarEvent[];
+    // Use a simple type assertion without complex generics
+    const events = data as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
