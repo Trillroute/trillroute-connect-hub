@@ -33,11 +33,9 @@ export async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Directly access the response without destructuring
-    const response = await supabase
-      .from('calendar_events')
-      .select('*')
-      .eq(columnName, filterId);
+    // Use a safer approach to avoid deep type instantiation
+    const query = supabase.from('calendar_events').select('*').eq(columnName, filterId);
+    const response = await query;
     
     // Handle error case
     if (response.error) {
@@ -45,8 +43,25 @@ export async function fetchEventsBySingleValue(
       return [];
     }
 
-    // Cast directly without intermediate steps to avoid type issues
-    const events = response.data as unknown as CalendarEvent[];
+    // Create a new array and explictly cast each element
+    const events: CalendarEvent[] = [];
+    if (response.data) {
+      for (let i = 0; i < response.data.length; i++) {
+        const item = response.data[i];
+        events.push({
+          id: item.id,
+          title: item.title,
+          start_time: item.start_time,
+          end_time: item.end_time,
+          description: item.description,
+          user_id: item.user_id,
+          location: item.location,
+          color: item.color,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        });
+      }
+    }
     
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
@@ -65,11 +80,9 @@ export async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Directly access the response without destructuring
-    const response = await supabase
-      .from('calendar_events')
-      .select('*')
-      .in(columnName, filterIds);
+    // Use a safer approach to avoid deep type instantiation
+    const query = supabase.from('calendar_events').select('*').in(columnName, filterIds);
+    const response = await query;
     
     // Handle error case
     if (response.error) {
@@ -77,8 +90,25 @@ export async function fetchEventsByMultipleValues(
       return [];
     }
 
-    // Cast directly without intermediate steps to avoid type issues
-    const events = response.data as unknown as CalendarEvent[];
+    // Create a new array and explictly cast each element
+    const events: CalendarEvent[] = [];
+    if (response.data) {
+      for (let i = 0; i < response.data.length; i++) {
+        const item = response.data[i];
+        events.push({
+          id: item.id,
+          title: item.title,
+          start_time: item.start_time,
+          end_time: item.end_time,
+          description: item.description,
+          user_id: item.user_id,
+          location: item.location,
+          color: item.color,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        });
+      }
+    }
     
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
