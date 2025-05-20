@@ -91,16 +91,16 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Use a simpler query approach to avoid excessive type inference
-    const { data, error } = await supabase.from('calendar_events').select('*');
+    // Directly destructure the data and error to avoid deep type inference
+    const result = await supabase.from('calendar_events').select('*');
     
-    if (error) {
-      console.error('Error fetching all events:', error);
+    if (result.error) {
+      console.error('Error fetching all events:', result.error);
       return [];
     }
 
-    // Explicitly cast the result data as CalendarEvent[] to avoid inference issues
-    const events: CalendarEvent[] = data || [];
+    // Use type assertion with an explicitly declared empty array fallback
+    const events = (result.data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events (no filters)`);
     return events;
   } catch (error) {
@@ -118,19 +118,17 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Use a simpler query approach to avoid excessive type inference
-    const { data, error } = await supabase
-      .from('calendar_events')
-      .select('*')
-      .eq(columnName, filterId);
+    // Create the query without chaining to avoid deep type inference
+    const query = supabase.from('calendar_events').select('*');
+    const result = await query.eq(columnName, filterId);
     
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
+    if (result.error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, result.error);
       return [];
     }
 
-    // Explicitly cast the result data as CalendarEvent[] to avoid inference issues
-    const events: CalendarEvent[] = data || [];
+    // Use type assertion with an explicitly declared empty array fallback
+    const events = (result.data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -148,19 +146,17 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Use a simpler query approach to avoid excessive type inference
-    const { data, error } = await supabase
-      .from('calendar_events')
-      .select('*')
-      .in(columnName, filterIds);
+    // Create the query without chaining to avoid deep type inference
+    const query = supabase.from('calendar_events').select('*');
+    const result = await query.in(columnName, filterIds);
     
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
+    if (result.error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, result.error);
       return [];
     }
 
-    // Explicitly cast the result data as CalendarEvent[] to avoid inference issues
-    const events: CalendarEvent[] = data || [];
+    // Use type assertion with an explicitly declared empty array fallback
+    const events = (result.data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
