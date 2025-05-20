@@ -17,21 +17,22 @@ export async function fetchEventsBySingleValue(
   try {
     console.log(`Fetching events where ${columnName} = ${value}`);
     
-    // Using a simpler approach to avoid excessive type instantiation
-    // Cast to any to bypass TypeScript inference
-    const result = await (supabase
+    // Build query without type inference
+    const query = supabase
       .from('user_events')
       .select('*')
-      .eq(columnName, value) as any);
-      
-    const { data, error } = result;
+      .eq(columnName, value);
+    
+    // Execute query as unknown type first, then cast result
+    const response = await (query as unknown as Promise<{data: any[], error: any}>);
+    const { data, error } = response;
     
     if (error) {
       console.error('Error fetching events by single value:', error);
       return [];
     }
     
-    // Explicitly cast the result as UserEventFromDB[]
+    // Explicitly cast the data to the proper type after retrieval
     const events = (data || []) as UserEventFromDB[];
     return formatEventData(events);
   } catch (error) {
