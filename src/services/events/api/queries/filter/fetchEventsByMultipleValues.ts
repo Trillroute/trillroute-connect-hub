@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent } from '../../types/eventTypes';
+import { CalendarEvent, UserEventFromDB } from '../../types/eventTypes';
 import { formatEventData } from '../utils/eventFormatters';
 
 /**
@@ -13,7 +13,7 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
   try {
     console.log('Fetching events with multiple filters:', filters);
     
-    // Build the query without explicit typing
+    // Build the query
     let query = supabase.from('user_events').select('*');
     
     // Apply each filter to the query
@@ -21,9 +21,8 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       query = query.eq(column, value);
     }
     
-    // Execute the query
-    const result = await query;
-    const { data, error } = result;
+    // Execute the query with explicit typing to avoid recursive type inference
+    const { data, error } = await query;
     
     if (error) {
       console.error('Error fetching events by multiple values:', error);
@@ -31,7 +30,7 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
     }
     
     // Use the formatting utility to transform the data
-    return formatEventData(data || []);
+    return formatEventData(data as UserEventFromDB[] || []);
   } catch (error) {
     console.error('Exception in fetchEventsByMultipleValues:', error);
     return [];
