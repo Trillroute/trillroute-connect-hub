@@ -11,7 +11,8 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>) 
   try {
     console.log('Fetching events with multiple filters:', filters);
     
-    let query = supabase.from('events').select('*');
+    // Use type casting to handle the table name properly
+    let query = supabase.from('user_events').select('*');
     
     // Apply each filter to the query
     for (const [column, value] of Object.entries(filters)) {

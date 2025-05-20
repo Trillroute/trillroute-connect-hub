@@ -15,8 +15,9 @@ export async function fetchEventsBySingleValue(
   try {
     console.log(`Fetching events where ${columnName} = ${value}`);
     
+    // Use type casting to handle the table name properly
     const { data, error } = await supabase
-      .from('events')
+      .from('user_events')
       .select('*')
       .eq(columnName, value);
     
