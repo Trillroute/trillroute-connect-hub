@@ -21,8 +21,10 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       queryBuilder = queryBuilder.eq(column, value);
     }
     
-    // Cast to any to avoid type inference issues
-    const { data, error } = await (queryBuilder as any);
+    // Execute the query without type inference by performing the await separately
+    // This avoids deep type instantiation issues
+    const result: any = await queryBuilder;
+    const { data, error } = result;
     
     if (error) {
       console.error('Error fetching events by multiple values:', error);

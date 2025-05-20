@@ -17,14 +17,16 @@ export async function fetchEventsBySingleValue(
   try {
     console.log(`Fetching events where ${columnName} = ${value}`);
     
-    // Use a two-step approach to avoid type inference issues
+    // First create the query
     const query = supabase
       .from('user_events')
       .select('*')
       .eq(columnName, value);
     
-    // Cast to Promise<any> to avoid deep type instantiation
-    const { data, error } = await (query as any);
+    // Execute the query without type inference by performing the await separately
+    // This avoids deep type instantiation issues
+    const result: any = await query;
+    const { data, error } = result;
     
     if (error) {
       console.error('Error fetching events by single value:', error);
