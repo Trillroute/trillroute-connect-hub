@@ -9,6 +9,7 @@ import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
 import { useCourseTeachers } from '@/hooks/useCourseTeachers';
+import { Copy } from 'lucide-react';
 
 const EnrollmentPage: React.FC = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -16,15 +17,17 @@ const EnrollmentPage: React.FC = () => {
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [shouldShowTeacher, setShouldShowTeacher] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
   const { teachers, loading: teachersLoading } = useCourseTeachers(selectedCourseId);
-  const { addStudentToCourse, loading: enrollmentLoading } = useCourseEnrollment();
+  const { addStudentToCourse, loading: enrollmentLoading, generatePaymentLink } = useCourseEnrollment();
 
   // Reset teacher selection when course changes
   useEffect(() => {
     setSelectedTeacherId('');
+    setGeneratedLink(null);
     
     if (selectedCourseId) {
       const selectedCourse = courses.find(course => course.id === selectedCourseId);
@@ -52,6 +55,24 @@ const EnrollmentPage: React.FC = () => {
 
     setIsEnrolling(true);
     try {
+      // Get course data to check if it's a fixed course
+      const selectedCourse = courses.find(course => course.id === selectedCourseId);
+      const isFixedCourse = selectedCourse?.duration_type === 'fixed';
+      const amount = selectedCourse?.final_price || 0;
+      
+      // If fixed course, generate payment link first
+      if (isFixedCourse && selectedCourse) {
+        const paymentLink = await generatePaymentLink(
+          selectedCourseId,
+          selectedStudentId, 
+          amount
+        );
+        
+        if (paymentLink) {
+          setGeneratedLink(paymentLink);
+        }
+      }
+      
       const success = await addStudentToCourse(
         selectedCourseId, 
         selectedStudentId, 
@@ -59,12 +80,56 @@ const EnrollmentPage: React.FC = () => {
       );
       
       if (success) {
-        toast.success("Student has been enrolled in the course");
+        // Get student details for the toast message
+        const student = students.find(s => s.id === selectedStudentId);
+        const course = courses.find(c => c.id === selectedCourseId);
+        
+        if (isFixedCourse && generatedLink) {
+          toast.success("Student enrollment started", {
+            description: (
+              <div>
+                <p>Payment link sent to {student?.email}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <a 
+                    href={generatedLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline truncate max-w-[200px]"
+                  >
+                    {generatedLink}
+                  </a>
+                  <Button
+                    variant="outline" 
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedLink);
+                      toast.info("Link copied to clipboard");
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ),
+            action: {
+              label: "Copy Link",
+              onClick: () => {
+                navigator.clipboard.writeText(generatedLink);
+                toast.info("Link copied to clipboard");
+              }
+            },
+            duration: 10000, // 10 seconds
+          });
+        } else {
+          toast.success("Student has been enrolled in the course");
+        }
         
         // Reset selections after successful enrollment
         setSelectedStudentId('');
         setSelectedCourseId('');
         setSelectedTeacherId('');
+        setGeneratedLink(null);
       }
     } catch (error) {
       console.error("Error enrolling student:", error);
@@ -147,6 +212,31 @@ const EnrollmentPage: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+          
+          {generatedLink && (
+            <div className="p-3 bg-slate-50 rounded-md border mt-4">
+              <p className="text-sm font-medium mb-2">Payment Link Generated</p>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={generatedLink}
+                  readOnly 
+                  className="w-full text-xs bg-white p-2 border rounded truncate"
+                />
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedLink);
+                    toast.info("Link copied to clipboard");
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
