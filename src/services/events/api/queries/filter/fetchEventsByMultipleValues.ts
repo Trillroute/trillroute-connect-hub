@@ -21,18 +21,17 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       queryBuilder = queryBuilder.eq(column, value);
     }
     
-    // Execute the query without type inference by performing the await separately
-    // This avoids deep type instantiation issues
-    const result: any = await queryBuilder;
-    const { data, error } = result;
+    // Execute the query as a generic Promise to avoid TypeScript deep instantiation
+    const response = await queryBuilder;
     
-    if (error) {
-      console.error('Error fetching events by multiple values:', error);
+    // Handle query error
+    if (response.error) {
+      console.error('Error fetching events by multiple values:', response.error);
       return [];
     }
     
-    // Explicitly cast the data to the proper type after retrieval
-    const events = (data || []) as UserEventFromDB[];
+    // Cast the data to our expected type
+    const events = (response.data || []) as UserEventFromDB[];
     return formatEventData(events);
   } catch (error) {
     console.error('Exception in fetchEventsByMultipleValues:', error);

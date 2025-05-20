@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
 import { useCourseTeachers } from '@/hooks/useCourseTeachers';
 import { Copy } from 'lucide-react';
+import TeacherAvailabilityDialog from './TeacherAvailabilityDialog';
+import { UserAvailability } from '@/services/availability/types';
 
 const EnrollmentPage: React.FC = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -17,6 +20,8 @@ const EnrollmentPage: React.FC = () => {
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [shouldShowTeacher, setShouldShowTeacher] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
+  const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState<UserAvailability | null>(null);
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
@@ -27,6 +32,7 @@ const EnrollmentPage: React.FC = () => {
   useEffect(() => {
     setSelectedTeacherId('');
     setGeneratedLink(null);
+    setSelectedAvailabilitySlot(null);
     
     if (selectedCourseId) {
       const selectedCourse = courses.find(course => course.id === selectedCourseId);
@@ -52,10 +58,26 @@ const EnrollmentPage: React.FC = () => {
       return;
     }
 
+    // If teacher selection is required but not selected
+    if (shouldShowTeacher && !selectedTeacherId) {
+      toast.error("Please select a teacher for this course");
+      return;
+    }
+
+    // Check if this is a recurring solo/duo course that needs time slot selection
+    const selectedCourse = courses.find(course => course.id === selectedCourseId);
+    const isRecurring = selectedCourse?.duration_type === 'recurring';
+    const isSoloOrDuo = selectedCourse?.course_type === 'solo' || selectedCourse?.course_type === 'duo';
+    
+    // If recurring solo/duo course and teacher is selected but no slot is selected yet
+    if (isRecurring && isSoloOrDuo && selectedTeacherId && !selectedAvailabilitySlot) {
+      setShowAvailabilityDialog(true);
+      return;
+    }
+
     setIsEnrolling(true);
     try {
       // Get course data to check if it's a fixed course
-      const selectedCourse = courses.find(course => course.id === selectedCourseId);
       const isFixedCourse = selectedCourse?.duration_type === 'fixed';
       const amount = selectedCourse?.final_price || 0;
       
@@ -78,10 +100,19 @@ const EnrollmentPage: React.FC = () => {
         }
       }
       
+      // Additional metadata to include availability slot information if selected
+      const additionalMetadata = selectedAvailabilitySlot ? {
+        availabilitySlotId: selectedAvailabilitySlot.id,
+        dayOfWeek: selectedAvailabilitySlot.day_of_week,
+        startTime: selectedAvailabilitySlot.start_time,
+        endTime: selectedAvailabilitySlot.end_time
+      } : undefined;
+      
       const success = await addStudentToCourse(
         selectedCourseId, 
         selectedStudentId, 
-        shouldShowTeacher ? selectedTeacherId || undefined : undefined
+        shouldShowTeacher ? selectedTeacherId || undefined : undefined,
+        additionalMetadata
       );
       
       if (success) {
@@ -141,6 +172,7 @@ const EnrollmentPage: React.FC = () => {
         setSelectedCourseId('');
         setSelectedTeacherId('');
         setGeneratedLink(null);
+        setSelectedAvailabilitySlot(null);
       }
     } catch (error) {
       console.error("Error enrolling student:", error);
@@ -148,6 +180,35 @@ const EnrollmentPage: React.FC = () => {
     } finally {
       setIsEnrolling(false);
     }
+  };
+
+  // Handle availability slot selection
+  const handleSlotSelected = (slot: UserAvailability) => {
+    setSelectedAvailabilitySlot(slot);
+    setShowAvailabilityDialog(false);
+    
+    // Show success message
+    toast.success("Time slot selected", {
+      description: `Selected ${getDayName(slot.day_of_week)} from ${formatTime(slot.start_time)} to ${formatTime(slot.end_time)}`,
+    });
+    
+    // Continue with enrollment now that we have the slot
+    setTimeout(() => {
+      handleEnrollStudent();
+    }, 500);
+  };
+  
+  // Helper functions
+  const getDayName = (dayOfWeek: number) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dayOfWeek];
+  };
+  
+  const formatTime = (timeString: string) => {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12;
+    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   // Check if teacher selection should be displayed and if there are available teachers
@@ -203,7 +264,6 @@ const EnrollmentPage: React.FC = () => {
             </Select>
           </div>
           
-          {/* Only render the teacher dropdown if it should be displayed */}
           {shouldDisplayTeacherField && (
             <div className="space-y-2">
               <Label htmlFor="teacher">Select Teacher</Label>
@@ -223,6 +283,23 @@ const EnrollmentPage: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+          
+          {selectedAvailabilitySlot && (
+            <div className="p-3 bg-slate-50 rounded-md border">
+              <p className="text-sm font-medium">Selected Time Slot</p>
+              <p className="text-xs text-gray-600 mt-1">
+                {getDayName(selectedAvailabilitySlot.day_of_week)}, {formatTime(selectedAvailabilitySlot.start_time)} - {formatTime(selectedAvailabilitySlot.end_time)}
+              </p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs mt-1 h-7 px-2" 
+                onClick={() => setShowAvailabilityDialog(true)}
+              >
+                Change Slot
+              </Button>
             </div>
           )}
           
@@ -261,6 +338,16 @@ const EnrollmentPage: React.FC = () => {
           </Button>
         </CardFooter>
       </Card>
+      
+      {/* Teacher availability dialog */}
+      {showAvailabilityDialog && selectedTeacherId && (
+        <TeacherAvailabilityDialog
+          isOpen={showAvailabilityDialog}
+          onClose={() => setShowAvailabilityDialog(false)}
+          teacherId={selectedTeacherId}
+          onSlotSelect={handleSlotSelected}
+        />
+      )}
     </div>
   );
 };
