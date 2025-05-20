@@ -21,16 +21,17 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       query = query.eq(column, value);
     }
     
-    // Execute the query with explicit typing to avoid recursive type inference
-    const { data, error } = await query;
+    // Execute the query using a simpler approach
+    const response = await query;
     
-    if (error) {
-      console.error('Error fetching events by multiple values:', error);
+    if (response.error) {
+      console.error('Error fetching events by multiple values:', response.error);
       return [];
     }
     
-    // Use the formatting utility to transform the data
-    return formatEventData(data as UserEventFromDB[] || []);
+    // First cast the data to an array, then use the formatter
+    const events = response.data || [];
+    return formatEventData(events as UserEventFromDB[]);
   } catch (error) {
     console.error('Exception in fetchEventsByMultipleValues:', error);
     return [];

@@ -17,19 +17,20 @@ export async function fetchEventsBySingleValue(
   try {
     console.log(`Fetching events where ${columnName} = ${value}`);
     
-    // Explicitly type the query result to avoid deep type instantiation
-    const { data, error } = await supabase
+    // Use a simpler typing approach to avoid deep type instantiation
+    const response = await supabase
       .from('user_events')
       .select('*')
       .eq(columnName, value);
     
-    if (error) {
-      console.error('Error fetching events by single value:', error);
+    if (response.error) {
+      console.error('Error fetching events by single value:', response.error);
       return [];
     }
     
-    // Use the formatting utility to transform the data
-    return formatEventData(data as UserEventFromDB[] || []);
+    // First cast the data to an array, then use the formatter
+    const events = response.data || [];
+    return formatEventData(events as UserEventFromDB[]);
   } catch (error) {
     console.error('Exception in fetchEventsBySingleValue:', error);
     return [];
