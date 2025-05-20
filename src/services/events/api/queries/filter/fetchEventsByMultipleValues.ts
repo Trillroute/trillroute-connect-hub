@@ -1,5 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent } from '../types/eventTypes';
+import { CalendarEvent } from '../../types/eventTypes';
 
 /**
  * Fetch events based on multiple filter criteria

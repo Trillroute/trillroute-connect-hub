@@ -20,7 +20,12 @@ export const formatEventData = (data: UserEventFromDB[]): CalendarEvent[] => {
       end: new Date(item.end_time),
       isBlocked: item.is_blocked || false,
       metadata: item.metadata || {},
-      userId: item.user_id
+      userId: item.user_id,
+      user_id: item.user_id,
+      start_time: item.start_time,
+      end_time: item.end_time,
+      created_at: item.created_at,
+      updated_at: item.updated_at
     });
   }
   
