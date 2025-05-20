@@ -39,9 +39,22 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
   {
     id: "students",
     label: "Students",
-    value: "students",
     icon: Users,
-    requiredPermission: AdminPermission.VIEW_STUDENTS
+    requiredPermission: AdminPermission.VIEW_STUDENTS,
+    submenu: [
+      {
+        id: "studentsList",
+        label: "Students List",
+        value: "students",
+        requiredPermission: AdminPermission.VIEW_STUDENTS
+      },
+      {
+        id: "enrollStudents",
+        label: "Enroll Students",
+        value: "enrollStudents",
+        requiredPermission: AdminPermission.VIEW_STUDENTS
+      }
+    ]
   },
   {
     id: "courses",
@@ -142,7 +155,6 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
         value: "levels",
         requiredPermission: AdminPermission.VIEW_LEVELS
       },
-      // Removed the "Access Control" option here
     ],
   },
 ];

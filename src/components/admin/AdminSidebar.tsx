@@ -20,6 +20,7 @@ export type ActiveTab =
   | "courses"
   | "classTypes"
   | "students"
+  | "enrollStudents"
   | "teachers"
   | "admins"
   | "leads"
@@ -45,6 +46,7 @@ const sidebarItems: SidebarItem[] = [
   { key: 'courses', icon: BookOpen, label: 'Courses', permissionKey: 'courses' },
   { key: 'classTypes', icon: Puzzle, label: 'Class Types', permissionKey: 'classTypes' },
   { key: 'students', icon: Users, label: 'Students', permissionKey: 'students' },
+  { key: 'enrollStudents', icon: Users, label: 'Enroll Students', permissionKey: 'students' },
   { key: 'teachers', icon: GraduationCap, label: 'Teachers', permissionKey: 'teachers' },
   { key: 'admins', icon: ShieldCheck, label: 'Admins', permissionKey: 'admins' },
   { key: 'leads', icon: UserPlus, label: 'Leads', permissionKey: 'leads' },

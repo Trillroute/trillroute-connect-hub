@@ -8,6 +8,7 @@ import TeacherManagement from '@/components/admin/TeacherManagement';
 import AdminManagement from '@/components/admin/AdminManagement';
 import LeadManagement from '@/components/admin/LeadManagement';
 import LevelManagement from '@/components/admin/levels/LevelManagement';
+import EnrollmentPage from '@/components/admin/enrollment/EnrollmentPage';
 import LimitedAccessCard from './LimitedAccessCard';
 import { type ActiveTab } from '@/components/admin/AdminSidebar';
 
@@ -57,6 +58,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           canEditUser={permissionMap.students.edit}
           canDeleteUser={permissionMap.students.delete}
         />
+      )}
+
+      {activeTab === 'enrollStudents' && permissionMap.students.view && (
+        <EnrollmentPage />
       )}
 
       {activeTab === 'teachers' && permissionMap.teachers.view && (
