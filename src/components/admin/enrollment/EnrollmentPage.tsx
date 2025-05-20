@@ -56,6 +56,9 @@ const EnrollmentPage: React.FC = () => {
     }
   };
 
+  // Check if the selected course has teachers
+  const hasTeachers = teachers && teachers.length > 0;
+
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-2xl font-bold mb-6">Enroll Students</h1>
@@ -106,20 +109,17 @@ const EnrollmentPage: React.FC = () => {
             </Select>
           </div>
           
-          {selectedCourseId && (
+          {/* Only render the teacher dropdown if there are teachers for this course */}
+          {selectedCourseId && hasTeachers && (
             <div className="space-y-2">
               <Label htmlFor="teacher">Select Teacher</Label>
               <Select 
                 value={selectedTeacherId} 
                 onValueChange={setSelectedTeacherId}
-                disabled={teachersLoading || teachers.length === 0}
+                disabled={teachersLoading}
               >
                 <SelectTrigger id="teacher">
-                  <SelectValue placeholder={
-                    teachersLoading ? "Loading teachers..." :
-                    teachers.length === 0 ? "No teachers available" :
-                    "Select a teacher"
-                  } />
+                  <SelectValue placeholder="Select a teacher" />
                 </SelectTrigger>
                 <SelectContent>
                   {teachers.map((teacher) => (
@@ -129,9 +129,6 @@ const EnrollmentPage: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
-              {teachers.length === 0 && !teachersLoading && (
-                <p className="text-xs text-amber-600">No teachers are assigned to this course</p>
-              )}
             </div>
           )}
         </CardContent>

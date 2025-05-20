@@ -91,17 +91,17 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
  */
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
-    // Break down the query to avoid type instantiation issues
-    const query = supabase.from('calendar_events');
-    const result = await query.select('*');
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*');
     
-    if (result.error) {
-      console.error('Error fetching all events:', result.error);
+    if (error) {
+      console.error('Error fetching all events:', error);
       return [];
     }
 
     // Use type assertion with an explicitly declared empty array fallback
-    const events = (result.data || []) as CalendarEvent[];
+    const events = (data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events (no filters)`);
     return events;
   } catch (error) {
@@ -119,17 +119,18 @@ async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Break down the query to avoid type instantiation issues
-    const query = supabase.from('calendar_events');
-    const result = await query.select('*').eq(columnName, filterId);
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .eq(columnName, filterId);
     
-    if (result.error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, result.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
       return [];
     }
 
     // Use type assertion with an explicitly declared empty array fallback
-    const events = (result.data || []) as CalendarEvent[];
+    const events = (data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -147,17 +148,18 @@ async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Break down the query to avoid type instantiation issues
-    const query = supabase.from('calendar_events');
-    const result = await query.select('*').in(columnName, filterIds);
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select('*')
+      .in(columnName, filterIds);
     
-    if (result.error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, result.error);
+    if (error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
       return [];
     }
 
     // Use type assertion with an explicitly declared empty array fallback
-    const events = (result.data || []) as CalendarEvent[];
+    const events = (data || []) as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
@@ -181,11 +183,12 @@ export const fetchUserEvents = async (userId: string): Promise<CalendarEvent[]> 
       return [];
     }
     
-    // Explicitly cast to any before mapping to avoid deep type instantiation
-    const events = (data || []) as any[];
+    if (!data || data.length === 0) {
+      return [];
+    }
     
     // Map to calendar events with explicit typing
-    return events.map((event): CalendarEvent => ({
+    return data.map((event): CalendarEvent => ({
       id: event.id,
       title: event.title,
       start_time: event.start_time,
