@@ -24,6 +24,12 @@ export const formatEventData = (data: UserEventFromDB[]): CalendarEvent[] => {
       user_id: item.user_id,
       start_time: item.start_time,
       end_time: item.end_time,
+      location: (item.metadata && typeof item.metadata === 'object' && 'location' in item.metadata) 
+        ? String(item.metadata.location) 
+        : undefined,
+      color: (item.metadata && typeof item.metadata === 'object' && 'color' in item.metadata) 
+        ? String(item.metadata.color) 
+        : undefined,
       created_at: item.created_at,
       updated_at: item.updated_at
     });
