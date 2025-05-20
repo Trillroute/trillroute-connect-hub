@@ -13,7 +13,7 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
   try {
     console.log('Fetching events with multiple filters:', filters);
     
-    // Build the query
+    // Build the query without type inference
     let query = supabase.from('user_events').select('*');
     
     // Apply each filter to the query
@@ -21,7 +21,7 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       query = query.eq(column, value);
     }
     
-    // Execute the query using a simpler approach
+    // Execute the query without TypeScript trying to infer the types
     const response = await query;
     
     if (response.error) {
@@ -29,9 +29,9 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       return [];
     }
     
-    // First cast the data to an array, then use the formatter
-    const events = response.data || [];
-    return formatEventData(events as UserEventFromDB[]);
+    // Explicitly cast the data as an array of UserEventFromDB objects
+    const events = (response.data || []) as UserEventFromDB[];
+    return formatEventData(events);
   } catch (error) {
     console.error('Exception in fetchEventsByMultipleValues:', error);
     return [];
