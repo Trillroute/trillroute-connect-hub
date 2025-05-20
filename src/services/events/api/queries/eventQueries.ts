@@ -32,19 +32,27 @@ export async function fetchEventsBySingleValue(
   filterId: string
 ): Promise<CalendarEvent[]> {
   try {
-    // Use a simpler approach to fetch data to avoid type recursion issues
-    const { data, error } = await supabase
+    // Explicitly destructure data and error to avoid type recursion
+    const result = await supabase
       .from('calendar_events')
       .select('*')
       .eq(columnName, filterId);
     
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, error);
+    // Handle error case
+    if (result.error) {
+      console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, result.error);
       return [];
     }
 
-    // Use a simple type assertion without complex generics
-    const events = data as CalendarEvent[];
+    // Safely cast the data using an intermediate array
+    const rawData = result.data || [];
+    const events: CalendarEvent[] = [];
+    
+    // Process each item individually to avoid deep type instantiation
+    rawData.forEach(item => {
+      events.push(item as CalendarEvent);
+    });
+    
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -62,19 +70,27 @@ export async function fetchEventsByMultipleValues(
   filterIds: string[]
 ): Promise<CalendarEvent[]> {
   try {
-    // Simplify the query to avoid type recursion issues
-    const { data, error } = await supabase
+    // Explicitly destructure data and error to avoid type recursion
+    const result = await supabase
       .from('calendar_events')
       .select('*')
       .in(columnName, filterIds);
     
-    if (error) {
-      console.error(`Error fetching events for ${filterType} with multiple IDs:`, error);
+    // Handle error case
+    if (result.error) {
+      console.error(`Error fetching events for ${filterType} with multiple IDs:`, result.error);
       return [];
     }
 
-    // Use a simple type assertion without complex generics
-    const events = data as CalendarEvent[];
+    // Safely cast the data using an intermediate array
+    const rawData = result.data || [];
+    const events: CalendarEvent[] = [];
+    
+    // Process each item individually to avoid deep type instantiation
+    rawData.forEach(item => {
+      events.push(item as CalendarEvent);
+    });
+    
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
@@ -88,22 +104,24 @@ export async function fetchEventsByMultipleValues(
  */
 export async function fetchUserEvents(userId: string): Promise<CalendarEvent[]> {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('user_events')
       .select('*')
       .eq('user_id', userId);
     
-    if (error) {
-      console.error('Error fetching user events:', error);
+    if (result.error) {
+      console.error('Error fetching user events:', result.error);
       return [];
     }
     
-    if (!data || data.length === 0) {
+    if (!result.data || result.data.length === 0) {
       return [];
     }
     
     // Map to calendar events with explicit typing
-    return data.map((event: UserEventFromDB): CalendarEvent => {
+    const events: CalendarEvent[] = [];
+    
+    result.data.forEach((event: UserEventFromDB) => {
       // Create a base CalendarEvent with required fields
       const calendarEvent: CalendarEvent = {
         id: event.id,
@@ -121,8 +139,10 @@ export async function fetchUserEvents(userId: string): Promise<CalendarEvent[]> 
         if (metadata.location) calendarEvent.location = metadata.location as string;
       }
       
-      return calendarEvent;
+      events.push(calendarEvent);
     });
+    
+    return events;
   } catch (error) {
     console.error('Error in fetchUserEvents:', error);
     return [];
