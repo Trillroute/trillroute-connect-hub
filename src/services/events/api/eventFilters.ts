@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -91,9 +92,8 @@ function getColumnNameFromFilterType(filterType: FilterType): string | null {
 async function fetchAllEvents(): Promise<CalendarEvent[]> {
   try {
     // Break down the query to avoid type instantiation issues
-    let query = supabase.from('calendar_events');
-    let selectQuery = query.select('*');
-    let result = await selectQuery;
+    const query = supabase.from('calendar_events');
+    const result = await query.select('*');
     
     if (result.error) {
       console.error('Error fetching all events:', result.error);
@@ -120,10 +120,8 @@ async function fetchEventsBySingleValue(
 ): Promise<CalendarEvent[]> {
   try {
     // Break down the query to avoid type instantiation issues
-    let query = supabase.from('calendar_events');
-    let selectQuery = query.select('*');
-    let filteredQuery = selectQuery.eq(columnName, filterId);
-    let result = await filteredQuery;
+    const query = supabase.from('calendar_events');
+    const result = await query.select('*').eq(columnName, filterId);
     
     if (result.error) {
       console.error(`Error fetching events for ${filterType} with ID ${filterId}:`, result.error);
@@ -150,10 +148,8 @@ async function fetchEventsByMultipleValues(
 ): Promise<CalendarEvent[]> {
   try {
     // Break down the query to avoid type instantiation issues
-    let query = supabase.from('calendar_events');
-    let selectQuery = query.select('*');
-    let filteredQuery = selectQuery.in(columnName, filterIds);
-    let result = await filteredQuery;
+    const query = supabase.from('calendar_events');
+    const result = await query.select('*').in(columnName, filterIds);
     
     if (result.error) {
       console.error(`Error fetching events for ${filterType} with multiple IDs:`, result.error);
@@ -192,12 +188,12 @@ export const fetchUserEvents = async (userId: string): Promise<CalendarEvent[]> 
     return events.map((event): CalendarEvent => ({
       id: event.id,
       title: event.title,
-      start: new Date(event.start_time),
-      end: new Date(event.end_time),
+      start_time: event.start_time,
+      end_time: event.end_time,
       description: event.description || '',
-      eventType: event.event_type,
-      userId: event.user_id,
-      metadata: event.metadata || {}
+      user_id: event.user_id,
+      color: event.color,
+      location: event.location
     }));
   } catch (error) {
     console.error('Error in fetchUserEvents:', error);
