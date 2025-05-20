@@ -1,5 +1,5 @@
 
-import { fetchEventsByFilter, FilterType } from '@/services/events/api/eventFilters';
+import { fetchEventsByFilter, FilterType } from '@/services/events';
 import { fetchUserAvailabilityForUsers } from '@/services/availability/api/staffAvailability';
 import { getUsersBySkills } from '@/services/skills/skillStaffService';
 

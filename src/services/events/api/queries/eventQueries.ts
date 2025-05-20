@@ -42,7 +42,8 @@ export async function fetchEventsBySingleValue(
       return [];
     }
 
-    const events = (response.data || []) as CalendarEvent[];
+    // Use type assertion instead of generic parameter
+    const events = response.data as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType} with ID ${filterId}`);
     return events;
   } catch (error) {
@@ -70,7 +71,8 @@ export async function fetchEventsByMultipleValues(
       return [];
     }
 
-    const events = (response.data || []) as CalendarEvent[];
+    // Use type assertion instead of generic parameter
+    const events = response.data as CalendarEvent[];
     console.log(`Found ${events.length} events for ${filterType}`);
     return events;
   } catch (error) {
