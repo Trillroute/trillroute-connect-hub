@@ -10,10 +10,11 @@ interface CourseContentProps {
   loading: boolean;
   viewMode: string;
   onView: (course: Course) => void;
-  onEdit: (course: Course) => void;
-  onDelete: (course: Course) => void;
-  selectedCourses: string[];
-  setSelectedCourses: React.Dispatch<React.SetStateAction<string[]>>;
+  onEdit?: (course: Course) => void;
+  onDelete?: (course: Course) => void;
+  onBulkDelete?: (ids: string[]) => void;
+  selectedIds: string[];
+  setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const CourseContent: React.FC<CourseContentProps> = ({
@@ -23,14 +24,15 @@ const CourseContent: React.FC<CourseContentProps> = ({
   onView,
   onEdit,
   onDelete,
-  selectedCourses,
-  setSelectedCourses
+  onBulkDelete,
+  selectedIds,
+  setSelectedIds
 }) => {
   if (viewMode === 'grid') {
     return (
       <CourseGridView
         courses={courses}
-        isLoading={loading} // Updated prop name to match component
+        isLoading={loading}
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -42,7 +44,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
     return (
       <CourseTileView
         courses={courses}
-        isLoading={loading} // Updated prop name to match component
+        isLoading={loading}
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -58,8 +60,9 @@ const CourseContent: React.FC<CourseContentProps> = ({
       onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
-      selectedCourses={selectedCourses}
-      setSelectedCourses={setSelectedCourses}
+      onBulkDelete={onBulkDelete}
+      selectedCourseIds={selectedIds}
+      setSelectedCourseIds={setSelectedIds}
     />
   );
 };

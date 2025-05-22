@@ -11,6 +11,7 @@ import { useStaffAvailability } from '@/hooks/useStaffAvailability';
 import { UserAvailability } from '@/services/availability/types';
 import { format, parse } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useUserAvailability } from '@/hooks/useUserAvailability';
 
 interface TeacherAvailabilityDialogProps {
   open: boolean;
@@ -30,7 +31,8 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
   courseId
 }) => {
   const [selectedDay, setSelectedDay] = useState<number>(0);
-  const { availabilities, isLoading } = useStaffAvailability(teacherId);
+  // Use useUserAvailability for the teacher's availability
+  const { dailyAvailability, loading: isLoading } = useUserAvailability(teacherId);
 
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -41,17 +43,15 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
       byDay[i] = [];
     }
     
-    if (availabilities) {
-      availabilities.forEach(slot => {
-        if (byDay[slot.dayOfWeek]) {
-          byDay[slot.dayOfWeek].push(slot);
-        } else {
-          byDay[slot.dayOfWeek] = [slot];
+    if (dailyAvailability) {
+      dailyAvailability.forEach(day => {
+        if (day.dayOfWeek >= 0 && day.dayOfWeek < 7) {
+          byDay[day.dayOfWeek] = day.slots || [];
         }
       });
     }
     
-    // Sort by start time
+    // Sort by start time in each day
     Object.keys(byDay).forEach(day => {
       const dayIndex = parseInt(day);
       byDay[dayIndex] = byDay[dayIndex].sort((a, b) => {
@@ -62,7 +62,7 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
     });
     
     return byDay;
-  }, [availabilities]);
+  }, [dailyAvailability]);
 
   const formatTimeRange = (slot: UserAvailability) => {
     try {

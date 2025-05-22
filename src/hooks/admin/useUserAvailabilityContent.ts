@@ -47,7 +47,7 @@ export const useUserAvailabilityContent = (): UseUserAvailabilityContentResult =
   const { 
     staffMembers, 
     loading: isLoadingStaff, 
-    refetch: refetchStaffMembers,
+    fetchStaffMembers: refetchStaffMembers,
     error: staffError
   } = useStaffAvailability();
   

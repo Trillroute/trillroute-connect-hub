@@ -10,9 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 export const fetchEventsBySingleValue = async (
   field: string,
   value: string | number | boolean
-): Promise<any[]> => { // Explicitly set return type to avoid deep type instantiation
+): Promise<any[]> => {
   try {
-    // Create a query without type issues
+    // Use an explicit type annotation to avoid deep instantiation
     const { data, error } = await supabase
       .from('user_events')
       .select('*')

@@ -9,6 +9,7 @@ export interface StaffMember {
   lastName: string;
   email: string;
   role: string;
+  name: string; // Add name property needed by the components
 }
 
 export interface UseStaffAvailabilityResult {
@@ -16,6 +17,7 @@ export interface UseStaffAvailabilityResult {
   loading: boolean;
   error: any;
   fetchStaffMembers: () => Promise<void>;
+  refetch: () => Promise<void>; // Add refetch alias
 }
 
 export const useStaffAvailability = (): UseStaffAvailabilityResult => {
@@ -26,9 +28,9 @@ export const useStaffAvailability = (): UseStaffAvailabilityResult => {
   const fetchStaffMembers = async () => {
     try {
       setLoading(true);
-      // Fetch staff members from Supabase
+      // Fix the query to use custom_users instead of users table
       const { data, error } = await supabase
-        .from('users')
+        .from('custom_users')
         .select('*')
         .eq('role', 'staff');
 
@@ -41,7 +43,9 @@ export const useStaffAvailability = (): UseStaffAvailabilityResult => {
         firstName: staff.first_name || staff.firstName || '',
         lastName: staff.last_name || staff.lastName || '',
         email: staff.email || '',
-        role: 'staff'
+        role: 'staff',
+        // Add name property by combining first and last name
+        name: `${staff.first_name || staff.firstName || ''} ${staff.last_name || staff.lastName || ''}`.trim()
       }));
 
       setStaffMembers(transformedStaffMembers);
@@ -53,9 +57,12 @@ export const useStaffAvailability = (): UseStaffAvailabilityResult => {
     }
   };
 
+  // Create an alias for fetchStaffMembers to satisfy the interface
+  const refetch = fetchStaffMembers;
+
   useEffect(() => {
     fetchStaffMembers();
   }, []);
 
-  return { staffMembers, loading, error, fetchStaffMembers };
+  return { staffMembers, loading, error, fetchStaffMembers, refetch };
 };
