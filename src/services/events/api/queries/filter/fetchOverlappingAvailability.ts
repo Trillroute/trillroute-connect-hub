@@ -1,80 +1,79 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { UserAvailability } from '@/services/availability/types';
-import { mapDbAvailabilitySlot } from '@/services/availability/api/availabilityCore';
+import { CalendarEvent, UserEventFromDB } from '../../types/eventTypes';
+import { formatEventData } from '../utils/eventFormatters';
 
 /**
- * Fetches time slots where all teachers in a course are available
+ * Fetch available time slots where all specified users are available
  * 
- * @param courseId The course ID to check teacher availability for
- * @returns Array of overlapping availability slots
+ * @param userIds Array of user IDs to check availability for
+ * @returns Array of overlapping available time slots
  */
-export const fetchOverlappingAvailability = async (courseId: string): Promise<UserAvailability[]> => {
+export async function fetchOverlappingAvailability(
+  userIds: string[]
+): Promise<CalendarEvent[]> {
   try {
-    console.log('Fetching overlapping availability for course:', courseId);
+    console.log(`Fetching overlapping availability for users:`, userIds);
     
-    // First, get the instructor IDs from the course
-    const { data: courseData, error: courseError } = await supabase
-      .from('courses')
-      .select('instructor_ids')
-      .eq('id', courseId)
-      .single();
-    
-    if (courseError) {
-      console.error('Error fetching course instructors:', courseError);
+    if (!userIds.length) {
       return [];
     }
     
-    const instructorIds = courseData?.instructor_ids || [];
-    if (instructorIds.length === 0) {
-      console.log('No instructors found for this course');
+    // Get all availability events for these users
+    const { data, error } = await supabase
+      .from('user_events')
+      .select('*')
+      .in('user_id', userIds)
+      .eq('event_type', 'availability');
+    
+    // Handle query error
+    if (error) {
+      console.error('Error fetching overlapping availability:', error);
       return [];
     }
     
-    console.log('Found instructors:', instructorIds);
+    // If no data or empty results, return empty array
+    if (!data || data.length === 0) {
+      return [];
+    }
     
-    // For each instructor, fetch their availability
-    const instructorAvailability: Record<string, UserAvailability[]> = {};
+    // Group events by time slot (day and hour)
+    const eventsByTimeSlot: Record<string, UserEventFromDB[]> = {};
     
-    for (const instructorId of instructorIds) {
-      const { data, error } = await supabase
-        .from('user_availability')
-        .select('*')
-        .eq('user_id', instructorId);
+    (data as UserEventFromDB[]).forEach(event => {
+      // Create a key for the time slot (e.g., "Monday-9:00-10:00")
+      const startDate = new Date(event.start_time);
+      const endDate = new Date(event.end_time);
+      const day = startDate.getDay();
+      const startHour = startDate.getHours();
+      const endHour = endDate.getHours();
       
-      if (error) {
-        console.error('Error fetching availability for instructor', instructorId, error);
-        continue;
+      const key = `${day}-${startHour}-${endHour}`;
+      
+      if (!eventsByTimeSlot[key]) {
+        eventsByTimeSlot[key] = [];
       }
       
-      instructorAvailability[instructorId] = data.map(slot => mapDbAvailabilitySlot(slot));
-    }
+      eventsByTimeSlot[key].push(event);
+    });
     
-    // Find overlapping time slots
-    // Start with the first instructor's slots
-    const firstInstructorId = instructorIds[0];
-    let overlappingSlots = [...(instructorAvailability[firstInstructorId] || [])];
+    // Filter for slots where all users have availability
+    const overlappingSlots: UserEventFromDB[] = [];
     
-    // For each additional instructor, filter to only keep slots that overlap
-    for (let i = 1; i < instructorIds.length; i++) {
-      const instructorId = instructorIds[i];
-      const instructorSlots = instructorAvailability[instructorId] || [];
+    Object.entries(eventsByTimeSlot).forEach(([key, events]) => {
+      // Get unique user IDs for this time slot
+      const slotUserIds = [...new Set(events.map(event => event.user_id))];
       
-      // Filter the current overlapping slots to keep only those that overlap with this instructor's slots
-      overlappingSlots = overlappingSlots.filter(slot => 
-        instructorSlots.some(instructorSlot => 
-          // Match on day of week
-          instructorSlot.dayOfWeek === slot.dayOfWeek && 
-          // Check time overlap
-          instructorSlot.startTime <= slot.endTime && 
-          instructorSlot.endTime >= slot.startTime
-        )
-      );
-    }
+      // If all users have an event for this slot, include one of the events
+      if (slotUserIds.length === userIds.length && 
+          userIds.every(id => slotUserIds.includes(id))) {
+        overlappingSlots.push(events[0]);
+      }
+    });
     
-    console.log(`Found ${overlappingSlots.length} overlapping availability slots`);
-    return overlappingSlots;
+    return formatEventData(overlappingSlots);
   } catch (error) {
     console.error('Exception in fetchOverlappingAvailability:', error);
     return [];
   }
-};
+}

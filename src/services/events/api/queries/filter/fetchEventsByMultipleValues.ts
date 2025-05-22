@@ -9,7 +9,9 @@ import { formatEventData } from '../utils/eventFormatters';
  * @param filters Object containing column names as keys and filter values
  * @returns Array of event objects or empty array if none found
  */
-export async function fetchEventsByMultipleValues(filters: Record<string, any>): Promise<CalendarEvent[]> {
+export async function fetchEventsByMultipleValues(
+  filters: Record<string, any>
+): Promise<CalendarEvent[]> {
   try {
     console.log('Fetching events with multiple filters:', filters);
     
@@ -21,9 +23,8 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       queryBuilder = queryBuilder.eq(column, value);
     }
     
-    // Execute the query and handle the response manually to avoid TypeScript depth issue
-    const response = await queryBuilder;
-    const { data, error } = response as { data: UserEventFromDB[] | null, error: any };
+    // Execute the query
+    const { data, error } = await queryBuilder;
     
     // Handle query error
     if (error) {
@@ -32,7 +33,7 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
     }
     
     // Return formatted data or empty array
-    return formatEventData(data || []);
+    return formatEventData(data as UserEventFromDB[] || []);
   } catch (error) {
     console.error('Exception in fetchEventsByMultipleValues:', error);
     return [];

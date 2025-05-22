@@ -17,15 +17,11 @@ export async function fetchEventsBySingleValue(
   try {
     console.log(`Fetching events where ${columnName} = ${value}`);
     
-    // Create the query
-    const query = supabase
+    // Create and execute the query
+    const { data, error } = await supabase
       .from('user_events')
       .select('*')
       .eq(columnName, value);
-    
-    // Execute the query and handle the response manually to avoid TypeScript depth issue
-    const response = await query;
-    const { data, error } = response as { data: UserEventFromDB[] | null, error: any };
     
     // Handle query error
     if (error) {
@@ -34,7 +30,7 @@ export async function fetchEventsBySingleValue(
     }
     
     // Return formatted data or empty array
-    return formatEventData(data || []);
+    return formatEventData(data as UserEventFromDB[] || []);
   } catch (error) {
     console.error('Exception in fetchEventsBySingleValue:', error);
     return [];
