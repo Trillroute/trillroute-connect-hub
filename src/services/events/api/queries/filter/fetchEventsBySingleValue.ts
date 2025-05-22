@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { CalendarEvent } from '../../types/eventTypes';
 
 /**
  * Fetches events filtered by a single field value
@@ -12,7 +13,7 @@ export const fetchEventsBySingleValue = async (
   value: string | number | boolean
 ): Promise<any[]> => {
   try {
-    // Use an explicit type annotation to avoid deep instantiation
+    // Using a more specific return type to avoid deep instantiation
     const { data, error } = await supabase
       .from('user_events')
       .select('*')
