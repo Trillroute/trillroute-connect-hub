@@ -1,67 +1,61 @@
 
 import { useState, useEffect } from 'react';
-import { fetchAllStaffAvailability } from '@/services/availability/api';
-import { UserAvailabilityMap } from '@/services/availability/types';
-
-export interface StaffMember {
-  id: string;
-  name: string;
-  role: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { UserAvailability, DbUserAvailability } from '@/services/availability/types';
+import { mapDbToUserAvailability } from '@/services/availability/availabilityMappers';
 
 export interface UseStaffAvailabilityResult {
-  staffMembers: StaffMember[];
-  availabilities: UserAvailabilityMap;
-  availabilityByUser: UserAvailabilityMap;
-  loading: boolean;
+  availabilities: UserAvailability[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 }
 
-export const useStaffAvailability = (): UseStaffAvailabilityResult => {
-  const [availabilityByUser, setAvailabilityByUser] = useState<UserAvailabilityMap>({});
-  const [loading, setLoading] = useState(true);
+export const useStaffAvailability = (userId?: string): UseStaffAvailabilityResult => {
+  const [availabilities, setAvailabilities] = useState<UserAvailability[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  
+  const fetchAvailabilities = async () => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
 
-  const fetchStaffAvailability = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      console.log("Fetching staff availability data...");
-      const data = await fetchAllStaffAvailability();
-      console.log("Received raw staff availability data:", data);
-      setAvailabilityByUser(data);
+      setIsLoading(true);
+      setError(null);
       
-      // Extract staff members from the data
-      const members: StaffMember[] = Object.entries(data).map(([id, userData]) => ({
-        id,
-        name: userData.name || 'Unknown User',
-        role: userData.role || 'staff'
-      }));
+      const { data, error: supabaseError } = await supabase
+        .from('user_availability')
+        .select('*')
+        .eq('user_id', userId);
       
-      console.log("Extracted staff members:", members);
-      setStaffMembers(members);
+      if (supabaseError) {
+        throw new Error(supabaseError.message);
+      }
+      
+      // Map DB fields to our frontend model
+      const mappedData: UserAvailability[] = (data as DbUserAvailability[]).map(mapDbToUserAvailability);
+      
+      setAvailabilities(mappedData);
     } catch (err) {
-      console.error("Error in useStaffAvailability hook:", err);
-      setError(err instanceof Error ? err : new Error('Failed to load staff availability'));
+      console.error('Error fetching staff availability:', err);
+      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  // Initial fetch
   useEffect(() => {
-    fetchStaffAvailability();
-  }, []);
+    fetchAvailabilities();
+  }, [userId]);
 
-  return {
-    staffMembers,
-    availabilities: availabilityByUser, // Added this property
-    availabilityByUser,
-    loading,
-    isLoading: loading, // Added this property as an alias
-    error,
-    refetch: fetchStaffAvailability
+  return { 
+    availabilities, 
+    isLoading, 
+    error, 
+    refetch: fetchAvailabilities 
   };
 };

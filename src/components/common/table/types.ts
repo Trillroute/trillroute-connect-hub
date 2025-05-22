@@ -1,27 +1,31 @@
 
-export interface SortConfig {
-  field: string;
-  direction: 'asc' | 'desc';
-}
+import { ReactNode } from 'react';
 
 export interface ColumnConfig {
   field: string;
   headerName: string;
-  width?: string;
+  valueGetter?: ({ data }: { data: any }) => any;
+  valueFormatter?: ({ value }: { value: any }) => any;
+  cellRenderer?: ({ data, value }: { data: any; value: any }) => ReactNode;
   sortable?: boolean;
   filterable?: boolean;
-  valueFormatter?: ({ value, data }: { value: any, data?: any }) => string | number;
-  cellRenderer?: ({ value, data }: { value: any, data: any }) => React.ReactNode;
-  valueGetter?: ({ data }: { data: any }) => any;
+  width?: number;
+  minWidth?: number;
+  flex?: number;
+}
+
+export interface SortConfig {
+  field: string;
+  direction: 'asc' | 'desc';
 }
 
 export interface UnifiedDataGridProps {
   data: any[];
   columnConfigs: ColumnConfig[];
   loading?: boolean;
-  onView?: (row: any) => void;
-  onEdit?: (row: any) => void;
-  onDelete?: (row: any) => void;
+  onView?: (item: any) => void;
+  onEdit?: (item: any) => void;
+  onDelete?: (item: any) => void;
   onBulkDelete?: (ids: string[]) => void;
   selectedIds?: string[];
   setSelectedIds?: React.Dispatch<React.SetStateAction<string[]>>;

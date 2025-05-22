@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -7,24 +7,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuCheckboxItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Columns } from "lucide-react";
 import { useGridData } from './hooks/useGridData';
 import { useGridSelection } from './hooks/useGridSelection';
+import { useColumnReordering } from './hooks/useColumnReordering';
+import { useColumnVisibility } from './hooks/useColumnVisibility';
 import GridHeader from './components/GridHeader';
 import GridBody from './components/GridBody';
 import GridToolbar from './components/GridToolbar';
 import LoadingIndicator from './components/LoadingIndicator';
-import { UnifiedDataGridProps, ColumnConfig } from './types';
+import ColumnVisibilityMenu from './components/ColumnVisibilityMenu';
+import { UnifiedDataGridProps } from './types';
 
-// Re-export the types so they can be imported from this file
-export type { ColumnConfig, UnifiedDataGridProps };
+// Re-export for convenience
+export type { ColumnConfig, UnifiedDataGridProps } from './types';
 
 const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   data,
@@ -42,19 +37,16 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   onColumnReorder,
   showColumnVisibilityDropdown = true,
 }) => {
-  // Add state to track column configurations that can be reordered
-  const [columnConfigs, setColumnConfigs] = useState<ColumnConfig[]>(initialColumnConfigs);
-  const [draggedColIndex, setDraggedColIndex] = useState<number | null>(null);
-  
-  // Add state to track column visibility
-  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(
-    initialColumnConfigs.reduce((acc, column) => {
-      acc[column.field] = true;
-      return acc;
-    }, {} as Record<string, boolean>)
-  );
+  // Use custom hooks for column and visibility management
+  const { columnVisibility, toggleColumnVisibility } = useColumnVisibility(initialColumnConfigs);
+  const { 
+    columnConfigs, 
+    handleDragStart, 
+    handleDragOver, 
+    handleDragEnd 
+  } = useColumnReordering(initialColumnConfigs, onColumnReorder);
 
-  // Filter columns based on visibility
+  // Filter visible columns
   const visibleColumnConfigs = useMemo(() => {
     return columnConfigs.filter(column => {
       // Always show the first column (usually name/identifier)
@@ -62,14 +54,6 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
       return columnVisibility[column.field] !== false;
     });
   }, [columnConfigs, columnVisibility]);
-
-  // Update column visibility
-  const toggleColumnVisibility = (field: string, isVisible: boolean) => {
-    setColumnVisibility(prev => ({
-      ...prev,
-      [field]: isVisible
-    }));
-  };
 
   // Use our custom hooks to manage grid data and selection
   const {
@@ -100,66 +84,6 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
   const hasSelectionColumn = !!setSelectedIds;
   const hasActionColumn = !!(onView || onEdit || onDelete);
   
-  // Column drag handlers
-  const handleDragStart = (index: number) => {
-    // Check if the column should be draggable
-    const column = columnConfigs[index];
-    
-    // Define non-draggable columns
-    const isNameColumn = 
-      column.field === 'name' || 
-      column.field === 'title' ||
-      column.headerName === 'Name' ||
-      column.headerName.includes('Name') ||
-      index === 0;  // First column is usually a name/identifier
-    
-    if (isNameColumn || column.field.includes('action')) {
-      return;
-    }
-    
-    setDraggedColIndex(index);
-  };
-
-  const handleDragOver = (index: number) => {
-    if (draggedColIndex === null || draggedColIndex === index) return;
-    
-    // Don't allow dropping on protected columns
-    const targetColumn = columnConfigs[index];
-    const isNameColumn = 
-      targetColumn.field === 'name' || 
-      targetColumn.field === 'title' ||
-      targetColumn.headerName === 'Name' ||
-      targetColumn.headerName.includes('Name') ||
-      index === 0;  // First column is usually a name/identifier
-    
-    if (isNameColumn || targetColumn.field.includes('action')) {
-      return;
-    }
-
-    // Create a new array with reordered columns
-    const newColumnConfigs = [...columnConfigs];
-    const draggedColumn = newColumnConfigs[draggedColIndex];
-    
-    // Remove the dragged column
-    newColumnConfigs.splice(draggedColIndex, 1);
-    // Insert it at the new position
-    newColumnConfigs.splice(index, 0, draggedColumn);
-    
-    // Update the dragged column index
-    setDraggedColIndex(index);
-    // Update the column configs
-    setColumnConfigs(newColumnConfigs);
-    
-    // If external reorder handler exists, call it
-    if (onColumnReorder) {
-      onColumnReorder(draggedColumn.field, targetColumn.field);
-    }
-  };
-
-  const handleDragEnd = () => {
-    setDraggedColIndex(null);
-  };
-
   // Loading state
   if (loading) {
     return <LoadingIndicator height={height} />;
@@ -176,31 +100,12 @@ const UnifiedDataGrid: React.FC<UnifiedDataGridProps> = ({
         />
         
         {/* Column visibility dropdown */}
-        {showColumnVisibilityDropdown && columnConfigs.length > 1 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-auto flex items-center gap-1"
-              >
-                <Columns className="h-4 w-4" />
-                <span>Columns</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-background">
-              {columnConfigs.map((column, index) => (
-                <DropdownMenuCheckboxItem
-                  key={column.field}
-                  checked={columnVisibility[column.field] !== false}
-                  onCheckedChange={(checked) => toggleColumnVisibility(column.field, checked)}
-                  disabled={index === 0} // Disable first column (usually name or ID)
-                >
-                  {column.headerName}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {showColumnVisibilityDropdown && (
+          <ColumnVisibilityMenu
+            columnConfigs={columnConfigs}
+            columnVisibility={columnVisibility}
+            toggleColumnVisibility={toggleColumnVisibility}
+          />
         )}
       </div>
 

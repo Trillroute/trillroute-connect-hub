@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { PostgrestFilterBuilder } from '@supabase/supabase-js';
 
 /**
  * Fetches events filtered by multiple field values
@@ -17,13 +16,11 @@ export const fetchEventsByMultipleValues = async <T>(
       return [];
     }
     
-    // Using explicit type casting to avoid TypeScript depth issues
-    const query = supabase
+    // Create a query without type issues
+    const { data, error } = await supabase
       .from('user_events')
-      .select('*') as PostgrestFilterBuilder<any, any, any[]>;
-    
-    // Apply the filter
-    const { data, error } = await query.in(field, values);
+      .select('*')
+      .in(field, values);
     
     if (error) {
       console.error('Error fetching events by multiple values:', error);

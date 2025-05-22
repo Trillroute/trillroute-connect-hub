@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import BulkDeleteButton from '@/components/admin/courses/table/BulkDeleteButton';
 
 interface GridToolbarProps {
   selectedIds: string[];
@@ -24,10 +23,13 @@ const GridToolbar: React.FC<GridToolbarProps> = ({
   return (
     <div className="flex justify-between items-center">
       {selectedIds.length > 0 && onBulkDelete && (
-        <BulkDeleteButton 
-          selectedCount={selectedIds.length}
-          onBulkDelete={() => onBulkDelete(selectedIds)}
-        />
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => onBulkDelete(selectedIds)}
+        >
+          Delete Selected ({selectedIds.length})
+        </Button>
       )}
       
       <div className="flex-1"></div>

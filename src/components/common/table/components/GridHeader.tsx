@@ -1,11 +1,16 @@
 
 import React from 'react';
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Toggle } from '@/components/ui/toggle';
-import { ChevronDown, ChevronUp, Filter, X, ArrowUpAZ, ArrowDownAZ, GripVertical } from "lucide-react";
+import { 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Checkbox,
+  Input,
+  Button
+} from "@/components/ui/";
+import { X, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { ColumnConfig, SortConfig } from '../types';
 
 interface GridHeaderProps {
@@ -17,14 +22,14 @@ interface GridHeaderProps {
   visibleFilters: Record<string, boolean>;
   selectedIds: string[];
   filteredData: any[];
-  handleSelectAll: () => void;
+  handleSelectAll: (data: any[]) => void;
   handleSort: (field: string) => void;
   handleFilterChange: (field: string, value: string) => void;
   clearFilter: (field: string) => void;
   toggleFilterVisibility: (field: string) => void;
-  onDragStart?: (index: number) => void;
-  onDragOver?: (index: number) => void;
-  onDragEnd?: () => void;
+  onDragStart: (index: number) => void;
+  onDragOver: (index: number) => void;
+  onDragEnd: () => void;
 }
 
 const GridHeader: React.FC<GridHeaderProps> = ({
@@ -48,122 +53,83 @@ const GridHeader: React.FC<GridHeaderProps> = ({
   return (
     <TableHeader>
       <TableRow>
+        {/* Selection column */}
         {hasSelectionColumn && (
-          <TableHead className="w-12">
-            <Checkbox
-              checked={selectedIds.length === filteredData.length && filteredData.length > 0}
-              indeterminate={selectedIds.length > 0 && selectedIds.length < filteredData.length}
-              onCheckedChange={handleSelectAll}
+          <TableHead className="w-[50px] relative">
+            <Checkbox 
+              checked={selectedIds.length === filteredData.length && filteredData.length > 0} 
+              onCheckedChange={() => handleSelectAll(filteredData)}
             />
           </TableHead>
         )}
         
-        {columnConfigs.map((column, index) => {
-          // Determine if column is draggable - name column and action column are never draggable
-          // Check for names in various formats across different tables
-          const isNameColumn = 
-            column.field === 'name' || 
-            column.field === 'title' || 
-            column.headerName === 'Name' || 
-            column.headerName.includes('Name') ||
-            index === 0;  // First column is usually a name/identifier
-          
-          const isDraggable = !isNameColumn && 
-                             !column.field.includes('action') && 
-                             typeof onDragStart === 'function';
-          
-          return (
-            <TableHead 
-              key={index} 
-              style={column.width ? { width: column.width } : {}}
-              draggable={isDraggable}
-              onDragStart={isDraggable ? () => {
-                if (onDragStart) onDragStart(index);
-              } : undefined}
-              onDragOver={isDraggable ? (e) => {
-                e.preventDefault();
-                if (onDragOver) onDragOver(index);
-              } : undefined}
-              onDragEnd={isDraggable && onDragEnd ? onDragEnd : undefined}
-              className={isDraggable ? "cursor-move" : ""}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    {isDraggable && (
-                      <GripVertical className="h-4 w-4 text-gray-400 cursor-grab active:cursor-grabbing" />
-                    )}
-                    <div 
-                      className="flex items-center gap-1 cursor-pointer"
-                      onClick={() => column.sortable !== false && handleSort(column.field)}
-                    >
-                      <span>{column.headerName}</span>
-                      {sortConfig?.field === column.field && (
-                        sortConfig?.direction === 'asc' ? 
-                          <ChevronUp className="h-3 w-3" /> : 
-                          <ChevronDown className="h-3 w-3" />
-                      )}
-                    </div>
-                    
-                    {column.filterable !== false && (
-                      <Toggle 
-                        variant="outline" 
-                        size="sm" 
-                        pressed={visibleFilters[column.field]} 
-                        onPressedChange={() => toggleFilterVisibility(column.field)}
+        {/* Data columns */}
+        {columnConfigs.map((column, index) => (
+          <TableHead 
+            key={column.field}
+            className="relative"
+            draggable 
+            onDragStart={() => onDragStart(index)}
+            onDragOver={() => onDragOver(index)}
+            onDragEnd={onDragEnd}
+            style={column.width ? { width: column.width } : {}}
+          >
+            <div>
+              {/* Column header with sort */}
+              <button 
+                className="w-full text-left flex items-center justify-between group hover:text-primary transition-colors"
+                onClick={() => handleSort(column.field)}
+              >
+                <span>{column.headerName}</span>
+                {sortConfig?.field === column.field && (
+                  sortConfig.direction === 'asc' 
+                    ? <ArrowUp className="h-4 w-4" /> 
+                    : <ArrowDown className="h-4 w-4" />
+                )}
+              </button>
+              
+              {/* Filter toggle button */}
+              <div className="flex justify-between items-center mt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => toggleFilterVisibility(column.field)}
+                >
+                  <Filter className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              {/* Filter input */}
+              {visibleFilters[column.field] && (
+                <div className="mt-2">
+                  <div className="flex items-center">
+                    <Input
+                      placeholder={`Filter ${column.headerName.toLowerCase()}...`}
+                      value={filters[column.field] || ''}
+                      onChange={(e) => handleFilterChange(column.field, e.target.value)}
+                      className="h-7 text-xs"
+                    />
+                    {filters[column.field] && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 ml-1"
+                        onClick={() => clearFilter(column.field)}
                       >
-                        <Filter className="h-3 w-3" />
-                      </Toggle>
-                    )}
-                    
-                    {/* Sort buttons */}
-                    {column.sortable !== false && (
-                      <div className="flex items-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => handleSort(column.field)}
-                        >
-                          {sortConfig?.field === column.field && sortConfig?.direction === 'asc' ? (
-                            <ArrowUpAZ className="h-3 w-3" />
-                          ) : sortConfig?.field === column.field && sortConfig?.direction === 'desc' ? (
-                            <ArrowDownAZ className="h-3 w-3" />
-                          ) : (
-                            <ArrowUpAZ className="h-3 w-3 text-gray-400" />
-                          )}
-                        </Button>
-                      </div>
+                        <X className="h-3 w-3" />
+                      </Button>
                     )}
                   </div>
-                  
-                  {filters[column.field] && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => clearFilter(column.field)}
-                      className="h-5 w-5 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
                 </div>
-                
-                {column.filterable !== false && visibleFilters[column.field] && (
-                  <Input
-                    value={filters[column.field] || ''}
-                    onChange={(e) => handleFilterChange(column.field, e.target.value)}
-                    placeholder={`Filter...`}
-                    className="h-7 text-xs"
-                  />
-                )}
-              </div>
-            </TableHead>
-          );
-        })}
+              )}
+            </div>
+          </TableHead>
+        ))}
         
+        {/* Actions column */}
         {hasActionColumn && (
-          <TableHead className="w-[120px]">Actions</TableHead>
+          <TableHead className="w-[100px] text-right">Actions</TableHead>
         )}
       </TableRow>
     </TableHeader>

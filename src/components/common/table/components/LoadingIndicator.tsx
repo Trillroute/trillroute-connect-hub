@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface LoadingIndicatorProps {
   height?: string;
@@ -7,8 +8,14 @@ interface LoadingIndicatorProps {
 
 const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({ height = "500px" }) => {
   return (
-    <div className={`flex justify-center items-center h-64`} style={{ height }}>
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-music-500"></div>
+    <div 
+      className="w-full flex items-center justify-center border rounded-md"
+      style={{ height }}
+    >
+      <div className="flex flex-col items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-2 text-sm text-muted-foreground">Loading data...</p>
+      </div>
     </div>
   );
 };

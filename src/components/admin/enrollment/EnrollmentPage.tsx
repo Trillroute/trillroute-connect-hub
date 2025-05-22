@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ const EnrollmentPage: React.FC = () => {
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [shouldShowTeacher, setShouldShowTeacher] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
-  const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
+  const [showTeacherDialog, setShowTeacherDialog] = useState(false);
   const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState<UserAvailability | null>(null);
   
   const { students, loading: studentsLoading } = useStudents();
@@ -77,13 +76,13 @@ const EnrollmentPage: React.FC = () => {
     
     // For solo/duo recurring courses with a teacher but no slot selected yet
     if (isRecurring && isSoloOrDuo && selectedTeacherId && !selectedAvailabilitySlot) {
-      setShowAvailabilityDialog(true);
+      setShowTeacherDialog(true);
       return;
     }
     
     // For group recurring courses, open dialog to select a common slot for all teachers
     if (isGroupRecurring && !selectedAvailabilitySlot && selectedCourse.instructor_ids?.length > 0) {
-      setShowAvailabilityDialog(true);
+      setShowTeacherDialog(true);
       return;
     }
 
@@ -194,9 +193,9 @@ const EnrollmentPage: React.FC = () => {
   };
 
   // Handle availability slot selection
-  const handleSlotSelected = (slot: UserAvailability) => {
+  const handleTimeSlotSelect = (slot: UserAvailability) => {
     setSelectedAvailabilitySlot(slot);
-    setShowAvailabilityDialog(false);
+    setShowTeacherDialog(false);
     
     // Show success message
     toast.success("Time slot selected", {
@@ -313,7 +312,7 @@ const EnrollmentPage: React.FC = () => {
                 variant="ghost" 
                 size="sm" 
                 className="text-xs mt-1 h-7 px-2" 
-                onClick={() => setShowAvailabilityDialog(true)}
+                onClick={() => setShowTeacherDialog(true)}
               >
                 Change Slot
               </Button>
@@ -365,12 +364,12 @@ const EnrollmentPage: React.FC = () => {
       </Card>
       
       {/* Teacher availability dialog */}
-      {showAvailabilityDialog && (
+      {showTeacherDialog && (
         <TeacherAvailabilityDialog
-          isOpen={showAvailabilityDialog}
-          onClose={() => setShowAvailabilityDialog(false)}
+          open={showTeacherDialog}
+          onClose={() => setShowTeacherDialog(false)}
           teacherId={selectedTeacherId}
-          onSlotSelect={handleSlotSelected}
+          onSlotSelect={handleTimeSlotSelect}
           isGroupCourse={isGroupRecurring}
           courseId={isGroupRecurring ? selectedCourseId : undefined}
         />

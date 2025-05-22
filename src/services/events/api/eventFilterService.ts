@@ -36,11 +36,7 @@ export async function fetchEventsByFilter(props: FilterEventsProps) {
     } else if (filterIds.length === 1) {
       return await fetchEventsBySingleValue(columnName, filterIds[0]);
     } else {
-      // When filtering by multiple values, create a filters object
-      // with the column name as key and the array of IDs as value
-      const filters: Record<string, any> = {};
-      filters[columnName] = filterIds[0]; // Use the first ID only
-      return await fetchEventsByMultipleValues(filters);
+      return await fetchEventsByMultipleValues(columnName, filterIds);
     }
     
   } catch (error) {

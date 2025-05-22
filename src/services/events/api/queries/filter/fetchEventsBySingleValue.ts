@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { PostgrestFilterBuilder } from '@supabase/supabase-js';
 
 /**
  * Fetches events filtered by a single field value
@@ -13,14 +12,12 @@ export const fetchEventsBySingleValue = async <T>(
   value: string | number | boolean
 ) => {
   try {
-    // Using explicit type casting to avoid TypeScript depth issues
-    const query = supabase
+    // Create a query without type issues
+    const { data, error } = await supabase
       .from('user_events')
-      .select('*') as PostgrestFilterBuilder<any, any, any[]>;
+      .select('*')
+      .eq(field, value);
     
-    // Apply the filter
-    const { data, error } = await query.eq(field, value);
-
     if (error) {
       console.error('Error fetching events by single value:', error);
       throw error;
