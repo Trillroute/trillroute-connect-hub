@@ -21,8 +21,9 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       queryBuilder = queryBuilder.eq(column, value);
     }
     
-    // Execute the query and cast the result to any to avoid TypeScript deep instantiation
-    const { data, error } = await queryBuilder as any;
+    // Execute the query and use unknown type to avoid TypeScript deep instantiation
+    const response = await queryBuilder as unknown as { data: any, error: any };
+    const { data, error } = response;
     
     // Handle query error
     if (error) {
