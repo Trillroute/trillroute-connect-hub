@@ -23,9 +23,8 @@ export async function fetchEventsBySingleValue(
       .select('*')
       .eq(columnName, value);
     
-    // Execute the query and use any type to avoid TypeScript deep instantiation
-    const response = await query as unknown as { data: any, error: any };
-    const { data, error } = response;
+    // Execute the query
+    const { data, error } = await query;
     
     // Handle query error
     if (error) {
