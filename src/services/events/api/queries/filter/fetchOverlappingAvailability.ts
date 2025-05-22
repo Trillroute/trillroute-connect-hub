@@ -1,122 +1,71 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserAvailability } from '@/services/availability/types';
+import { UserAvailability, DbUserAvailability } from '@/services/availability/types';
 
 /**
- * Fetches overlapping availability slots for multiple teachers
- * @param teacherIds Array of teacher IDs to find overlapping availability for
+ * Transforms a database user availability to the application format
+ */
+const transformDbToUserAvailability = (dbItem: DbUserAvailability): UserAvailability => ({
+  id: dbItem.id,
+  user_id: dbItem.user_id,
+  userId: dbItem.user_id, // Alias for better compatibility
+  dayOfWeek: dbItem.day_of_week,
+  startTime: dbItem.start_time,
+  endTime: dbItem.end_time,
+  category: dbItem.category,
+  created_at: dbItem.created_at,
+  updated_at: dbItem.updated_at
+});
+
+/**
+ * Fetches availability slots that overlap with the given time range
+ * @param dayOfWeek The day of the week (0-6, where 0 is Sunday)
+ * @param startTime Start time in HH:MM format
+ * @param endTime End time in HH:MM format
  * @returns Promise with overlapping availability slots
  */
-export const fetchOverlappingAvailability = async (teacherIds: string[]): Promise<UserAvailability[]> => {
+export const fetchOverlappingAvailability = async (
+  dayOfWeek: number,
+  startTime: string,
+  endTime: string
+): Promise<UserAvailability[]> => {
   try {
-    if (!teacherIds.length) {
-      return [];
-    }
-
-    // Get all availability slots for all teachers
     const { data, error } = await supabase
       .from('user_availability')
       .select('*')
-      .in('user_id', teacherIds);
-
+      .eq('day_of_week', dayOfWeek);
+    
     if (error) {
-      console.error('Error fetching teacher availability:', error);
+      console.error('Error fetching overlapping availability:', error);
       throw error;
     }
-
+    
     if (!data || data.length === 0) {
       return [];
     }
 
-    // Group slots by day of week
-    const slotsByDay = data.reduce((acc, slot) => {
-      if (!acc[slot.day_of_week]) {
-        acc[slot.day_of_week] = [];
-      }
-      acc[slot.day_of_week].push(slot);
-      return acc;
-    }, {} as Record<number, UserAvailability[]>);
-
-    // Find overlapping slots for each day
-    const overlappingSlots: UserAvailability[] = [];
-
-    Object.keys(slotsByDay).forEach(dayKey => {
-      const day = parseInt(dayKey);
-      const daySlots = slotsByDay[day];
+    // Transform the database items to application format
+    const availabilitySlots: UserAvailability[] = data.map(item => 
+      transformDbToUserAvailability(item as DbUserAvailability)
+    );
+    
+    // Filter for overlapping slots
+    const overlappingSlots = availabilitySlots.filter(slot => {
+      // Convert times to minutes for easier comparison
+      const requestStart = timeToMinutes(startTime);
+      const requestEnd = timeToMinutes(endTime);
+      const slotStart = timeToMinutes(slot.startTime);
+      const slotEnd = timeToMinutes(slot.endTime);
       
-      // Group slots by teacher
-      const slotsByTeacher = teacherIds.map(teacherId => {
-        return daySlots.filter(slot => slot.user_id === teacherId);
-      });
-      
-      // No overlaps possible if any teacher has no slots for this day
-      if (slotsByTeacher.some(teacherSlots => teacherSlots.length === 0)) {
-        return;
-      }
-      
-      // Find overlapping time ranges
-      const timeRanges = slotsByTeacher.flat().map(slot => ({
-        start: slot.start_time,
-        end: slot.end_time,
-        userId: slot.user_id,
-        id: slot.id,
-        dayOfWeek: slot.day_of_week,
-        createdAt: slot.created_at,
-        updatedAt: slot.updated_at,
-        category: slot.category
-      }));
-      
-      // For each starting point, find if all teachers have availability
-      for (const range of timeRanges) {
-        const startTime = range.start;
-        const teachersAvailableAtStart = teacherIds.every(teacherId => 
-          slotsByTeacher
-            .find(teacherSlots => teacherSlots[0]?.user_id === teacherId)
-            ?.some(slot => 
-              slot.start_time <= startTime && 
-              slot.end_time >= startTime
-            )
-        );
-        
-        if (teachersAvailableAtStart) {
-          // Find the earliest end time among all teachers for this start time
-          let earliestEndTime = range.end;
-          
-          teacherIds.forEach(teacherId => {
-            const teacherSlots = slotsByTeacher
-              .find(slots => slots[0]?.user_id === teacherId) || [];
-            
-            // Find slots that contain this start time
-            const containingSlots = teacherSlots.filter(
-              slot => slot.start_time <= startTime && slot.end_time >= startTime
-            );
-            
-            if (containingSlots.length > 0) {
-              // Find the earliest end time
-              const slotEndTime = containingSlots.reduce(
-                (earliest, slot) => slot.end_time < earliest ? slot.end_time : earliest,
-                containingSlots[0].end_time
-              );
-              
-              if (slotEndTime < earliestEndTime) {
-                earliestEndTime = slotEndTime;
-              }
-            }
-          });
-          
-          // Create a new overlapping slot
-          overlappingSlots.push({
-            id: range.id,
-            user_id: 'overlapping',
-            day_of_week: day,
-            start_time: startTime,
-            end_time: earliestEndTime,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            category: 'Overlapping'
-          });
-        }
-      }
+      // Check if the slots overlap
+      return (
+        // Case 1: Requested slot starts during existing slot
+        (requestStart >= slotStart && requestStart < slotEnd) ||
+        // Case 2: Requested slot ends during existing slot
+        (requestEnd > slotStart && requestEnd <= slotEnd) ||
+        // Case 3: Requested slot completely contains existing slot
+        (requestStart <= slotStart && requestEnd >= slotEnd)
+      );
     });
 
     return overlappingSlots;
@@ -124,4 +73,12 @@ export const fetchOverlappingAvailability = async (teacherIds: string[]): Promis
     console.error('Unexpected error in fetchOverlappingAvailability:', error);
     return [];
   }
+};
+
+/**
+ * Converts time string in HH:MM format to minutes
+ */
+const timeToMinutes = (timeStr: string): number => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return (hours * 60) + minutes;
 };

@@ -7,10 +7,10 @@ import { supabase } from '@/integrations/supabase/client';
  * @param value The value to filter by
  * @returns Promise with the events data
  */
-export const fetchEventsBySingleValue = async <T>(
+export const fetchEventsBySingleValue = async (
   field: string,
   value: string | number | boolean
-) => {
+): Promise<any[]> => { // Explicitly set return type to avoid deep type instantiation
   try {
     // Create a query without type issues
     const { data, error } = await supabase

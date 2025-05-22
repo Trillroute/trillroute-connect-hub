@@ -5,16 +5,15 @@ import CourseTable from './CourseTable';
 import CourseGridView from './CourseGridView';
 import CourseTileView from './CourseTileView';
 
-export interface CourseContentProps {
+interface CourseContentProps {
   courses: Course[];
   loading: boolean;
-  viewMode: 'list' | 'grid' | 'tile';
+  viewMode: string;
   onView: (course: Course) => void;
   onEdit: (course: Course) => void;
   onDelete: (course: Course) => void;
-  onBulkDelete: (courseIds: string[]) => Promise<void>;
-  selectedIds: string[];
-  setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedCourses: string[];
+  setSelectedCourses: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const CourseContent: React.FC<CourseContentProps> = ({
@@ -24,17 +23,14 @@ const CourseContent: React.FC<CourseContentProps> = ({
   onView,
   onEdit,
   onDelete,
-  onBulkDelete,
-  selectedIds,
-  setSelectedIds
+  selectedCourses,
+  setSelectedCourses
 }) => {
-  console.info(`CourseContent rendering in ${viewMode} mode with ${courses.length} courses`);
-
   if (viewMode === 'grid') {
     return (
       <CourseGridView
-        courses={courses} 
-        loading={loading}
+        courses={courses}
+        isLoading={loading} // Updated prop name to match component
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -46,7 +42,7 @@ const CourseContent: React.FC<CourseContentProps> = ({
     return (
       <CourseTileView
         courses={courses}
-        loading={loading}
+        isLoading={loading} // Updated prop name to match component
         onView={onView}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -54,16 +50,16 @@ const CourseContent: React.FC<CourseContentProps> = ({
     );
   }
 
+  // Default to table view
   return (
     <CourseTable
       courses={courses}
       loading={loading}
+      onView={onView}
       onEdit={onEdit}
       onDelete={onDelete}
-      onView={onView}
-      onBulkDelete={onBulkDelete}
-      selectedCourseIds={selectedIds}
-      setSelectedCourseIds={setSelectedIds}
+      selectedCourses={selectedCourses}
+      setSelectedCourses={setSelectedCourses}
     />
   );
 };

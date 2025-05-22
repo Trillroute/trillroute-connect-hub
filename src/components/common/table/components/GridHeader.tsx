@@ -5,11 +5,9 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { 
-  Checkbox,
-  Input,
-  Button
-} from "@/components/ui/";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { X, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { ColumnConfig, SortConfig } from '../types';
 
