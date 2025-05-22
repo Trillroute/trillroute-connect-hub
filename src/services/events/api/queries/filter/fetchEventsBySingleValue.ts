@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent } from '../../types/eventTypes';
 
 /**
  * Fetches events filtered by a single field value

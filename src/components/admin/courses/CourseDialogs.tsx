@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Course } from '@/types/course';
-import CreateCourseDialog from './CreateCourseDialog';
+import CreateCourseDialog from './dialogs/CreateCourseDialog';
 import ViewCourseDialog from './ViewCourseDialog';
 import EditCourseDialog from './EditCourseDialog';
 import DeleteCourseDialog from './DeleteCourseDialog';
