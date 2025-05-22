@@ -1,157 +1,166 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchUserAvailabilityForWeek } from "@/services/availability/api/userAvailability";
-import { UserAvailability } from "@/services/availability/types";
-import { Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useStaffAvailability } from '@/hooks/useStaffAvailability';
+import { Course } from '@/types/course';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { UserAvailability } from '@/services/availability/types';
 import { fetchOverlappingAvailability } from '@/services/events/api/queries/filter/fetchOverlappingAvailability';
 
 interface TeacherAvailabilityDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  teacherId: string;
-  onSlotSelect: (slot: UserAvailability) => void;
-  isGroupCourse?: boolean;
-  courseId?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  course: Course;
+  onSelectSlot: (day: number, startTime: string, endTime: string) => void;
 }
 
-const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({ 
-  isOpen, 
-  onClose,
-  teacherId,
-  onSlotSelect,
-  isGroupCourse = false,
-  courseId
+const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
+  open,
+  onOpenChange,
+  course,
+  onSelectSlot,
 }) => {
-  const [availabilitySlots, setAvailabilitySlots] = useState<UserAvailability[]>([]);
+  const { toast } = useToast();
+  const [teacherAvailability, setTeacherAvailability] = useState<UserAvailability[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSlotId, setSelectedSlotId] = useState<string>('');
-  const [groupedSlots, setGroupedSlots] = useState<Record<string, UserAvailability[]>>({});
-  
-  // Helper function to format day name
-  const getDayName = (dayOfWeek: number) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayOfWeek];
-  };
-  
-  // Format time for display (e.g. 14:30 -> 2:30 PM)
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = hours % 12 || 12;
-    return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-  
-  // Fetch teacher availability when the dialog opens
+  const [selectedSlot, setSelectedSlot] = useState<UserAvailability | null>(null);
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  // Get instructor availability if course is solo or duo
+  // For group courses, get overlapping availability of all instructors
   useEffect(() => {
-    if (isOpen) {
-      const fetchAvailability = async () => {
-        setLoading(true);
-        try {
-          let slots: UserAvailability[] = [];
-          
-          if (isGroupCourse && courseId) {
-            // For group courses, fetch overlapping availability for all teachers
-            console.log("Fetching overlapping availability for course:", courseId);
-            slots = await fetchOverlappingAvailability(courseId);
-          } else if (teacherId) {
-            // For solo/duo courses, fetch the selected teacher's availability
-            console.log("Fetching availability for teacher:", teacherId);
-            slots = await fetchUserAvailabilityForWeek(teacherId);
-          }
-          
-          setAvailabilitySlots(slots);
-          
-          // Group slots by day for better UI organization
-          const grouped: Record<string, UserAvailability[]> = {};
-          slots.forEach(slot => {
-            const dayName = getDayName(slot.dayOfWeek);
-            if (!grouped[dayName]) {
-              grouped[dayName] = [];
-            }
-            grouped[dayName].push(slot);
-          });
-          setGroupedSlots(grouped);
-        } catch (error) {
-          console.error("Error fetching availability:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
+    const fetchAvailability = async () => {
+      if (!open || !course) return;
       
-      fetchAvailability();
-    }
-  }, [isOpen, teacherId, isGroupCourse, courseId]);
-  
-  // Handle slot selection
-  const handleConfirm = () => {
-    if (selectedSlotId) {
-      const selectedSlot = availabilitySlots.find(slot => slot.id === selectedSlotId);
-      if (selectedSlot) {
-        onSlotSelect(selectedSlot);
-        onClose();
+      setLoading(true);
+      try {
+        let availabilityData: UserAvailability[] = [];
+        
+        if (course.course_type === 'group' && Array.isArray(course.instructor_ids) && course.instructor_ids.length > 1) {
+          // For group courses, get overlapping availability
+          availabilityData = await fetchOverlappingAvailability(course.instructor_ids);
+        } else if (Array.isArray(course.instructor_ids) && course.instructor_ids.length === 1) {
+          // For solo/duo with a single instructor
+          const { data, error } = await useStaffAvailability(course.instructor_ids[0]);
+          if (error) {
+            throw new Error(error.message);
+          }
+          availabilityData = data || [];
+        }
+        
+        setTeacherAvailability(availabilityData);
+      } catch (error) {
+        console.error('Error fetching teacher availability:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load teacher availability.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
       }
+    };
+
+    fetchAvailability();
+  }, [open, course, toast]);
+
+  const handleSlotClick = (slot: UserAvailability) => {
+    setSelectedSlot(slot);
+  };
+
+  const handleConfirmSlot = () => {
+    if (selectedSlot) {
+      onSelectSlot(selectedSlot.day_of_week, selectedSlot.start_time, selectedSlot.end_time);
+      onOpenChange(false);
     }
   };
-  
+
+  const formatTime = (timeString: string) => {
+    // Handle PostgreSQL time format (e.g., "14:00:00")
+    if (timeString.includes(':')) {
+      const [hours, minutes] = timeString.split(':');
+      return format(new Date().setHours(Number(hours), Number(minutes)), 'h:mm a');
+    }
+    return timeString;
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isGroupCourse 
-              ? "Select Time Slot (All Teachers Available)" 
-              : "Select Teacher Availability Slot"}
-          </DialogTitle>
+          <DialogTitle>Teacher Availability</DialogTitle>
+          <DialogDescription>
+            Select a time slot that works for you.
+          </DialogDescription>
         </DialogHeader>
-        
-        {loading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : availabilitySlots.length === 0 ? (
-          <div className="py-4 text-center text-gray-500">
-            {isGroupCourse 
-              ? "No common availability slots found for all teachers in this course." 
-              : "No availability slots found for this teacher. Please contact them to set up their schedule."}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="availability-slot">Select an available time slot</Label>
-              <Select value={selectedSlotId} onValueChange={setSelectedSlotId}>
-                <SelectTrigger id="availability-slot">
-                  <SelectValue placeholder="Select a time slot" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(groupedSlots).map(([day, slots]) => (
-                    <React.Fragment key={day}>
-                      <div className="px-2 py-1.5 text-sm font-semibold text-primary-foreground bg-primary/20 my-1">{day}</div>
-                      {slots.map((slot) => (
-                        <SelectItem key={slot.id} value={slot.id}>
-                          {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                        </SelectItem>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </SelectContent>
-              </Select>
+
+        <ScrollArea className="h-72 mt-4">
+          {loading ? (
+            <div className="flex justify-center items-center h-full">
+              <p>Loading availability...</p>
             </div>
-          </div>
-        )}
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          ) : teacherAvailability.length === 0 ? (
+            <div className="p-4 text-center">
+              <p>No availability found for this teacher.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {dayNames.map((day, dayIndex) => {
+                const daySlots = teacherAvailability.filter(
+                  (slot) => slot.day_of_week === dayIndex
+                );
+
+                if (daySlots.length === 0) return null;
+
+                return (
+                  <div key={day} className="mb-4">
+                    <h3 className="font-medium text-sm mb-2">{day}</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {daySlots.map((slot) => (
+                        <div
+                          key={slot.id}
+                          className={`p-2 border rounded-md cursor-pointer text-sm transition-colors ${
+                            selectedSlot?.id === slot.id
+                              ? 'bg-music-100 border-music-500'
+                              : 'hover:bg-gray-50'
+                          }`}
+                          onClick={() => handleSlotClick(slot)}
+                        >
+                          {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </ScrollArea>
+
+        <DialogFooter className="mt-4">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="mr-2"
+          >
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirm} 
-            disabled={!selectedSlotId || loading}
+          <Button
+            onClick={handleConfirmSlot}
+            disabled={!selectedSlot || loading}
           >
-            Confirm Slot
+            Select Slot
           </Button>
         </DialogFooter>
       </DialogContent>

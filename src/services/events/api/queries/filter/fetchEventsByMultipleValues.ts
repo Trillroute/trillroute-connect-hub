@@ -1,41 +1,38 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent, UserEventFromDB } from '../../types/eventTypes';
-import { formatEventData } from '../utils/eventFormatters';
+import { PostgrestFilterBuilder } from '@supabase/supabase-js';
 
 /**
- * Fetch events based on multiple filter criteria
- * 
- * @param filters Object containing column names as keys and filter values
- * @returns Array of event objects or empty array if none found
+ * Fetches events filtered by multiple field values
+ * @param field The field name to filter on
+ * @param values Array of values to match against the field
+ * @returns Promise with the events data
  */
-export async function fetchEventsByMultipleValues(
-  filters: Record<string, any>
-): Promise<CalendarEvent[]> {
+export const fetchEventsByMultipleValues = async <T>(
+  field: string,
+  values: (string | number | boolean)[]
+) => {
   try {
-    console.log('Fetching events with multiple filters:', filters);
-    
-    // Start with the base query builder
-    let queryBuilder = supabase.from('user_events').select('*');
-    
-    // Apply all filters sequentially
-    for (const [column, value] of Object.entries(filters)) {
-      queryBuilder = queryBuilder.eq(column, value);
-    }
-    
-    // Execute the query
-    const { data, error } = await queryBuilder;
-    
-    // Handle query error
-    if (error) {
-      console.error('Error fetching events by multiple values:', error);
+    if (!values.length) {
       return [];
     }
     
-    // Return formatted data or empty array
-    return formatEventData(data as UserEventFromDB[] || []);
+    // Using explicit type casting to avoid TypeScript depth issues
+    const query = supabase
+      .from('user_events')
+      .select('*') as PostgrestFilterBuilder<any, any, any[]>;
+    
+    // Apply the filter
+    const { data, error } = await query.in(field, values);
+    
+    if (error) {
+      console.error('Error fetching events by multiple values:', error);
+      throw error;
+    }
+
+    return data || [];
   } catch (error) {
-    console.error('Exception in fetchEventsByMultipleValues:', error);
+    console.error('Unexpected error in fetchEventsByMultipleValues:', error);
     return [];
   }
-}
+};

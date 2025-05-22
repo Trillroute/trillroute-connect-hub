@@ -1,38 +1,34 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { CalendarEvent, UserEventFromDB } from '../../types/eventTypes';
-import { formatEventData } from '../utils/eventFormatters';
+import { PostgrestFilterBuilder } from '@supabase/supabase-js';
 
 /**
- * Fetch events where a specific column matches a single value
- * 
- * @param columnName The column name to filter by
- * @param value The value to match against the column
- * @returns Array of event objects or empty array if none found
+ * Fetches events filtered by a single field value
+ * @param field The field name to filter on
+ * @param value The value to filter by
+ * @returns Promise with the events data
  */
-export async function fetchEventsBySingleValue(
-  columnName: string,
-  value: any
-): Promise<CalendarEvent[]> {
+export const fetchEventsBySingleValue = async <T>(
+  field: string,
+  value: string | number | boolean
+) => {
   try {
-    console.log(`Fetching events where ${columnName} = ${value}`);
-    
-    // Create and execute the query
-    const { data, error } = await supabase
+    // Using explicit type casting to avoid TypeScript depth issues
+    const query = supabase
       .from('user_events')
-      .select('*')
-      .eq(columnName, value);
+      .select('*') as PostgrestFilterBuilder<any, any, any[]>;
     
-    // Handle query error
+    // Apply the filter
+    const { data, error } = await query.eq(field, value);
+
     if (error) {
       console.error('Error fetching events by single value:', error);
-      return [];
+      throw error;
     }
-    
-    // Return formatted data or empty array
-    return formatEventData(data as UserEventFromDB[] || []);
+
+    return data || [];
   } catch (error) {
-    console.error('Exception in fetchEventsBySingleValue:', error);
+    console.error('Unexpected error in fetchEventsBySingleValue:', error);
     return [];
   }
-}
+};

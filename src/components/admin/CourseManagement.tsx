@@ -2,18 +2,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import CreateCourseDialog from './courses/CreateCourseDialog';
-import ViewCourseDialog from './courses/ViewCourseDialog';
-import EditCourseDialog from './courses/EditCourseDialog';
-import DeleteCourseDialog from './courses/DeleteCourseDialog';
 import { useCourses } from '@/hooks/useCourses';
-import { Course } from '@/types/course';
-import { canManageCourses } from '@/utils/permissions';
-import { supabase } from '@/integrations/supabase/client';
 import ViewControls from './courses/ViewControls';
 import CourseSearch from './courses/CourseSearch';
 import CourseContent from './courses/CourseContent';
+import CourseDialogs from './courses/CourseDialogs';
+import { useCoursePermissions } from './courses/hooks/useCoursePermissions';
+import { useCourseDialogs } from './courses/hooks/useCourseDialogs';
+import { useCourseSearch } from './courses/hooks/useCourseSearch';
 
 interface CourseManagementProps {
   canAddCourse?: boolean;
@@ -27,99 +23,34 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
   canEditCourse = true
 }) => {
   const { toast } = useToast();
-  const { user, isSuperAdmin } = useAuth();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { courses, loading, fetchCourses } = useCourses();
-  const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'tile'>('list');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  console.log('CourseManagement rendering with courses:', courses?.length);
-  console.log('Current user role:', user?.role);
+  // Custom hooks
+  const { 
+    effectiveCanEditCourse,
+    effectiveCanDeleteCourse,
+    effectiveCanAddCourse 
+  } = useCoursePermissions(canAddCourse, canDeleteCourse, canEditCourse);
   
-  // Force superadmin to always have permissions
-  const userCanEdit = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'edit'));
-  const userCanDelete = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'delete'));
-  const userCanAdd = user?.role === 'superadmin' || (user?.role === 'admin' && canManageCourses(user, 'add'));
+  const {
+    isCreateDialogOpen,
+    setIsCreateDialogOpen,
+    isViewDialogOpen,
+    setIsViewDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    selectedCourse,
+    openViewDialog,
+    openEditDialog,
+    openDeleteDialog,
+    handleBulkDelete
+  } = useCourseDialogs(fetchCourses, effectiveCanDeleteCourse);
   
-  console.log('User can edit courses:', userCanEdit);
-  console.log('User can delete courses:', userCanDelete);
-  console.log('User can add courses:', userCanAdd);
-  
-  const effectiveCanEditCourse = canEditCourse && userCanEdit;
-  const effectiveCanDeleteCourse = canDeleteCourse && userCanDelete;
-  const effectiveCanAddCourse = canAddCourse && userCanAdd;
-  
-  const openViewDialog = (course: Course) => {
-    setSelectedCourse(course);
-    setIsViewDialogOpen(true);
-  };
-
-  const openEditDialog = (course: Course) => {
-    setSelectedCourse(course);
-    setIsEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (course: Course) => {
-    setSelectedCourse(course);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleBulkDelete = async (courseIds: string[]) => {
-    if (!effectiveCanDeleteCourse) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to delete courses.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('courses')
-        .delete()
-        .in('id', courseIds);
-        
-      if (error) {
-        console.error('Error deleting courses:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to delete courses. Please try again.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      toast({
-        title: "Courses Deleted",
-        description: `Successfully deleted ${courseIds.length} course(s)`,
-        duration: 3000,
-      });
-      
-      // Refresh courses
-      fetchCourses();
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const filteredCourses = searchQuery 
-    ? courses.filter(course => 
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.level.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.skill.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : courses;
+  const { searchQuery, setSearchQuery, filteredCourses } = useCourseSearch(courses);
 
   return (
     <Card className="w-full">
@@ -153,45 +84,25 @@ const CourseManagement: React.FC<CourseManagementProps> = ({
             onEdit={effectiveCanEditCourse ? openEditDialog : undefined}
             onDelete={effectiveCanDeleteCourse ? openDeleteDialog : undefined}
             onBulkDelete={effectiveCanDeleteCourse ? handleBulkDelete : undefined}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
           />
         </div>
 
-        {effectiveCanAddCourse && (
-          <CreateCourseDialog 
-            open={isCreateDialogOpen} 
-            onOpenChange={setIsCreateDialogOpen} 
-            onSuccess={fetchCourses}
-          />
-        )}
-
-        {selectedCourse && (
-          <>
-            <ViewCourseDialog
-              isOpen={isViewDialogOpen}
-              onOpenChange={setIsViewDialogOpen}
-              course={selectedCourse}
-              onSuccess={fetchCourses}
-            />
-            
-            {effectiveCanEditCourse && (
-              <EditCourseDialog
-                open={isEditDialogOpen}
-                onOpenChange={setIsEditDialogOpen}
-                course={selectedCourse}
-                onSuccess={fetchCourses}
-              />
-            )}
-            
-            {effectiveCanDeleteCourse && (
-              <DeleteCourseDialog
-                open={isDeleteDialogOpen}
-                onOpenChange={setIsDeleteDialogOpen}
-                course={selectedCourse}
-                onSuccess={fetchCourses}
-              />
-            )}
-          </>
-        )}
+        <CourseDialogs
+          selectedCourse={selectedCourse}
+          isCreateDialogOpen={isCreateDialogOpen}
+          setIsCreateDialogOpen={setIsCreateDialogOpen}
+          isViewDialogOpen={isViewDialogOpen}
+          setIsViewDialogOpen={setIsViewDialogOpen}
+          isEditDialogOpen={isEditDialogOpen}
+          setIsEditDialogOpen={setIsEditDialogOpen}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          fetchCourses={fetchCourses}
+          canEditCourse={effectiveCanEditCourse}
+          canDeleteCourse={effectiveCanDeleteCourse}
+        />
       </CardContent>
     </Card>
   );
