@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -93,7 +94,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       durationValue: '',
       durationMetric: 'weeks',
       image: '',
-      instructors: [],
+      instructors: [], // Initialize as an empty array for multiple selection
       class_types_data: [],
       base_price: 0,
       is_gst_applicable: false,
@@ -102,6 +103,7 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       discount_value: 0,
       discount_validity: '',
       discount_code: '',
+      course_type: 'group',
     }
   });
 
@@ -200,9 +202,9 @@ const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, onOpenCha
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-2xl font-bold text-music-600">Create New Course</DialogTitle>
-          <p className="text-muted-foreground mt-2">
+          <DialogDescription className="text-muted-foreground mt-2">
             Fill in the course details below. All fields marked with * are required.
-          </p>
+          </DialogDescription>
         </DialogHeader>
         
         {isLoading ? (

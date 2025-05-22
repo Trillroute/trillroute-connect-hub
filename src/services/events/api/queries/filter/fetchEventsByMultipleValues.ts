@@ -21,9 +21,9 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       queryBuilder = queryBuilder.eq(column, value);
     }
     
-    // Execute the query using any type to bypass TypeScript depth issue
-    const response: any = await queryBuilder;
-    const { data, error } = response;
+    // Execute the query and handle the response manually to avoid TypeScript depth issue
+    const response = await queryBuilder;
+    const { data, error } = response as { data: UserEventFromDB[] | null, error: any };
     
     // Handle query error
     if (error) {
@@ -31,9 +31,8 @@ export async function fetchEventsByMultipleValues(filters: Record<string, any>):
       return [];
     }
     
-    // Cast the data to our expected type
-    const events = (data || []) as UserEventFromDB[];
-    return formatEventData(events);
+    // Return formatted data or empty array
+    return formatEventData(data || []);
   } catch (error) {
     console.error('Exception in fetchEventsByMultipleValues:', error);
     return [];

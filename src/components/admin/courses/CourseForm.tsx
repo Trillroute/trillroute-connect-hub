@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import BasicCourseInfo from './form-sections/BasicCourseInfo';
 import DurationSection from './form-sections/DurationSection';
 import PricingSection from './form-sections/PricingSection';
 import DiscountSection from './form-sections/DiscountSection';
+import { MultiSelect, Option } from '@/components/ui/multi-select';
 
 export interface CourseFormValues {
   title: string;
@@ -30,7 +30,7 @@ export interface CourseFormValues {
   discount_value?: number;
   discount_validity?: string;
   discount_code?: string;
-  course_type: "solo" | "duo" | "group"; // Added course type field
+  course_type: "solo" | "duo" | "group";
 }
 
 interface CourseFormProps {
@@ -71,10 +71,11 @@ const CourseForm: React.FC<CourseFormProps> = ({
     return finalPrice.toFixed(2);
   };
 
-  // Ensure we have a valid default for instructor selection
-  const instructorValue = Array.isArray(form.watch('instructors')) && form.watch('instructors').length > 0 
-    ? form.watch('instructors').join(',') 
-    : "no_instructors";
+  // Convert teachers to options for MultiSelect
+  const teacherOptions: Option[] = teachers.map(teacher => ({
+    label: `${teacher.first_name} ${teacher.last_name}`,
+    value: teacher.id
+  }));
 
   return (
     <FormProvider {...form}>
@@ -83,7 +84,6 @@ const CourseForm: React.FC<CourseFormProps> = ({
           <TabsContent value="basic" className="mt-4">
             <BasicCourseInfo form={form} skills={skills} />
             
-            {/* Course Type field */}
             <FormField
               control={form.control}
               name="course_type"
@@ -113,36 +113,16 @@ const CourseForm: React.FC<CourseFormProps> = ({
               control={form.control}
               name="instructors"
               render={({ field }) => (
-                <FormItem>
-                  <Select
-                    onValueChange={(value) => {
-                      // Handle the case where value is "no_instructors"
-                      if (value === "no_instructors") {
-                        field.onChange([]);
-                      } else {
-                        const selectedIds = value.split(',').filter(id => id);
-                        field.onChange(selectedIds);
-                      }
-                    }}
-                    value={instructorValue}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select teachers" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {teachers.map((teacher) => (
-                        <SelectItem 
-                          key={teacher.id} 
-                          value={teacher.id}
-                        >
-                          {teacher.first_name} {teacher.last_name}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="no_instructors">Select Instructors</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <FormItem className="mt-4">
+                  <FormControl>
+                    <MultiSelect
+                      options={teacherOptions}
+                      selected={field.value || []}
+                      onChange={field.onChange}
+                      placeholder="Select instructors"
+                      className="w-full"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
