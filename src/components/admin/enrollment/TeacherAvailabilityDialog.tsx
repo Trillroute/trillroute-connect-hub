@@ -6,20 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchUserAvailabilityForWeek } from "@/services/availability/api/userAvailability";
 import { UserAvailability } from "@/services/availability/types";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from 'lucide-react';
+import { fetchOverlappingAvailability } from '@/services/events/api/queries/filter/fetchOverlappingAvailability';
 
 interface TeacherAvailabilityDialogProps {
   isOpen: boolean;
   onClose: () => void;
   teacherId: string;
   onSlotSelect: (slot: UserAvailability) => void;
+  isGroupCourse?: boolean;
+  courseId?: string;
 }
 
 const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({ 
   isOpen, 
   onClose,
   teacherId,
-  onSlotSelect
+  onSlotSelect,
+  isGroupCourse = false,
+  courseId
 }) => {
   const [availabilitySlots, setAvailabilitySlots] = useState<UserAvailability[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,11 +47,22 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
   
   // Fetch teacher availability when the dialog opens
   useEffect(() => {
-    if (isOpen && teacherId) {
-      const fetchTeacherAvailability = async () => {
+    if (isOpen) {
+      const fetchAvailability = async () => {
         setLoading(true);
         try {
-          const slots = await fetchUserAvailabilityForWeek(teacherId);
+          let slots: UserAvailability[] = [];
+          
+          if (isGroupCourse && courseId) {
+            // For group courses, fetch overlapping availability for all teachers
+            console.log("Fetching overlapping availability for course:", courseId);
+            slots = await fetchOverlappingAvailability(courseId);
+          } else if (teacherId) {
+            // For solo/duo courses, fetch the selected teacher's availability
+            console.log("Fetching availability for teacher:", teacherId);
+            slots = await fetchUserAvailabilityForWeek(teacherId);
+          }
+          
           setAvailabilitySlots(slots);
           
           // Group slots by day for better UI organization
@@ -60,15 +76,15 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
           });
           setGroupedSlots(grouped);
         } catch (error) {
-          console.error("Error fetching teacher availability:", error);
+          console.error("Error fetching availability:", error);
         } finally {
           setLoading(false);
         }
       };
       
-      fetchTeacherAvailability();
+      fetchAvailability();
     }
-  }, [isOpen, teacherId]);
+  }, [isOpen, teacherId, isGroupCourse, courseId]);
   
   // Handle slot selection
   const handleConfirm = () => {
@@ -85,7 +101,11 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Select Teacher Availability Slot</DialogTitle>
+          <DialogTitle>
+            {isGroupCourse 
+              ? "Select Time Slot (All Teachers Available)" 
+              : "Select Teacher Availability Slot"}
+          </DialogTitle>
         </DialogHeader>
         
         {loading ? (
@@ -94,7 +114,9 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
           </div>
         ) : availabilitySlots.length === 0 ? (
           <div className="py-4 text-center text-gray-500">
-            No availability slots found for this teacher. Please contact them to set up their schedule.
+            {isGroupCourse 
+              ? "No common availability slots found for all teachers in this course." 
+              : "No availability slots found for this teacher. Please contact them to set up their schedule."}
           </div>
         ) : (
           <div className="space-y-4">

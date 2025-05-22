@@ -37,12 +37,12 @@ const EnrollmentPage: React.FC = () => {
     if (selectedCourseId) {
       const selectedCourse = courses.find(course => course.id === selectedCourseId);
       
-      // Determine if teacher selection should be shown based on course type and duration type
       if (selectedCourse) {
         const isRecurring = selectedCourse.duration_type === 'recurring';
         const isSoloOrDuo = selectedCourse.course_type === 'solo' || selectedCourse.course_type === 'duo';
+        const isGroupRecurring = selectedCourse.course_type === 'group' && isRecurring;
         
-        // Show teacher selection only for recurring solo or duo courses
+        // Show teacher selection for solo/duo recurring courses
         setShouldShowTeacher(isRecurring && isSoloOrDuo);
       } else {
         setShouldShowTeacher(false);
@@ -64,20 +64,32 @@ const EnrollmentPage: React.FC = () => {
       return;
     }
 
-    // Check if this is a recurring solo/duo course that needs time slot selection
+    // Get the selected course details
     const selectedCourse = courses.find(course => course.id === selectedCourseId);
+    if (!selectedCourse) {
+      toast.error("Course information not found");
+      return;
+    }
+    
     const isRecurring = selectedCourse?.duration_type === 'recurring';
     const isSoloOrDuo = selectedCourse?.course_type === 'solo' || selectedCourse?.course_type === 'duo';
+    const isGroupRecurring = selectedCourse?.course_type === 'group' && isRecurring;
     
-    // If recurring solo/duo course and teacher is selected but no slot is selected yet
+    // For solo/duo recurring courses with a teacher but no slot selected yet
     if (isRecurring && isSoloOrDuo && selectedTeacherId && !selectedAvailabilitySlot) {
+      setShowAvailabilityDialog(true);
+      return;
+    }
+    
+    // For group recurring courses, open dialog to select a common slot for all teachers
+    if (isGroupRecurring && !selectedAvailabilitySlot && selectedCourse.instructor_ids?.length > 0) {
       setShowAvailabilityDialog(true);
       return;
     }
 
     setIsEnrolling(true);
     try {
-      // Get course data to check if it's a fixed course
+      // Check if it's a fixed course
       const isFixedCourse = selectedCourse?.duration_type === 'fixed';
       const amount = selectedCourse?.final_price || 0;
       
@@ -95,7 +107,6 @@ const EnrollmentPage: React.FC = () => {
         if (generatedPaymentLink) {
           setGeneratedLink(generatedPaymentLink);
         } else {
-          // If payment link generation failed, show error but continue
           console.error("Failed to generate payment link, but continuing with enrollment");
         }
       }
@@ -211,6 +222,12 @@ const EnrollmentPage: React.FC = () => {
     return `${formattedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
+  // Get course details for form state
+  const selectedCourse = selectedCourseId ? courses.find(course => course.id === selectedCourseId) : null;
+  const isRecurring = selectedCourse?.duration_type === 'recurring';
+  const courseType = selectedCourse?.course_type || '';
+  const isGroupRecurring = courseType === 'group' && isRecurring;
+  
   // Check if teacher selection should be displayed and if there are available teachers
   const shouldDisplayTeacherField = shouldShowTeacher && teachers && teachers.length > 0;
 
@@ -303,6 +320,14 @@ const EnrollmentPage: React.FC = () => {
             </div>
           )}
           
+          {isGroupRecurring && !selectedAvailabilitySlot && selectedCourse?.instructor_ids?.length > 0 && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-amber-800">
+                This is a recurring group course. You'll need to select a time slot where all teachers are available.
+              </p>
+            </div>
+          )}
+          
           {generatedLink && (
             <div className="p-3 bg-slate-50 rounded-md border mt-4">
               <p className="text-sm font-medium mb-2">Payment Link Generated</p>
@@ -340,12 +365,14 @@ const EnrollmentPage: React.FC = () => {
       </Card>
       
       {/* Teacher availability dialog */}
-      {showAvailabilityDialog && selectedTeacherId && (
+      {showAvailabilityDialog && (
         <TeacherAvailabilityDialog
           isOpen={showAvailabilityDialog}
           onClose={() => setShowAvailabilityDialog(false)}
           teacherId={selectedTeacherId}
           onSlotSelect={handleSlotSelected}
+          isGroupCourse={isGroupRecurring}
+          courseId={isGroupRecurring ? selectedCourseId : undefined}
         />
       )}
     </div>
