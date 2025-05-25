@@ -12,11 +12,13 @@ export const fetchEventsBySingleValue = async (
   value: string | number | boolean
 ): Promise<any[]> => {
   try {
-    // Using a more specific return type to avoid deep instantiation
-    const { data, error } = await supabase
+    // Explicitly type the query to avoid deep instantiation
+    const query = supabase
       .from('user_events')
       .select('*')
       .eq(field, value);
+    
+    const { data, error } = await query;
     
     if (error) {
       console.error('Error fetching events by single value:', error);
