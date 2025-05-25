@@ -10,15 +10,14 @@ import { supabase } from '@/integrations/supabase/client';
 export const fetchEventsBySingleValue = async (
   field: string,
   value: string | number | boolean
-) => {
+): Promise<any[]> => {
   try {
-    // Use a more explicit query approach to avoid type inference issues
-    const query = supabase
+    // Use explicit typing to avoid type inference issues
+    const { data, error } = await supabase
       .from('user_events')
-      .select('*');
-    
-    // Apply the filter based on the field and value
-    const { data, error } = await query.eq(field, value);
+      .select('*')
+      .eq(field, value)
+      .returns<any[]>();
     
     if (error) {
       console.error('Error fetching events by single value:', error);
