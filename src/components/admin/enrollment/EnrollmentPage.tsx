@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -376,7 +375,7 @@ const EnrollmentPage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 {availableCourses.length === 0 && selectedStudentId ? (
-                  <SelectItem value="" disabled>
+                  <SelectItem value="no-courses-available" disabled>
                     No courses available (trial classes required)
                   </SelectItem>
                 ) : (

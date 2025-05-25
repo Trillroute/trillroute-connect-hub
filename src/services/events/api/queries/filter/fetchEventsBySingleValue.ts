@@ -12,7 +12,6 @@ export const fetchEventsBySingleValue = async (
   value: string | number | boolean
 ): Promise<any[]> => {
   try {
-    // Remove .returns<any[]>() to avoid type inference issues
     const { data, error } = await supabase
       .from('user_events')
       .select('*')
