@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ActiveTab } from '@/components/admin/SuperAdminSidebar';
 import TodayContent from './TodayContent';
@@ -16,6 +17,7 @@ import LevelManagement from '@/components/admin/levels/LevelManagement';
 import ClassTypeManagement from '@/components/admin/class-types/ClassTypeManagement';
 import TeacherManagement from '@/components/admin/TeacherManagement';
 import EnrollmentPage from '@/components/admin/enrollment/EnrollmentPage';
+import TrialBookingPage from '@/components/admin/trial-booking/TrialBookingPage';
 
 interface TabContentMapProps {
   activeTab: ActiveTab;
@@ -58,6 +60,12 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
   if (activeTab === 'enrollStudents') {
     console.log("Rendering EnrollmentPage component");
     return <EnrollmentPage />;
+  }
+
+  // Add handling for the new trialBooking tab
+  if (activeTab === 'trialBooking') {
+    console.log("Rendering TrialBookingPage component");
+    return <TrialBookingPage />;
   }
 
   switch (activeTab) {

@@ -11,7 +11,8 @@ import {
   Lock, 
   MessageSquare, 
   UserPlus, 
-  Users 
+  Users,
+  BookOpen
 } from "lucide-react";
 import { ElementType } from "react";
 
@@ -52,6 +53,12 @@ export const sidebarMenuItems: SidebarMenuItem[] = [
         id: "enrollStudents",
         label: "Enroll Students",
         value: "enrollStudents",
+        requiredPermission: AdminPermission.VIEW_STUDENTS
+      },
+      {
+        id: "trialBooking",
+        label: "Trial Booking",
+        value: "trialBooking",
         requiredPermission: AdminPermission.VIEW_STUDENTS
       }
     ]

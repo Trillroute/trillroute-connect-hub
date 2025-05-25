@@ -13,6 +13,7 @@ export type ActiveTab =
   | "today"
   | "students"
   | "enrollStudents"
+  | "trialBooking"
   | "classTypes"
   | "fees"
   | "communication"
@@ -40,7 +41,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
     access: activeTab === 'admins' || activeTab === 'levels',
     leads: activeTab === 'leads' || activeTab === 'leads-cards',
     scheduling: activeTab === 'scheduling' || activeTab === 'calendar' || activeTab === 'user-availability',
-    students: activeTab === 'students', // Make sure students tab is included
+    students: activeTab === 'students' || activeTab === 'enrollStudents' || activeTab === 'trialBooking',
   });
 
   const location = useLocation();
