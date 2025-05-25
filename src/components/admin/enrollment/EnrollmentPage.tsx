@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { useCourseTeachers } from '@/hooks/useCourseTeachers';
 import { Copy } from 'lucide-react';
 import TeacherAvailabilityDialog from './TeacherAvailabilityDialog';
 import { UserAvailability } from '@/services/availability/types';
+import { fetchEventsBySingleValue } from '@/services/events/api/queries/filter/fetchEventsBySingleValue';
 
 const EnrollmentPage: React.FC = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -21,11 +23,63 @@ const EnrollmentPage: React.FC = () => {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [showTeacherDialog, setShowTeacherDialog] = useState(false);
   const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState<UserAvailability | null>(null);
+  const [availableCourses, setAvailableCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
   const { teachers, loading: teachersLoading } = useCourseTeachers(selectedCourseId);
   const { addStudentToCourse, loading: enrollmentLoading, generatePaymentLink } = useCourseEnrollment();
+
+  // Filter courses based on trial completion when student changes
+  useEffect(() => {
+    const filterCoursesForStudent = async () => {
+      if (!selectedStudentId || !courses.length) {
+        setAvailableCourses(courses);
+        return;
+      }
+
+      setLoadingCourses(true);
+      try {
+        // Fetch all trial booking events for the selected student
+        const trialEvents = await fetchEventsBySingleValue('event_type', 'trial_booking');
+        
+        // Find trials for this specific student
+        const studentTrials = trialEvents.filter(event => {
+          const metadata = event.metadata;
+          if (typeof metadata === 'object' && metadata !== null) {
+            return (metadata as any).student_id === selectedStudentId;
+          }
+          return false;
+        });
+
+        // Get course IDs that the student has completed trials for
+        const completedTrialCourseIds = studentTrials.map(trial => {
+          const metadata = trial.metadata;
+          if (typeof metadata === 'object' && metadata !== null) {
+            return (metadata as any).course_id;
+          }
+          return null;
+        }).filter(Boolean);
+
+        // Filter courses to only show those with completed trials
+        const filteredCourses = courses.filter(course => 
+          completedTrialCourseIds.includes(course.id)
+        );
+
+        setAvailableCourses(filteredCourses);
+      } catch (error) {
+        console.error('Error filtering courses by trial completion:', error);
+        // On error, show all courses as fallback
+        setAvailableCourses(courses);
+        toast.error('Failed to check trial completion status');
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    filterCoursesForStudent();
+  }, [selectedStudentId, courses]);
 
   // Reset teacher selection when course changes
   useEffect(() => {
@@ -34,7 +88,7 @@ const EnrollmentPage: React.FC = () => {
     setSelectedAvailabilitySlot(null);
     
     if (selectedCourseId) {
-      const selectedCourse = courses.find(course => course.id === selectedCourseId);
+      const selectedCourse = availableCourses.find(course => course.id === selectedCourseId);
       
       if (selectedCourse) {
         const isRecurring = selectedCourse.duration_type === 'recurring';
@@ -49,7 +103,7 @@ const EnrollmentPage: React.FC = () => {
     } else {
       setShouldShowTeacher(false);
     }
-  }, [selectedCourseId, courses]);
+  }, [selectedCourseId, availableCourses]);
 
   const handleEnrollStudent = async () => {
     if (!selectedStudentId || !selectedCourseId) {
@@ -64,7 +118,7 @@ const EnrollmentPage: React.FC = () => {
     }
 
     // Get the selected course details
-    const selectedCourse = courses.find(course => course.id === selectedCourseId);
+    const selectedCourse = availableCourses.find(course => course.id === selectedCourseId);
     if (!selectedCourse) {
       toast.error("Course information not found");
       return;
@@ -128,7 +182,7 @@ const EnrollmentPage: React.FC = () => {
       if (success) {
         // Get student details for the toast message
         const student = students.find(s => s.id === selectedStudentId);
-        const course = courses.find(c => c.id === selectedCourseId);
+        const course = availableCourses.find(c => c.id === selectedCourseId);
         
         // Use the stored link for the toast message
         const paymentLink = generatedLink || generatedPaymentLink;
@@ -222,7 +276,7 @@ const EnrollmentPage: React.FC = () => {
   };
 
   // Get course details for form state
-  const selectedCourse = selectedCourseId ? courses.find(course => course.id === selectedCourseId) : null;
+  const selectedCourse = selectedCourseId ? availableCourses.find(course => course.id === selectedCourseId) : null;
   const isRecurring = selectedCourse?.duration_type === 'recurring';
   const courseType = selectedCourse?.course_type || '';
   const isGroupRecurring = courseType === 'group' && isRecurring;
@@ -237,7 +291,7 @@ const EnrollmentPage: React.FC = () => {
       <Card className="max-w-md mx-auto">
         <CardHeader>
           <CardTitle>Course Enrollment</CardTitle>
-          <CardDescription>Enroll a student in a course</CardDescription>
+          <CardDescription>Enroll a student in a course (trial completion required)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -265,19 +319,34 @@ const EnrollmentPage: React.FC = () => {
             <Select 
               value={selectedCourseId} 
               onValueChange={setSelectedCourseId}
-              disabled={coursesLoading}
+              disabled={coursesLoading || loadingCourses}
             >
               <SelectTrigger id="course">
-                <SelectValue placeholder="Select a course" />
+                <SelectValue placeholder={
+                  loadingCourses ? "Loading courses..." : 
+                  selectedStudentId ? "Select a course" : 
+                  "Please select a student first"
+                } />
               </SelectTrigger>
               <SelectContent>
-                {courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.title} ({course.course_type}, {course.duration_type})
+                {availableCourses.length === 0 && selectedStudentId ? (
+                  <SelectItem value="" disabled>
+                    No courses available (student must complete trial classes first)
                   </SelectItem>
-                ))}
+                ) : (
+                  availableCourses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.title} ({course.course_type}, {course.duration_type})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
+            {selectedStudentId && availableCourses.length === 0 && !loadingCourses && (
+              <p className="text-sm text-amber-600 mt-1">
+                This student must complete trial classes before enrolling in courses.
+              </p>
+            )}
           </div>
           
           {shouldDisplayTeacherField && (
@@ -356,7 +425,7 @@ const EnrollmentPage: React.FC = () => {
           <Button 
             onClick={handleEnrollStudent} 
             className="w-full" 
-            disabled={!selectedStudentId || !selectedCourseId || isEnrolling || enrollmentLoading}
+            disabled={!selectedStudentId || !selectedCourseId || isEnrolling || enrollmentLoading || availableCourses.length === 0}
           >
             {isEnrolling ? "Enrolling..." : "Enroll Student"}
           </Button>
