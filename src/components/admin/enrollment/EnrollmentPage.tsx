@@ -9,7 +9,7 @@ import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
 import { useCourseTeachers } from '@/hooks/useCourseTeachers';
-import { Copy } from 'lucide-react';
+import { Copy, AlertTriangle } from 'lucide-react';
 import TeacherAvailabilityDialog from './TeacherAvailabilityDialog';
 import { UserAvailability } from '@/services/availability/types';
 import { fetchEventsBySingleValue } from '@/services/events/api/queries/filter/fetchEventsBySingleValue';
@@ -25,17 +25,19 @@ const EnrollmentPage: React.FC = () => {
   const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState<UserAvailability | null>(null);
   const [availableCourses, setAvailableCourses] = useState<any[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [trialVerificationStatus, setTrialVerificationStatus] = useState<{[key: string]: boolean}>({});
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
   const { teachers, loading: teachersLoading } = useCourseTeachers(selectedCourseId);
-  const { addStudentToCourse, loading: enrollmentLoading, generatePaymentLink } = useCourseEnrollment();
+  const { addStudentToCourse, loading: enrollmentLoading, generatePaymentLink, hasCompletedTrialForCourse } = useCourseEnrollment();
 
   // Filter courses based on trial completion when student changes
   useEffect(() => {
     const filterCoursesForStudent = async () => {
       if (!selectedStudentId || !courses.length) {
         setAvailableCourses(courses);
+        setTrialVerificationStatus({});
         return;
       }
 
@@ -62,17 +64,34 @@ const EnrollmentPage: React.FC = () => {
           return null;
         }).filter(Boolean);
 
+        // Create trial verification status map for UI feedback
+        const verificationStatus: {[key: string]: boolean} = {};
+        for (const course of courses) {
+          verificationStatus[course.id] = completedTrialCourseIds.includes(course.id);
+        }
+        setTrialVerificationStatus(verificationStatus);
+
         // Filter courses to only show those with completed trials
         const filteredCourses = courses.filter(course => 
           completedTrialCourseIds.includes(course.id)
         );
 
         setAvailableCourses(filteredCourses);
+        
+        // Show warning if no courses are available
+        if (filteredCourses.length === 0 && courses.length > 0) {
+          console.warn('No courses available for student - trial classes required', { 
+            studentId: selectedStudentId, 
+            totalCourses: courses.length,
+            completedTrials: completedTrialCourseIds.length 
+          });
+        }
       } catch (error) {
         console.error('Error filtering courses by trial completion:', error);
-        // On error, show all courses as fallback
+        // On error, show all courses as fallback but warn user
         setAvailableCourses(courses);
-        toast.error('Failed to check trial completion status');
+        setTrialVerificationStatus({});
+        toast.error('Failed to check trial completion status - please verify manually');
       } finally {
         setLoadingCourses(false);
       }
@@ -108,6 +127,23 @@ const EnrollmentPage: React.FC = () => {
   const handleEnrollStudent = async () => {
     if (!selectedStudentId || !selectedCourseId) {
       toast.error("Please select both a student and a course");
+      return;
+    }
+
+    // CRITICAL SECURITY CHECK: Double-verify trial completion before proceeding
+    try {
+      const trialCompleted = await hasCompletedTrialForCourse(selectedStudentId, selectedCourseId);
+      if (!trialCompleted) {
+        toast.error("ENROLLMENT BLOCKED: Student has not completed a trial class for this course");
+        console.error('Enrollment attempt blocked - no trial completed', { 
+          studentId: selectedStudentId, 
+          courseId: selectedCourseId 
+        });
+        return;
+      }
+    } catch (error) {
+      console.error('Error verifying trial completion:', error);
+      toast.error("Unable to verify trial completion - enrollment blocked for security");
       return;
     }
 
@@ -149,7 +185,7 @@ const EnrollmentPage: React.FC = () => {
       // Variable to store the generated payment link
       let generatedPaymentLink: string | null = null;
       
-      // If fixed course, generate payment link first
+      // If fixed course, generate payment link first (this also verifies trial completion)
       if (isFixedCourse && selectedCourse) {
         generatedPaymentLink = await generatePaymentLink(
           selectedCourseId,
@@ -160,7 +196,10 @@ const EnrollmentPage: React.FC = () => {
         if (generatedPaymentLink) {
           setGeneratedLink(generatedPaymentLink);
         } else {
-          console.error("Failed to generate payment link, but continuing with enrollment");
+          console.error("Failed to generate payment link - this could indicate trial not completed");
+          toast.error("Failed to generate payment link - please verify trial completion");
+          setIsEnrolling(false);
+          return;
         }
       }
       
@@ -169,8 +208,9 @@ const EnrollmentPage: React.FC = () => {
         availabilitySlotId: selectedAvailabilitySlot.id,
         dayOfWeek: selectedAvailabilitySlot.dayOfWeek,
         startTime: selectedAvailabilitySlot.startTime,
-        endTime: selectedAvailabilitySlot.endTime
-      } : undefined;
+        endTime: selectedAvailabilitySlot.endTime,
+        trialVerified: true
+      } : { trialVerified: true };
       
       const success = await addStudentToCourse(
         selectedCourseId, 
@@ -187,7 +227,7 @@ const EnrollmentPage: React.FC = () => {
         // Use the stored link for the toast message
         const paymentLink = generatedLink || generatedPaymentLink;
         
-        toast.success("Student enrollment processed", {
+        toast.success("Student enrollment completed successfully", {
           description: paymentLink ? (
             <div>
               <p>{student?.first_name} {student?.last_name} has been enrolled in {course?.title}</p>
@@ -219,7 +259,7 @@ const EnrollmentPage: React.FC = () => {
               )}
             </div>
           ) : (
-            `${student?.first_name} ${student?.last_name} has been enrolled in ${course?.title}`
+            `${student?.first_name} ${student?.last_name} has been enrolled in ${course?.title} (Trial verified)`
           ),
           action: paymentLink ? {
             label: "Copy Link",
@@ -237,6 +277,7 @@ const EnrollmentPage: React.FC = () => {
         setSelectedTeacherId('');
         setGeneratedLink(null);
         setSelectedAvailabilitySlot(null);
+        setTrialVerificationStatus({});
       }
     } catch (error) {
       console.error("Error enrolling student:", error);
@@ -291,7 +332,12 @@ const EnrollmentPage: React.FC = () => {
       <Card className="max-w-md mx-auto">
         <CardHeader>
           <CardTitle>Course Enrollment</CardTitle>
-          <CardDescription>Enroll a student in a course (trial completion required)</CardDescription>
+          <CardDescription>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <span>Trial completion verification enforced</span>
+            </div>
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -323,7 +369,7 @@ const EnrollmentPage: React.FC = () => {
             >
               <SelectTrigger id="course">
                 <SelectValue placeholder={
-                  loadingCourses ? "Loading courses..." : 
+                  loadingCourses ? "Verifying trial completion..." : 
                   selectedStudentId ? "Select a course" : 
                   "Please select a student first"
                 } />
@@ -331,21 +377,31 @@ const EnrollmentPage: React.FC = () => {
               <SelectContent>
                 {availableCourses.length === 0 && selectedStudentId ? (
                   <SelectItem value="" disabled>
-                    No courses available (student must complete trial classes first)
+                    No courses available (trial classes required)
                   </SelectItem>
                 ) : (
                   availableCourses.map((course) => (
                     <SelectItem key={course.id} value={course.id}>
-                      {course.title} ({course.course_type}, {course.duration_type})
+                      <div className="flex items-center gap-2">
+                        <span>{course.title} ({course.course_type}, {course.duration_type})</span>
+                        {selectedStudentId && trialVerificationStatus[course.id] && (
+                          <span className="text-green-600 text-xs">✓ Trial Complete</span>
+                        )}
+                      </div>
                     </SelectItem>
                   ))
                 )}
               </SelectContent>
             </Select>
             {selectedStudentId && availableCourses.length === 0 && !loadingCourses && (
-              <p className="text-sm text-amber-600 mt-1">
-                This student must complete trial classes before enrolling in courses.
-              </p>
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <p className="text-sm text-amber-800 font-medium">
+                    This student must complete trial classes before enrolling in courses.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
           
@@ -427,7 +483,7 @@ const EnrollmentPage: React.FC = () => {
             className="w-full" 
             disabled={!selectedStudentId || !selectedCourseId || isEnrolling || enrollmentLoading || availableCourses.length === 0}
           >
-            {isEnrolling ? "Enrolling..." : "Enroll Student"}
+            {isEnrolling ? "Verifying & Enrolling..." : "Enroll Student"}
           </Button>
         </CardFooter>
       </Card>

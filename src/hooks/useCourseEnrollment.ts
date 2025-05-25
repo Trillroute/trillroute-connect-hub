@@ -3,9 +3,33 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+import { fetchEventsBySingleValue } from '@/services/events/api/queries/filter/fetchEventsBySingleValue';
 
 export function useCourseEnrollment() {
   const [loading, setLoading] = useState(false);
+
+  // Check if student has completed a trial for the specific course
+  const hasCompletedTrialForCourse = async (studentId: string, courseId: string): Promise<boolean> => {
+    try {
+      // Fetch all trial booking events
+      const trialEvents = await fetchEventsBySingleValue('event_type', 'trial_booking');
+      
+      // Find trials for this specific student and course
+      const studentTrialForCourse = trialEvents.find(event => {
+        const metadata = event.metadata;
+        if (typeof metadata === 'object' && metadata !== null) {
+          const typedMetadata = metadata as any;
+          return typedMetadata.student_id === studentId && typedMetadata.course_id === courseId;
+        }
+        return false;
+      });
+
+      return !!studentTrialForCourse;
+    } catch (error) {
+      console.error('Error checking trial completion:', error);
+      return false;
+    }
+  };
 
   // Add a student to a course
   const addStudentToCourse = async (
@@ -18,6 +42,16 @@ export function useCourseEnrollment() {
     
     setLoading(true);
     try {
+      // CRITICAL CHECK: Verify student has completed trial for this specific course
+      const hasTrialCompleted = await hasCompletedTrialForCourse(studentId, courseId);
+      
+      if (!hasTrialCompleted) {
+        toast.error('Student must complete a trial class for this course before enrollment');
+        console.error('Enrollment blocked: Student has not completed trial for course', { studentId, courseId });
+        setLoading(false);
+        return false;
+      }
+
       // First, get the current course data
       const { data: courseData, error: courseError } = await supabase
         .from('courses')
@@ -62,6 +96,7 @@ export function useCourseEnrollment() {
           courseTitle: courseData.title,
           courseType: courseData.course_type,
           enrollmentDate: new Date().toISOString(),
+          trialCompleted: true, // Mark that trial was verified
           ...(additionalMetadata || {})
         };
         
@@ -98,6 +133,7 @@ export function useCourseEnrollment() {
         return false;
       }
       
+      console.log('Student successfully enrolled after trial verification', { studentId, courseId });
       setLoading(false);
       return true;
     } catch (error) {
@@ -113,6 +149,15 @@ export function useCourseEnrollment() {
     if (!courseId || !studentId || amount <= 0) return null;
     
     try {
+      // CRITICAL CHECK: Verify student has completed trial for this specific course before generating payment link
+      const hasTrialCompleted = await hasCompletedTrialForCourse(studentId, courseId);
+      
+      if (!hasTrialCompleted) {
+        console.error('Payment link generation blocked: Student has not completed trial for course', { studentId, courseId });
+        toast.error('Student must complete a trial class for this course before payment');
+        return null;
+      }
+
       // Generate a unique order ID
       const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       
@@ -127,7 +172,8 @@ export function useCourseEnrollment() {
           status: 'pending',
           metadata: {
             generated_at: new Date().toISOString(),
-            payment_type: 'course_enrollment'
+            payment_type: 'course_enrollment',
+            trial_completed: true // Mark that trial was verified
           }
         });
       
@@ -141,6 +187,7 @@ export function useCourseEnrollment() {
       const baseUrl = window.location.origin;
       const paymentLink = `${baseUrl}/payment?order=${orderId}&course=${courseId}&student=${studentId}&amount=${amount}`;
       
+      console.log('Payment link generated after trial verification', { studentId, courseId, orderId });
       return paymentLink;
     } catch (error) {
       console.error('Error generating payment link:', error);
@@ -151,6 +198,7 @@ export function useCourseEnrollment() {
   return {
     addStudentToCourse,
     generatePaymentLink,
-    loading
+    loading,
+    hasCompletedTrialForCourse
   };
 }
