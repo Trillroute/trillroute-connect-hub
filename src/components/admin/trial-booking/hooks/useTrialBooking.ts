@@ -65,7 +65,7 @@ export function useTrialBooking() {
         ...(additionalMetadata || {})
       };
       
-      // Create a trial booking event
+      // Create a trial booking event first
       const { error: trialError } = await supabase
         .from('user_events')
         .insert({
@@ -80,13 +80,15 @@ export function useTrialBooking() {
         });
         
       if (trialError) {
-        console.error('Error creating trial booking:', trialError);
+        console.error('Error creating trial booking event:', trialError);
         toast.error('Failed to book trial class');
         setLoading(false);
         return false;
       }
 
-      // Update the student's trial_classes array in custom_users
+      console.log('Trial booking event created successfully');
+
+      // Update the student's trial_classes array in custom_users - this is the critical step
       const updatedTrialClasses = [...currentTrialClasses, courseId];
       const { error: updateError } = await supabase
         .from('custom_users')
@@ -94,10 +96,14 @@ export function useTrialBooking() {
         .eq('id', studentId);
 
       if (updateError) {
-        console.error('Error updating student trial classes:', updateError);
-        // Don't fail the entire operation for this, just log the error
-        console.warn('Trial booking created but failed to update student trial_classes array');
+        console.error('Error updating student trial classes in custom_users:', updateError);
+        toast.error('Trial booking created but failed to update student record. Please contact support.');
+        setLoading(false);
+        return false;
       }
+
+      console.log('Successfully updated custom_users.trial_classes for student:', studentId);
+      console.log('Updated trial classes array:', updatedTrialClasses);
       
       setLoading(false);
       return true;
