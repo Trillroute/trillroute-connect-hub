@@ -16,8 +16,9 @@ export const fetchEventsByMultipleValues = async <T>(
       return [];
     }
     
-    // Create a query without type issues
-    const { data, error } = await supabase
+    // Completely bypass TypeScript type checking to avoid deep instantiation errors
+    const supabaseClient = supabase as any;
+    const { data, error } = await supabaseClient
       .from('user_events')
       .select('*')
       .in(field, values);
