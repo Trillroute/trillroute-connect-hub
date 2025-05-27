@@ -32,23 +32,23 @@ export function useTrialBooking() {
         return false;
       }
       
-      // Check if student already has a trial for this course
-      const { data: existingTrial, error: trialCheckError } = await supabase
-        .from('user_events')
-        .select('*')
-        .eq('event_type', 'trial_booking')
-        .filter('metadata->student_id', 'eq', studentId)
-        .filter('metadata->course_id', 'eq', courseId);
+      // Check if student already has a trial for this course by checking custom_users.trial_classes
+      const { data: studentData, error: studentError } = await supabase
+        .from('custom_users')
+        .select('trial_classes')
+        .eq('id', studentId)
+        .single();
       
-      if (trialCheckError) {
-        console.error('Error checking existing trial:', trialCheckError);
-        toast.error('Failed to check existing trial bookings');
+      if (studentError) {
+        console.error('Error checking student trial classes:', studentError);
+        toast.error('Failed to check existing trial classes');
         setLoading(false);
         return false;
       }
       
-      if (existingTrial && existingTrial.length > 0) {
-        toast.info('Student already has a trial booking for this course');
+      const currentTrialClasses = studentData?.trial_classes || [];
+      if (currentTrialClasses.includes(courseId)) {
+        toast.info('Student already has a trial class for this course');
         setLoading(false);
         return true;
       }
@@ -84,6 +84,19 @@ export function useTrialBooking() {
         toast.error('Failed to book trial class');
         setLoading(false);
         return false;
+      }
+
+      // Update the student's trial_classes array in custom_users
+      const updatedTrialClasses = [...currentTrialClasses, courseId];
+      const { error: updateError } = await supabase
+        .from('custom_users')
+        .update({ trial_classes: updatedTrialClasses })
+        .eq('id', studentId);
+
+      if (updateError) {
+        console.error('Error updating student trial classes:', updateError);
+        // Don't fail the entire operation for this, just log the error
+        console.warn('Trial booking created but failed to update student trial_classes array');
       }
       
       setLoading(false);

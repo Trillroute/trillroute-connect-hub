@@ -11,6 +11,7 @@ import { useCourseTeachers } from '@/hooks/useCourseTeachers';
 import { useTrialBooking } from './hooks/useTrialBooking';
 import TeacherAvailabilityDialog from '../enrollment/TeacherAvailabilityDialog';
 import { UserAvailability } from '@/services/availability/types';
+import { supabase } from '@/integrations/supabase/client';
 
 const TrialBookingPage: React.FC = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -20,11 +21,66 @@ const TrialBookingPage: React.FC = () => {
   const [shouldShowTeacher, setShouldShowTeacher] = useState(false);
   const [showTeacherDialog, setShowTeacherDialog] = useState(false);
   const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState<UserAvailability | null>(null);
+  const [availableCourses, setAvailableCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
   const { teachers, loading: teachersLoading } = useCourseTeachers(selectedCourseId);
   const { bookTrialClass, loading: bookingLoading } = useTrialBooking();
+
+  // Filter courses based on student's existing trial classes
+  useEffect(() => {
+    const filterCoursesForStudent = async () => {
+      if (!selectedStudentId || !courses.length) {
+        setAvailableCourses(courses);
+        return;
+      }
+
+      setLoadingCourses(true);
+      try {
+        // Get the student's trial classes from custom_users table
+        const { data: studentData, error } = await supabase
+          .from('custom_users')
+          .select('trial_classes')
+          .eq('id', selectedStudentId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching student trial classes:', error);
+          setAvailableCourses(courses);
+          return;
+        }
+
+        const studentTrialClasses = studentData?.trial_classes || [];
+        
+        // Filter out courses where student has already taken a trial
+        const filteredCourses = courses.filter(course => 
+          !studentTrialClasses.includes(course.id)
+        );
+
+        setAvailableCourses(filteredCourses);
+        
+        // Show info if no courses are available
+        if (filteredCourses.length === 0 && courses.length > 0) {
+          console.info('No courses available for student - trials already taken for all courses', { 
+            studentId: selectedStudentId, 
+            totalCourses: courses.length,
+            trialClassesTaken: studentTrialClasses.length 
+          });
+        }
+      } catch (error) {
+        console.error('Error filtering courses by trial status:', error);
+        // On error, show all courses as fallback but warn user
+        setAvailableCourses(courses);
+        toast.error('Failed to check trial status - please verify manually');
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    filterCoursesForStudent();
+  }, [selectedStudentId, courses]);
 
   // Reset teacher selection when course changes
   useEffect(() => {
@@ -32,7 +88,7 @@ const TrialBookingPage: React.FC = () => {
     setSelectedAvailabilitySlot(null);
     
     if (selectedCourseId) {
-      const selectedCourse = courses.find(course => course.id === selectedCourseId);
+      const selectedCourse = availableCourses.find(course => course.id === selectedCourseId);
       
       if (selectedCourse) {
         const isRecurring = selectedCourse.duration_type === 'recurring';
@@ -47,7 +103,7 @@ const TrialBookingPage: React.FC = () => {
     } else {
       setShouldShowTeacher(false);
     }
-  }, [selectedCourseId, courses]);
+  }, [selectedCourseId, availableCourses]);
 
   const handleBookTrial = async () => {
     if (!selectedStudentId || !selectedCourseId) {
@@ -62,7 +118,7 @@ const TrialBookingPage: React.FC = () => {
     }
 
     // Get the selected course details
-    const selectedCourse = courses.find(course => course.id === selectedCourseId);
+    const selectedCourse = availableCourses.find(course => course.id === selectedCourseId);
     if (!selectedCourse) {
       toast.error("Course information not found");
       return;
@@ -104,7 +160,7 @@ const TrialBookingPage: React.FC = () => {
       if (success) {
         // Get student details for the toast message
         const student = students.find(s => s.id === selectedStudentId);
-        const course = courses.find(c => c.id === selectedCourseId);
+        const course = availableCourses.find(c => c.id === selectedCourseId);
         
         toast.success("Trial class booked successfully", {
           description: `${student?.first_name} ${student?.last_name} has been booked for a trial class in ${course?.title}`,
@@ -154,7 +210,7 @@ const TrialBookingPage: React.FC = () => {
   };
 
   // Get course details for form state
-  const selectedCourse = selectedCourseId ? courses.find(course => course.id === selectedCourseId) : null;
+  const selectedCourse = selectedCourseId ? availableCourses.find(course => course.id === selectedCourseId) : null;
   const isRecurring = selectedCourse?.duration_type === 'recurring';
   const courseType = selectedCourse?.course_type || '';
   const isGroupRecurring = courseType === 'group' && isRecurring;
@@ -197,19 +253,36 @@ const TrialBookingPage: React.FC = () => {
             <Select 
               value={selectedCourseId} 
               onValueChange={setSelectedCourseId}
-              disabled={coursesLoading}
+              disabled={coursesLoading || loadingCourses}
             >
               <SelectTrigger id="course">
-                <SelectValue placeholder="Select a course" />
+                <SelectValue placeholder={
+                  loadingCourses ? "Checking available courses..." : 
+                  selectedStudentId ? "Select a course" : 
+                  "Please select a student first"
+                } />
               </SelectTrigger>
               <SelectContent>
-                {courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.title} ({course.course_type}, {course.duration_type})
+                {availableCourses.length === 0 && selectedStudentId && !loadingCourses ? (
+                  <SelectItem value="no-courses-available" disabled>
+                    No courses available (trials already taken)
                   </SelectItem>
-                ))}
+                ) : (
+                  availableCourses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.title} ({course.course_type}, {course.duration_type})
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
+            {selectedStudentId && availableCourses.length === 0 && !loadingCourses && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  This student has already taken trial classes for all available courses.
+                </p>
+              </div>
+            )}
           </div>
           
           {shouldDisplayTeacherField && (
@@ -263,7 +336,7 @@ const TrialBookingPage: React.FC = () => {
           <Button 
             onClick={handleBookTrial} 
             className="w-full" 
-            disabled={!selectedStudentId || !selectedCourseId || isBooking || bookingLoading}
+            disabled={!selectedStudentId || !selectedCourseId || isBooking || bookingLoading || availableCourses.length === 0}
           >
             {isBooking ? "Booking..." : "Book Trial Class"}
           </Button>
