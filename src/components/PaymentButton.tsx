@@ -32,12 +32,16 @@ export const PaymentButton = ({
     try {
       setLoading(true);
       
+      console.log('PaymentButton clicked with params:', { courseId, studentId, amount });
+      
       if (!courseId || !amount || !studentId) {
+        console.error('Missing payment parameters:', { courseId, studentId, amount });
         toast.error("Invalid payment parameters");
         return;
       }
 
       if (!razorpay) {
+        console.error('Razorpay not loaded yet');
         toast.error("Payment gateway is loading. Please try again in a moment.");
         return;
       }
@@ -46,9 +50,12 @@ export const PaymentButton = ({
       
       const orderData = await createRazorpayOrder(amount, courseId, studentId);
       if (!orderData) {
+        console.error('Failed to create order');
         toast.error("Failed to create payment order");
         return;
       }
+
+      console.log('Order created successfully:', orderData);
 
       const options = {
         key: orderData.key,
@@ -83,6 +90,7 @@ export const PaymentButton = ({
         },
         modal: {
           ondismiss: function() {
+            console.log('Payment modal dismissed');
             setLoading(false);
             toast.info("Payment cancelled", {
               description: "You can try again when you're ready"

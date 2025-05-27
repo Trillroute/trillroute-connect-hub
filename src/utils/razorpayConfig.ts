@@ -108,17 +108,11 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
       return data;
     } else {
       // For regular payments, redirect immediately
-      const redirectUrl = `/courses/${courseId}?enrollment=success&payment=verified`;
-      window.location.href = redirectUrl;
+      console.log('Regular payment successful, redirecting...');
       return data;
     }
   } catch (error) {
     console.error('Payment verification error:', error);
-    // For regular payments, still redirect since payment might have succeeded
-    // For QR payments, let the caller handle the error
-    if (!response.razorpay_payment_id?.startsWith('qr_payment_')) {
-      window.location.href = `/courses/${courseId}?enrollment=success`;
-    }
     throw error;
   }
 };

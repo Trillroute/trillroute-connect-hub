@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { PaymentButton } from '@/components/PaymentButton';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -13,7 +12,6 @@ const PaymentPage = () => {
   const { courseId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
   
   const orderId = searchParams.get('order_id');
   const studentId = searchParams.get('student_id');
@@ -87,13 +85,16 @@ const PaymentPage = () => {
     fetchPaymentData();
   }, [courseId, orderId, studentId, amount]);
   
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (response: any) => {
+    console.log('Payment successful:', response);
     toast.success('Payment successful!', {
       description: 'You are now enrolled in this course.'
     });
     
-    // Redirect to course page
-    window.location.href = `/courses/${courseId}?enrollment=success`;
+    // Redirect to course page after a short delay
+    setTimeout(() => {
+      window.location.href = `/courses/${courseId}?enrollment=success`;
+    }, 2000);
   };
   
   const handlePaymentError = (error: any) => {
