@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -215,8 +214,10 @@ export function useCourseEnrollment() {
       // Generate a unique order ID
       const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       
+      console.log('Creating order with ID:', orderId);
+      
       // Store order information in the database
-      const { error } = await supabase
+      const { data: orderData, error } = await supabase
         .from('orders')
         .insert({
           order_id: orderId,
@@ -229,22 +230,30 @@ export function useCourseEnrollment() {
             payment_type: 'course_enrollment',
             trial_completed: true // Mark that trial was verified
           }
-        });
+        })
+        .select()
+        .single();
       
       if (error) {
         console.error('Error creating order:', error);
+        toast.error('Failed to create payment order');
         return null;
       }
+      
+      console.log('Order created successfully:', orderData);
       
       // Generate a payment link (in a real app, this would involve your payment provider)
       // This is a placeholder that would normally call your payment gateway API
       const baseUrl = window.location.origin;
-      const paymentLink = `${baseUrl}/payment?order=${orderId}&course=${courseId}&student=${studentId}&amount=${amount}`;
+      const paymentLink = `${baseUrl}/payment?order_id=${orderId}&course_id=${courseId}&student_id=${studentId}&amount=${amount}`;
       
+      console.log('Payment link generated successfully:', paymentLink);
       console.log('Payment link generated after trial verification', { studentId, courseId, orderId });
+      
       return paymentLink;
     } catch (error) {
       console.error('Error generating payment link:', error);
+      toast.error('Failed to generate payment link');
       return null;
     }
   };
