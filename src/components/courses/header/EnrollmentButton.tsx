@@ -108,6 +108,7 @@ export const EnrollmentButton: React.FC<EnrollmentButtonProps> = ({
         <PaymentButton
           courseId={courseId}
           amount={finalPrice}
+          studentId={user.id}
           onSuccess={onEnrollmentSuccess}
           onError={onEnrollmentError}
           className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
@@ -123,6 +124,7 @@ export const EnrollmentButton: React.FC<EnrollmentButtonProps> = ({
     <PaymentButton
       courseId={courseId}
       amount={finalPrice}
+      studentId={user.id}
       onSuccess={onEnrollmentSuccess}
       onError={onEnrollmentError}
       className="bg-[#9b87f5] text-white hover:bg-[#7E69AB] transition-colors"
