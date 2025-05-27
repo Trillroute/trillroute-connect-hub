@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -26,32 +25,67 @@ const PaymentPage = () => {
   
   // Check authentication and user match
   useEffect(() => {
-    if (authLoading) return; // Wait for auth to load
+    const initializePayment = async () => {
+      console.log('PaymentPage initialization:', { 
+        user: user?.id, 
+        studentId, 
+        authLoading,
+        isAuthenticated: !!user 
+      });
+      
+      // Wait a bit longer for auth to stabilize in new tab/window
+      if (authLoading) {
+        console.log('Waiting for auth to load...');
+        return;
+      }
+      
+      // Give auth context more time to settle in new window
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Check if user is still loading after delay
+      if (!user) {
+        console.log('No user found after auth delay, checking session directly');
+        
+        // Try to get session directly from Supabase as fallback
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.user) {
+            console.log('No session found, redirecting to login');
+            toast.error('Please log in to complete your payment');
+            navigate('/auth/login');
+            return;
+          }
+          
+          // If we have a session but no user in context, verify against studentId
+          if (session.user.id !== studentId) {
+            console.error('Session user ID mismatch:', { sessionUser: session.user.id, paymentStudentId: studentId });
+            setError('Payment link is not valid for the current session. Please ensure you are logged in with the correct account.');
+            setLoading(false);
+            return;
+          }
+          
+          console.log('Session found, proceeding with payment data fetch');
+        } catch (sessionError) {
+          console.error('Error checking session:', sessionError);
+          toast.error('Authentication error. Please log in again.');
+          navigate('/auth/login');
+          return;
+        }
+      } else {
+        // Verify that the logged-in user matches the student ID in the payment link
+        if (user.id !== studentId) {
+          console.error('User ID mismatch:', { loggedInUser: user.id, paymentStudentId: studentId });
+          setError('Payment link is not valid for the current user. Please ensure you are logged in with the correct account.');
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // If we get here, proceed with data fetching
+      await fetchPaymentData();
+    };
     
-    console.log('PaymentPage auth check:', { 
-      user: user?.id, 
-      studentId, 
-      isAuthenticated: !!user 
-    });
-    
-    // If not authenticated, redirect to login
-    if (!user) {
-      console.log('User not authenticated, redirecting to login');
-      toast.error('Please log in to complete your payment');
-      navigate('/auth/login');
-      return;
-    }
-    
-    // Verify that the logged-in user matches the student ID in the payment link
-    if (user.id !== studentId) {
-      console.error('User ID mismatch:', { loggedInUser: user.id, paymentStudentId: studentId });
-      setError('Payment link is not valid for the current user. Please log in with the correct account.');
-      setLoading(false);
-      return;
-    }
-    
-    // If user matches, proceed with data fetching
-    fetchPaymentData();
+    initializePayment();
   }, [user, authLoading, studentId, navigate]);
   
   const fetchPaymentData = async () => {
@@ -102,8 +136,15 @@ const PaymentPage = () => {
         throw new Error('Student not found');
       }
       
-      // Double-check that the student email matches the logged-in user
-      if (student.email !== user?.email) {
+      // Get current user email for comparison
+      const currentUserEmail = user?.email;
+      if (!currentUserEmail) {
+        // Try to get email from session if user context doesn't have it
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email && session.user.email !== student.email) {
+          throw new Error('Student email does not match logged-in user');
+        }
+      } else if (student.email !== currentUserEmail) {
         throw new Error('Student email does not match logged-in user');
       }
       
@@ -140,7 +181,7 @@ const PaymentPage = () => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <Loader2 className="w-10 h-10 animate-spin text-purple-500 mb-4" />
         <p className="text-lg font-medium">
-          {authLoading ? 'Checking authentication...' : 'Loading payment information...'}
+          {authLoading ? 'Verifying authentication...' : 'Loading payment information...'}
         </p>
       </div>
     );
