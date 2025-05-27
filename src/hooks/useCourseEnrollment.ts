@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -260,10 +259,9 @@ export function useCourseEnrollment() {
       
       console.log('Order created successfully:', orderData);
       
-      // Generate a payment link (in a real app, this would involve your payment provider)
-      // This is a placeholder that would normally call your payment gateway API
+      // Generate the correct payment link format that matches the route structure
       const baseUrl = window.location.origin;
-      const paymentLink = `${baseUrl}/payment?order_id=${orderId}&course_id=${courseId}&student_id=${studentId}&amount=${amount}`;
+      const paymentLink = `${baseUrl}/payment/${courseId}?order_id=${orderId}&student_id=${studentId}&amount=${amount}`;
       
       console.log('Payment link generated successfully:', paymentLink);
       console.log('Payment link generated after trial verification', { studentId, courseId, orderId });
