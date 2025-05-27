@@ -98,39 +98,72 @@ const EnrollmentPage: React.FC = () => {
         endTime: selectedAvailabilitySlot.endTime
       } : undefined;
       
-      // Generate payment link first
-      console.log('Generating payment link for course:', selectedCourse.title, 'Amount:', selectedCourse.final_price);
-      const paymentLink = await generatePaymentLink(
-        selectedCourseId, 
-        selectedStudentId, 
-        selectedCourse.final_price || 0
-      );
+      const coursePrice = selectedCourse.final_price || 0;
+      console.log('Course price:', coursePrice);
       
-      if (!paymentLink) {
-        console.error('Payment link generation failed');
-        toast.error('Failed to generate payment link. Please try again.');
-        setIsEnrolling(false);
-        return;
-      }
+      // Handle free courses differently
+      if (coursePrice === 0) {
+        console.log('Processing free course enrollment');
+        
+        // For free courses, directly enroll the student
+        const enrollmentSuccess = await addStudentToCourse(
+          selectedCourseId,
+          selectedStudentId,
+          selectedTeacherId,
+          additionalMetadata
+        );
+        
+        if (enrollmentSuccess) {
+          const student = students.find(s => s.id === selectedStudentId);
+          const course = courses.find(c => c.id === selectedCourseId);
+          
+          toast.success("Student enrolled successfully!", {
+            description: `${student?.first_name} ${student?.last_name} has been enrolled in ${course?.title}`,
+          });
+          
+          // Reset selections after successful enrollment
+          setSelectedStudentId('');
+          setSelectedCourseId('');
+          setSelectedTeacherId('');
+          setSelectedAvailabilitySlot(null);
+        } else {
+          toast.error('Failed to enroll student in free course');
+        }
+      } else {
+        // For paid courses, generate payment link
+        console.log('Generating payment link for paid course, amount:', coursePrice);
+        const paymentLink = await generatePaymentLink(
+          selectedCourseId, 
+          selectedStudentId, 
+          coursePrice
+        );
+        
+        if (!paymentLink) {
+          console.error('Payment link generation failed');
+          toast.error('Failed to generate payment link. Please try again.');
+          setIsEnrolling(false);
+          return;
+        }
 
-      console.log('Payment link generated successfully:', paymentLink);
-      
-      // Open payment link in new window/tab
-      window.open(paymentLink, '_blank');
-      
-      // Show success message
-      const student = students.find(s => s.id === selectedStudentId);
-      const course = courses.find(c => c.id === selectedCourseId);
-      
-      toast.success("Payment link generated successfully", {
-        description: `Payment link opened for ${student?.first_name} ${student?.last_name} to enroll in ${course?.title}`,
-      });
-      
-      // Reset selections after successful generation
-      setSelectedStudentId('');
-      setSelectedCourseId('');
-      setSelectedTeacherId('');
-      setSelectedAvailabilitySlot(null);
+        console.log('Payment link generated successfully:', paymentLink);
+        
+        // Open payment link in new window/tab
+        window.open(paymentLink, '_blank');
+        
+        // Show success message
+        const student = students.find(s => s.id === selectedStudentId);
+        const course = courses.find(c => c.id === selectedCourseId);
+        
+        toast.success("Payment link generated successfully", {
+          description: `Payment link opened for ${student?.first_name} ${student?.last_name} to enroll in ${course?.title}`,
+        });
+        
+        // Reset selections after successful generation
+        setSelectedStudentId('');
+        setSelectedCourseId('');
+        setSelectedTeacherId('');
+        setSelectedAvailabilitySlot(null);
+      }
       
     } catch (error) {
       console.error("Error during enrollment process:", error);
@@ -185,7 +218,7 @@ const EnrollmentPage: React.FC = () => {
       <Card className="max-w-md mx-auto">
         <CardHeader>
           <CardTitle>Student Enrollment</CardTitle>
-          <CardDescription>Generate payment link for student course enrollment</CardDescription>
+          <CardDescription>Enroll students in courses (free or paid)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -279,7 +312,8 @@ const EnrollmentPage: React.FC = () => {
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm font-medium">Course Details</p>
               <p className="text-xs text-gray-600 mt-1">
-                {selectedCourse.title} - ₹{selectedCourse.final_price}
+                {selectedCourse.title} - ₹{selectedCourse.final_price || 0}
+                {selectedCourse.final_price === 0 && <span className="text-green-600 font-medium"> (FREE)</span>}
               </p>
               <p className="text-xs text-gray-500">
                 {selectedCourse.course_type} course, {selectedCourse.duration_type} duration
@@ -293,7 +327,7 @@ const EnrollmentPage: React.FC = () => {
             className="w-full" 
             disabled={!selectedStudentId || !selectedCourseId || isEnrolling || enrollmentLoading}
           >
-            {isEnrolling ? "Processing..." : "Generate Payment Link"}
+            {isEnrolling ? "Processing..." : selectedCourse?.final_price === 0 ? "Enroll Student (Free)" : "Generate Payment Link"}
           </Button>
         </CardFooter>
       </Card>

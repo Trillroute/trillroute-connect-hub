@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -193,9 +194,9 @@ export function useCourseEnrollment() {
     }
   };
 
-  // Generate a payment link for a course
+  // Generate a payment link for a course (or handle free enrollment)
   const generatePaymentLink = async (courseId: string, studentId: string, amount: number) => {
-    if (!courseId || !studentId || amount <= 0) return null;
+    if (!courseId || !studentId) return null;
     
     try {
       console.log('Generating payment link for:', { courseId, studentId, amount });
@@ -211,7 +212,24 @@ export function useCourseEnrollment() {
         return null;
       }
 
-      // Generate a unique order ID
+      // Handle free courses (amount = 0)
+      if (amount === 0) {
+        console.log('Free course detected, enrolling student directly');
+        
+        // For free courses, enroll the student directly without payment
+        const enrollmentSuccess = await addStudentToCourse(courseId, studentId);
+        
+        if (enrollmentSuccess) {
+          console.log('Free course enrollment successful');
+          return 'FREE_ENROLLMENT_SUCCESS'; // Special return value for free courses
+        } else {
+          console.error('Free course enrollment failed');
+          toast.error('Failed to enroll in free course');
+          return null;
+        }
+      }
+
+      // For paid courses, generate payment link
       const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       
       console.log('Creating order with ID:', orderId);
