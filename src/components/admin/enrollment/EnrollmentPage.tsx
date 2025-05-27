@@ -129,7 +129,7 @@ const EnrollmentPage: React.FC = () => {
           toast.error('Failed to enroll student in free course');
         }
       } else {
-        // For paid courses, generate payment link
+        // For paid courses, generate payment link and send email
         console.log('Generating payment link for paid course, amount:', coursePrice);
         const paymentLink = await generatePaymentLink(
           selectedCourseId, 
@@ -149,16 +149,16 @@ const EnrollmentPage: React.FC = () => {
         const student = students.find(s => s.id === selectedStudentId);
         const course = courses.find(c => c.id === selectedCourseId);
         
-        // Show success message immediately
-        toast.success("Redirecting to payment page", {
-          description: `Opening payment page for ${student?.first_name} ${student?.last_name} to enroll in ${course?.title}`,
+        // Show success message for email sending
+        toast.success("Payment link generated and sent!", {
+          description: `Payment link has been sent to ${student?.first_name} ${student?.last_name}'s email for ${course?.title}`,
         });
         
-        // Navigate in the same window with a slight delay to ensure state is preserved
-        setTimeout(() => {
-          console.log('Navigating to payment page:', paymentLink);
-          window.location.href = paymentLink;
-        }, 500);
+        // Reset selections after successful link generation
+        setSelectedStudentId('');
+        setSelectedCourseId('');
+        setSelectedTeacherId('');
+        setSelectedAvailabilitySlot(null);
       }
       
     } catch (error) {
@@ -243,7 +243,7 @@ const EnrollmentPage: React.FC = () => {
             className="w-full" 
             disabled={!selectedStudentId || !selectedCourseId || isEnrolling || enrollmentLoading}
           >
-            {isEnrolling ? "Processing..." : selectedCourse?.final_price === 0 ? "Enroll Student (Free)" : "Generate Payment Link"}
+            {isEnrolling ? "Processing..." : selectedCourse?.final_price === 0 ? "Enroll Student (Free)" : "Send Payment Link"}
           </Button>
         </CardFooter>
       </Card>

@@ -30,7 +30,7 @@ export function usePaymentLink() {
         }
       }
 
-      // For paid courses, generate payment link
+      // For paid courses, generate payment link and send email
       const orderId = `order_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       
       console.log('Creating order with ID:', orderId);
@@ -61,11 +61,49 @@ export function usePaymentLink() {
       
       console.log('Order created successfully:', orderData);
       
-      // Generate the correct payment link format that matches the route structure
+      // Generate the payment link
       const baseUrl = window.location.origin;
       const paymentLink = `${baseUrl}/payment/${courseId}?order_id=${orderId}&student_id=${studentId}&amount=${amount}`;
       
-      console.log('Payment link generated successfully:', paymentLink);
+      console.log('Payment link generated:', paymentLink);
+      
+      // Send email with payment link
+      try {
+        const { data: emailResult, error: emailError } = await supabase.functions.invoke('send-payment-email', {
+          body: {
+            studentId,
+            courseId,
+            paymentLink
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending payment email:', emailError);
+          toast.error('Failed to send payment email. Please contact support.');
+        } else {
+          console.log('Payment email sent successfully:', emailResult);
+          toast.success('Payment link sent to your email!', {
+            description: 'Please check your email for the payment link.',
+          });
+        }
+      } catch (emailError) {
+        console.error('Error invoking email function:', emailError);
+        toast.error('Failed to send payment email. Please contact support.');
+      }
+      
+      // Also show the payment link in a toast for immediate access
+      toast.success('Payment link generated!', {
+        description: `Payment link: ${paymentLink}`,
+        duration: 10000, // Show for 10 seconds
+        action: {
+          label: "Copy Link",
+          onClick: () => {
+            navigator.clipboard.writeText(paymentLink);
+            toast.success('Payment link copied to clipboard!');
+          }
+        }
+      });
+      
       console.log('Payment link generated after trial verification', { studentId, courseId, orderId });
       
       return paymentLink;
