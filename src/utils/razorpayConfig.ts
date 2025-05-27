@@ -27,7 +27,7 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
     if (orderError) {
       console.error('Error creating order:', orderError);
       toast.error('Payment gateway error', {
-        description: 'Please check Razorpay API configuration'
+        description: 'Unable to connect to payment gateway. Please try again.'
       });
       return null;
     }
@@ -42,8 +42,8 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
     // Check if we got an error message in the response
     if (orderData.error) {
       console.error('Error in edge function response:', orderData.error);
-      toast.error('Razorpay API error', {
-        description: orderData.message || 'Please check your API keys'
+      toast.error('Payment gateway error', {
+        description: orderData.message || 'Please contact support for assistance'
       });
       return null;
     }
@@ -52,7 +52,7 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
     if (!orderData.orderId || !orderData.key) {
       console.error('Invalid order data received:', orderData);
       toast.error('Payment gateway configuration error', {
-        description: 'Please check Razorpay API keys'
+        description: 'Invalid response from payment gateway'
       });
       return null;
     }
@@ -62,7 +62,7 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
   } catch (error) {
     console.error('Exception in createRazorpayOrder:', error);
     toast.error('Payment system error', {
-      description: 'Please try again later or contact support'
+      description: 'Unable to initialize payment. Please try again or contact support.'
     });
     return null;
   }
@@ -100,17 +100,7 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
     }
 
     console.log('Payment verification success:', data);
-    
-    if (isQrPayment) {
-      // For QR payments, we'll let the UI handle the redirect
-      // after polling for enrollment status
-      console.log('QR payment verification sent, UI will handle redirect');
-      return data;
-    } else {
-      // For regular payments, redirect immediately
-      console.log('Regular payment successful, redirecting...');
-      return data;
-    }
+    return data;
   } catch (error) {
     console.error('Payment verification error:', error);
     throw error;

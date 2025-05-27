@@ -42,7 +42,7 @@ export const PaymentButton = ({
 
       if (!razorpay) {
         console.error('Razorpay not loaded yet');
-        toast.error("Payment gateway is loading. Please try again in a moment.");
+        toast.error("Payment gateway is still loading. Please wait a moment and try again.");
         return;
       }
       
@@ -51,7 +51,7 @@ export const PaymentButton = ({
       const orderData = await createRazorpayOrder(amount, courseId, studentId);
       if (!orderData) {
         console.error('Failed to create order');
-        toast.error("Failed to create payment order");
+        toast.error("Failed to create payment order. Please try again.");
         return;
       }
 
@@ -83,7 +83,7 @@ export const PaymentButton = ({
           }
         },
         prefill: {
-          email: "student@example.com" // This will be filled from student data if available
+          email: "student@example.com"
         },
         theme: {
           color: "#9b87f5"
@@ -117,11 +117,11 @@ export const PaymentButton = ({
   return (
     <Button
       onClick={handleClick}
-      disabled={loading}
+      disabled={loading || !razorpay}
       className={className}
     >
       {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-      {children}
+      {!razorpay ? 'Loading Payment Gateway...' : children}
     </Button>
   );
 };
