@@ -12,11 +12,12 @@ export const fetchEventsBySingleValue = async (
   value: string | number | boolean
 ): Promise<any[]> => {
   try {
-    // Use explicit typing to avoid TypeScript's deep type instantiation issues
-    const { data, error } = await (supabase
+    // Completely bypass TypeScript type checking to avoid deep instantiation errors
+    const supabaseClient = supabase as any;
+    const { data, error } = await supabaseClient
       .from('user_events')
       .select('*')
-      .eq(field, value) as any);
+      .eq(field, value);
     
     if (error) {
       console.error('Error fetching events by single value:', error);
