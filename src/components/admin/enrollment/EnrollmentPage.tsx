@@ -1,17 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
 import { useCourseTeachers } from '@/hooks/useCourseTeachers';
-import { Copy, AlertTriangle } from 'lucide-react';
+import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import TeacherAvailabilityDialog from './TeacherAvailabilityDialog';
 import { UserAvailability } from '@/services/availability/types';
-import { fetchEventsBySingleValue } from '@/services/events/api/queries/filter/fetchEventsBySingleValue';
 
 const EnrollmentPage: React.FC = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
@@ -19,99 +18,25 @@ const EnrollmentPage: React.FC = () => {
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [shouldShowTeacher, setShouldShowTeacher] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [showTeacherDialog, setShowTeacherDialog] = useState(false);
   const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState<UserAvailability | null>(null);
-  const [availableCourses, setAvailableCourses] = useState<any[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(false);
-  const [trialVerificationStatus, setTrialVerificationStatus] = useState<{[key: string]: boolean}>({});
   
   const { students, loading: studentsLoading } = useStudents();
   const { courses, loading: coursesLoading } = useCourses();
   const { teachers, loading: teachersLoading } = useCourseTeachers(selectedCourseId);
-  const { addStudentToCourse, loading: enrollmentLoading, generatePaymentLink, hasCompletedTrialForCourse } = useCourseEnrollment();
-
-  // Filter courses based on trial completion when student changes
-  useEffect(() => {
-    const filterCoursesForStudent = async () => {
-      if (!selectedStudentId || !courses.length) {
-        setAvailableCourses(courses);
-        setTrialVerificationStatus({});
-        return;
-      }
-
-      setLoadingCourses(true);
-      try {
-        // Fetch all trial booking events for the selected student
-        const trialEvents = await fetchEventsBySingleValue('event_type', 'trial_booking');
-        
-        // Find trials for this specific student
-        const studentTrials = trialEvents.filter(event => {
-          const metadata = event.metadata;
-          if (typeof metadata === 'object' && metadata !== null) {
-            return (metadata as any).student_id === selectedStudentId;
-          }
-          return false;
-        });
-
-        // Get course IDs that the student has completed trials for
-        const completedTrialCourseIds = studentTrials.map(trial => {
-          const metadata = trial.metadata;
-          if (typeof metadata === 'object' && metadata !== null) {
-            return (metadata as any).course_id;
-          }
-          return null;
-        }).filter(Boolean);
-
-        // Create trial verification status map for UI feedback
-        const verificationStatus: {[key: string]: boolean} = {};
-        for (const course of courses) {
-          verificationStatus[course.id] = completedTrialCourseIds.includes(course.id);
-        }
-        setTrialVerificationStatus(verificationStatus);
-
-        // Filter courses to only show those with completed trials
-        const filteredCourses = courses.filter(course => 
-          completedTrialCourseIds.includes(course.id)
-        );
-
-        setAvailableCourses(filteredCourses);
-        
-        // Show warning if no courses are available
-        if (filteredCourses.length === 0 && courses.length > 0) {
-          console.warn('No courses available for student - trial classes required', { 
-            studentId: selectedStudentId, 
-            totalCourses: courses.length,
-            completedTrials: completedTrialCourseIds.length 
-          });
-        }
-      } catch (error) {
-        console.error('Error filtering courses by trial completion:', error);
-        // On error, show all courses as fallback but warn user
-        setAvailableCourses(courses);
-        setTrialVerificationStatus({});
-        toast.error('Failed to check trial completion status - please verify manually');
-      } finally {
-        setLoadingCourses(false);
-      }
-    };
-
-    filterCoursesForStudent();
-  }, [selectedStudentId, courses]);
+  const { addStudentToCourse, generatePaymentLink, loading: enrollmentLoading, hasCompletedTrialForCourse } = useCourseEnrollment();
 
   // Reset teacher selection when course changes
   useEffect(() => {
     setSelectedTeacherId('');
-    setGeneratedLink(null);
     setSelectedAvailabilitySlot(null);
     
     if (selectedCourseId) {
-      const selectedCourse = availableCourses.find(course => course.id === selectedCourseId);
+      const selectedCourse = courses.find(course => course.id === selectedCourseId);
       
       if (selectedCourse) {
         const isRecurring = selectedCourse.duration_type === 'recurring';
         const isSoloOrDuo = selectedCourse.course_type === 'solo' || selectedCourse.course_type === 'duo';
-        const isGroupRecurring = selectedCourse.course_type === 'group' && isRecurring;
         
         // Show teacher selection for solo/duo recurring courses
         setShouldShowTeacher(isRecurring && isSoloOrDuo);
@@ -121,28 +46,11 @@ const EnrollmentPage: React.FC = () => {
     } else {
       setShouldShowTeacher(false);
     }
-  }, [selectedCourseId, availableCourses]);
+  }, [selectedCourseId, courses]);
 
   const handleEnrollStudent = async () => {
     if (!selectedStudentId || !selectedCourseId) {
       toast.error("Please select both a student and a course");
-      return;
-    }
-
-    // CRITICAL SECURITY CHECK: Double-verify trial completion before proceeding
-    try {
-      const trialCompleted = await hasCompletedTrialForCourse(selectedStudentId, selectedCourseId);
-      if (!trialCompleted) {
-        toast.error("ENROLLMENT BLOCKED: Student has not completed a trial class for this course");
-        console.error('Enrollment attempt blocked - no trial completed', { 
-          studentId: selectedStudentId, 
-          courseId: selectedCourseId 
-        });
-        return;
-      }
-    } catch (error) {
-      console.error('Error verifying trial completion:', error);
-      toast.error("Unable to verify trial completion - enrollment blocked for security");
       return;
     }
 
@@ -152,135 +60,81 @@ const EnrollmentPage: React.FC = () => {
       return;
     }
 
-    // Get the selected course details
-    const selectedCourse = availableCourses.find(course => course.id === selectedCourseId);
+    // Get the selected course details for pricing
+    const selectedCourse = courses.find(course => course.id === selectedCourseId);
     if (!selectedCourse) {
       toast.error("Course information not found");
       return;
     }
-    
+
     const isRecurring = selectedCourse?.duration_type === 'recurring';
     const isSoloOrDuo = selectedCourse?.course_type === 'solo' || selectedCourse?.course_type === 'duo';
-    const isGroupRecurring = selectedCourse?.course_type === 'group' && isRecurring;
     
     // For solo/duo recurring courses with a teacher but no slot selected yet
     if (isRecurring && isSoloOrDuo && selectedTeacherId && !selectedAvailabilitySlot) {
       setShowTeacherDialog(true);
       return;
     }
-    
-    // For group recurring courses, open dialog to select a common slot for all teachers
-    if (isGroupRecurring && !selectedAvailabilitySlot && selectedCourse.instructor_ids?.length > 0) {
-      setShowTeacherDialog(true);
-      return;
-    }
 
     setIsEnrolling(true);
     try {
-      // Check if it's a fixed course
-      const isFixedCourse = selectedCourse?.duration_type === 'fixed';
-      const amount = selectedCourse?.final_price || 0;
+      console.log('Starting enrollment process for student:', selectedStudentId, 'course:', selectedCourseId);
       
-      // Variable to store the generated payment link
-      let generatedPaymentLink: string | null = null;
+      // First check if the student has completed the trial for this course
+      const hasTrialCompleted = await hasCompletedTrialForCourse(selectedStudentId, selectedCourseId);
+      console.log('Trial completion check result:', hasTrialCompleted);
       
-      // If fixed course, generate payment link first (this also verifies trial completion)
-      if (isFixedCourse && selectedCourse) {
-        generatedPaymentLink = await generatePaymentLink(
-          selectedCourseId,
-          selectedStudentId, 
-          amount
-        );
-        
-        if (generatedPaymentLink) {
-          setGeneratedLink(generatedPaymentLink);
-        } else {
-          console.error("Failed to generate payment link - this could indicate trial not completed");
-          toast.error("Failed to generate payment link - please verify trial completion");
-          setIsEnrolling(false);
-          return;
-        }
+      if (!hasTrialCompleted) {
+        toast.error('Student must complete a trial class for this course before enrollment');
+        setIsEnrolling(false);
+        return;
       }
-      
+
       // Additional metadata to include availability slot information if selected
       const additionalMetadata = selectedAvailabilitySlot ? {
         availabilitySlotId: selectedAvailabilitySlot.id,
         dayOfWeek: selectedAvailabilitySlot.dayOfWeek,
         startTime: selectedAvailabilitySlot.startTime,
-        endTime: selectedAvailabilitySlot.endTime,
-        trialVerified: true
-      } : { trialVerified: true };
+        endTime: selectedAvailabilitySlot.endTime
+      } : undefined;
       
-      const success = await addStudentToCourse(
+      // Generate payment link first
+      console.log('Generating payment link for course:', selectedCourse.title, 'Amount:', selectedCourse.final_price);
+      const paymentLink = await generatePaymentLink(
         selectedCourseId, 
         selectedStudentId, 
-        shouldShowTeacher ? selectedTeacherId || undefined : undefined,
-        additionalMetadata
+        selectedCourse.final_price || 0
       );
       
-      if (success) {
-        // Get student details for the toast message
-        const student = students.find(s => s.id === selectedStudentId);
-        const course = availableCourses.find(c => c.id === selectedCourseId);
-        
-        // Use the stored link for the toast message
-        const paymentLink = generatedLink || generatedPaymentLink;
-        
-        toast.success("Student enrollment completed successfully", {
-          description: paymentLink ? (
-            <div>
-              <p>{student?.first_name} {student?.last_name} has been enrolled in {course?.title}</p>
-              {isFixedCourse && (
-                <div>
-                  <p className="mt-1 text-sm">Payment link sent to {student?.email}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <a 
-                      href={paymentLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-500 underline truncate max-w-[200px]"
-                    >
-                      {paymentLink}
-                    </a>
-                    <Button
-                      variant="outline" 
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => {
-                        navigator.clipboard.writeText(paymentLink);
-                        toast.info("Link copied to clipboard");
-                      }}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            `${student?.first_name} ${student?.last_name} has been enrolled in ${course?.title} (Trial verified)`
-          ),
-          action: paymentLink ? {
-            label: "Copy Link",
-            onClick: () => {
-              navigator.clipboard.writeText(paymentLink);
-              toast.info("Link copied to clipboard");
-            }
-          } : undefined,
-          duration: paymentLink ? 10000 : 4000, // Longer duration if there's a payment link
-        });
-        
-        // Reset selections after successful enrollment
-        setSelectedStudentId('');
-        setSelectedCourseId('');
-        setSelectedTeacherId('');
-        setGeneratedLink(null);
-        setSelectedAvailabilitySlot(null);
-        setTrialVerificationStatus({});
+      if (!paymentLink) {
+        console.error('Payment link generation failed');
+        toast.error('Failed to generate payment link. Please try again.');
+        setIsEnrolling(false);
+        return;
       }
+
+      console.log('Payment link generated successfully:', paymentLink);
+      
+      // Open payment link in new window/tab
+      window.open(paymentLink, '_blank');
+      
+      // Show success message
+      const student = students.find(s => s.id === selectedStudentId);
+      const course = courses.find(c => c.id === selectedCourseId);
+      
+      toast.success("Payment link generated successfully", {
+        description: `Payment link opened for ${student?.first_name} ${student?.last_name} to enroll in ${course?.title}`,
+      });
+      
+      // Reset selections after successful generation
+      setSelectedStudentId('');
+      setSelectedCourseId('');
+      setSelectedTeacherId('');
+      setSelectedAvailabilitySlot(null);
+      
     } catch (error) {
-      console.error("Error enrolling student:", error);
-      toast.error("Failed to enroll student. Please try again.");
+      console.error("Error during enrollment process:", error);
+      toast.error("Failed to process enrollment. Please try again.");
     } finally {
       setIsEnrolling(false);
     }
@@ -316,7 +170,7 @@ const EnrollmentPage: React.FC = () => {
   };
 
   // Get course details for form state
-  const selectedCourse = selectedCourseId ? availableCourses.find(course => course.id === selectedCourseId) : null;
+  const selectedCourse = selectedCourseId ? courses.find(course => course.id === selectedCourseId) : null;
   const isRecurring = selectedCourse?.duration_type === 'recurring';
   const courseType = selectedCourse?.course_type || '';
   const isGroupRecurring = courseType === 'group' && isRecurring;
@@ -326,17 +180,12 @@ const EnrollmentPage: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Enroll Students</h1>
+      <h1 className="text-2xl font-bold mb-6">Enroll Students in Courses</h1>
       
       <Card className="max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>Course Enrollment</CardTitle>
-          <CardDescription>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span>Trial completion verification enforced</span>
-            </div>
-          </CardDescription>
+          <CardTitle>Student Enrollment</CardTitle>
+          <CardDescription>Generate payment link for student course enrollment</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -364,44 +213,19 @@ const EnrollmentPage: React.FC = () => {
             <Select 
               value={selectedCourseId} 
               onValueChange={setSelectedCourseId}
-              disabled={coursesLoading || loadingCourses}
+              disabled={coursesLoading}
             >
               <SelectTrigger id="course">
-                <SelectValue placeholder={
-                  loadingCourses ? "Verifying trial completion..." : 
-                  selectedStudentId ? "Select a course" : 
-                  "Please select a student first"
-                } />
+                <SelectValue placeholder="Select a course" />
               </SelectTrigger>
               <SelectContent>
-                {availableCourses.length === 0 && selectedStudentId ? (
-                  <SelectItem value="no-courses-available" disabled>
-                    No courses available (trial classes required)
+                {courses.map((course) => (
+                  <SelectItem key={course.id} value={course.id}>
+                    {course.title} ({course.course_type}, {course.duration_type}) - ₹{course.final_price}
                   </SelectItem>
-                ) : (
-                  availableCourses.map((course) => (
-                    <SelectItem key={course.id} value={course.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{course.title} ({course.course_type}, {course.duration_type})</span>
-                        {selectedStudentId && trialVerificationStatus[course.id] && (
-                          <span className="text-green-600 text-xs">✓ Trial Complete</span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))
-                )}
+                ))}
               </SelectContent>
             </Select>
-            {selectedStudentId && availableCourses.length === 0 && !loadingCourses && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <p className="text-sm text-amber-800 font-medium">
-                    This student must complete trial classes before enrolling in courses.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
           
           {shouldDisplayTeacherField && (
@@ -451,28 +275,15 @@ const EnrollmentPage: React.FC = () => {
             </div>
           )}
           
-          {generatedLink && (
-            <div className="p-3 bg-slate-50 rounded-md border mt-4">
-              <p className="text-sm font-medium mb-2">Payment Link Generated</p>
-              <div className="flex items-center gap-2">
-                <input 
-                  type="text" 
-                  value={generatedLink}
-                  readOnly 
-                  className="w-full text-xs bg-white p-2 border rounded truncate"
-                />
-                <Button
-                  variant="outline" 
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => {
-                    navigator.clipboard.writeText(generatedLink);
-                    toast.info("Link copied to clipboard");
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
+          {selectedCourse && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm font-medium">Course Details</p>
+              <p className="text-xs text-gray-600 mt-1">
+                {selectedCourse.title} - ₹{selectedCourse.final_price}
+              </p>
+              <p className="text-xs text-gray-500">
+                {selectedCourse.course_type} course, {selectedCourse.duration_type} duration
+              </p>
             </div>
           )}
         </CardContent>
@@ -480,9 +291,9 @@ const EnrollmentPage: React.FC = () => {
           <Button 
             onClick={handleEnrollStudent} 
             className="w-full" 
-            disabled={!selectedStudentId || !selectedCourseId || isEnrolling || enrollmentLoading || availableCourses.length === 0}
+            disabled={!selectedStudentId || !selectedCourseId || isEnrolling || enrollmentLoading}
           >
-            {isEnrolling ? "Verifying & Enrolling..." : "Enroll Student"}
+            {isEnrolling ? "Processing..." : "Generate Payment Link"}
           </Button>
         </CardFooter>
       </Card>
