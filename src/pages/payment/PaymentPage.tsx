@@ -1,67 +1,122 @@
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { PaymentButton } from '@/components/PaymentButton';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 const PaymentPage = () => {
   const { courseId } = useParams();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  
   const orderId = searchParams.get('order_id');
   const studentId = searchParams.get('student_id');
+  const amount = searchParams.get('amount');
   
   const [courseData, setCourseData] = useState<any>(null);
   const [studentData, setStudentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
+  // Check authentication and user match
   useEffect(() => {
-    const fetchData = async () => {
-      if (!courseId || !orderId || !studentId) {
-        setError('Invalid payment link. Missing required parameters.');
-        setLoading(false);
-        return;
+    if (authLoading) return; // Wait for auth to load
+    
+    console.log('PaymentPage auth check:', { 
+      user: user?.id, 
+      studentId, 
+      isAuthenticated: !!user 
+    });
+    
+    // If not authenticated, redirect to login
+    if (!user) {
+      console.log('User not authenticated, redirecting to login');
+      toast.error('Please log in to complete your payment');
+      navigate('/auth/login');
+      return;
+    }
+    
+    // Verify that the logged-in user matches the student ID in the payment link
+    if (user.id !== studentId) {
+      console.error('User ID mismatch:', { loggedInUser: user.id, paymentStudentId: studentId });
+      setError('Payment link is not valid for the current user. Please log in with the correct account.');
+      setLoading(false);
+      return;
+    }
+    
+    // If user matches, proceed with data fetching
+    fetchPaymentData();
+  }, [user, authLoading, studentId, navigate]);
+  
+  const fetchPaymentData = async () => {
+    if (!courseId || !orderId || !studentId) {
+      setError('Invalid payment link. Missing required parameters.');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      console.log('Fetching payment data for:', { courseId, orderId, studentId });
+      
+      // Verify the order exists and belongs to the current user
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_id', orderId)
+        .eq('user_id', studentId)
+        .eq('course_id', courseId)
+        .single();
+      
+      if (orderError || !orderData) {
+        console.error('Order verification failed:', orderError);
+        throw new Error('Payment order not found or invalid');
       }
       
-      try {
-        // Fetch course details
-        const { data: course, error: courseError } = await supabase
-          .from('courses')
-          .select('title, description, final_price, image')
-          .eq('id', courseId)
-          .single();
-          
-        if (courseError || !course) {
-          throw new Error('Course not found');
-        }
+      console.log('Order verified:', orderData);
+      
+      // Fetch course details
+      const { data: course, error: courseError } = await supabase
+        .from('courses')
+        .select('title, description, final_price, image')
+        .eq('id', courseId)
+        .single();
         
-        // Fetch student details
-        const { data: student, error: studentError } = await supabase
-          .from('custom_users')
-          .select('first_name, last_name, email')
-          .eq('id', studentId)
-          .single();
-          
-        if (studentError || !student) {
-          throw new Error('Student not found');
-        }
-        
-        setCourseData(course);
-        setStudentData(student);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to load payment information. Please contact support.');
-      } finally {
-        setLoading(false);
+      if (courseError || !course) {
+        throw new Error('Course not found');
       }
-    };
-    
-    fetchData();
-  }, [courseId, orderId, studentId]);
+      
+      // Fetch student details (should match current user)
+      const { data: student, error: studentError } = await supabase
+        .from('custom_users')
+        .select('first_name, last_name, email')
+        .eq('id', studentId)
+        .single();
+        
+      if (studentError || !student) {
+        throw new Error('Student not found');
+      }
+      
+      // Double-check that the student email matches the logged-in user
+      if (student.email !== user?.email) {
+        throw new Error('Student email does not match logged-in user');
+      }
+      
+      setCourseData(course);
+      setStudentData(student);
+      console.log('Payment data loaded successfully');
+    } catch (error) {
+      console.error('Error fetching payment data:', error);
+      setError('Failed to load payment information. Please contact support.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const handlePaymentSuccess = () => {
     toast.success('Payment successful!', {
@@ -79,11 +134,14 @@ const PaymentPage = () => {
     });
   };
   
-  if (loading) {
+  // Show loading while authentication is being checked
+  if (authLoading || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <Loader2 className="w-10 h-10 animate-spin text-purple-500 mb-4" />
-        <p className="text-lg font-medium">Loading payment information...</p>
+        <p className="text-lg font-medium">
+          {authLoading ? 'Checking authentication...' : 'Loading payment information...'}
+        </p>
       </div>
     );
   }
@@ -98,9 +156,12 @@ const PaymentPage = () => {
           <CardContent>
             <p>{error}</p>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex gap-2">
             <Button variant="outline" onClick={() => window.history.back()}>
               Go Back
+            </Button>
+            <Button onClick={() => navigate('/auth/login')}>
+              Login
             </Button>
           </CardFooter>
         </Card>
