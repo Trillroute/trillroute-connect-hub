@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,75 +23,118 @@ const PaymentPage = () => {
   const [studentData, setStudentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sessionRetryCount, setSessionRetryCount] = useState(0);
+  const MAX_RETRY_COUNT = 5;
   
-  // Check authentication and user match
+  // Enhanced session checking with retries
   useEffect(() => {
-    const initializePayment = async () => {
-      console.log('PaymentPage initialization:', { 
+    const checkAuthWithRetry = async () => {
+      console.log('PaymentPage auth check:', { 
         user: user?.id, 
         studentId, 
         authLoading,
-        isAuthenticated: !!user 
+        retryCount: sessionRetryCount 
       });
       
-      // Wait a bit longer for auth to stabilize in new tab/window
       if (authLoading) {
-        console.log('Waiting for auth to load...');
+        console.log('Auth still loading, waiting...');
         return;
       }
       
-      // Give auth context more time to settle in new window
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Check if user is still loading after delay
-      if (!user) {
-        console.log('No user found after auth delay, checking session directly');
+      // If no user and we haven't exceeded retry count, try to get session directly
+      if (!user && sessionRetryCount < MAX_RETRY_COUNT) {
+        console.log('No user in context, checking Supabase session directly...');
         
-        // Try to get session directly from Supabase as fallback
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session?.user) {
-            console.log('No session found, redirecting to login');
-            toast.error('Please log in to complete your payment');
-            navigate('/auth/login');
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error('Session error:', sessionError);
+            // Retry after a short delay
+            setTimeout(() => {
+              setSessionRetryCount(prev => prev + 1);
+            }, 1000);
             return;
           }
           
-          // If we have a session but no user in context, verify against studentId
+          if (!session?.user) {
+            console.log('No session found, retrying...');
+            // Retry after a short delay
+            setTimeout(() => {
+              setSessionRetryCount(prev => prev + 1);
+            }, 1000);
+            return;
+          }
+          
+          console.log('Found session, verifying against student ID:', {
+            sessionUserId: session.user.id,
+            studentId
+          });
+          
+          // Verify session user matches student ID
           if (session.user.id !== studentId) {
-            console.error('Session user ID mismatch:', { sessionUser: session.user.id, paymentStudentId: studentId });
+            console.error('Session user mismatch:', {
+              sessionUser: session.user.id,
+              expectedStudent: studentId
+            });
             setError('Payment link is not valid for the current session. Please ensure you are logged in with the correct account.');
             setLoading(false);
             return;
           }
           
-          console.log('Session found, proceeding with payment data fetch');
-        } catch (sessionError) {
-          console.error('Error checking session:', sessionError);
-          toast.error('Authentication error. Please log in again.');
-          navigate('/auth/login');
+          // Session matches, proceed with data fetch
+          console.log('Session verified, proceeding with payment data fetch');
+          await fetchPaymentData(session.user);
           return;
-        }
-      } else {
-        // Verify that the logged-in user matches the student ID in the payment link
-        if (user.id !== studentId) {
-          console.error('User ID mismatch:', { loggedInUser: user.id, paymentStudentId: studentId });
-          setError('Payment link is not valid for the current user. Please ensure you are logged in with the correct account.');
-          setLoading(false);
+          
+        } catch (error) {
+          console.error('Error checking session:', error);
+          // Retry after a short delay
+          setTimeout(() => {
+            setSessionRetryCount(prev => prev + 1);
+          }, 1000);
           return;
         }
       }
       
-      // If we get here, proceed with data fetching
-      await fetchPaymentData();
+      // If we have exceeded retry count and still no user
+      if (!user && sessionRetryCount >= MAX_RETRY_COUNT) {
+        console.log('Max retries exceeded, redirecting to login');
+        toast.error('Please log in to complete your payment');
+        navigate('/auth/login');
+        return;
+      }
+      
+      // If we have a user, verify it matches the student ID
+      if (user) {
+        if (user.id !== studentId) {
+          console.error('User ID mismatch:', { 
+            loggedInUser: user.id, 
+            paymentStudentId: studentId 
+          });
+          setError('Payment link is not valid for the current user. Please ensure you are logged in with the correct account.');
+          setLoading(false);
+          return;
+        }
+        
+        // User matches, proceed with data fetch
+        await fetchPaymentData(user);
+      }
     };
     
-    initializePayment();
-  }, [user, authLoading, studentId, navigate]);
+    checkAuthWithRetry();
+  }, [user, authLoading, studentId, navigate, sessionRetryCount]);
   
-  const fetchPaymentData = async () => {
+  const fetchPaymentData = async (currentUser?: any) => {
     if (!courseId || !orderId || !studentId) {
       setError('Invalid payment link. Missing required parameters.');
+      setLoading(false);
+      return;
+    }
+    
+    const userToUse = currentUser || user;
+    if (!userToUse) {
+      setError('User authentication required.');
       setLoading(false);
       return;
     }
@@ -125,7 +169,7 @@ const PaymentPage = () => {
         throw new Error('Course not found');
       }
       
-      // Fetch student details (should match current user)
+      // Fetch student details
       const { data: student, error: studentError } = await supabase
         .from('custom_users')
         .select('first_name, last_name, email')
@@ -137,14 +181,8 @@ const PaymentPage = () => {
       }
       
       // Get current user email for comparison
-      const currentUserEmail = user?.email;
-      if (!currentUserEmail) {
-        // Try to get email from session if user context doesn't have it
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email && session.user.email !== student.email) {
-          throw new Error('Student email does not match logged-in user');
-        }
-      } else if (student.email !== currentUserEmail) {
+      const currentUserEmail = userToUse.email;
+      if (student.email !== currentUserEmail) {
         throw new Error('Student email does not match logged-in user');
       }
       
@@ -183,6 +221,11 @@ const PaymentPage = () => {
         <p className="text-lg font-medium">
           {authLoading ? 'Verifying authentication...' : 'Loading payment information...'}
         </p>
+        {sessionRetryCount > 0 && sessionRetryCount < MAX_RETRY_COUNT && (
+          <p className="text-sm text-muted-foreground mt-2">
+            Checking session... (attempt {sessionRetryCount + 1}/{MAX_RETRY_COUNT})
+          </p>
+        )}
       </div>
     );
   }

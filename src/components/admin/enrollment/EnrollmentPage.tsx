@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -145,21 +146,19 @@ const EnrollmentPage: React.FC = () => {
 
         console.log('Payment link generated successfully:', paymentLink);
         
-        // Open payment link in same window to maintain session
-        // Use a slight delay to ensure the current state is saved
-        setTimeout(() => {
-          window.location.href = paymentLink;
-        }, 100);
-        
-        // Show success message
         const student = students.find(s => s.id === selectedStudentId);
         const course = courses.find(c => c.id === selectedCourseId);
         
+        // Show success message immediately
         toast.success("Redirecting to payment page", {
           description: `Opening payment page for ${student?.first_name} ${student?.last_name} to enroll in ${course?.title}`,
         });
         
-        // Don't reset selections yet since we're navigating away
+        // Navigate in the same window with a slight delay to ensure state is preserved
+        setTimeout(() => {
+          console.log('Navigating to payment page:', paymentLink);
+          window.location.href = paymentLink;
+        }, 500);
       }
       
     } catch (error) {
