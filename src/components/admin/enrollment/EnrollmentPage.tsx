@@ -2,14 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useStudents } from '@/hooks/useStudents';
 import { useCourses } from '@/hooks/useCourses';
 import { useCourseTeachers } from '@/hooks/useCourseTeachers';
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import TeacherAvailabilityDialog from './TeacherAvailabilityDialog';
+import { EnrollmentForm } from './components/EnrollmentForm';
 import { UserAvailability } from '@/services/availability/types';
 
 const EnrollmentPage: React.FC = () => {
@@ -220,106 +219,26 @@ const EnrollmentPage: React.FC = () => {
           <CardTitle>Student Enrollment</CardTitle>
           <CardDescription>Enroll students in courses (free or paid)</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="student">Select Student</Label>
-            <Select 
-              value={selectedStudentId} 
-              onValueChange={setSelectedStudentId}
-              disabled={studentsLoading}
-            >
-              <SelectTrigger id="student">
-                <SelectValue placeholder="Select a student" />
-              </SelectTrigger>
-              <SelectContent>
-                {students.map((student) => (
-                  <SelectItem key={student.id} value={student.id}>
-                    {student.first_name} {student.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="course">Select Course</Label>
-            <Select 
-              value={selectedCourseId} 
-              onValueChange={setSelectedCourseId}
-              disabled={coursesLoading}
-            >
-              <SelectTrigger id="course">
-                <SelectValue placeholder="Select a course" />
-              </SelectTrigger>
-              <SelectContent>
-                {courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.title} ({course.course_type}, {course.duration_type}) - ₹{course.final_price}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {shouldDisplayTeacherField && (
-            <div className="space-y-2">
-              <Label htmlFor="teacher">Select Teacher</Label>
-              <Select 
-                value={selectedTeacherId} 
-                onValueChange={setSelectedTeacherId}
-                disabled={teachersLoading}
-              >
-                <SelectTrigger id="teacher">
-                  <SelectValue placeholder="Select a teacher" />
-                </SelectTrigger>
-                <SelectContent>
-                  {teachers.map((teacher) => (
-                    <SelectItem key={teacher.id} value={teacher.id}>
-                      {teacher.first_name} {teacher.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {selectedAvailabilitySlot && (
-            <div className="p-3 bg-slate-50 rounded-md border">
-              <p className="text-sm font-medium">Selected Time Slot</p>
-              <p className="text-xs text-gray-600 mt-1">
-                {getDayName(selectedAvailabilitySlot.dayOfWeek)}, {formatTime(selectedAvailabilitySlot.startTime)} - {formatTime(selectedAvailabilitySlot.endTime)}
-              </p>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-xs mt-1 h-7 px-2" 
-                onClick={() => setShowTeacherDialog(true)}
-              >
-                Change Slot
-              </Button>
-            </div>
-          )}
-          
-          {isGroupRecurring && !selectedAvailabilitySlot && selectedCourse?.instructor_ids?.length > 0 && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-sm text-amber-800">
-                This is a recurring group course. You'll need to select a time slot where all teachers are available.
-              </p>
-            </div>
-          )}
-          
-          {selectedCourse && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm font-medium">Course Details</p>
-              <p className="text-xs text-gray-600 mt-1">
-                {selectedCourse.title} - ₹{selectedCourse.final_price || 0}
-                {selectedCourse.final_price === 0 && <span className="text-green-600 font-medium"> (FREE)</span>}
-              </p>
-              <p className="text-xs text-gray-500">
-                {selectedCourse.course_type} course, {selectedCourse.duration_type} duration
-              </p>
-            </div>
-          )}
+        <CardContent>
+          <EnrollmentForm
+            students={students}
+            courses={courses}
+            teachers={teachers}
+            studentsLoading={studentsLoading}
+            coursesLoading={coursesLoading}
+            teachersLoading={teachersLoading}
+            selectedStudentId={selectedStudentId}
+            selectedCourseId={selectedCourseId}
+            selectedTeacherId={selectedTeacherId}
+            selectedAvailabilitySlot={selectedAvailabilitySlot}
+            setSelectedStudentId={setSelectedStudentId}
+            setSelectedCourseId={setSelectedCourseId}
+            setSelectedTeacherId={setSelectedTeacherId}
+            onChangeTimeSlot={() => setShowTeacherDialog(true)}
+            selectedCourse={selectedCourse}
+            shouldDisplayTeacherField={shouldDisplayTeacherField}
+            isGroupRecurring={isGroupRecurring}
+          />
         </CardContent>
         <CardFooter>
           <Button 
