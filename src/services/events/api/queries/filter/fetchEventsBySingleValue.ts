@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const fetchEventsBySingleValue = async (
   field: string,
   value: string | number | boolean
-) => {
+): Promise<any[]> => {
   try {
     const { data, error } = await supabase
       .from('user_events')
