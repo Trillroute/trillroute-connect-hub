@@ -75,11 +75,21 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
     }
   };
 
+  const handleSlotSelect = (slot: UserAvailability) => {
+    console.log('Slot selected in dialog:', slot);
+    // Pass the complete slot data with all necessary information
+    onSlotSelect({
+      ...slot,
+      // Ensure we have the day of week from the slot data
+      dayOfWeek: slot.dayOfWeek
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Teacher's Availability</DialogTitle>
+          <DialogTitle>Select Available Time Slot</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="0" onValueChange={(value) => setSelectedDay(parseInt(value))}>
@@ -98,7 +108,7 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
           {dayNames.map((day, index) => (
             <TabsContent key={index} value={index.toString()}>
               <div className="py-4">
-                <h3 className="text-lg font-medium mb-3">{day} Slots</h3>
+                <h3 className="text-lg font-medium mb-3">{day} Available Slots</h3>
                 
                 {isLoading ? (
                   <p>Loading availability slots...</p>
@@ -108,14 +118,17 @@ const TeacherAvailabilityDialog: React.FC<TeacherAvailabilityDialogProps> = ({
                       <Button
                         key={slot.id}
                         variant="outline"
-                        className="justify-start p-4 h-auto"
-                        onClick={() => onSlotSelect(slot)}
+                        className="justify-start p-4 h-auto hover:bg-blue-50 border-blue-200"
+                        onClick={() => handleSlotSelect(slot)}
                       >
                         <div>
                           <div className="font-medium">{formatTimeRange(slot)}</div>
                           {slot.category && (
                             <div className="text-xs text-muted-foreground">{slot.category}</div>
                           )}
+                          <div className="text-xs text-green-600 mt-1">
+                            Click to book this slot
+                          </div>
                         </div>
                       </Button>
                     ))}
