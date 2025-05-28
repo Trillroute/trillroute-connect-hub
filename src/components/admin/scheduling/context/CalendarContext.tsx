@@ -83,6 +83,7 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
 
   // Load events and availabilities when component mounts
   useEffect(() => {
+    console.log('CalendarProvider mounting, calling refreshEvents');
     refreshEvents();
     
     // Load staff availabilities - this will populate the availabilities state
@@ -103,6 +104,20 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Debug log when events change
+  useEffect(() => {
+    console.log('CalendarProvider: Events updated:', events.length, 'events');
+    events.forEach((event, index) => {
+      console.log(`Event ${index + 1}:`, {
+        id: event.id,
+        title: event.title,
+        start: event.start,
+        end: event.end,
+        userId: event.userId || event.user_id
+      });
+    });
+  }, [events]);
 
   return (
     <CalendarContext.Provider

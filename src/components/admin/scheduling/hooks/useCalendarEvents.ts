@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { CalendarEvent } from '../types';
 import { useToast } from '@/hooks/use-toast';
@@ -17,13 +18,19 @@ export const useCalendarEvents = () => {
 
   // Fetch events from database
   const refreshEvents = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, cannot fetch events');
+      return;
+    }
     
+    console.log('refreshEvents called with user:', { id: user.id, role });
     setIsLoading(true);
     try {
       const fetchedEvents = await fetchEvents(user.id, role);
+      console.log('Fetched events in useCalendarEvents:', fetchedEvents.length);
       setEvents(fetchedEvents);
     } catch (error) {
+      console.error('Error in refreshEvents:', error);
       toast({
         title: "Error fetching events",
         description: "Could not load your calendar events",
