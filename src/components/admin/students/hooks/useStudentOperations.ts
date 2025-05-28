@@ -1,26 +1,30 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { UserManagementUser } from '@/types/student';
 import { updateUser } from '@/components/admin/users/UserServiceExtended';
+import { addUser } from '@/components/admin/users/UserService';
+import { NewUserData } from '@/components/admin/users/AddUserDialog';
 
 export const useStudentOperations = (loadStudents: () => Promise<void>) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleAddStudent = async (userData: any): Promise<boolean> => {
+  const handleAddStudent = async (userData: NewUserData): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Mock implementation - replace with actual API call
       console.log('Adding student:', userData);
       
-      // Simulate API call success
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Call the actual addUser function from UserService
+      await addUser(userData);
       
       toast({
         title: "Success",
         description: "Student added successfully",
       });
       
+      // Reload the students list
+      await loadStudents();
       return true;
     } catch (error) {
       console.error('Failed to add student:', error);

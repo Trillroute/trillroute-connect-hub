@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserManagementUser } from '@/types/student';
 import { hashPassword } from '@/integrations/supabase/client';
@@ -20,6 +21,8 @@ export const fetchAllUsers = async (): Promise<UserManagementUser[]> => {
 };
 
 export const addUser = async (userData: NewUserData) => {
+  console.log('Creating new user with data:', userData);
+  
   const passwordHash = await hashPassword(userData.password);
   
   const userId = crypto.randomUUID();
@@ -32,25 +35,30 @@ export const addUser = async (userData: NewUserData) => {
     last_name: userData.lastName,
     role: userData.role,
     created_at: new Date().toISOString(),
-    date_of_birth: userData.dateOfBirth,
-    profile_photo: userData.profilePhoto,
-    parent_name: userData.parentName,
-    guardian_relation: userData.role === 'student' ? userData.guardianRelation : null,
-    primary_phone: userData.primaryPhone,
-    secondary_phone: userData.secondaryPhone,
-    whatsapp_enabled: userData.whatsappEnabled,
-    address: userData.address,
-    id_proof: userData.idProof,
-    admin_level_name: userData.role === 'admin' ? "Limited View" : null
+    date_of_birth: userData.dateOfBirth || null,
+    profile_photo: userData.profilePhoto || null,
+    parent_name: userData.parentName || null,
+    guardian_relation: userData.role === 'student' ? (userData.guardianRelation || null) : null,
+    primary_phone: userData.primaryPhone || null,
+    secondary_phone: userData.secondaryPhone || null,
+    whatsapp_enabled: userData.whatsappEnabled || false,
+    address: userData.address || null,
+    id_proof: userData.idProof || null,
+    admin_level_name: userData.role === 'admin' ? (userData.adminLevelName || "Limited View") : null
   };
+  
+  console.log('Inserting user data:', dbUserData);
   
   const { error } = await supabase
     .from('custom_users')
     .insert(dbUserData);
 
   if (error) {
+    console.error('Error inserting user:', error);
     throw error;
   }
+  
+  console.log('User created successfully');
 };
 
 export const deleteUser = async (userId: string) => {
