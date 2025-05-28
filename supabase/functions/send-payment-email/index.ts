@@ -46,7 +46,7 @@ serve(async (req) => {
       console.error('RESEND_API_KEY environment variable is not set');
       throw new Error('Email service not configured properly');
     }
-    console.log('Resend API Key found:', resendApiKey ? 'Yes' : 'No');
+    console.log('Resend API Key found');
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -122,10 +122,10 @@ serve(async (req) => {
     </html>
     `;
 
-    // Try sending email with better error handling
     console.log(`Attempting to send email to ${student.email}`);
     
     try {
+      // Use the verified Resend domain that should work for any recipient
       const emailResponse = await resend.emails.send({
         from: 'Music Course Platform <onboarding@resend.dev>',
         to: [student.email],
@@ -183,12 +183,9 @@ serve(async (req) => {
     } catch (resendError) {
       console.error('Resend API Error:', resendError);
       
-      // Check if it's a 403 error (likely API key issue)
-      if (resendError.message?.includes('403') || resendError.message?.includes('Forbidden')) {
-        console.error('403 Error - likely API key issue. Please check:');
-        console.error('1. API key is correct');
-        console.error('2. Domain is verified in Resend dashboard');
-        console.error('3. API key has proper permissions');
+      // Check if it's the domain verification error
+      if (resendError.message?.includes('testing emails') || resendError.message?.includes('verify a domain')) {
+        console.error('Domain verification required. Error details:', resendError.message);
         
         // Log to database as failed
         await supabase
@@ -204,12 +201,12 @@ serve(async (req) => {
               course_title: course.title,
               payment_link: paymentLink,
               amount: course.final_price,
-              error: 'API key authentication failed',
+              error: 'Domain verification required',
               error_details: resendError.message
             }
           });
 
-        throw new Error('Email sending failed: API key authentication issue. Please verify your Resend API key and domain verification.');
+        throw new Error('Email sending failed: Domain verification required. Please verify your domain at resend.com/domains to send emails to any recipient.');
       }
       
       throw resendError;
