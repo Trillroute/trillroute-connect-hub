@@ -17,9 +17,30 @@ interface WeekViewProps {
 const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   const { currentDate, events, handleUpdateEvent, handleDeleteEvent, availabilities } = useCalendar();
   
+  // Add detailed logging for week view
+  console.log('WeekView: Rendering with current date:', currentDate);
+  console.log('WeekView: Events received from context:', events);
+  console.log('WeekView: Number of events:', events.length);
+  
+  events.forEach((event, index) => {
+    console.log(`WeekView: Event ${index + 1}:`, {
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      startType: typeof event.start,
+      endType: typeof event.end,
+      startValid: event.start instanceof Date && !isNaN(event.start.getTime()),
+      endValid: event.end instanceof Date && !isNaN(event.end.getTime())
+    });
+  });
+  
   // Generate days and hours for the week view
   const weekDays = getWeekDays(currentDate);
   const hours = getHourCells();
+
+  console.log('WeekView: Week days:', weekDays.map(d => d.toDateString()));
+  console.log('WeekView: Hours:', hours);
 
   // Custom hook for week view state and handlers
   const {

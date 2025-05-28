@@ -1,45 +1,125 @@
 
 import React from 'react';
+import { CalendarEvent } from '../context/calendarTypes';
+import { AvailabilitySlot } from './weekViewUtils';
+import WeekDayHeader from './WeekDayHeader';
+import WeekViewEvent from './WeekViewEvent';
+import WeekAvailabilitySlots from './WeekAvailabilitySlots';
 
 interface WeekTimeGridProps {
   hours: number[];
   weekDays: Date[];
-  onCellClick: (dayIndex: number, hour: number) => void;
-  getAvailabilityClass: (dayIndex: number, hour: number) => string;
+  events: CalendarEvent[];
+  availabilitySlots: AvailabilitySlot[];
+  selectedEvent: CalendarEvent | null;
+  openEventActions: (event: CalendarEvent) => void;
+  handleCellClick: (dayIndex: number, hour: number) => void;
+  handleAvailabilityClick: (slot: AvailabilitySlot) => void;
+  handleEdit: (event: CalendarEvent) => void;
+  confirmDelete: (event: CalendarEvent) => void;
 }
 
 const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   hours,
   weekDays,
-  onCellClick,
-  getAvailabilityClass
+  events,
+  availabilitySlots,
+  selectedEvent,
+  openEventActions,
+  handleCellClick,
+  handleAvailabilityClick,
+  handleEdit,
+  confirmDelete
 }) => {
+  console.log('WeekTimeGrid: Processing events for display:', events.length);
+  
+  // Filter events that fall within the current week
+  const weekEvents = events.filter(event => {
+    if (!event.start || !(event.start instanceof Date) || isNaN(event.start.getTime())) {
+      console.warn('WeekTimeGrid: Invalid event start date:', event);
+      return false;
+    }
+    
+    const eventDate = new Date(event.start);
+    const weekStart = new Date(weekDays[0]);
+    const weekEnd = new Date(weekDays[6]);
+    weekEnd.setHours(23, 59, 59, 999);
+    
+    const isInWeek = eventDate >= weekStart && eventDate <= weekEnd;
+    console.log('WeekTimeGrid: Event', event.title, 'is in week:', isInWeek, {
+      eventDate: eventDate.toISOString(),
+      weekStart: weekStart.toISOString(),
+      weekEnd: weekEnd.toISOString()
+    });
+    
+    return isInWeek;
+  });
+  
+  console.log('WeekTimeGrid: Filtered week events:', weekEvents.length);
+  weekEvents.forEach((event, index) => {
+    console.log(`WeekTimeGrid: Week event ${index + 1}:`, {
+      title: event.title,
+      start: event.start,
+      dayOfWeek: event.start instanceof Date ? event.start.getDay() : 'invalid'
+    });
+  });
+
   return (
-    <div className="flex">
-      {/* Time labels column */}
-      <div className="w-16 flex-shrink-0 sticky left-0 bg-white z-10">
+    <div className="grid grid-cols-8 h-full">
+      {/* Time column */}
+      <div className="border-r">
+        <div className="h-16 border-b"></div>
         {hours.map(hour => (
-          <div 
-            key={hour} 
-            className="relative h-[60px] border-b border-r border-gray-200"
-          >
-            <div className="absolute -top-3 right-2 text-xs text-gray-500">
-              {hour === 12 ? '12 PM' : hour < 12 ? `${hour} AM` : `${hour-12} PM`}
-            </div>
+          <div key={hour} className="h-16 border-b text-xs p-1 text-gray-500">
+            {hour === 0 ? '12:00 AM' : hour < 12 ? `${hour}:00 AM` : hour === 12 ? '12:00 PM' : `${hour - 12}:00 PM`}
           </div>
         ))}
       </div>
       
       {/* Day columns */}
       {weekDays.map((day, dayIndex) => (
-        <div key={dayIndex} className="flex-1 relative">
+        <div key={dayIndex} className="border-r relative">
+          <WeekDayHeader day={day} />
+          
+          {/* Hour cells */}
           {hours.map(hour => (
             <div
               key={hour}
-              className={`h-[60px] border-b border-r border-gray-200 ${getAvailabilityClass(dayIndex, hour)}`}
-              onClick={() => onCellClick(dayIndex, hour)}
-            />
+              className="h-16 border-b cursor-pointer hover:bg-gray-50 relative"
+              onClick={() => handleCellClick(dayIndex, hour)}
+            >
+              {/* Events for this time slot */}
+              {weekEvents
+                .filter(event => {
+                  if (!(event.start instanceof Date)) return false;
+                  const eventDay = event.start.getDay();
+                  const eventHour = event.start.getHours();
+                  const matches = eventDay === day.getDay() && eventHour === hour;
+                  if (matches) {
+                    console.log(`WeekTimeGrid: Event "${event.title}" matches day ${eventDay} hour ${eventHour}`);
+                  }
+                  return matches;
+                })
+                .map(event => (
+                  <WeekViewEvent
+                    key={event.id}
+                    event={event}
+                    isSelected={selectedEvent?.id === event.id}
+                    onClick={() => openEventActions(event)}
+                    onEdit={() => handleEdit(event)}
+                    onDelete={() => confirmDelete(event)}
+                  />
+                ))
+              }
+            </div>
           ))}
+          
+          {/* Availability slots */}
+          <WeekAvailabilitySlots
+            dayOfWeek={day.getDay()}
+            availabilitySlots={availabilitySlots.filter(slot => slot.dayOfWeek === day.getDay())}
+            onSlotClick={handleAvailabilityClick}
+          />
         </div>
       ))}
     </div>
