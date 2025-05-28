@@ -69,7 +69,7 @@ export const createRazorpayOrder = async (amount: number, courseId: string, user
 };
 
 export const verifyPayment = async (response: RazorpayHandlerResponse, courseId: string, userId: string) => {
-  console.log('Payment verification response:', response);
+  console.log('Starting payment verification and enrollment process:', response);
   
   try {
     // For QR code payments, we generate pseudo-IDs if they're not present
@@ -84,25 +84,39 @@ export const verifyPayment = async (response: RazorpayHandlerResponse, courseId:
       is_qr_payment: isQrPayment
     };
 
-    console.log('Sending verification data to backend:', verificationData);
+    console.log('Sending verification data to backend for enrollment:', verificationData);
 
-    // Call verify-razorpay-payment edge function
+    // Call verify-razorpay-payment edge function which will handle both verification AND enrollment
     const { data, error } = await supabase.functions.invoke('verify-razorpay-payment', {
       body: verificationData
     });
     
     if (error) {
-      console.error('Payment verification error:', error);
+      console.error('Payment verification and enrollment error:', error);
       toast.error('Payment Verification Failed', {
         description: 'Please contact support if payment was deducted'
       });
       throw error;
     }
 
-    console.log('Payment verification success:', data);
+    console.log('Payment verification and enrollment success:', data);
+    
+    // Check if enrollment was confirmed
+    if (data.enrollment_confirmed) {
+      console.log('Student successfully enrolled in course');
+      toast.success('Enrollment Successful!', {
+        description: 'You have been enrolled in the course'
+      });
+    } else {
+      console.warn('Payment verified but enrollment status unclear');
+      toast.success('Payment Successful', {
+        description: 'Your payment has been processed'
+      });
+    }
+    
     return data;
   } catch (error) {
-    console.error('Payment verification error:', error);
+    console.error('Payment verification and enrollment error:', error);
     throw error;
   }
 };

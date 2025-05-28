@@ -46,7 +46,7 @@ export const PaymentButton = ({
         return;
       }
       
-      console.log('Creating Razorpay order for:', { courseId, studentId, amount });
+      console.log('Creating Razorpay order for enrollment:', { courseId, studentId, amount });
       
       const orderData = await createRazorpayOrder(amount, courseId, studentId);
       if (!orderData) {
@@ -55,7 +55,7 @@ export const PaymentButton = ({
         return;
       }
 
-      console.log('Order created successfully:', orderData);
+      console.log('Order created successfully for enrollment:', orderData);
 
       const options = {
         key: orderData.key,
@@ -66,18 +66,35 @@ export const PaymentButton = ({
         order_id: orderData.orderId,
         handler: async (response: any) => {
           try {
-            console.log('Payment successful, verifying:', response);
+            console.log('Payment successful, processing enrollment:', response);
             
             toast.success('Payment successful!', {
               description: 'Processing your enrollment...'
             });
             
-            await verifyPayment(response, courseId, studentId);
-            if (onSuccess) onSuccess(response);
+            // This will now handle both payment verification AND student enrollment
+            const verificationResult = await verifyPayment(response, courseId, studentId);
+            
+            if (verificationResult && verificationResult.enrollment_confirmed) {
+              console.log('Student successfully enrolled after payment');
+              toast.success('Enrollment Complete!', {
+                description: 'You are now enrolled in this course'
+              });
+              
+              if (onSuccess) onSuccess(verificationResult);
+              
+              // Redirect to course page after successful enrollment
+              setTimeout(() => {
+                window.location.href = `/courses/${courseId}?enrollment=success`;
+              }, 2000);
+            } else {
+              console.warn('Payment verified but enrollment not confirmed');
+              if (onSuccess) onSuccess(verificationResult);
+            }
           } catch (error) {
             console.error('Error in payment handler:', error);
-            toast.error('Payment verification failed', {
-              description: 'Please contact support if payment was deducted.'
+            toast.error('Enrollment Failed', {
+              description: 'Payment was successful but enrollment failed. Please contact support.'
             });
             if (onError) onError(error);
           }
@@ -99,7 +116,7 @@ export const PaymentButton = ({
         }
       };
 
-      console.log('Opening Razorpay checkout with options:', options);
+      console.log('Opening Razorpay checkout for enrollment:', options);
       const razorpayInstance = new razorpay(options);
       razorpayInstance.open();
 

@@ -148,19 +148,19 @@ const checkOrderExists = async (
   }
 };
 
-// Function to update course enrollment
+// Enhanced function to update course enrollment with better error handling
 const updateCourseEnrollment = async (
   supabase: any,
   courseId: string,
   userId: string
 ): Promise<boolean> => {
   try {
-    logStep("Updating course enrollment", { courseId, userId });
+    logStep("Starting course enrollment update", { courseId, userId });
     
     // Get current course data
     const { data: courseData, error: courseError } = await supabase
       .from("courses")
-      .select("student_ids, students")
+      .select("student_ids, students, title")
       .eq("id", courseId)
       .single();
 
@@ -169,19 +169,27 @@ const updateCourseEnrollment = async (
       return false;
     }
 
+    if (!courseData) {
+      logStep("Course not found");
+      return false;
+    }
+
     // Check if student is already enrolled
-    const currentStudentIds = courseData.student_ids || [];
+    const currentStudentIds = Array.isArray(courseData.student_ids) ? courseData.student_ids : [];
     if (currentStudentIds.includes(userId)) {
       logStep("Student already enrolled in course");
-      return true;
+      return true; // Still return true since they are enrolled
     }
 
     // Add student to course
+    const updatedStudentIds = [...currentStudentIds, userId];
+    const updatedStudentCount = updatedStudentIds.length;
+
     const { error: updateError } = await supabase
       .from("courses")
       .update({
-        student_ids: [...currentStudentIds, userId],
-        students: (courseData.students || 0) + 1
+        student_ids: updatedStudentIds,
+        students: updatedStudentCount
       })
       .eq("id", courseId);
 
@@ -190,7 +198,41 @@ const updateCourseEnrollment = async (
       return false;
     }
 
-    logStep("Course enrollment updated successfully");
+    logStep("Course enrollment updated successfully", { 
+      courseTitle: courseData.title,
+      newStudentCount: updatedStudentCount 
+    });
+
+    // Create enrollment event record for tracking
+    try {
+      const { error: eventError } = await supabase
+        .from("user_events")
+        .insert({
+          user_id: userId,
+          event_type: "enrollment",
+          title: `Enrolled in ${courseData.title}`,
+          description: "Course enrollment via payment",
+          start_time: new Date().toISOString(),
+          end_time: new Date().toISOString(),
+          metadata: {
+            courseId,
+            enrollmentMethod: "payment",
+            paymentVerified: true,
+            enrollmentDate: new Date().toISOString()
+          }
+        });
+
+      if (eventError) {
+        logStep("Warning: Could not create enrollment event", eventError);
+        // Don't fail the enrollment if event creation fails
+      } else {
+        logStep("Enrollment event created successfully");
+      }
+    } catch (eventException) {
+      logStep("Exception creating enrollment event", { error: eventException.message });
+      // Continue with enrollment even if event creation fails
+    }
+
     return true;
   } catch (error) {
     logStep("Exception in updateCourseEnrollment", { error: error.message });
@@ -237,7 +279,11 @@ const updatePaymentStatus = async (
           status: "completed",
           razorpay_signature: razorpaySignature,
           updated_at: new Date().toISOString(),
-          metadata: { isQrPayment, verification_time: new Date().toISOString() }
+          metadata: { 
+            isQrPayment, 
+            verification_time: new Date().toISOString(),
+            enrollment_completed: true
+          }
         })
         .eq("id", existingPayment.id);
       
@@ -261,7 +307,11 @@ const updatePaymentStatus = async (
           amount: amount,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          metadata: { isQrPayment, initial_verification_time: new Date().toISOString() }
+          metadata: { 
+            isQrPayment, 
+            initial_verification_time: new Date().toISOString(),
+            enrollment_completed: true
+          }
         });
       
       if (insertError) {
@@ -367,7 +417,7 @@ serve(async (req) => {
       );
     }
 
-    // Check if this is a QR code payment (will have payment ID starting with qr_payment_)
+    // Check if this is a QR code payment
     const isQrCodePayment = requestData.razorpay_payment_id?.startsWith('qr_payment_') || 
                             requestData.is_qr_payment === true;
     
@@ -439,7 +489,27 @@ serve(async (req) => {
     // Get course price for payment record
     const amount = await getCoursePrice(supabase, requestData.course_id);
     
-    // Update payment status
+    // CRITICAL: Update course enrollment FIRST before payment status
+    const enrollmentSuccess = await updateCourseEnrollment(
+      supabase,
+      requestData.course_id,
+      requestData.user_id
+    );
+
+    if (!enrollmentSuccess) {
+      logStep("CRITICAL: Failed to update course enrollment");
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to enroll student in course",
+          message: "Payment was processed but enrollment failed. Please contact support." 
+        }),
+        { headers: responseHeaders, status: 500 }
+      );
+    }
+
+    logStep("ENROLLMENT SUCCESSFUL - Student enrolled in course");
+
+    // Update payment status after successful enrollment
     const paymentUpdateSuccess = await updatePaymentStatus(
       supabase,
       requestData.razorpay_payment_id || `qr_payment_${Date.now()}`,
@@ -452,22 +522,7 @@ serve(async (req) => {
     );
     
     if (!paymentUpdateSuccess) {
-      logStep("Failed to update payment status, but continuing with enrollment");
-    }
-    
-    // Update course enrollment
-    const enrollmentSuccess = await updateCourseEnrollment(
-      supabase,
-      requestData.course_id,
-      requestData.user_id
-    );
-
-    if (!enrollmentSuccess) {
-      logStep("Failed to update course enrollment");
-      return new Response(
-        JSON.stringify({ error: "Failed to update course enrollment" }),
-        { headers: responseHeaders, status: 500 }
-      );
+      logStep("Warning: Failed to update payment status, but enrollment was successful");
     }
 
     // Log user activity
@@ -480,11 +535,12 @@ serve(async (req) => {
 
     logStep("Payment verification and enrollment completed successfully");
 
-    // Return success response
+    // Return success response with enrollment confirmation
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Payment verification and enrollment completed successfully",
+        message: "Payment verified and student enrolled successfully",
+        enrollment_confirmed: true,
         redirectUrl: `/courses/${requestData.course_id}?enrollment=success&payment=verified`,
         signatureVerified: signatureVerified,
         orderVerified: orderVerified,
@@ -499,7 +555,10 @@ serve(async (req) => {
     });
     
     return new Response(
-      JSON.stringify({ error: error.message || "Payment verification failed" }),
+      JSON.stringify({ 
+        error: error.message || "Payment verification failed",
+        enrollment_status: "failed"
+      }),
       { headers: responseHeaders, status: 400 }
     );
   }
