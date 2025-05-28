@@ -45,7 +45,8 @@ export function useCalendarEventCreation() {
         return 60;
       }
 
-      const classTypeId = firstClassType.class_type_id;
+      // Safely convert class_type_id to string
+      const classTypeId = String(firstClassType.class_type_id);
 
       const { data: classType, error: classTypeError } = await supabase
         .from('class_types')
