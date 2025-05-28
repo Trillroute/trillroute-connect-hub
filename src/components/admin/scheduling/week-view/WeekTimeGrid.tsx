@@ -105,9 +105,16 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
                     key={event.id}
                     event={event}
                     isSelected={selectedEvent?.id === event.id}
-                    onClick={() => openEventActions(event)}
+                    onSelect={() => openEventActions(event)}
                     onEdit={() => handleEdit(event)}
                     onDelete={() => confirmDelete(event)}
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: '2px',
+                      right: '2px',
+                      bottom: '2px'
+                    }}
                   />
                 ))
               }
@@ -116,9 +123,9 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
           
           {/* Availability slots */}
           <WeekAvailabilitySlots
-            dayOfWeek={day.getDay()}
+            dayIndex={dayIndex}
             availabilitySlots={availabilitySlots.filter(slot => slot.dayOfWeek === day.getDay())}
-            onSlotClick={handleAvailabilityClick}
+            onAvailabilityClick={handleAvailabilityClick}
           />
         </div>
       ))}
