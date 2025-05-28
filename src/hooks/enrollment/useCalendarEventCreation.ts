@@ -158,15 +158,10 @@ export function useCalendarEventCreation() {
       
       for (let week = 0; week < weeksToCreate; week++) {
         const eventDate = new Date(startDate);
-        eventDate.setDate(startDate.getDate() + (week * 7));
         
-        // Find the next occurrence of the specified day of week
-        const dayDiff = availabilitySlot.dayOfWeek - eventDate.getDay();
-        if (dayDiff < 0) {
-          eventDate.setDate(eventDate.getDate() + (7 + dayDiff));
-        } else {
-          eventDate.setDate(eventDate.getDate() + dayDiff);
-        }
+        // Calculate the date for this week's class
+        const daysToAdd = (7 * week) + (availabilitySlot.dayOfWeek - eventDate.getDay() + 7) % 7;
+        eventDate.setDate(startDate.getDate() + daysToAdd);
 
         // Create start time from availability slot
         const [startHour, startMinute] = availabilitySlot.startTime.split(':').map(Number);
