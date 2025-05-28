@@ -42,6 +42,10 @@ export const useLegacyViewData = () => {
       0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []
     };
     
+    console.log('Legacy View: Processing events and availabilities');
+    console.log('Legacy View: Events received:', events);
+    console.log('Legacy View: Availabilities received:', availabilities);
+    
     // Process availabilities
     if (availabilities && displayMode !== 'events') {
       Object.entries(availabilities).forEach(([userId, userData]) => {
@@ -84,32 +88,71 @@ export const useLegacyViewData = () => {
       });
     }
     
-    // Process events
+    // Process events with proper validation
     if (events && displayMode !== 'slots') {
-      events.forEach(event => {
-        const dayOfWeek = event.start.getDay();
-        const hour = event.start.getHours();
-        const minute = event.start.getMinutes();
-        const formattedTime = formatTime(hour, minute);
+      console.log('Legacy View: Processing events for time slots');
+      
+      events.forEach((event, index) => {
+        console.log(`Legacy View: Processing event ${index}:`, event);
         
-        // Find if time slot already exists
-        let timeSlot = slotsByDay[dayOfWeek].find(s => s.time === formattedTime);
-        
-        if (!timeSlot) {
-          timeSlot = {
-            time: formattedTime,
-            items: []
-          };
-          slotsByDay[dayOfWeek].push(timeSlot);
+        // Validate event has required properties
+        if (!event) {
+          console.warn(`Legacy View: Event ${index} is null/undefined`);
+          return;
         }
         
-        timeSlot.items.push({
-          userId: event.userId || '',
-          userName: event.title,
-          status: 'booked',
-          type: event.description || 'Event',
-          color: event.color || '#4285F4'
-        });
+        // Validate start date
+        if (!event.start) {
+          console.warn(`Legacy View: Event ${index} has no start property:`, event);
+          return;
+        }
+        
+        // Check if start is a valid Date object
+        let startDate: Date;
+        if (event.start instanceof Date) {
+          startDate = event.start;
+        } else if (typeof event.start === 'string') {
+          startDate = new Date(event.start);
+        } else {
+          console.warn(`Legacy View: Event ${index} has invalid start date type:`, typeof event.start, event.start);
+          return;
+        }
+        
+        // Validate the Date object is valid
+        if (isNaN(startDate.getTime())) {
+          console.warn(`Legacy View: Event ${index} has invalid start date:`, event.start);
+          return;
+        }
+        
+        try {
+          const dayOfWeek = startDate.getDay();
+          const hour = startDate.getHours();
+          const minute = startDate.getMinutes();
+          const formattedTime = formatTime(hour, minute);
+          
+          console.log(`Legacy View: Event ${index} scheduled for day ${dayOfWeek} at ${formattedTime}`);
+          
+          // Find if time slot already exists
+          let timeSlot = slotsByDay[dayOfWeek].find(s => s.time === formattedTime);
+          
+          if (!timeSlot) {
+            timeSlot = {
+              time: formattedTime,
+              items: []
+            };
+            slotsByDay[dayOfWeek].push(timeSlot);
+          }
+          
+          timeSlot.items.push({
+            userId: event.userId || '',
+            userName: event.title,
+            status: 'booked',
+            type: event.description || 'Event',
+            color: event.color || '#4285F4'
+          });
+        } catch (error) {
+          console.error(`Legacy View: Error processing event ${index}:`, error, event);
+        }
       });
     }
     
@@ -120,6 +163,8 @@ export const useLegacyViewData = () => {
         return a.time.localeCompare(b.time);
       });
     });
+    
+    console.log('Legacy View: Final time slots by day:', slotsByDay);
     
     return slotsByDay;
   }, [availabilities, events, displayMode]);
