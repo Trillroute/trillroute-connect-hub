@@ -114,10 +114,57 @@ serve(async (req) => {
     </html>
     `;
 
-    // Send email using Resend
+    // For now, use the verified email as sender - you'll need to update this with your domain
+    const fromEmail = 'Music Course Platform <noreply@yourdomain.com>';
+    
+    // Check if we're in testing mode (when domain is not verified)
+    const isTestingMode = !Deno.env.get('VERIFIED_DOMAIN');
+    
+    if (isTestingMode) {
+      console.log('TESTING MODE: Domain not verified. Email content logged below:');
+      console.log('To:', student.email);
+      console.log('Subject:', `Payment Link for ${course.title} - Complete Your Enrollment`);
+      console.log('Payment Link:', paymentLink);
+      
+      // Still log to database for record keeping
+      const { data: emailLog, error: emailError } = await supabase
+        .from('email_logs')
+        .insert({
+          recipient_id: studentId,
+          recipient_email: student.email,
+          subject: `Payment Link for ${course.title}`,
+          content: emailHtml,
+          status: 'testing_mode',
+          metadata: {
+            course_id: courseId,
+            course_title: course.title,
+            payment_link: paymentLink,
+            amount: course.final_price,
+            testing_mode: true
+          }
+        })
+        .select()
+        .single();
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: `TESTING MODE: Email logged but not sent. To send real emails, verify your domain at resend.com/domains`,
+          payment_link: paymentLink,
+          recipient: student.email,
+          email_log_id: emailLog?.id
+        }),
+        {
+          headers: responseHeaders,
+          status: 200,
+        }
+      );
+    }
+
+    // Send email using Resend (only when domain is verified)
     console.log(`Sending email to ${student.email}`);
     const emailResponse = await resend.emails.send({
-      from: 'Music Course Platform <onboarding@resend.dev>',
+      from: fromEmail,
       to: [student.email],
       subject: `Payment Link for ${course.title} - Complete Your Enrollment`,
       html: emailHtml,
