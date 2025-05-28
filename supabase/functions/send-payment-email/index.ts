@@ -124,93 +124,60 @@ serve(async (req) => {
 
     console.log(`Attempting to send email to ${student.email}`);
     
-    try {
-      // Use the verified Resend domain that should work for any recipient
-      const emailResponse = await resend.emails.send({
-        from: 'Music Course Platform <onboarding@resend.dev>',
-        to: [student.email],
-        subject: `Payment Link for ${course.title} - Complete Your Enrollment`,
-        html: emailHtml,
-      });
+    // Use Resend's default verified domain - this should work for any recipient
+    const emailResponse = await resend.emails.send({
+      from: 'Music Course Platform <onboarding@resend.dev>',
+      to: [student.email],
+      subject: `Payment Link for ${course.title} - Complete Your Enrollment`,
+      html: emailHtml,
+    });
 
-      console.log('Resend API Response:', JSON.stringify(emailResponse, null, 2));
+    console.log('Resend API Response:', JSON.stringify(emailResponse, null, 2));
 
-      if (emailResponse.error) {
-        console.error('Resend error details:', emailResponse.error);
-        throw new Error(`Failed to send email: ${emailResponse.error.message || 'Unknown error'}`);
-      }
-
-      console.log('Email sent successfully via Resend:', emailResponse.data);
-
-      // Log the email in database for record keeping
-      const { data: emailLog, error: emailError } = await supabase
-        .from('email_logs')
-        .insert({
-          recipient_id: studentId,
-          recipient_email: student.email,
-          subject: `Payment Link for ${course.title}`,
-          content: emailHtml,
-          status: 'sent',
-          metadata: {
-            course_id: courseId,
-            course_title: course.title,
-            payment_link: paymentLink,
-            amount: course.final_price,
-            resend_id: emailResponse.data?.id
-          }
-        })
-        .select()
-        .single();
-
-      if (emailError) {
-        console.error('Error logging email:', emailError);
-        // Don't throw here - email was sent successfully, logging is secondary
-      }
-
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          message: `Payment link email for ${course.title} sent successfully to ${student.email}`,
-          email_id: emailResponse.data?.id,
-          email_log_id: emailLog?.id
-        }),
-        {
-          headers: responseHeaders,
-          status: 200,
-        }
-      );
-
-    } catch (resendError) {
-      console.error('Resend API Error:', resendError);
-      
-      // Check if it's the domain verification error
-      if (resendError.message?.includes('testing emails') || resendError.message?.includes('verify a domain')) {
-        console.error('Domain verification required. Error details:', resendError.message);
-        
-        // Log to database as failed
-        await supabase
-          .from('email_logs')
-          .insert({
-            recipient_id: studentId,
-            recipient_email: student.email,
-            subject: `Payment Link for ${course.title}`,
-            content: emailHtml,
-            status: 'failed',
-            metadata: {
-              course_id: courseId,
-              course_title: course.title,
-              payment_link: paymentLink,
-              amount: course.final_price,
-              error: 'Domain verification required',
-              error_details: resendError.message
-            }
-          });
-
-        throw new Error('Email sending failed: Domain verification required. Please verify your domain at resend.com/domains to send emails to any recipient.');
-      }
-      
-      throw resendError;
+    if (emailResponse.error) {
+      console.error('Resend error details:', emailResponse.error);
+      throw new Error(`Failed to send email: ${emailResponse.error.message || 'Unknown error'}`);
     }
+
+    console.log('Email sent successfully via Resend:', emailResponse.data);
+
+    // Log the email in database for record keeping
+    const { data: emailLog, error: emailError } = await supabase
+      .from('email_logs')
+      .insert({
+        recipient_id: studentId,
+        recipient_email: student.email,
+        subject: `Payment Link for ${course.title}`,
+        content: emailHtml,
+        status: 'sent',
+        metadata: {
+          course_id: courseId,
+          course_title: course.title,
+          payment_link: paymentLink,
+          amount: course.final_price,
+          resend_id: emailResponse.data?.id
+        }
+      })
+      .select()
+      .single();
+
+    if (emailError) {
+      console.error('Error logging email:', emailError);
+      // Don't throw here - email was sent successfully, logging is secondary
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        message: `Payment link email for ${course.title} sent successfully to ${student.email}`,
+        email_id: emailResponse.data?.id,
+        email_log_id: emailLog?.id
+      }),
+      {
+        headers: responseHeaders,
+        status: 200,
+      }
+    );
 
   } catch (error) {
     console.error('Error sending payment email:', error);
