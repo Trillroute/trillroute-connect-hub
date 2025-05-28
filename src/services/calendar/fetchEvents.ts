@@ -54,14 +54,27 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
     console.log(`Raw data from user_events table:`, data);
     console.log(`Fetched ${data?.length || 0} events from user_events table`);
     
-    // Convert user_events format to CalendarEvent format
+    // Convert user_events format to CalendarEvent format with proper date parsing
     const events = data ? data.map((event) => {
+      // Parse dates properly - ensure they are valid Date objects
+      const startDate = new Date(event.start_time);
+      const endDate = new Date(event.end_time);
+      
+      // Check if dates are valid
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.error('Invalid date format for event:', event.id, {
+          start_time: event.start_time,
+          end_time: event.end_time
+        });
+        return null;
+      }
+      
       const mappedEvent = {
         id: event.id,
         title: event.title,
         description: event.description || '',
-        start: new Date(event.start_time),
-        end: new Date(event.end_time),
+        start: startDate,
+        end: endDate,
         userId: event.user_id,
         eventType: event.event_type || 'general',
         isBlocked: event.is_blocked || false,
@@ -78,11 +91,20 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
         created_at: event.created_at,
         updated_at: event.updated_at
       };
-      console.log('Mapped event:', mappedEvent);
+      
+      console.log('Mapped event with valid dates:', {
+        id: mappedEvent.id,
+        title: mappedEvent.title,
+        start: mappedEvent.start,
+        end: mappedEvent.end,
+        startValid: !isNaN(mappedEvent.start.getTime()),
+        endValid: !isNaN(mappedEvent.end.getTime())
+      });
+      
       return mappedEvent;
-    }) : [];
+    }).filter(event => event !== null) : [];
     
-    console.log(`Returning ${events.length} mapped events`);
+    console.log(`Returning ${events.length} valid mapped events`);
     return events;
   } catch (err) {
     console.error("Failed to fetch events:", err);

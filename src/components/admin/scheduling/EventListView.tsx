@@ -1,152 +1,139 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { CalendarEvent } from './context/calendarTypes';
+import { CalendarEvent } from './types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Calendar } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { handleAvailabilitySlotClick } from './utils/availabilitySlotHandlers';
+import { Edit, Trash2, Clock, MapPin, User } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface EventListViewProps {
   events: CalendarEvent[];
-  onEditEvent?: (event: CalendarEvent) => void;
-  onDeleteEvent?: (event: CalendarEvent) => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
   showAvailability?: boolean;
-  availabilitySlots?: Array<{
-    dayOfWeek: number;
-    startHour: number;
-    startMinute: number;
-    endHour: number;
-    endMinute: number;
-    userId: string;
-    userName?: string;
-    category: string;
-  }>;
 }
 
-const EventListView: React.FC<EventListViewProps> = ({ 
-  events, 
-  onEditEvent, 
+const EventListView: React.FC<EventListViewProps> = ({
+  events,
+  onEditEvent,
   onDeleteEvent,
-  showAvailability = true,
-  availabilitySlots = []
+  showAvailability = true
 }) => {
-  if (events.length === 0 && availabilitySlots.length === 0) {
+  console.log('EventListView: Rendering with events:', events);
+
+  const formatEventTime = (start: Date, end: Date) => {
+    try {
+      if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.warn('Invalid dates provided to formatEventTime:', { start, end });
+        return 'Invalid time';
+      }
+      
+      const startStr = format(start, 'MMM dd, yyyy - h:mm a');
+      const endStr = format(end, 'h:mm a');
+      return `${startStr} to ${endStr}`;
+    } catch (error) {
+      console.error('Error formatting event time:', error, { start, end });
+      return 'Invalid time';
+    }
+  };
+
+  const getEventTypeColor = (eventType: string) => {
+    switch (eventType) {
+      case 'class':
+        return 'bg-blue-100 text-blue-800';
+      case 'trial':
+        return 'bg-green-100 text-green-800';
+      case 'meeting':
+        return 'bg-purple-100 text-purple-800';
+      case 'blocked':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (events.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <Calendar className="h-12 w-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-medium">No events found</h3>
-        <p className="text-gray-500 mt-1">
-          There are no events scheduled for the selected period.
-        </p>
+      <div className="text-center py-8 text-gray-500">
+        <p>No events to display</p>
       </div>
     );
   }
 
-  const handleAvailabilityClick = (slot: any) => {
-    handleAvailabilitySlotClick(slot);
-  };
-
   return (
     <div className="space-y-4">
-      {/* Events section */}
-      {events.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-3">Events</h3>
-          <div className="divide-y divide-gray-200">
-            {events.map(event => (
-              <div
-                key={event.id}
-                className="flex justify-between items-center py-4 px-2 hover:bg-gray-50"
-              >
-                <div>
-                  <h4 className="font-medium text-gray-900">{event.title}</h4>
-                  <div className="text-sm text-gray-500 mt-1">
-                    {format(event.start, 'MMM d, yyyy')} • {format(event.start, 'h:mm a')} - {format(event.end, 'h:mm a')}
-                  </div>
-                  {event.location && (
-                    <div className="text-sm text-gray-600 mt-1">
-                      📍 {event.location}
-                    </div>
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  {onEditEvent && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEditEvent(event)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                  )}
-                  {onDeleteEvent && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-500 border-red-200 hover:bg-red-50"
-                      onClick={() => onDeleteEvent(event)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  )}
-                </div>
+      {events.map((event) => (
+        <Card key={event.id} className="w-full">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <CardTitle className="text-lg">{event.title}</CardTitle>
+                {event.description && (
+                  <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Availability slots section */}
-      {showAvailability && availabilitySlots.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Available Time Slots</h3>
-          <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-            {availabilitySlots.map((slot, index) => {
-              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-              const dayName = dayNames[slot.dayOfWeek];
+              <div className="flex gap-2 ml-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEditEvent(event)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDeleteEvent(event)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-sm">
+                  {formatEventTime(event.start, event.end)}
+                </span>
+              </div>
               
-              return (
-                <TooltipProvider key={`${slot.userId}-${index}`}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div 
-                        className="p-3 rounded-md shadow-sm border cursor-pointer hover:shadow-md transition-shadow"
-                        style={{ 
-                          backgroundColor: `${slot.category === 'Session' ? '#e6f7ed' : 
-                                          slot.category === 'Break' ? '#e6f1fa' :
-                                          slot.category === 'Office' ? '#f0e6fa' : '#f0f0f0'}`,
-                          borderColor: `${slot.category === 'Session' ? '#9be6c0' : 
-                                        slot.category === 'Break' ? '#9bc5e6' :
-                                        slot.category === 'Office' ? '#c59be6' : '#d0d0d0'}`
-                        }}
-                        onClick={() => handleAvailabilityClick(slot)}
-                      >
-                        <div className="font-medium">{slot.userName || 'Available'}</div>
-                        <div className="text-xs font-semibold mt-1">{dayName}</div>
-                        <div className="text-sm mt-1">
-                          {`${slot.startHour}:${slot.startMinute.toString().padStart(2, '0')} - ${slot.endHour}:${slot.endMinute.toString().padStart(2, '0')}`}
-                        </div>
-                        <div className="mt-2">
-                          <span className="inline-block px-2 py-1 text-xs rounded-full bg-white/50">
-                            {slot.category}
-                          </span>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p><strong>{slot.category}</strong> - {slot.userName || 'Available'}</p>
-                      <p className="text-xs">Click to create an event</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              );
-            })}
-          </div>
-        </div>
-      )}
+              {event.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">{event.location}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <Badge className={getEventTypeColor(event.eventType)}>
+                  {event.eventType}
+                </Badge>
+                
+                {event.metadata?.teacherName && (
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3 text-gray-500" />
+                    <span className="text-xs text-gray-600">
+                      Teacher: {event.metadata.teacherName}
+                    </span>
+                  </div>
+                )}
+                
+                {event.metadata?.studentName && (
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3 text-gray-500" />
+                    <span className="text-xs text-gray-600">
+                      Student: {event.metadata.studentName}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };
