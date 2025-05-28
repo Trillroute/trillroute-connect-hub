@@ -23,28 +23,33 @@ const WeekAvailabilitySlots: React.FC<WeekAvailabilitySlotsProps> = ({
   return (
     <>
       {slotsForDay.map((slot, index) => {
-        // Calculate position based on time - each hour cell is 64px (h-16)
-        // Grid starts from hour 0, so we calculate position relative to that
-        const startHourPosition = slot.startHour;
-        const startMinuteOffset = slot.startMinute;
-        const endHourPosition = slot.endHour;
-        const endMinuteOffset = slot.endMinute;
+        // The time grid shows hours 0-23, each hour cell is 64px (h-16)
+        // Calculate position based on the hour within the grid
+        const startHour = slot.startHour;
+        const startMinute = slot.startMinute;
+        const endHour = slot.endHour;
+        const endMinute = slot.endMinute;
         
-        // Calculate total duration in minutes
-        const totalStartMinutes = (startHourPosition * 60) + startMinuteOffset;
-        const totalEndMinutes = (endHourPosition * 60) + endMinuteOffset;
-        const durationMinutes = totalEndMinutes - totalStartMinutes;
+        // Calculate total minutes from start of day (midnight)
+        const startTotalMinutes = (startHour * 60) + startMinute;
+        const endTotalMinutes = (endHour * 60) + endMinute;
+        const durationMinutes = endTotalMinutes - startTotalMinutes;
         
         // Convert to pixels - each hour (60 minutes) = 64px (h-16)
         const pixelsPerMinute = 64 / 60;
-        const topOffset = totalStartMinutes * pixelsPerMinute;
-        const height = durationMinutes * pixelsPerMinute;
+        
+        // Position relative to the start of the grid (hour 0)
+        const topOffset = startTotalMinutes * pixelsPerMinute;
+        const height = Math.max(durationMinutes * pixelsPerMinute, 20); // Minimum 20px height
         
         console.log(`WeekAvailabilitySlots: Slot ${index} positioning:`, {
           startHour: slot.startHour,
           startMinute: slot.startMinute,
           endHour: slot.endHour,
           endMinute: slot.endMinute,
+          startTotalMinutes,
+          endTotalMinutes,
+          durationMinutes,
           topOffset,
           height,
           category: slot.category
@@ -55,21 +60,21 @@ const WeekAvailabilitySlots: React.FC<WeekAvailabilitySlotsProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className={`absolute rounded border cursor-pointer hover:opacity-90 z-10 ${getCategoryColor(slot.category)}`}
+                  className={`absolute rounded border cursor-pointer hover:opacity-90 z-20 ${getCategoryColor(slot.category)}`}
                   style={{
                     top: `${topOffset}px`,
                     height: `${height}px`,
-                    left: '2px',
-                    right: '2px',
+                    left: '4px',
+                    right: '4px',
                   }}
                   onClick={() => {
                     handleAvailabilitySlotClick(slot);
                     onAvailabilityClick(slot);
                   }}
                 >
-                  <div className="p-1 text-xs">
+                  <div className="p-1 text-xs overflow-hidden">
                     <div className="font-semibold truncate">{slot.userName || 'Available'}</div>
-                    <div className="opacity-80">{slot.category}</div>
+                    <div className="opacity-80 truncate">{slot.category}</div>
                   </div>
                 </div>
               </TooltipTrigger>
