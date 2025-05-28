@@ -21,21 +21,27 @@ const WeekAvailabilitySlots: React.FC<WeekAvailabilitySlotsProps> = ({
   return (
     <>
       {slotsForDay.map((slot, index) => {
-        // Calculate position based on time
-        const startMinutesFromReference = ((slot.startHour - 7) * 60) + slot.startMinute;
-        const durationMinutes = ((slot.endHour - slot.startHour) * 60) + (slot.endMinute - slot.startMinute);
+        // Calculate position based on time - each hour cell is 64px (h-16)
+        const startMinutesFromMidnight = (slot.startHour * 60) + slot.startMinute;
+        const endMinutesFromMidnight = (slot.endHour * 60) + slot.endMinute;
+        const durationMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
+        
+        // Convert to pixels - each hour (60 minutes) = 64px
+        const pixelsPerMinute = 64 / 60;
+        const topOffset = startMinutesFromMidnight * pixelsPerMinute;
+        const height = durationMinutes * pixelsPerMinute;
         
         return (
           <TooltipProvider key={`${slot.userId}-${index}`}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className={`absolute rounded border cursor-pointer hover:opacity-90 ${getCategoryColor(slot.category)}`}
+                  className={`absolute rounded border cursor-pointer hover:opacity-90 z-10 ${getCategoryColor(slot.category)}`}
                   style={{
-                    top: `${startMinutesFromReference}px`,
-                    height: `${durationMinutes}px`,
-                    left: '10%',
-                    width: '80%',
+                    top: `${topOffset}px`,
+                    height: `${height}px`,
+                    left: '2px',
+                    right: '2px',
                   }}
                   onClick={() => {
                     handleAvailabilitySlotClick(slot);
