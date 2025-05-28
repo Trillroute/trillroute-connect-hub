@@ -25,9 +25,10 @@ export function useCalendarEventCreation() {
   ) => {
     try {
       console.log('Creating recurring events for enrollment:', { courseId, studentId, teacherId });
+      console.log('Availability slot provided:', availabilitySlot);
       
-      if (!availabilitySlot) {
-        console.log('No availability slot provided for recurring course');
+      if (!availabilitySlot || !availabilitySlot.dayOfWeek || !availabilitySlot.startTime || !availabilitySlot.endTime) {
+        console.log('Invalid availability slot provided for recurring course');
         return false;
       }
 
@@ -71,6 +72,13 @@ export function useCalendarEventCreation() {
       const eventsToCreate = [];
       const startDate = new Date();
       const weeksToCreate = 12;
+      
+      console.log('Creating events for next', weeksToCreate, 'weeks');
+      console.log('Availability slot details:', {
+        dayOfWeek: availabilitySlot.dayOfWeek,
+        startTime: availabilitySlot.startTime,
+        endTime: availabilitySlot.endTime
+      });
       
       for (let week = 0; week < weeksToCreate; week++) {
         const eventDate = new Date(startDate);
@@ -134,6 +142,8 @@ export function useCalendarEventCreation() {
 
         eventsToCreate.push(teacherEvent, studentEvent);
       }
+
+      console.log('About to insert', eventsToCreate.length, 'events');
 
       // Insert all events
       const { error: insertError } = await supabase
@@ -260,6 +270,8 @@ export function useCalendarEventCreation() {
       };
 
       eventsToCreate.push(teacherEvent, studentEvent);
+
+      console.log('About to insert', eventsToCreate.length, 'one-time events');
 
       // Insert events
       const { error: insertError } = await supabase

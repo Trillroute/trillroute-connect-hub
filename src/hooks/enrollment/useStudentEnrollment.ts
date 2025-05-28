@@ -18,6 +18,8 @@ export function useStudentEnrollment() {
     
     try {
       console.log('Starting enrollment process for student:', studentId, 'course:', courseId);
+      console.log('Teacher ID provided:', teacherId);
+      console.log('Additional metadata:', additionalMetadata);
       
       // First, get the current course data
       const { data: courseData, error: courseError } = await supabase
@@ -52,6 +54,14 @@ export function useStudentEnrollment() {
       const isSoloOrDuo = courseData.course_type === 'solo' || courseData.course_type === 'duo';
       const isRecurring = courseData.duration_type === 'recurring';
       const isGroup = courseData.course_type === 'group';
+      
+      console.log('Course details:', {
+        courseType: courseData.course_type,
+        durationType: courseData.duration_type,
+        isSoloOrDuo,
+        isRecurring,
+        isGroup
+      });
       
       // Create enrollment record with metadata
       const metadata = {
@@ -95,28 +105,42 @@ export function useStudentEnrollment() {
         return false;
       }
       
+      console.log('Course updated successfully, now creating calendar events...');
+      
       // Create calendar events based on course type and teacher availability
       let calendarEventsCreated = false;
       
-      if (isSoloOrDuo && isRecurring && teacherId && additionalMetadata?.availabilitySlotId) {
+      // Determine which teacher to use
+      const effectiveTeacherId = teacherId || (courseData.instructor_ids && courseData.instructor_ids[0]);
+      
+      console.log('Effective teacher ID for calendar events:', effectiveTeacherId);
+      
+      if (isSoloOrDuo && isRecurring && effectiveTeacherId && additionalMetadata?.availabilitySlotId) {
         // For solo/duo recurring courses with selected availability slot
         console.log('Creating recurring events for solo/duo course');
         calendarEventsCreated = await createRecurringEvents(
           courseId,
           studentId,
-          teacherId,
+          effectiveTeacherId,
           additionalMetadata,
           courseData
         );
-      } else if (isGroup || !isRecurring) {
+      } else if ((isGroup || !isRecurring) && effectiveTeacherId) {
         // For group courses or one-time courses
         console.log('Creating one-time events for group/one-time course');
         calendarEventsCreated = await createOneTimeEvents(
           courseId,
           studentId,
-          teacherId,
+          effectiveTeacherId,
           courseData
         );
+      } else {
+        console.log('Skipping calendar event creation - missing requirements:', {
+          hasEffectiveTeacher: !!effectiveTeacherId,
+          hasAvailabilitySlot: !!additionalMetadata?.availabilitySlotId,
+          courseType: courseData.course_type,
+          durationType: courseData.duration_type
+        });
       }
       
       if (calendarEventsCreated) {

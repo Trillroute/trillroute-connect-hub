@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,9 @@ const EnrollmentPage: React.FC = () => {
     setIsEnrolling(true);
     try {
       console.log('Starting enrollment process for student:', selectedStudentId, 'course:', selectedCourseId);
+      console.log('Selected teacher:', selectedTeacherId);
+      console.log('Course type:', selectedCourse.course_type, 'Duration type:', selectedCourse.duration_type);
+      console.log('Selected availability slot:', selectedAvailabilitySlot);
       
       // First check if the student has completed the trial for this course
       const hasTrialCompleted = await hasCompletedTrialForCourse(selectedStudentId, selectedCourseId);
@@ -170,6 +174,7 @@ const EnrollmentPage: React.FC = () => {
 
   // Handle availability slot selection
   const handleTimeSlotSelect = (slot: UserAvailability) => {
+    console.log('Time slot selected:', slot);
     setSelectedAvailabilitySlot(slot);
     setShowTeacherDialog(false);
     
