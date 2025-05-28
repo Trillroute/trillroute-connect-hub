@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.188.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.20.0'
 import { Resend } from 'npm:resend@2.0.0'
@@ -131,10 +132,14 @@ serve(async (req) => {
           .content { background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
           .button { display: inline-block; padding: 12px 24px; background-color: #9b87f5; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
           .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+          .test-notice { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 20px 0; border-radius: 5px; }
         </style>
       </head>
       <body>
         <div class="container">
+          <div class="test-notice">
+            <strong>TEST EMAIL:</strong> This payment link was generated for student: ${student.first_name} ${student.last_name} (${student.email}) but sent to you for testing purposes since domain verification is pending.
+          </div>
           <div class="header">
             <h1>Complete Your Course Enrollment</h1>
           </div>
@@ -159,13 +164,14 @@ serve(async (req) => {
     </html>
     `;
 
-    console.log(`Attempting to send email to ${student.email} using onboarding@resend.dev`);
+    // Send email to your registered email for testing (Resend limitation without domain verification)
+    const testEmail = 'trillroute.app@gmail.com';
+    console.log(`Sending test email to ${testEmail} (intended for ${student.email})`);
     
-    // Send email using the default verified domain
     const emailResponse = await resend.emails.send({
       from: 'Music Course Platform <onboarding@resend.dev>',
-      to: [student.email],
-      subject: `Payment Link for ${course.title} - Complete Your Enrollment`,
+      to: [testEmail],
+      subject: `[TEST] Payment Link for ${course.title} - Student: ${student.first_name} ${student.last_name}`,
       html: emailHtml,
     });
 
@@ -192,8 +198,8 @@ serve(async (req) => {
       .from('email_logs')
       .insert({
         recipient_id: studentId,
-        recipient_email: student.email,
-        subject: `Payment Link for ${course.title}`,
+        recipient_email: testEmail, // Log actual recipient for testing
+        subject: `[TEST] Payment Link for ${course.title}`,
         content: emailHtml,
         status: 'sent',
         metadata: {
@@ -201,7 +207,9 @@ serve(async (req) => {
           course_title: course.title,
           payment_link: paymentLink,
           amount: course.final_price,
-          resend_id: emailResponse.data?.id
+          resend_id: emailResponse.data?.id,
+          intended_recipient: student.email, // Track who it was meant for
+          test_mode: true
         }
       })
       .select()
@@ -217,9 +225,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Payment link email for ${course.title} sent successfully to ${student.email}`,
+        message: `Test payment link email sent to ${testEmail} (intended for ${student.first_name} ${student.last_name} - ${student.email})`,
         email_id: emailResponse.data?.id,
-        email_log_id: emailLog?.id
+        email_log_id: emailLog?.id,
+        test_mode: true
       }),
       {
         headers: responseHeaders,
