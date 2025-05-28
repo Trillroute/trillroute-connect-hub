@@ -4,7 +4,7 @@ import { FormProvider, UseFormReturn } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Teacher } from '@/types/course';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
+import { FormField, FormItem, FormControl, FormMessage, FormLabel } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ClassTypesSelector from './ClassTypesSelector';
 import BasicCourseInfo from './form-sections/BasicCourseInfo';
@@ -90,6 +90,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
               name="course_type"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Course Type *</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || "group"}
@@ -109,12 +110,38 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="durationType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Duration Type *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || "fixed"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select duration type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixed Duration</SelectItem>
+                      <SelectItem value="recurring">Recurring (No End Date)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
               name="instructors"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel>Instructors *</FormLabel>
                   <FormControl>
                     <MultiSelect
                       options={teacherOptions}
