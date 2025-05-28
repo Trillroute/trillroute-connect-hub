@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 
 export type EventLayer = string;
@@ -12,6 +11,14 @@ export interface CalendarEvent {
   end: Date;
   color?: string;
   userId?: string;
+  eventType?: string;
+  isBlocked?: boolean;
+  metadata?: any;
+  user_id?: string;
+  start_time?: string;
+  end_time?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';

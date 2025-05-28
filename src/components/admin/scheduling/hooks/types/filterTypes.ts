@@ -1,4 +1,3 @@
-
 import { UserAvailability } from '@/services/availability/types';
 
 export interface FilterState {
@@ -19,6 +18,14 @@ export interface CalendarEvent {
   courseId?: string;
   skillId?: string;
   color?: string;
+  eventType?: string;
+  isBlocked?: boolean;
+  metadata?: any;
+  user_id?: string;
+  start_time?: string;
+  end_time?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CalendarUserAvailability {
