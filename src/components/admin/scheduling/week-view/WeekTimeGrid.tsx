@@ -2,7 +2,6 @@
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
 import { AvailabilitySlot } from './weekViewUtils';
-import WeekDayHeader from './WeekDayHeader';
 import WeekViewEvent from './WeekViewEvent';
 import WeekAvailabilitySlots from './WeekAvailabilitySlots';
 
@@ -68,7 +67,6 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     <div className="grid grid-cols-8 h-full">
       {/* Time column */}
       <div className="border-r">
-        <div className="h-16 border-b"></div>
         {hours.map(hour => (
           <div key={hour} className="h-16 border-b text-xs p-1 text-gray-500">
             {hour === 0 ? '12:00 AM' : hour < 12 ? `${hour}:00 AM` : hour === 12 ? '12:00 PM' : `${hour - 12}:00 PM`}
@@ -79,8 +77,6 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
       {/* Day columns */}
       {weekDays.map((day, dayIndex) => (
         <div key={dayIndex} className="border-r relative">
-          <WeekDayHeader day={day} />
-          
           {/* Hour cells */}
           {hours.map(hour => (
             <div
