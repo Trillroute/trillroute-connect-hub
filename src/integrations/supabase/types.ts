@@ -338,6 +338,47 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          content: string
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          recipient_id: string | null
+          sent_at: string | null
+          status: string | null
+          subject: string
+        }
+        Insert: {
+          content: string
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          recipient_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          recipient_id?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "custom_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           age: number | null
