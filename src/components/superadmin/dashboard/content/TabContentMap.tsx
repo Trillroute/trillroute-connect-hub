@@ -44,8 +44,8 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
 }) => {
   console.log("TabContentMap rendering with activeTab:", activeTab);
 
-  // Force-render StudentManagement for debugging
-  if (activeTab === 'students') {
+  // Handle both 'students' and 'studentsList' tabs
+  if (activeTab === 'students' || activeTab === 'studentsList') {
     console.log("ACTIVELY RENDERING StudentManagement component");
     return (
       <StudentManagement 
@@ -62,89 +62,103 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     return <EnrollmentPage />;
   }
 
-  // Add handling for the new trialBooking tab
+  // Add handling for the trialBooking tab
   if (activeTab === 'trialBooking') {
     console.log("Rendering TrialBookingPage component");
     return <TrialBookingPage />;
   }
 
-  switch (activeTab) {
-    case 'today':
-      return stats && userActivityData && currentYear && handleYearChange ? (
-        <TodayContent 
-          stats={stats}
-          userActivityData={userActivityData}
-          currentYear={currentYear}
-          handleYearChange={handleYearChange}
-        />
-      ) : null;
-      
-    case 'leads':
-      return <LeadManagement 
-        canAddLead={true}
-        canEditLead={true}
-        canDeleteLead={true}
-      />;
-      
-    case 'leads-cards':
-      return leads && onEditLead && onDeleteLead ? (
-        <LeadsKanbanContent
-          leads={leads}
-          loading={leadsLoading || false}
-          onEdit={onEditLead}
-          onDelete={onDeleteLead}
-        />
-      ) : null;
-      
-    case 'teachers':
-      return <TeacherManagement 
-        canAddUser={true}
-        canEditUser={true}
-        canDeleteUser={true}
-      />;
-      
-    case 'scheduling':
-      console.log("Rendering SchedulingContent component");
-      // Always render the SchedulingContent component for the scheduling tab
-      return <SchedulingContent />;
-      
-    case 'calendar':
-      console.log("Rendering SchedulingContent for calendar tab");
-      // Map 'calendar' tab to the SchedulingContent component
-      return <SchedulingContent />;
-      
-    case 'user-availability':
-      return <UserAvailabilityContent />;
-      
-    case 'classTypes':
-      return <ClassTypeManagement />;
-      
-    case 'courseManagement':
-      return <CourseManagement 
-        canAddCourse={true}
-        canEditCourse={true}
-        canDeleteCourse={true}
-      />;
-      
-    case 'admins':
-      return <AdminManagement 
-        canAddAdmin={true}
-        canEditAdmin={true}
-        canDeleteAdmin={true}
-        canEditAdminLevel={true}
-      />;
-      
-    case 'levels':
-      return <LevelManagement 
-        canAddLevel={true}
-        canEditLevel={true}
-        canDeleteLevel={true}
-      />;
-      
-    default:
-      console.log("Default case: Rendering PlaceholderContent for tab:", activeTab);
-      return <PlaceholderContent tab={activeTab} />;
+  if (activeTab === 'today') {
+    console.log("Rendering TodayContent");
+    return (
+      <TodayContent 
+        stats={stats}
+        userActivityData={userActivityData}
+        currentYear={currentYear}
+        handleYearChange={handleYearChange}
+      />
+    );
   }
+
+  if (activeTab === 'leads-cards') {
+    console.log("Rendering LeadsKanbanContent");
+    return (
+      <LeadsKanbanContent 
+        leads={leads}
+        loading={leadsLoading}
+        onEditLead={onEditLead}
+        onDeleteLead={onDeleteLead}
+      />
+    );
+  }
+
+  if (activeTab === 'leads') {
+    console.log("Rendering LeadManagement");
+    return <LeadManagement />;
+  }
+
+  if (activeTab === 'teachers') {
+    console.log("Rendering TeacherManagement");
+    return <TeacherManagement />;
+  }
+
+  if (activeTab === 'admins') {
+    console.log("Rendering AdminManagement");
+    return <AdminManagement />;
+  }
+
+  if (activeTab === 'levels') {
+    console.log("Rendering LevelManagement");
+    return <LevelManagement />;
+  }
+
+  if (activeTab === 'courseManagement') {
+    console.log("Rendering CourseManagement");
+    return <CourseManagement />;
+  }
+
+  if (activeTab === 'classTypes') {
+    console.log("Rendering ClassTypeManagement");
+    return <ClassTypeManagement />;
+  }
+
+  if (activeTab === 'scheduling') {
+    console.log("Rendering SchedulingContent");
+    return <SchedulingContent />;
+  }
+
+  if (activeTab === 'user-availability') {
+    console.log("Rendering UserAvailabilityContent");
+    return <UserAvailabilityContent />;
+  }
+
+  if (activeTab === 'calendar') {
+    console.log("Rendering Calendar placeholder");
+    return <PlaceholderContent tabName="Calendar" />;
+  }
+
+  if (activeTab === 'fees') {
+    console.log("Rendering Fees placeholder");
+    return <PlaceholderContent tabName="Fees" />;
+  }
+
+  if (activeTab === 'communication') {
+    console.log("Rendering Communication placeholder");
+    return <PlaceholderContent tabName="Communication" />;
+  }
+
+  if (activeTab === 'intramural') {
+    console.log("Rendering Intramural placeholder");
+    return <PlaceholderContent tabName="Intramural" />;
+  }
+
+  if (activeTab === 'reports') {
+    console.log("Rendering Reports placeholder");
+    return <PlaceholderContent tabName="Reports" />;
+  }
+
+  console.log("Default case: Rendering PlaceholderContent for tab:", activeTab);
+  return <PlaceholderContent tabName={activeTab} />;
 };
 
 export default TabContentMap;

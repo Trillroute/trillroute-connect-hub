@@ -12,6 +12,7 @@ import { sidebarMenuItems } from "./sidebar/sidebarConfig";
 export type ActiveTab =
   | "today"
   | "students"
+  | "studentsList"
   | "enrollStudents"
   | "trialBooking"
   | "classTypes"
@@ -41,7 +42,7 @@ const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ activeTab, onTabC
     access: activeTab === 'admins' || activeTab === 'levels',
     leads: activeTab === 'leads' || activeTab === 'leads-cards',
     scheduling: activeTab === 'scheduling' || activeTab === 'calendar' || activeTab === 'user-availability',
-    students: activeTab === 'students' || activeTab === 'enrollStudents' || activeTab === 'trialBooking',
+    students: activeTab === 'students' || activeTab === 'studentsList' || activeTab === 'enrollStudents' || activeTab === 'trialBooking',
   });
 
   const location = useLocation();
