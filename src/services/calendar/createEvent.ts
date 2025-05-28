@@ -17,9 +17,11 @@ export const createEvent = async (
       throw new Error("You don't have permission to create events");
     }
     
+    const eventData = mapToDbEvent(event, userId);
+    
     const { data, error } = await supabase
-      .from("calendar_events")
-      .insert(mapToDbEvent(event, userId))
+      .from("user_events")
+      .insert(eventData)
       .select()
       .single();
       

@@ -6,7 +6,8 @@ import { canManageEvents } from "@/utils/permissions/modulePermissions";
 
 export const fetchEvents = async (userId: string, role: string | null): Promise<CalendarEvent[]> => {
   try {
-    let query = supabase.from("calendar_events").select("*");
+    // Fetch from user_events table instead of calendar_events
+    let query = supabase.from("user_events").select("*");
     
     // Filter events based on user role
     if (role === 'superadmin') {
@@ -24,56 +25,54 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
         query = query.eq("user_id", userId);
       }
     } else if (role === 'teacher') {
-      // Teachers see events they created plus events for courses they teach
+      // Teachers see events they created plus events where they are mentioned in metadata
       console.log("Teacher user, fetching relevant events");
       
-      // First get the teacher's courses
-      const { data: teacherCourses } = await supabase
-        .from("courses")
-        .select("id")
-        .contains("instructor_ids", [userId]);
-      
-      if (teacherCourses && teacherCourses.length > 0) {
-        const courseIds = teacherCourses.map(course => course.id);
-        
-        // Get events that are either created by this user or related to courses they teach
-        query = query.or(`user_id.eq.${userId},description.ilike.%course_id:${courseIds.join('%,description.ilike.%course_id:')}%`);
-      } else {
-        // If teacher has no courses, only show events they created
-        query = query.eq("user_id", userId);
-      }
+      // Get events that are either created by this user or where they are the teacher
+      query = query.or(`user_id.eq.${userId},metadata->>teacherId.eq.${userId}`);
     } else if (role === 'student') {
-      // Students see events for courses they're enrolled in
+      // Students see events where they are mentioned in metadata
       console.log("Student user, fetching enrolled course events");
       
-      // First get the student's enrolled courses
-      const { data: studentCourses } = await supabase
-        .from("courses")
-        .select("id")
-        .contains("student_ids", [userId]);
-      
-      if (studentCourses && studentCourses.length > 0) {
-        const courseIds = studentCourses.map(course => course.id);
-        
-        // Get events related to courses they're enrolled in
-        query = query.or(`user_id.eq.${userId},description.ilike.%course_id:${courseIds.join('%,description.ilike.%course_id:')}%`);
-      } else {
-        // If student has no enrolled courses, only show events they created
-        query = query.eq("user_id", userId);
-      }
+      // Get events where they are the student in metadata
+      query = query.or(`user_id.eq.${userId},metadata->>studentId.eq.${userId}`);
     } else {
       // Default case - users only see their own events
       query = query.eq("user_id", userId);
     }
       
-    const { data, error } = await query;
+    const { data, error } = await query.order('start_time', { ascending: true });
     
     if (error) {
       console.error("Error fetching events:", error);
       return [];
     }
     
-    return data ? data.map(mapFromDbEvent) : [];
+    console.log(`Fetched ${data?.length || 0} events from user_events table`);
+    
+    // Convert user_events format to CalendarEvent format
+    return data ? data.map((event) => ({
+      id: event.id,
+      title: event.title,
+      description: event.description || '',
+      start: new Date(event.start_time),
+      end: new Date(event.end_time),
+      userId: event.user_id,
+      eventType: event.event_type || 'general',
+      isBlocked: event.is_blocked || false,
+      metadata: event.metadata || {},
+      user_id: event.user_id,
+      start_time: event.start_time,
+      end_time: event.end_time,
+      location: (event.metadata && typeof event.metadata === 'object' && 'location' in event.metadata) 
+        ? String(event.metadata.location) 
+        : undefined,
+      color: (event.metadata && typeof event.metadata === 'object' && 'color' in event.metadata) 
+        ? String(event.metadata.color) 
+        : '#4285F4', // Default color for class events
+      created_at: event.created_at,
+      updated_at: event.updated_at
+    })) : [];
   } catch (err) {
     console.error("Failed to fetch events:", err);
     return [];
