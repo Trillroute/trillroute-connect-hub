@@ -31,22 +31,39 @@ serve(async (req) => {
   };
 
   try {
+    console.log("Starting email send process");
+    
     const { studentId, courseId, paymentLink } = await req.json() as EmailPayload;
+    console.log("Received payload:", { studentId, courseId, paymentLink });
 
     if (!studentId || !courseId || !paymentLink) {
       console.error('Missing required parameters:', { studentId, courseId, paymentLink });
-      throw new Error('Missing required parameters: studentId, courseId, or paymentLink');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing required parameters: studentId, courseId, or paymentLink'
+        }),
+        {
+          headers: responseHeaders,
+          status: 400,
+        }
+      );
     }
-
-    console.log(`Sending payment email for student ${studentId}, course ${courseId}`);
 
     // Check if RESEND_API_KEY exists
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
       console.error('RESEND_API_KEY environment variable is not set');
-      throw new Error('Email service not configured properly');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Email service not configured - missing API key'
+        }),
+        {
+          headers: responseHeaders,
+          status: 500,
+        }
+      );
     }
-    console.log('Resend API Key found');
+    console.log('Resend API Key found, length:', resendApiKey.length);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -54,6 +71,7 @@ serve(async (req) => {
     );
 
     // Get student details
+    console.log("Fetching student details for ID:", studentId);
     const { data: student, error: studentError } = await supabase
       .from('custom_users')
       .select('first_name, last_name, email')
@@ -62,10 +80,20 @@ serve(async (req) => {
 
     if (studentError || !student) {
       console.error('Error fetching student:', studentError);
-      throw new Error(`Student with ID ${studentId} not found`);
+      return new Response(
+        JSON.stringify({ 
+          error: `Student with ID ${studentId} not found`
+        }),
+        {
+          headers: responseHeaders,
+          status: 404,
+        }
+      );
     }
+    console.log("Student found:", student.email);
 
     // Get course details
+    console.log("Fetching course details for ID:", courseId);
     const { data: course, error: courseError } = await supabase
       .from('courses')
       .select('title, final_price, duration_type')
@@ -74,8 +102,17 @@ serve(async (req) => {
 
     if (courseError || !course) {
       console.error('Error fetching course:', courseError);
-      throw new Error(`Course with ID ${courseId} not found`);
+      return new Response(
+        JSON.stringify({ 
+          error: `Course with ID ${courseId} not found`
+        }),
+        {
+          headers: responseHeaders,
+          status: 404,
+        }
+      );
     }
+    console.log("Course found:", course.title);
 
     // Initialize Resend
     const resend = new Resend(resendApiKey);
@@ -122,9 +159,9 @@ serve(async (req) => {
     </html>
     `;
 
-    console.log(`Attempting to send email to ${student.email}`);
+    console.log(`Attempting to send email to ${student.email} using onboarding@resend.dev`);
     
-    // Use Resend's default verified domain - this should work for any recipient
+    // Send email using the default verified domain
     const emailResponse = await resend.emails.send({
       from: 'Music Course Platform <onboarding@resend.dev>',
       to: [student.email],
@@ -135,11 +172,20 @@ serve(async (req) => {
     console.log('Resend API Response:', JSON.stringify(emailResponse, null, 2));
 
     if (emailResponse.error) {
-      console.error('Resend error details:', emailResponse.error);
-      throw new Error(`Failed to send email: ${emailResponse.error.message || 'Unknown error'}`);
+      console.error('Resend error details:', JSON.stringify(emailResponse.error, null, 2));
+      return new Response(
+        JSON.stringify({ 
+          error: `Failed to send email: ${emailResponse.error.message || 'Unknown error'}`,
+          details: emailResponse.error
+        }),
+        {
+          headers: responseHeaders,
+          status: 400,
+        }
+      );
     }
 
-    console.log('Email sent successfully via Resend:', emailResponse.data);
+    console.log('Email sent successfully via Resend. ID:', emailResponse.data?.id);
 
     // Log the email in database for record keeping
     const { data: emailLog, error: emailError } = await supabase
@@ -164,6 +210,8 @@ serve(async (req) => {
     if (emailError) {
       console.error('Error logging email:', emailError);
       // Don't throw here - email was sent successfully, logging is secondary
+    } else {
+      console.log('Email logged successfully with ID:', emailLog?.id);
     }
 
     return new Response(
@@ -180,15 +228,17 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error sending payment email:', error);
+    console.error('Error in send-payment-email function:', error);
+    console.error('Error stack:', error.stack);
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Failed to send payment email',
-        details: 'Check the function logs for more information'
+        details: 'Check the function logs for more information',
+        stack: error.stack
       }),
       {
         headers: responseHeaders,
-        status: 400,
+        status: 500,
       }
     );
   }
