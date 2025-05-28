@@ -29,15 +29,22 @@ export function useCalendarEventCreation() {
         return 60; // Default 60 minutes
       }
 
-      const classTypesData = course.class_types_data || [];
+      const classTypesData = course.class_types_data;
       
-      if (classTypesData.length === 0) {
+      // Check if classTypesData is an array and has elements
+      if (!Array.isArray(classTypesData) || classTypesData.length === 0) {
         console.log('No class types data found, using default duration');
         return 60; // Default 60 minutes
       }
 
       // Get the first class type's duration
       const firstClassType = classTypesData[0];
+      
+      if (!firstClassType || typeof firstClassType !== 'object' || !('class_type_id' in firstClassType)) {
+        console.log('Invalid class type data structure, using default duration');
+        return 60;
+      }
+
       const classTypeId = firstClassType.class_type_id;
 
       const { data: classType, error: classTypeError } = await supabase
