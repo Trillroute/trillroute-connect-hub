@@ -9,9 +9,11 @@ const SchedulingContent: React.FC = () => {
   const { role, isAdmin, isSuperAdmin } = useAuth();
   const hasAdminAccess = isAdmin() || isSuperAdmin();
   
-  const [filterType, setFilterType] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<string | null>('teacher'); // Default to teacher filter
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+
+  console.log('SchedulingContent: Rendering with filterType:', filterType, 'selectedFilters:', selectedFilters);
 
   return (
     <ContentWrapper

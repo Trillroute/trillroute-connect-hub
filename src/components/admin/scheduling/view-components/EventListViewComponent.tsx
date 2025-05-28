@@ -18,16 +18,26 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
 }) => {
   const { events } = useCalendar();
   
-  console.log(`EventListViewComponent rendering with ${events.length} events`);
+  console.log(`EventListViewComponent: Rendering with ${events.length} events`);
+  console.log('EventListViewComponent: Events data:', events);
   
   return (
     <ScrollArea className="h-full">
-      <EventListView 
-        events={events}
-        onEditEvent={onEditEvent} 
-        onDeleteEvent={onDeleteEvent}
-        showAvailability={showAvailability}
-      />
+      <div className="p-4">
+        {events.length === 0 ? (
+          <div className="text-center text-gray-500 py-8">
+            <p>No events found</p>
+            <p className="text-sm mt-2">Try adjusting your filters or create a new event</p>
+          </div>
+        ) : (
+          <EventListView 
+            events={events}
+            onEditEvent={onEditEvent} 
+            onDeleteEvent={onDeleteEvent}
+            showAvailability={showAvailability}
+          />
+        )}
+      </div>
     </ScrollArea>
   );
 };

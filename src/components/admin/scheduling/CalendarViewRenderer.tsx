@@ -10,6 +10,7 @@ import { WeekViewComponent } from './view-components/WeekViewComponent';
 import { MonthViewComponent } from './view-components/MonthViewComponent';
 import { EventListViewComponent } from './view-components/EventListViewComponent';
 import { LegacyViewComponent } from './view-components/LegacyViewComponent';
+import { useCalendar } from './context/CalendarContext';
 
 interface CalendarViewRendererProps {
   viewMode: 'day' | 'week' | 'month' | 'list' | 'legacy';
@@ -32,6 +33,11 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   filterIds,
   showAvailability = true
 }) => {
+  const { events } = useCalendar();
+  
+  console.log(`CalendarViewRenderer: Rendering ${viewMode} view with ${events.length} events`);
+  console.log('CalendarViewRenderer: Events:', events);
+  
   // Return appropriate calendar view based on viewMode
   switch (viewMode) {
     case 'day':

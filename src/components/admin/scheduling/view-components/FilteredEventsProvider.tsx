@@ -21,7 +21,16 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   filterId,
   filterIds = []
 }) => {
-  const { setEvents, setAvailabilities, refreshEvents } = useCalendar();
+  // Check if we have calendar context available
+  let calendarContext;
+  try {
+    calendarContext = useCalendar();
+  } catch (error) {
+    console.warn('FilteredEventsProvider: No CalendarContext available, using as passthrough');
+    return <>{children}</>;
+  }
+
+  const { setEvents, setAvailabilities, refreshEvents } = calendarContext;
   
   // Convert service availability map to context availability map
   const convertAvailabilityMap = (
@@ -49,9 +58,11 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
 
   // Apply filters when filterType or filterIds change
   useEffect(() => {
+    console.log('FilteredEventsProvider: Effect triggered with:', { filterType, filterIds, filterId });
+    
     // If no filters are applied, use refreshEvents to get all events
     if ((!filterType || filterType === null) && (!filterIds || filterIds.length === 0) && !filterId) {
-      console.log("No filters applied, fetching all events");
+      console.log("FilteredEventsProvider: No filters applied, fetching all events");
       refreshEvents();
       return;
     }
