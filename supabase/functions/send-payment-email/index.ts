@@ -40,6 +40,14 @@ serve(async (req) => {
 
     console.log(`Sending payment email for student ${studentId}, course ${courseId}`);
 
+    // Check if RESEND_API_KEY exists
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY environment variable is not set');
+      throw new Error('Email service not configured properly');
+    }
+    console.log('Resend API Key found:', resendApiKey ? 'Yes' : 'No');
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -70,7 +78,7 @@ serve(async (req) => {
     }
 
     // Initialize Resend
-    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    const resend = new Resend(resendApiKey);
 
     // Create email content
     const emailHtml = `
@@ -114,19 +122,27 @@ serve(async (req) => {
     </html>
     `;
 
-    // For now, use the verified email as sender - you'll need to update this with your domain
-    const fromEmail = 'Music Course Platform <noreply@yourdomain.com>';
+    // Try sending email with better error handling
+    console.log(`Attempting to send email to ${student.email}`);
     
-    // Check if we're in testing mode (when domain is not verified)
-    const isTestingMode = !Deno.env.get('VERIFIED_DOMAIN');
-    
-    if (isTestingMode) {
-      console.log('TESTING MODE: Domain not verified. Email content logged below:');
-      console.log('To:', student.email);
-      console.log('Subject:', `Payment Link for ${course.title} - Complete Your Enrollment`);
-      console.log('Payment Link:', paymentLink);
-      
-      // Still log to database for record keeping
+    try {
+      const emailResponse = await resend.emails.send({
+        from: 'Music Course Platform <onboarding@resend.dev>',
+        to: [student.email],
+        subject: `Payment Link for ${course.title} - Complete Your Enrollment`,
+        html: emailHtml,
+      });
+
+      console.log('Resend API Response:', JSON.stringify(emailResponse, null, 2));
+
+      if (emailResponse.error) {
+        console.error('Resend error details:', emailResponse.error);
+        throw new Error(`Failed to send email: ${emailResponse.error.message || 'Unknown error'}`);
+      }
+
+      console.log('Email sent successfully via Resend:', emailResponse.data);
+
+      // Log the email in database for record keeping
       const { data: emailLog, error: emailError } = await supabase
         .from('email_logs')
         .insert({
@@ -134,24 +150,28 @@ serve(async (req) => {
           recipient_email: student.email,
           subject: `Payment Link for ${course.title}`,
           content: emailHtml,
-          status: 'testing_mode',
+          status: 'sent',
           metadata: {
             course_id: courseId,
             course_title: course.title,
             payment_link: paymentLink,
             amount: course.final_price,
-            testing_mode: true
+            resend_id: emailResponse.data?.id
           }
         })
         .select()
         .single();
 
+      if (emailError) {
+        console.error('Error logging email:', emailError);
+        // Don't throw here - email was sent successfully, logging is secondary
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true,
-          message: `TESTING MODE: Email logged but not sent. To send real emails, verify your domain at resend.com/domains`,
-          payment_link: paymentLink,
-          recipient: student.email,
+          message: `Payment link email for ${course.title} sent successfully to ${student.email}`,
+          email_id: emailResponse.data?.id,
           email_log_id: emailLog?.id
         }),
         {
@@ -159,64 +179,49 @@ serve(async (req) => {
           status: 200,
         }
       );
-    }
 
-    // Send email using Resend (only when domain is verified)
-    console.log(`Sending email to ${student.email}`);
-    const emailResponse = await resend.emails.send({
-      from: fromEmail,
-      to: [student.email],
-      subject: `Payment Link for ${course.title} - Complete Your Enrollment`,
-      html: emailHtml,
-    });
+    } catch (resendError) {
+      console.error('Resend API Error:', resendError);
+      
+      // Check if it's a 403 error (likely API key issue)
+      if (resendError.message?.includes('403') || resendError.message?.includes('Forbidden')) {
+        console.error('403 Error - likely API key issue. Please check:');
+        console.error('1. API key is correct');
+        console.error('2. Domain is verified in Resend dashboard');
+        console.error('3. API key has proper permissions');
+        
+        // Log to database as failed
+        await supabase
+          .from('email_logs')
+          .insert({
+            recipient_id: studentId,
+            recipient_email: student.email,
+            subject: `Payment Link for ${course.title}`,
+            content: emailHtml,
+            status: 'failed',
+            metadata: {
+              course_id: courseId,
+              course_title: course.title,
+              payment_link: paymentLink,
+              amount: course.final_price,
+              error: 'API key authentication failed',
+              error_details: resendError.message
+            }
+          });
 
-    if (emailResponse.error) {
-      console.error('Resend error:', emailResponse.error);
-      throw new Error(`Failed to send email: ${emailResponse.error.message}`);
-    }
-
-    console.log('Email sent successfully via Resend:', emailResponse.data);
-
-    // Log the email in database for record keeping
-    const { data: emailLog, error: emailError } = await supabase
-      .from('email_logs')
-      .insert({
-        recipient_id: studentId,
-        recipient_email: student.email,
-        subject: `Payment Link for ${course.title}`,
-        content: emailHtml,
-        metadata: {
-          course_id: courseId,
-          course_title: course.title,
-          payment_link: paymentLink,
-          amount: course.final_price,
-          resend_id: emailResponse.data?.id
-        }
-      })
-      .select()
-      .single();
-
-    if (emailError) {
-      console.error('Error logging email:', emailError);
-      // Don't throw here - email was sent successfully, logging is secondary
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        message: `Payment link email for ${course.title} sent successfully to ${student.email}`,
-        email_id: emailResponse.data?.id,
-        email_log_id: emailLog?.id
-      }),
-      {
-        headers: responseHeaders,
-        status: 200,
+        throw new Error('Email sending failed: API key authentication issue. Please verify your Resend API key and domain verification.');
       }
-    );
+      
+      throw resendError;
+    }
+
   } catch (error) {
     console.error('Error sending payment email:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Failed to send payment email' }),
+      JSON.stringify({ 
+        error: error.message || 'Failed to send payment email',
+        details: 'Check the function logs for more information'
+      }),
       {
         headers: responseHeaders,
         status: 400,
