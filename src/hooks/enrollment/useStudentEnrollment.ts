@@ -20,9 +20,9 @@ export function useStudentEnrollment() {
     
     setLoading(true);
     try {
-      console.log('Starting enrollment process:', { courseId, studentId, teacherId });
+      console.log('Starting enrollment process:', { courseId, studentId, teacherId, additionalMetadata });
       
-      // First clean up any existing duplicate events
+      // First clean up any existing duplicate events for this exact enrollment
       await cleanupDuplicateEvents(courseId, studentId, teacherId);
       
       // Enroll the student in the course
@@ -54,8 +54,8 @@ export function useStudentEnrollment() {
       // Create calendar events based on course type
       if (course.duration_type === 'recurring' && (course.course_type === 'solo' || course.course_type === 'duo')) {
         // For recurring solo/duo courses, we need a teacher and availability slot
-        if (teacherId && additionalMetadata) {
-          console.log('Creating recurring events with metadata:', additionalMetadata);
+        if (teacherId && additionalMetadata?.availabilitySlotId) {
+          console.log('Creating recurring events with slot data:', additionalMetadata);
           calendarSuccess = await createRecurringEvents(
             courseId,
             studentId,
