@@ -84,10 +84,10 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
     console.log("Rendering LeadsKanbanContent");
     return (
       <LeadsKanbanContent 
-        leads={leads}
-        loading={leadsLoading}
-        onEditLead={onEditLead}
-        onDeleteLead={onDeleteLead}
+        leads={leads || []}
+        loading={leadsLoading || false}
+        onEdit={onEditLead || (() => {})}
+        onDelete={onDeleteLead || (() => {})}
       />
     );
   }
@@ -109,7 +109,13 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
 
   if (activeTab === 'levels') {
     console.log("Rendering LevelManagement");
-    return <LevelManagement />;
+    return (
+      <LevelManagement 
+        canAddLevel={true}
+        canEditLevel={true}
+        canDeleteLevel={true}
+      />
+    );
   }
 
   if (activeTab === 'courseManagement') {
@@ -134,31 +140,31 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
 
   if (activeTab === 'calendar') {
     console.log("Rendering Calendar placeholder");
-    return <PlaceholderContent tabName="Calendar" />;
+    return <PlaceholderContent />;
   }
 
   if (activeTab === 'fees') {
     console.log("Rendering Fees placeholder");
-    return <PlaceholderContent tabName="Fees" />;
+    return <PlaceholderContent />;
   }
 
   if (activeTab === 'communication') {
     console.log("Rendering Communication placeholder");
-    return <PlaceholderContent tabName="Communication" />;
+    return <PlaceholderContent />;
   }
 
   if (activeTab === 'intramural') {
     console.log("Rendering Intramural placeholder");
-    return <PlaceholderContent tabName="Intramural" />;
+    return <PlaceholderContent />;
   }
 
   if (activeTab === 'reports') {
     console.log("Rendering Reports placeholder");
-    return <PlaceholderContent tabName="Reports" />;
+    return <PlaceholderContent />;
   }
 
   console.log("Default case: Rendering PlaceholderContent for tab:", activeTab);
-  return <PlaceholderContent tabName={activeTab} />;
+  return <PlaceholderContent />;
 };
 
 export default TabContentMap;
