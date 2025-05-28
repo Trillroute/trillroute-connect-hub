@@ -139,8 +139,8 @@ const TabContentMap: React.FC<TabContentMapProps> = ({
   }
 
   if (activeTab === 'calendar') {
-    console.log("Rendering Calendar placeholder");
-    return <PlaceholderContent />;
+    console.log("Rendering Calendar - SchedulingContent");
+    return <SchedulingContent />;
   }
 
   if (activeTab === 'fees') {
