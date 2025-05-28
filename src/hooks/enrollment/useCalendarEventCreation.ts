@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
@@ -93,15 +92,29 @@ export function useCalendarEventCreation() {
     courseId: string,
     studentId: string,
     teacherId: string,
-    availabilitySlot?: any,
+    additionalMetadata?: any,
     courseData?: any
   ) => {
     try {
       console.log('Creating recurring events for enrollment:', { courseId, studentId, teacherId });
-      console.log('Availability slot provided:', availabilitySlot);
+      console.log('Additional metadata provided:', additionalMetadata);
       
-      if (!availabilitySlot || !availabilitySlot.dayOfWeek || !availabilitySlot.startTime || !availabilitySlot.endTime) {
+      // Extract availability slot data from additionalMetadata
+      const availabilitySlot = {
+        dayOfWeek: additionalMetadata?.dayOfWeek,
+        startTime: additionalMetadata?.startTime,
+        endTime: additionalMetadata?.endTime
+      };
+      
+      console.log('Extracted availability slot:', availabilitySlot);
+      
+      if (!availabilitySlot.dayOfWeek && availabilitySlot.dayOfWeek !== 0 || !availabilitySlot.startTime || !availabilitySlot.endTime) {
         console.log('Invalid availability slot provided for recurring course');
+        console.log('Missing required fields:', {
+          dayOfWeek: availabilitySlot.dayOfWeek,
+          startTime: availabilitySlot.startTime,
+          endTime: availabilitySlot.endTime
+        });
         return false;
       }
 
@@ -150,11 +163,7 @@ export function useCalendarEventCreation() {
       const weeksToCreate = 12;
       
       console.log('Creating events for next', weeksToCreate, 'weeks with duration', eventDurationMinutes, 'minutes');
-      console.log('Availability slot details:', {
-        dayOfWeek: availabilitySlot.dayOfWeek,
-        startTime: availabilitySlot.startTime,
-        endTime: availabilitySlot.endTime
-      });
+      console.log('Availability slot details:', availabilitySlot);
       
       for (let week = 0; week < weeksToCreate; week++) {
         const eventDate = new Date(startDate);
@@ -172,6 +181,8 @@ export function useCalendarEventCreation() {
         // Calculate end time based on class duration
         const endTime = new Date(startTime);
         endTime.setMinutes(endTime.getMinutes() + eventDurationMinutes);
+
+        console.log(`Creating event for week ${week + 1}: ${startTime.toISOString()} to ${endTime.toISOString()}`);
 
         // Create event for teacher
         const teacherEvent = {
