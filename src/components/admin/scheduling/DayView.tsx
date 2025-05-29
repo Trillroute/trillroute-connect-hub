@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useCalendar } from './context/CalendarContext';
 import { getHourCells } from './calendarUtils';
@@ -46,22 +47,46 @@ const DayView: React.FC<DayViewProps> = ({
   
   // Process availability data for the current day
   useEffect(() => {
-    console.log("Processing availabilities for day view, data:", 
-      { date: currentDate, availabilitiesCount: Object.keys(availabilities || {}).length });
+    console.log("DayView: Processing availabilities for day view, data:", 
+      { date: currentDate.toDateString(), availabilitiesCount: Object.keys(availabilities || {}).length });
     
     // Use prop availability slots if provided, otherwise process them from context
     if (propAvailabilitySlots) {
       setAvailabilitySlots(propAvailabilitySlots);
     } else {
       const slots = processAvailabilities(currentDate, availabilities);
-      console.log(`Processed ${slots.length} availability slots for day ${currentDate.toDateString()}`);
+      console.log(`DayView: Processed ${slots.length} availability slots for day ${currentDate.toDateString()}`);
       setAvailabilitySlots(slots);
     }
   }, [currentDate, availabilities, propAvailabilitySlots]);
   
-  // Filter events for the current day
-  const todayEvents = filterTodayEvents(events, currentDate);
-  console.log(`Displaying ${todayEvents.length} events for day ${currentDate.toDateString()}`);
+  // Filter events for the current day with improved date comparison
+  const todayEvents = events.filter(event => {
+    if (!event.start || !(event.start instanceof Date) || isNaN(event.start.getTime())) {
+      console.warn('DayView: Invalid event start date:', event);
+      return false;
+    }
+    
+    const eventDate = new Date(event.start);
+    const currentDay = new Date(currentDate);
+    
+    // Compare dates using year, month, and day
+    const isSameDay = eventDate.getFullYear() === currentDay.getFullYear() &&
+                     eventDate.getMonth() === currentDay.getMonth() &&
+                     eventDate.getDate() === currentDay.getDate();
+    
+    console.log('DayView: Event date check:', {
+      eventTitle: event.title,
+      eventDate: eventDate.toDateString(),
+      currentDay: currentDay.toDateString(),
+      isSameDay
+    });
+    
+    return isSameDay;
+  });
+  
+  console.log(`DayView: Displaying ${todayEvents.length} events for day ${currentDate.toDateString()}`);
+  console.log('DayView: Today events titles:', todayEvents.map(e => e.title));
   
   const handleCellClick = (hour: number) => {
     if (onCreateEvent) {

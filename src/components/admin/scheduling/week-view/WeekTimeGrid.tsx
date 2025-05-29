@@ -57,6 +57,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     console.log('WeekTimeGrid: Event date check:', {
       eventTitle: event.title,
       eventDate: eventDate.toISOString(),
+      eventDateString: eventDate.toDateString(),
       weekStart: weekStart.toISOString(),
       weekEnd: weekEnd.toISOString(),
       isInWeek
@@ -66,6 +67,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   });
   
   console.log('WeekTimeGrid: Filtered week events:', weekEvents.length);
+  console.log('WeekTimeGrid: Week events titles:', weekEvents.map(e => e.title));
   
   return (
     <div className="grid grid-cols-8 h-full">
