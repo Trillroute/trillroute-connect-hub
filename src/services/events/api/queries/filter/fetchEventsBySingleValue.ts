@@ -2,30 +2,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { formatEventData } from '../utils/eventFormatters';
 
-// Define CalendarEvent interface locally to avoid circular imports
-interface CalendarEvent {
-  id: string;
-  title: string;
-  description?: string;
-  eventType?: string;
-  start: Date;
-  end: Date;
-  isBlocked?: boolean;
-  metadata?: any;
-  userId: string;
-  user_id: string;
-  start_time: string;
-  end_time: string;
-  location?: string;
-  color?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 /**
  * Fetch events by a single filter value
  */
-export const fetchEventsBySingleValue = async (columnName: string, value: string): Promise<CalendarEvent[]> => {
+export const fetchEventsBySingleValue = async (columnName: string, value: string) => {
   try {
     console.log(`Fetching events by ${columnName} = ${value}`);
     
