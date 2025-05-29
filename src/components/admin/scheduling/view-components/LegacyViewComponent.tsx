@@ -45,6 +45,7 @@ export const LegacyViewComponent: React.FC<LegacyViewProps> = ({
               toggleDay={toggleDay}
               events={events}
               onEditEvent={onEditEvent}
+              onCreateEvent={onCreateEvent}
             />
           ))}
         </div>

@@ -1,49 +1,51 @@
 
 import React from 'react';
-import TimeSlotItem from './TimeSlotItem';
 import { TimeSlot } from './types';
 import { CalendarEvent } from '../../types';
+import TimeSlotItem from './TimeSlotItem';
 
 interface DayTimeSlotsProps {
-  slots: TimeSlot[];
-  dayIndex: number;
+  timeSlots: TimeSlot[];
   events: CalendarEvent[];
   onEditEvent?: (event: CalendarEvent) => void;
+  onCreateEvent?: () => void;
 }
 
-const DayTimeSlots: React.FC<DayTimeSlotsProps> = ({ slots, dayIndex, events, onEditEvent }) => {
+const DayTimeSlots: React.FC<DayTimeSlotsProps> = ({ 
+  timeSlots, 
+  events, 
+  onEditEvent,
+  onCreateEvent 
+}) => {
+  if (timeSlots.length === 0) {
+    return (
+      <div className="text-center text-gray-500 py-4">
+        No time slots available
+      </div>
+    );
+  }
+
   return (
-    <div className="divide-y">
-      {slots.length > 0 ? (
-        slots.map((slot, slotIdx) => (
-          <div key={`${dayIndex}-${slotIdx}`} className="grid grid-cols-[120px_1fr]">
-            <div className="p-3 border-r font-medium text-muted-foreground">
-              {slot.time}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 p-2">
-              {slot.items.map((item, idx) => (
-                <TimeSlotItem 
-                  key={`${dayIndex}-${slotIdx}-${idx}`}
-                  item={item}
-                  slotTime={slot.time}
-                  events={events}
-                  onEditEvent={onEditEvent}
-                />
-              ))}
-              
-              {slot.items.length === 0 && (
-                <div className="p-3 border border-dashed rounded text-center text-muted-foreground">
-                  Open slot
-                </div>
-              )}
-            </div>
+    <div className="space-y-2">
+      {timeSlots.map((slot, slotIndex) => (
+        <div key={slotIndex} className="mb-3">
+          <div className="text-sm font-medium text-gray-600 mb-2">
+            {slot.time}
           </div>
-        ))
-      ) : (
-        <div className="p-4 text-center text-muted-foreground">
-          No slots available for this day
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {slot.items.map((item, itemIndex) => (
+              <TimeSlotItem
+                key={`${slotIndex}-${itemIndex}`}
+                item={item}
+                slotTime={slot.time}
+                events={events}
+                onEditEvent={onEditEvent}
+                onCreateEvent={onCreateEvent}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 };

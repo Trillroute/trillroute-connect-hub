@@ -24,13 +24,15 @@ interface TimeSlotItemProps {
   slotTime: string;
   events: CalendarEvent[];
   onEditEvent?: (event: CalendarEvent) => void;
+  onCreateEvent?: () => void;
 }
 
 const TimeSlotItem: React.FC<TimeSlotItemProps> = ({ 
   item, 
   slotTime, 
   events,
-  onEditEvent
+  onEditEvent,
+  onCreateEvent
 }) => {
   const handleClick = () => {
     if (item.status === 'booked' && onEditEvent) {
@@ -47,7 +49,8 @@ const TimeSlotItem: React.FC<TimeSlotItemProps> = ({
               item.startHour !== undefined && 
               item.startMinute !== undefined && 
               item.endHour !== undefined && 
-              item.endMinute !== undefined) {
+              item.endMinute !== undefined &&
+              onCreateEvent) {
       // For available slots, prepare for event creation
       handleAvailabilitySlotClick({
         dayOfWeek: item.dayOfWeek,
@@ -59,6 +62,9 @@ const TimeSlotItem: React.FC<TimeSlotItemProps> = ({
         userName: item.userName,
         category: item.type
       });
+      
+      // Trigger the create event popup
+      onCreateEvent();
     }
   };
   
@@ -68,7 +74,7 @@ const TimeSlotItem: React.FC<TimeSlotItemProps> = ({
         <TooltipTrigger asChild>
           <div 
             className={cn(
-              "p-3 rounded shadow-sm cursor-pointer",
+              "p-3 rounded shadow-sm cursor-pointer hover:opacity-90 transition-opacity",
               getItemStyle(item)
             )}
             onClick={handleClick}
