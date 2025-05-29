@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
-import { EventListView } from '../EventListView';
+import EventListView from '../EventListView';
 
 interface EventListViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;

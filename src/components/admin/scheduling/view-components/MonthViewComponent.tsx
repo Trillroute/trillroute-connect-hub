@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
-import { MonthView } from '../MonthView';
+import MonthView from '../MonthView';
 
 interface MonthViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;

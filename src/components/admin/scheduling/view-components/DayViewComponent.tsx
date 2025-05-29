@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
-import { DayView } from '../DayView';
+import DayView from '../DayView';
 
 interface DayViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;

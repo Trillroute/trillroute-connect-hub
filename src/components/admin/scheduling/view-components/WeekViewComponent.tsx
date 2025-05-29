@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
-import { WeekViewLayout } from '../week-view/WeekViewLayout';
+import WeekView from '../WeekView';
 
 interface WeekViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;
@@ -29,7 +29,7 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   console.log('WeekViewComponent: Received availabilities:', Object.keys(availabilities).length);
 
   return (
-    <WeekViewLayout
+    <WeekView
       events={events}
       availabilities={availabilities}
       onEditEvent={onEditEvent}

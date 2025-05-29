@@ -61,8 +61,10 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
     case 'month':
       return (
         <MonthViewComponent 
-          onDateClick={onDateClick}
+          onDateClick={(date: Date) => onDateClick()}
           onCreateEvent={onCreateEvent}
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
         />
       );
     case 'list':
