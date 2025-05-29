@@ -78,43 +78,38 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
       {weekDays.map((day, dayIndex) => (
         <div key={dayIndex} className="border-r relative">
           {/* Hour cells */}
-          {hours.map(hour => (
-            <div
-              key={hour}
-              className="h-16 border-b cursor-pointer hover:bg-gray-50 relative"
-              onClick={() => handleCellClick(dayIndex, hour)}
-            >
-              {/* Events for this time slot */}
-              {weekEvents
-                .filter(event => {
-                  if (!(event.start instanceof Date)) return false;
-                  
-                  // Compare the event date with the specific day from weekDays array
-                  const eventDate = new Date(event.start);
-                  const currentDay = new Date(day);
-                  
-                  // Check if it's the same day
-                  const isSameDay = eventDate.toDateString() === currentDay.toDateString();
-                  
-                  // Check if the event hour matches the current hour
-                  const eventHour = eventDate.getHours();
-                  const hourMatches = eventHour === hour;
-                  
-                  const matches = isSameDay && hourMatches;
-                  
-                  console.log(`WeekTimeGrid: Checking event "${event.title}" for day ${dayIndex} hour ${hour}:`, {
-                    eventDate: eventDate.toDateString(),
-                    currentDay: currentDay.toDateString(),
-                    eventHour,
-                    hour,
-                    isSameDay,
-                    hourMatches,
-                    matches
-                  });
-                  
-                  return matches;
-                })
-                .map(event => (
+          {hours.map(hour => {
+            // Find events for this specific day and hour
+            const eventsForThisSlot = weekEvents.filter(event => {
+              if (!(event.start instanceof Date)) return false;
+              
+              const eventDate = new Date(event.start);
+              const currentDay = new Date(day);
+              
+              // Check if it's the same day
+              const isSameDay = eventDate.toDateString() === currentDay.toDateString();
+              
+              // Check if the event hour matches the current hour
+              const eventHour = eventDate.getHours();
+              const hourMatches = eventHour === hour;
+              
+              const matches = isSameDay && hourMatches;
+              
+              if (matches) {
+                console.log(`WeekTimeGrid: Found matching event "${event.title}" for day ${dayIndex} hour ${hour}`);
+              }
+              
+              return matches;
+            });
+
+            return (
+              <div
+                key={hour}
+                className="h-16 border-b cursor-pointer hover:bg-gray-50 relative"
+                onClick={() => handleCellClick(dayIndex, hour)}
+              >
+                {/* Events for this time slot */}
+                {eventsForThisSlot.map(event => (
                   <WeekViewEvent
                     key={event.id}
                     event={event}
@@ -130,10 +125,10 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
                       bottom: '2px'
                     }}
                   />
-                ))
-              }
-            </div>
-          ))}
+                ))}
+              </div>
+            );
+          })}
           
           {/* Availability slots */}
           <WeekAvailabilitySlots
