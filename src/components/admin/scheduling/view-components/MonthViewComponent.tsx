@@ -36,9 +36,6 @@ export const MonthViewComponent: React.FC<MonthViewComponentProps> = ({
 
   return (
     <MonthView
-      events={finalEvents}
-      onEditEvent={onEditEvent}
-      onDeleteEvent={onDeleteEvent}
       onDateClick={onDateClick}
       onCreateEvent={onCreateEvent}
     />

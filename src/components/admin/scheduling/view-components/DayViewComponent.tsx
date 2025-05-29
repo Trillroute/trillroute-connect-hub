@@ -37,12 +37,9 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
 
   return (
     <DayView
-      events={finalEvents}
-      availabilities={finalAvailabilities}
+      onCreateEvent={onCreateEvent}
       onEditEvent={onEditEvent}
       onDeleteEvent={onDeleteEvent}
-      onCreateEvent={onCreateEvent}
-      showAvailability={showAvailability}
     />
   );
 };
