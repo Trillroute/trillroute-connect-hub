@@ -9,23 +9,25 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
     console.log(`Fetching events by ${columnName} in [${values.join(', ')}]`);
     
     // Completely avoid type inference by using basic variables
-    let queryResult: any = null;
-    let query: any = null;
+    let rawData: any = null;
+    let hasError = false;
+    let errorInfo: any = null;
     
     // Handle different filter types
     if (columnName === 'user_id') {
-      query = supabase.from('user_events').select('*').in('user_id', values);
-      queryResult = await query.order('start_time', { ascending: true });
+      const result = await supabase.from('user_events').select('*').in('user_id', values).order('start_time', { ascending: true });
+      rawData = result.data;
+      hasError = !!result.error;
+      errorInfo = result.error;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering with multiple values, fetch all events and filter in JavaScript
-      query = supabase.from('user_events').select('*');
-      queryResult = await query.order('start_time', { ascending: true });
+      const result = await supabase.from('user_events').select('*').order('start_time', { ascending: true });
+      const allData = result.data;
+      hasError = !!result.error;
+      errorInfo = result.error;
 
-      const error = queryResult.error;
-      const allData = queryResult.data;
-
-      if (error) {
-        console.error(`Error fetching events for ${columnName} filtering:`, error);
+      if (hasError) {
+        console.error(`Error fetching events for ${columnName} filtering:`, errorInfo);
         return [];
       }
 
@@ -56,7 +58,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         const event = filteredData[i];
         if (!event) continue;
         
-        const transformedEvent = {
+        const transformedEvent: any = {
           id: event.id,
           title: event.title,
           description: event.description,
@@ -70,7 +72,9 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
           start_time: event.start_time,
           end_time: event.end_time,
           created_at: event.created_at,
-          updated_at: event.updated_at
+          updated_at: event.updated_at,
+          location: undefined,
+          color: undefined
         };
 
         // Handle metadata properties
@@ -96,33 +100,29 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       return [];
     }
 
-    // Extract data and error with basic property access
-    const error = queryResult.error;
-    const data = queryResult.data;
-
-    if (error) {
-      console.error(`Error fetching events by ${columnName}:`, error);
+    if (hasError) {
+      console.error(`Error fetching events by ${columnName}:`, errorInfo);
       return [];
     }
 
-    console.log(`Found ${data?.length || 0} events for ${columnName} in [${values.join(', ')}]`);
+    console.log(`Found ${rawData?.length || 0} events for ${columnName} in [${values.join(', ')}]`);
     
     // Check if we have valid data
-    if (!data) {
+    if (!rawData) {
       return [];
     }
 
-    if (!Array.isArray(data)) {
+    if (!Array.isArray(rawData)) {
       return [];
     }
 
     const events = [];
     
-    for (let i = 0; i < data.length; i++) {
-      const event = data[i];
+    for (let i = 0; i < rawData.length; i++) {
+      const event = rawData[i];
       if (!event) continue;
       
-      const transformedEvent = {
+      const transformedEvent: any = {
         id: event.id,
         title: event.title,
         description: event.description,
@@ -136,7 +136,9 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         start_time: event.start_time,
         end_time: event.end_time,
         created_at: event.created_at,
-        updated_at: event.updated_at
+        updated_at: event.updated_at,
+        location: undefined,
+        color: undefined
       };
 
       // Handle metadata properties
