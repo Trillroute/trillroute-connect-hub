@@ -16,6 +16,21 @@ const CalendarEventComponent: React.FC<CalendarEventProps> = ({
   onEditClick,
   onDeleteClick
 }) => {
+  // Uniform event color coding across all views
+  const getEventColor = (): string => {
+    // Check if it's a trial class
+    const isTrialClass = event.title?.toLowerCase().includes('trial') || 
+                        event.description?.toLowerCase().includes('trial') ||
+                        event.eventType?.toLowerCase().includes('trial');
+    
+    if (isTrialClass) {
+      return '#F97316'; // Orange for trial classes
+    }
+    
+    // Default to green for regular sessions/classes
+    return '#10B981'; // Green for regular sessions
+  };
+
   const calculateEventPosition = () => {
     // Hours in calendar view start from 7:00 AM (0 minutes) to 7:00 PM (720 minutes)
     // Calculate minutes from 7:00 AM reference point
@@ -37,7 +52,7 @@ const CalendarEventComponent: React.FC<CalendarEventProps> = ({
     return {
       top: `${topPosition}px`,
       height: `${heightValue}px`,
-      backgroundColor: event.color || '#4285F4',
+      backgroundColor: event.color || getEventColor(),
     };
   };
 

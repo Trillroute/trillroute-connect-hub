@@ -38,19 +38,18 @@ const EventListView: React.FC<EventListViewProps> = ({
     }
   };
 
-  const getEventTypeColor = (eventType: string) => {
-    switch (eventType) {
-      case 'class':
-        return 'bg-blue-100 text-blue-800';
-      case 'trial':
-        return 'bg-green-100 text-green-800';
-      case 'meeting':
-        return 'bg-purple-100 text-purple-800';
-      case 'blocked':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const getEventTypeColor = (event: CalendarEvent) => {
+    // Check if it's a trial class
+    const isTrialClass = event.title?.toLowerCase().includes('trial') || 
+                        event.description?.toLowerCase().includes('trial') ||
+                        event.eventType?.toLowerCase().includes('trial');
+    
+    if (isTrialClass) {
+      return 'bg-orange-100 text-orange-800';
     }
+    
+    // Default to green for regular classes/sessions
+    return 'bg-green-100 text-green-800';
   };
 
   if (events.length === 0) {
@@ -117,8 +116,8 @@ const EventListView: React.FC<EventListViewProps> = ({
                 )}
                 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={getEventTypeColor(event.eventType || 'general')}>
-                    {event.eventType || 'general'}
+                  <Badge className={getEventTypeColor(event)}>
+                    {event.eventType || 'class'}
                   </Badge>
                   
                   {event.metadata?.teacherName && (

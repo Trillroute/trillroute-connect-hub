@@ -84,6 +84,21 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
         return null;
       }
       
+      // Determine event color - uniform green for regular classes/sessions
+      const getEventColor = () => {
+        // Check if it's a trial class
+        const isTrialClass = event.title?.toLowerCase().includes('trial') || 
+                            event.description?.toLowerCase().includes('trial') ||
+                            event.event_type?.toLowerCase().includes('trial');
+        
+        if (isTrialClass) {
+          return '#F97316'; // Orange for trial classes
+        }
+        
+        // Default to green for regular sessions/classes
+        return '#10B981'; // Green for regular sessions
+      };
+      
       const mappedEvent = {
         id: event.id,
         title: event.title,
@@ -91,7 +106,7 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
         start: startDate,
         end: endDate,
         userId: event.user_id,
-        eventType: event.event_type || 'general',
+        eventType: event.event_type || 'class',
         isBlocked: event.is_blocked || false,
         metadata: event.metadata || {},
         user_id: event.user_id,
@@ -102,7 +117,7 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
           : undefined,
         color: (event.metadata && typeof event.metadata === 'object' && 'color' in event.metadata) 
           ? String(event.metadata.color) 
-          : '#4285F4', // Default color for class events
+          : getEventColor(), // Use consistent color logic
         created_at: event.created_at,
         updated_at: event.updated_at
       };
@@ -114,6 +129,7 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
         end: mappedEvent.end,
         startValid: !isNaN(mappedEvent.start.getTime()),
         endValid: !isNaN(mappedEvent.end.getTime()),
+        color: mappedEvent.color,
         metadata: mappedEvent.metadata
       });
       
