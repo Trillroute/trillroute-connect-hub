@@ -19,14 +19,17 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   onCreateEvent,
   showAvailability = true
 }) => {
-  const { events } = useCalendar();
-  const { availabilitySlots } = useFilteredEvents();
+  const { events, availabilities } = useCalendar();
+  const { filteredAvailability } = useFilteredEvents({
+    events,
+    availabilities
+  });
   
   // Convert availability slots to a format compatible with the list view
   const availabilityEvents = useMemo(() => {
-    if (!showAvailability || !availabilitySlots) return [];
+    if (!showAvailability || !filteredAvailability) return [];
     
-    return availabilitySlots.map(slot => {
+    return filteredAvailability.map(slot => {
       // Create a date object for the current week's slot
       const today = new Date();
       const currentWeekStart = new Date(today.setDate(today.getDate() - today.getDay()));
@@ -52,7 +55,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
         }
       } as CalendarEvent;
     });
-  }, [availabilitySlots, showAvailability]);
+  }, [filteredAvailability, showAvailability]);
   
   // Combine events and availability slots
   const displayEvents = useMemo(() => {
