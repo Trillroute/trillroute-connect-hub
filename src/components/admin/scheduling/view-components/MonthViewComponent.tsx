@@ -2,6 +2,7 @@
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
 import MonthView from '../MonthView';
+import { useCalendar } from '../context/CalendarContext';
 
 interface MonthViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;
@@ -25,10 +26,19 @@ export const MonthViewComponent: React.FC<MonthViewComponentProps> = ({
   onDateClick,
   events = []
 }) => {
-  console.log('MonthViewComponent: Received events:', events.length);
+  // Get filtered events from context
+  const { events: contextEvents } = useCalendar();
+  
+  // Use context data (which is already filtered by FilteredEventsProvider)
+  const finalEvents = contextEvents || events;
+  
+  console.log('MonthViewComponent: Using events from context:', finalEvents.length);
 
   return (
     <MonthView
+      events={finalEvents}
+      onEditEvent={onEditEvent}
+      onDeleteEvent={onDeleteEvent}
       onDateClick={onDateClick}
       onCreateEvent={onCreateEvent}
     />

@@ -2,6 +2,7 @@
 import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
 import WeekView from '../WeekView';
+import { useCalendar } from '../context/CalendarContext';
 
 interface WeekViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;
@@ -25,12 +26,24 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   events = [],
   availabilities = {}
 }) => {
-  console.log('WeekViewComponent: Received events:', events.length);
-  console.log('WeekViewComponent: Received availabilities:', Object.keys(availabilities).length);
+  // Get filtered events and availabilities from context
+  const { events: contextEvents, availabilities: contextAvailabilities } = useCalendar();
+  
+  // Use context data (which is already filtered by FilteredEventsProvider)
+  const finalEvents = contextEvents || events;
+  const finalAvailabilities = contextAvailabilities || availabilities;
+  
+  console.log('WeekViewComponent: Using events from context:', finalEvents.length);
+  console.log('WeekViewComponent: Using availabilities from context:', Object.keys(finalAvailabilities).length);
 
   return (
     <WeekView
+      events={finalEvents}
+      availabilities={finalAvailabilities}
+      onEditEvent={onEditEvent}
+      onDeleteEvent={onDeleteEvent}
       onCreateEvent={onCreateEvent}
+      showAvailability={showAvailability}
     />
   );
 };
