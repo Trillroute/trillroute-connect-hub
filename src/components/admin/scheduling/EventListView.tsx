@@ -53,10 +53,10 @@ const EventListView: React.FC<EventListViewProps> = ({
                         event.eventType?.toLowerCase().includes('trial');
     
     if (isTrialClass) {
-      return '#F97316'; // Orange for trial classes
+      return '#F97316'; // Orange for trial classes - matches EventColorPicker
     }
 
-    // Check event type for other categories
+    // Check event type for other categories - matches EventColorPicker exactly
     const eventType = event.eventType?.toLowerCase();
     switch (eventType) {
       case 'break':
@@ -68,7 +68,7 @@ const EventListView: React.FC<EventListViewProps> = ({
       case 'qc':
         return '#EC4899'; // Pink for QC
       default:
-        return '#10B981'; // Green for regular sessions
+        return '#10B981'; // Green for regular sessions - matches EventColorPicker
     }
   };
 
@@ -87,7 +87,7 @@ const EventListView: React.FC<EventListViewProps> = ({
       return 'bg-orange-100 border-orange-300 text-orange-800';
     }
 
-    // Check event type for other categories
+    // Check event type for other categories - matches other views exactly
     const eventType = event.eventType?.toLowerCase();
     switch (eventType) {
       case 'break':
