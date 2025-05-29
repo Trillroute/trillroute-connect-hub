@@ -36,7 +36,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     end: weekDays[6]?.toISOString()
   });
   
-  // Filter events that fall within the current week - simplified logic
+  // Filter events that fall within the current week
   const weekEvents = events.filter(event => {
     if (!event.start || !(event.start instanceof Date) || isNaN(event.start.getTime())) {
       console.warn('WeekTimeGrid: Invalid event start date:', event);
@@ -51,7 +51,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     weekStart.setHours(0, 0, 0, 0);
     weekEnd.setHours(23, 59, 59, 999);
     
-    // Simple date comparison - just check if event date falls within week range
+    // Check if event date falls within week range
     const isInWeek = eventDate >= weekStart && eventDate <= weekEnd;
     
     console.log('WeekTimeGrid: Event date check:', {
@@ -66,14 +66,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   });
   
   console.log('WeekTimeGrid: Filtered week events:', weekEvents.length);
-  weekEvents.forEach((event, index) => {
-    console.log(`WeekTimeGrid: Week event ${index + 1}:`, {
-      title: event.title,
-      start: event.start,
-      dayOfWeek: event.start instanceof Date ? event.start.getDay() : 'invalid'
-    });
-  });
-
+  
   return (
     <div className="grid grid-cols-8 h-full">
       {/* Time column */}
@@ -112,13 +105,15 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               const eventDate = new Date(event.start);
               const currentDay = new Date(day);
               
-              // Simple day comparison using toDateString for reliability
-              const isSameDay = eventDate.toDateString() === currentDay.toDateString();
+              // Use date comparison (year, month, day) for same day check
+              const isSameDay = eventDate.getFullYear() === currentDay.getFullYear() &&
+                               eventDate.getMonth() === currentDay.getMonth() &&
+                               eventDate.getDate() === currentDay.getDate();
               
               console.log(`WeekTimeGrid: Day ${dayIndex} event check:`, {
                 eventTitle: event.title,
-                eventDateString: eventDate.toDateString(),
-                currentDayString: currentDay.toDateString(),
+                eventDate: eventDate.toDateString(),
+                currentDay: currentDay.toDateString(),
                 isSameDay
               });
               
@@ -147,7 +142,11 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               const topOffset = Math.max(0, startMinutesFromGridStart * pixelsPerMinute);
               const height = Math.max(durationMinutes * pixelsPerMinute, 20);
               
-              console.log(`WeekTimeGrid: Rendering event ${event.title} at hour ${startHour}:${startMinute}`);
+              console.log(`WeekTimeGrid: Rendering event ${event.title} at hour ${startHour}:${startMinute}`, {
+                startMinutesFromGridStart,
+                topOffset,
+                height
+              });
               
               return (
                 <WeekViewEvent

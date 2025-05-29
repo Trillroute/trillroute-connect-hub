@@ -72,7 +72,7 @@ const WeekAvailabilitySlots: React.FC<WeekAvailabilitySlotsProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className={`absolute rounded border cursor-pointer hover:opacity-70 z-10 opacity-60 ${getCategoryColor(slot.category)}`}
+                  className={`absolute rounded border cursor-pointer hover:opacity-70 z-10 opacity-30 ${getCategoryColor(slot.category)}`}
                   style={{
                     top: `${topOffset}px`,
                     height: `${height}px`,
