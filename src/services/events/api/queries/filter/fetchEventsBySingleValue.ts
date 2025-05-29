@@ -28,7 +28,7 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
     console.log(`Found ${data?.length || 0} events for ${columnName} = ${value}`);
     
     // Format the data manually to avoid circular imports
-    return (data || []).map(event => ({
+    return (data || []).map((event: any) => ({
       id: event.id,
       title: event.title,
       description: event.description,

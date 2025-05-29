@@ -27,7 +27,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       }
 
       // Filter events where metadata contains any of the specified values
-      const filteredData = (data || []).filter(event => {
+      const filteredData = (data || []).filter((event: any) => {
         if (!event.metadata || typeof event.metadata !== 'object') return false;
         const metadataValue = (event.metadata as any)[columnName];
         return metadataValue && values.includes(metadataValue);
@@ -36,7 +36,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       console.log(`Found ${filteredData.length} events for ${columnName} in [${values.join(', ')}]`);
       
       // Format the data manually to avoid circular imports
-      return filteredData.map(event => ({
+      return filteredData.map((event: any) => ({
         id: event.id,
         title: event.title,
         description: event.description,
@@ -70,7 +70,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
     console.log(`Found ${data?.length || 0} events for ${columnName} in [${values.join(', ')}]`);
     
     // Format the data manually to avoid circular imports
-    return (data || []).map(event => ({
+    return (data || []).map((event: any) => ({
       id: event.id,
       title: event.title,
       description: event.description,
