@@ -57,7 +57,17 @@ export function filterAvailability(
     return [];
   }
   
-  console.log(`Filtering ${availabilityArray.length} availability slots with filterType: ${filterType}`);
+  console.log(`Filtering ${availabilityArray.length} availability slots with filterType: ${filterType}, filterIds:`, filterIds);
+
+  // If no specific filters are applied, show all availability slots
+  const hasNoFilters = (!filters.users || filters.users.length === 0) && 
+                      (!filterIds || filterIds.length === 0) && 
+                      !filterType;
+  
+  if (hasNoFilters) {
+    console.log('No filters applied, showing all availability slots');
+    return availabilityArray;
+  }
 
   // Special case: if no filterIds are provided but filterType is set, 
   // show all availabilities for that role (don't filter them)
