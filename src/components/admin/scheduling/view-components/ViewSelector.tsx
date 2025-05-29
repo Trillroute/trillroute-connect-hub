@@ -6,6 +6,7 @@ import { DayViewComponent } from './DayViewComponent';
 import { MonthViewComponent } from './MonthViewComponent';
 import { LegacyViewComponent } from './LegacyViewComponent';
 import { CalendarEvent } from '../context/calendarTypes';
+import { useCalendar } from '../context/CalendarContext';
 
 interface ViewSelectorProps {
   currentView: string;
@@ -33,6 +34,12 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   filterIds,
   filters
 }) => {
+  // Get the filtered events and availabilities from the calendar context
+  const { events, availabilities } = useCalendar();
+  
+  console.log('ViewSelector: Using filtered events from context:', events?.length || 0);
+  console.log('ViewSelector: Filter props:', { filterType, filterId, filterIds, filters });
+
   const viewProps = {
     onEditEvent,
     onDeleteEvent,
@@ -41,7 +48,10 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
     filterType,
     filterId,
     filterIds,
-    filters
+    filters,
+    // Pass the filtered events and availabilities from context
+    events,
+    availabilities
   };
 
   switch (currentView) {

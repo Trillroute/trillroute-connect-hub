@@ -1,73 +1,40 @@
 
 import React from 'react';
-import DayView from '../DayView';
-import { useCalendar } from '../context/CalendarContext';
-import { processAvailabilities } from '../day-view/dayViewUtils';
 import { CalendarEvent } from '../context/calendarTypes';
+import { DayView } from '../DayView';
 
 interface DayViewComponentProps {
-  showAvailability?: boolean;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
   onCreateEvent?: () => void;
-  onEditEvent?: (event: CalendarEvent) => void;
-  onDeleteEvent?: (event: CalendarEvent) => void;
+  showAvailability?: boolean;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterId?: string | null;
+  filterIds?: string[];
+  filters?: { users: string[]; courses: string[]; skills: string[] };
+  // Accept the filtered events and availabilities from ViewSelector
+  events?: CalendarEvent[];
+  availabilities?: any;
 }
 
 export const DayViewComponent: React.FC<DayViewComponentProps> = ({
-  showAvailability = true,
-  onCreateEvent,
   onEditEvent,
-  onDeleteEvent
+  onDeleteEvent,
+  onCreateEvent,
+  showAvailability = true,
+  events = [],
+  availabilities = {}
 }) => {
-  const { 
-    currentDate, 
-    events, 
-    availabilities,
-    handleCreateEvent,
-    handleUpdateEvent,
-    handleDeleteEvent
-  } = useCalendar();
-  
-  // Process availability data for the current day
-  const availabilitySlots = showAvailability 
-    ? processAvailabilities(currentDate, availabilities)
-    : [];
-  
-  const handleCreateEventClick = () => {
-    if (onCreateEvent) {
-      onCreateEvent();
-    } else if (handleCreateEvent) {
-      const newEvent: Omit<CalendarEvent, 'id'> = {
-        title: 'New Event',
-        description: '',
-        start: new Date(),
-        end: new Date(Date.now() + 3600000), // 1 hour later
-      };
-      
-      handleCreateEvent(newEvent);
-    }
-  };
-  
-  const handleEditEventClick = (event: CalendarEvent) => {
-    if (onEditEvent) {
-      onEditEvent(event);
-    } else if (handleUpdateEvent) {
-      handleUpdateEvent(event.id, event);
-    }
-  };
-  
-  const handleDeleteEventClick = (event: CalendarEvent) => {
-    if (onDeleteEvent) {
-      onDeleteEvent(event);
-    } else if (handleDeleteEvent) {
-      handleDeleteEvent(event.id);
-    }
-  };
-  
+  console.log('DayViewComponent: Received events:', events.length);
+
   return (
-    <DayView 
-      onCreateEvent={handleCreateEventClick}
-      onEditEvent={handleEditEventClick}
-      onDeleteEvent={handleDeleteEventClick}
+    <DayView
+      events={events}
+      availabilities={availabilities}
+      onEditEvent={onEditEvent}
+      onDeleteEvent={onDeleteEvent}
+      onCreateEvent={onCreateEvent}
+      showAvailability={showAvailability}
     />
   );
 };

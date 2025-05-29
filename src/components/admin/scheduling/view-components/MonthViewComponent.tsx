@@ -1,22 +1,39 @@
 
 import React from 'react';
-import MonthView from '../MonthView';
+import { CalendarEvent } from '../context/calendarTypes';
+import { MonthView } from '../MonthView';
 
 interface MonthViewComponentProps {
-  onDateClick: (date: Date) => void;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
   onCreateEvent?: () => void;
+  onDateClick: (date: Date) => void;
+  showAvailability?: boolean;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterId?: string | null;
+  filterIds?: string[];
+  filters?: { users: string[]; courses: string[]; skills: string[] };
+  // Accept the filtered events from ViewSelector
+  events?: CalendarEvent[];
+  availabilities?: any;
 }
 
 export const MonthViewComponent: React.FC<MonthViewComponentProps> = ({
+  onEditEvent,
+  onDeleteEvent,
+  onCreateEvent,
   onDateClick,
-  onCreateEvent
+  events = []
 }) => {
+  console.log('MonthViewComponent: Received events:', events.length);
+
   return (
-    <div className="h-full overflow-auto">
-      <MonthView 
-        onDateClick={onDateClick}
-        onCreateEvent={onCreateEvent}
-      />
-    </div>
+    <MonthView
+      events={events}
+      onEditEvent={onEditEvent}
+      onDeleteEvent={onDeleteEvent}
+      onCreateEvent={onCreateEvent}
+      onDateClick={onDateClick}
+    />
   );
 };

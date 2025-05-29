@@ -1,71 +1,41 @@
 
-import React, { useMemo } from 'react';
-import WeekView from '../WeekView';
-import { useCalendar } from '../context/CalendarContext';
-import { AvailabilitySlot } from '../week-view/weekViewUtils';
+import React from 'react';
 import { CalendarEvent } from '../context/calendarTypes';
+import { WeekViewLayout } from '../week-view/WeekViewLayout';
 
 interface WeekViewComponentProps {
-  showAvailability?: boolean;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
   onCreateEvent?: () => void;
-  onEditEvent?: (event: CalendarEvent) => void;
-  onDeleteEvent?: (event: CalendarEvent) => void;
+  showAvailability?: boolean;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterId?: string | null;
+  filterIds?: string[];
+  filters?: { users: string[]; courses: string[]; skills: string[] };
+  // Accept the filtered events and availabilities from ViewSelector
+  events?: CalendarEvent[];
+  availabilities?: any;
 }
 
 export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
-  showAvailability = true,
-  onCreateEvent,
   onEditEvent,
-  onDeleteEvent
+  onDeleteEvent,
+  onCreateEvent,
+  showAvailability = true,
+  events = [],
+  availabilities = {}
 }) => {
-  const { currentDate, events, availabilities } = useCalendar();
-  
-  // Process availability slots for the week view
-  const availabilitySlots = useMemo(() => {
-    // Always show availability slots in week view
-    if (!availabilities) return [];
-    
-    const slots: AvailabilitySlot[] = [];
-    
-    Object.entries(availabilities).forEach(([userId, userData]) => {
-      if (!userData || !userData.slots) return;
-      
-      userData.slots.forEach(slot => {
-        try {
-          const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-          const [endHour, endMinute] = slot.endTime.split(':').map(Number);
-          
-          if (
-            typeof startHour === 'number' && !isNaN(startHour) &&
-            typeof startMinute === 'number' && !isNaN(startMinute) &&
-            typeof endHour === 'number' && !isNaN(endHour) &&
-            typeof endMinute === 'number' && !isNaN(endMinute)
-          ) {
-            slots.push({
-              userId,
-              userName: userData.name || 'Unknown',
-              dayOfWeek: slot.dayOfWeek,
-              startHour,
-              startMinute,
-              endHour,
-              endMinute,
-              category: slot.category || 'Default'
-            });
-          }
-        } catch (error) {
-          console.error('Error processing availability slot for week view:', error);
-        }
-      });
-    });
-    
-    console.log('WeekViewComponent: Processed availability slots:', slots.length);
-    
-    return slots;
-  }, [availabilities]);
-  
+  console.log('WeekViewComponent: Received events:', events.length);
+  console.log('WeekViewComponent: Received availabilities:', Object.keys(availabilities).length);
+
   return (
-    <WeekView 
+    <WeekViewLayout
+      events={events}
+      availabilities={availabilities}
+      onEditEvent={onEditEvent}
+      onDeleteEvent={onDeleteEvent}
       onCreateEvent={onCreateEvent}
+      showAvailability={showAvailability}
     />
   );
 };
