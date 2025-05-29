@@ -1,7 +1,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useCalendar } from '../../context/CalendarContext';
-import { formatTime } from './utils';
+import { formatTime, getCategoryColor } from './utils';
 import { TimeSlot, DayInfo } from './types';
 
 export const useLegacyViewData = () => {
@@ -46,7 +46,7 @@ export const useLegacyViewData = () => {
     console.log('Legacy View: Events received:', events);
     console.log('Legacy View: Availabilities received:', availabilities);
     
-    // Process availabilities
+    // Process availabilities - these are SLOTS, not events
     if (availabilities && displayMode !== 'events') {
       Object.entries(availabilities).forEach(([userId, userData]) => {
         if (!userData || !userData.slots) return;
@@ -74,12 +74,13 @@ export const useLegacyViewData = () => {
               slotsByDay[slot.dayOfWeek].push(timeSlot);
             }
             
+            // For availability slots - use light background colors (not solid colors)
             timeSlot.items.push({
               userId: userId,
               userName: userData.name || 'Unknown',
-              status: 'available',
-              type: slot.category || 'session', // Default to 'session' to match week view
-              color: getCategoryColor(slot.category || 'session') // Use consistent color logic
+              status: 'available', // This indicates it's an availability slot
+              type: slot.category || 'session',
+              color: getCategoryColor(slot.category || 'session') // This will be used for light backgrounds
             });
           } catch (error) {
             console.error('Error processing availability slot:', error);
@@ -88,7 +89,7 @@ export const useLegacyViewData = () => {
       });
     }
     
-    // Process events with proper validation
+    // Process events - these are BOOKED events
     if (events && displayMode !== 'slots') {
       console.log('Legacy View: Processing events for time slots');
       
@@ -143,19 +144,17 @@ export const useLegacyViewData = () => {
             slotsByDay[dayOfWeek].push(timeSlot);
           }
           
-          // Determine event type and color using same logic as other views
+          // For events - determine if it's a trial class
           const isTrialClass = event.title?.toLowerCase().includes('trial') || 
                               event.description?.toLowerCase().includes('trial') ||
                               event.eventType?.toLowerCase().includes('trial');
           
-          const eventColor = isTrialClass ? '#F97316' : '#10B981'; // Orange for trial, green for regular
-          
           timeSlot.items.push({
             userId: event.userId || '',
             userName: event.title,
-            status: 'booked',
-            type: isTrialClass ? 'trial' : 'session', // Consistent type naming
-            color: eventColor
+            status: 'booked', // This indicates it's a booked event
+            type: isTrialClass ? 'trial' : 'session', // This will determine solid green vs orange
+            color: isTrialClass ? '#F97316' : '#10B981' // Orange for trial, green for regular
           });
         } catch (error) {
           console.error(`Legacy View: Error processing event ${index}:`, error, event);
@@ -185,26 +184,4 @@ export const useLegacyViewData = () => {
     toggleDay,
     setDisplayMode
   };
-};
-
-// Use EXACTLY the same color function as week view
-export const getCategoryColor = (category: string): string => {
-  switch(category.toLowerCase()) {
-    case 'session':
-      return '#10B981'; // green-500 - same as week view
-    case 'break':
-      return '#3B82F6'; // blue-600 - same as week view
-    case 'office':
-      return '#8B5CF6'; // purple-600 - same as week view
-    case 'meeting':
-      return '#F59E0B'; // yellow-500 - same as week view
-    case 'class setup':
-      return '#F97316'; // orange-500 - same as week view
-    case 'qc':
-      return '#EC4899'; // pink-600 - same as week view
-    case 'trial':
-      return '#F97316'; // orange-500 for trial classes
-    default:
-      return '#10B981'; // Default to green - same as week view
-  }
 };

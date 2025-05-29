@@ -50,12 +50,7 @@ export const getCategoryBackgroundClass = (category: string) => {
 
 // Get item background style based on status/category - EXACTLY matching week view logic
 export const getItemStyle = (item: { status: string; color: string; type?: string }) => {
-  // Handle expired status 
-  if (item.status === 'expired') {
-    return 'bg-red-700/90 text-white';
-  }
-  
-  // Handle booked status - use uniform green for regular classes, orange for trial classes
+  // Handle booked status (events) - use uniform green for regular classes, orange for trial classes
   if (item.status === 'booked') {
     // Check if it's a trial class
     const isTrialClass = item.type?.toLowerCase().includes('trial');
@@ -68,26 +63,16 @@ export const getItemStyle = (item: { status: string; color: string; type?: strin
     return 'bg-green-500 text-white';
   }
   
-  // Use category-specific color if available and for available slots - EXACTLY matching week view
+  // Handle available status (availability slots) - use light background classes
   if (item.status === 'available' && item.type) {
-    switch(item.type.toLowerCase()) {
-      case 'session':
-        return 'bg-green-500 text-white';
-      case 'break':
-        return 'bg-blue-600 text-white';
-      case 'office':
-        return 'bg-purple-600 text-white';
-      case 'meeting':
-        return 'bg-yellow-500 text-white';
-      case 'class setup':
-        return 'bg-orange-500 text-white';
-      case 'qc':
-        return 'bg-pink-600 text-white';
-      default:
-        return 'bg-green-500 text-white';
-    }
+    return getCategoryBackgroundClass(item.type);
   }
   
-  // Default to green if no match - EXACTLY matching week view
-  return 'bg-green-500 text-white';
+  // Handle expired status 
+  if (item.status === 'expired') {
+    return 'bg-red-700/90 text-white';
+  }
+  
+  // Default fallback
+  return 'bg-gray-100 border-gray-300 text-gray-800';
 };
