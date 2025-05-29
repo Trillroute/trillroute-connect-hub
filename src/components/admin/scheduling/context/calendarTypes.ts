@@ -1,3 +1,4 @@
+
 import { ReactNode } from "react";
 
 export type EventLayer = string;
@@ -21,7 +22,7 @@ export interface CalendarEvent {
   updated_at?: string;
 }
 
-export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
+export type CalendarViewMode = 'day' | 'week' | 'list' | 'legacy';
 
 export interface SelectedUser {
   id: string;

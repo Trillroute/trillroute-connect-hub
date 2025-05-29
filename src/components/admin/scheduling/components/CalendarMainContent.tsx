@@ -5,6 +5,7 @@ import CalendarViewRenderer from '../CalendarViewRenderer';
 import EventFormDialog from '../EventFormDialog';
 import FilterTypeTabs from './FilterTypeTabs';
 import { useCalendar } from '../context/CalendarContext';
+import { CalendarViewMode } from '../types';
 
 interface CalendarMainContentProps {
   hasAdminAccess?: boolean;
@@ -107,7 +108,7 @@ const CalendarMainContent: React.FC<CalendarMainContentProps> = ({
       
       <div className="flex-grow overflow-auto">
         <CalendarViewRenderer 
-          viewMode={viewMode}
+          viewMode={viewMode as CalendarViewMode}
           onCreateEvent={handleCreateEvent}
           onEditEvent={handleEventEdit}
           onDeleteEvent={handleEventDelete}
