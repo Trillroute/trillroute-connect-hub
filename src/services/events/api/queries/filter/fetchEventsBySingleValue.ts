@@ -47,18 +47,25 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
       allEvents = uniqueEvents;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering, use the metadata column
-      const result = await supabase
+      // Split the query to avoid TypeScript inference issues
+      const { data, error } = await supabase
         .from('user_events')
         .select('*')
-        .eq(`metadata->${columnName}`, value)
         .order('start_time', { ascending: true });
       
-      if (result.error) {
-        console.error(`Error fetching events by ${columnName}:`, result.error);
+      if (error) {
+        console.error(`Error fetching events by ${columnName}:`, error);
         return [];
       }
       
-      allEvents = result.data || [];
+      // Filter in JavaScript to avoid complex metadata query chains
+      const filteredEvents = (data || []).filter((event: any) => {
+        const metadata = event.metadata;
+        if (!metadata || typeof metadata !== 'object') return false;
+        return metadata[columnName] === value;
+      });
+      
+      allEvents = filteredEvents;
     } else {
       // Default case - return empty array
       return [];
