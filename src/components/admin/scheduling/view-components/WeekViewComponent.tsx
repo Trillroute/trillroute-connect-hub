@@ -15,8 +15,8 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   
   // Process availability slots for the week view
   const availabilitySlots = useMemo(() => {
-    // Return empty array if showAvailability is false
-    if (!showAvailability || !availabilities) return [];
+    // Always show availability slots in week view
+    if (!availabilities) return [];
     
     const slots: AvailabilitySlot[] = [];
     
@@ -51,8 +51,10 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
       });
     });
     
+    console.log('WeekViewComponent: Processed availability slots:', slots.length);
+    
     return slots;
-  }, [availabilities, showAvailability]);
+  }, [availabilities]);
   
   return (
     <WeekView 

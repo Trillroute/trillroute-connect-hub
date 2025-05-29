@@ -89,77 +89,81 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
       {weekDays.map((day, dayIndex) => (
         <div key={dayIndex} className="border-r relative">
           {/* Hour cells */}
-          {hours.map(hour => {
-            // Find events for this specific day and hour
-            const eventsForThisSlot = weekEvents.filter(event => {
-              if (!(event.start instanceof Date)) return false;
-              
-              const eventDate = new Date(event.start);
-              const currentDay = new Date(day);
-              
-              // Check if it's the same day (more robust comparison)
-              const eventDateStr = eventDate.toDateString();
-              const currentDayStr = currentDay.toDateString();
-              const isSameDay = eventDateStr === currentDayStr;
-              
-              // Check if the event hour overlaps with the current hour slot
-              const eventHour = eventDate.getHours();
-              const eventMinute = eventDate.getMinutes();
-              
-              // Event overlaps with this hour slot if it starts during this hour
-              // or if it's a multi-hour event that spans this hour
-              const eventStartsInThisHour = eventHour === hour;
-              
-              // For longer events, check if this hour falls within the event duration
-              const eventEnd = event.end instanceof Date ? event.end : eventDate;
-              const eventEndHour = eventEnd.getHours();
-              const eventSpansThisHour = eventHour <= hour && hour < eventEndHour;
-              
-              const hourMatches = eventStartsInThisHour || eventSpansThisHour;
-              
-              const matches = isSameDay && hourMatches;
-              
-              if (matches) {
-                console.log(`WeekTimeGrid: Found matching filtered event "${event.title}" for day ${dayIndex} (${currentDayStr}) hour ${hour}`);
-              }
-              
-              return matches;
-            });
-
-            return (
-              <div
-                key={hour}
-                className="h-16 border-b cursor-pointer hover:bg-gray-50 relative"
-                onClick={() => handleCellClick(dayIndex, hour)}
-              >
-                {/* Events for this time slot */}
-                {eventsForThisSlot.map(event => (
-                  <WeekViewEvent
-                    key={event.id}
-                    event={event}
-                    isSelected={selectedEvent?.id === event.id}
-                    onSelect={() => openEventActions(event)}
-                    onEdit={() => handleEdit(event)}
-                    onDelete={() => confirmDelete(event)}
-                    style={{
-                      position: 'absolute',
-                      top: '2px',
-                      left: '2px',
-                      right: '2px',
-                      bottom: '2px'
-                    }}
-                  />
-                ))}
-              </div>
-            );
-          })}
+          {hours.map(hour => (
+            <div
+              key={hour}
+              className="h-16 border-b cursor-pointer hover:bg-gray-50 relative"
+              onClick={() => handleCellClick(dayIndex, hour)}
+            />
+          ))}
           
-          {/* Availability slots */}
+          {/* Availability slots - rendered first so they appear behind events */}
           <WeekAvailabilitySlots
             dayIndex={dayIndex}
             availabilitySlots={availabilitySlots.filter(slot => slot.dayOfWeek === dayIndex)}
             onAvailabilityClick={handleAvailabilityClick}
           />
+          
+          {/* Events - rendered last so they appear on top */}
+          {weekEvents
+            .filter(event => {
+              if (!(event.start instanceof Date)) return false;
+              
+              const eventDate = new Date(event.start);
+              const currentDay = new Date(day);
+              
+              // Check if it's the same day
+              const eventDateStr = eventDate.toDateString();
+              const currentDayStr = currentDay.toDateString();
+              return eventDateStr === currentDayStr;
+            })
+            .map(event => {
+              const eventDate = new Date(event.start);
+              const eventEndDate = event.end instanceof Date ? event.end : eventDate;
+              
+              // Calculate position
+              const startHour = eventDate.getHours();
+              const startMinute = eventDate.getMinutes();
+              const endHour = eventEndDate.getHours();
+              const endMinute = eventEndDate.getMinutes();
+              
+              // Calculate minutes from 7 AM (grid start)
+              const gridStartHour = 7;
+              const hourCellHeight = 64; // h-16 = 64px
+              
+              const startMinutesFromGridStart = ((startHour - gridStartHour) * 60) + startMinute;
+              const endMinutesFromGridStart = ((endHour - gridStartHour) * 60) + endMinute;
+              const durationMinutes = endMinutesFromGridStart - startMinutesFromGridStart;
+              
+              // Convert to pixels
+              const pixelsPerMinute = hourCellHeight / 60;
+              const topOffset = Math.max(0, startMinutesFromGridStart * pixelsPerMinute);
+              const height = Math.max(durationMinutes * pixelsPerMinute, 20);
+              
+              // Only show events within visible hours
+              if (startHour < gridStartHour || startHour >= gridStartHour + 14) {
+                return null;
+              }
+              
+              return (
+                <WeekViewEvent
+                  key={event.id}
+                  event={event}
+                  isSelected={selectedEvent?.id === event.id}
+                  onSelect={() => openEventActions(event)}
+                  onEdit={() => handleEdit(event)}
+                  onDelete={() => confirmDelete(event)}
+                  style={{
+                    position: 'absolute',
+                    top: `${topOffset}px`,
+                    height: `${height}px`,
+                    left: '4px',
+                    right: '4px',
+                    zIndex: 30, // Higher z-index than availability slots
+                  }}
+                />
+              );
+            })}
         </div>
       ))}
     </div>
