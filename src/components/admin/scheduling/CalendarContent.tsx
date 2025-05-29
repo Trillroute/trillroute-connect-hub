@@ -21,7 +21,7 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
   filterIds,
   filters
 }) => {
-  const { currentView, handleCreateEvent, handleUpdateEvent, handleDeleteEvent } = useCalendar();
+  const { viewMode, handleCreateEvent, handleUpdateEvent, handleDeleteEvent } = useCalendar();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<CalendarEvent | null>(null);
@@ -84,7 +84,7 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
       
       <div className="flex-1 overflow-hidden">
         <ViewSelector
-          currentView={currentView}
+          currentView={viewMode}
           onEditEvent={handleEditEvent}
           onDeleteEvent={handleDeleteEventClick}
           onCreateEvent={handleCreateEventClick}
