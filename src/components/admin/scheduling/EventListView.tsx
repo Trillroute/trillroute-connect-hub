@@ -4,7 +4,7 @@ import { CalendarEvent } from './types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Clock, MapPin, User } from 'lucide-react';
+import { Edit, Trash2, Clock, MapPin, User, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface EventListViewProps {
@@ -42,6 +42,11 @@ const EventListView: React.FC<EventListViewProps> = ({
 
   // Use the same color scheme as EventColorPicker and other views
   const getEventColor = (event: CalendarEvent) => {
+    // Check if it's an availability slot
+    if (event.eventType === 'availability') {
+      return '#6B7280'; // Gray for availability slots
+    }
+
     // Check if it's a trial class
     const isTrialClass = event.title?.toLowerCase().includes('trial') || 
                         event.description?.toLowerCase().includes('trial') ||
@@ -68,6 +73,11 @@ const EventListView: React.FC<EventListViewProps> = ({
   };
 
   const getEventTypeBackgroundClass = (event: CalendarEvent) => {
+    // Check if it's an availability slot
+    if (event.eventType === 'availability') {
+      return 'bg-gray-100 border-gray-300 text-gray-800';
+    }
+
     // Check if it's a trial class
     const isTrialClass = event.title?.toLowerCase().includes('trial') || 
                         event.description?.toLowerCase().includes('trial') ||
@@ -91,6 +101,19 @@ const EventListView: React.FC<EventListViewProps> = ({
       default:
         return 'bg-green-100 border-green-300 text-green-800';
     }
+  };
+
+  const handleCardClick = (event: CalendarEvent) => {
+    // For availability slots, trigger create event instead of edit
+    if (event.eventType === 'availability' && onCreateEvent) {
+      onCreateEvent();
+    } else {
+      onEditEvent(event);
+    }
+  };
+
+  const isAvailabilitySlot = (event: CalendarEvent) => {
+    return event.eventType === 'availability' || event.metadata?.isAvailability;
   };
 
   if (events.length === 0) {
@@ -130,43 +153,63 @@ const EventListView: React.FC<EventListViewProps> = ({
         });
 
         const eventColor = getEventColor(event);
+        const isAvailability = isAvailabilitySlot(event);
 
         return (
           <Card 
             key={event.id} 
             className="w-full cursor-pointer hover:shadow-md transition-shadow duration-200"
-            onClick={() => onEditEvent(event)}
+            onClick={() => handleCardClick(event)}
             style={{ borderLeftColor: eventColor, borderLeftWidth: '4px' }}
           >
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <CardTitle className="text-lg">{event.title}</CardTitle>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {isAvailability && <Calendar className="h-4 w-4 text-gray-500" />}
+                    {event.title}
+                  </CardTitle>
                   {event.description && (
                     <p className="text-sm text-gray-600 mt-1">{event.description}</p>
                   )}
                 </div>
                 <div className="flex gap-2 ml-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditEvent(event);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteEvent(event);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {!isAvailability && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditEvent(event);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteEvent(event);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  {isAvailability && onCreateEvent && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCreateEvent();
+                      }}
+                    >
+                      Book Slot
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -190,7 +233,7 @@ const EventListView: React.FC<EventListViewProps> = ({
                   <Badge 
                     className={`${getEventTypeBackgroundClass(event)} border`}
                   >
-                    {event.eventType || 'class'}
+                    {isAvailability ? 'available' : (event.eventType || 'class')}
                   </Badge>
                   
                   {event.metadata?.teacherName && (
@@ -211,7 +254,16 @@ const EventListView: React.FC<EventListViewProps> = ({
                     </div>
                   )}
 
-                  {event.userId && (
+                  {event.metadata?.userName && (
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-600">
+                        {isAvailability ? 'Available:' : 'User:'} {event.metadata.userName}
+                      </span>
+                    </div>
+                  )}
+
+                  {event.userId && !event.metadata?.userName && (
                     <div className="flex items-center gap-1">
                       <User className="h-3 w-3 text-gray-500" />
                       <span className="text-xs text-gray-600">
