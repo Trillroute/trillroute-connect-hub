@@ -3,7 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { getItemStyle, getCategoryColor } from './utils';
-import { CalendarEvent } from '../../types';
+import { CalendarEvent } from '../../context/calendarTypes';
 import { format } from 'date-fns';
 import { handleAvailabilitySlotClick } from '../../utils/availabilitySlotHandlers';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -34,7 +34,18 @@ const TimeSlotItem: React.FC<TimeSlotItemProps> = ({
   onEditEvent,
   onCreateEvent
 }) => {
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('TimeSlotItem clicked:', { 
+      status: item.status, 
+      userName: item.userName, 
+      slotTime,
+      onCreateEvent: !!onCreateEvent,
+      onEditEvent: !!onEditEvent
+    });
+    
     if (item.status === 'booked' && onEditEvent) {
       // Find the event to edit
       const eventToEdit = events.find(e => 

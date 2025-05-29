@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TimeSlot } from './types';
-import { CalendarEvent } from '../../types';
+import { CalendarEvent } from '../../context/calendarTypes';
 import TimeSlotItem from './TimeSlotItem';
 
 interface DayTimeSlotsProps {
