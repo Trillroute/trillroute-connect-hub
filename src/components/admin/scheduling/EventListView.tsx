@@ -20,7 +20,7 @@ const EventListView: React.FC<EventListViewProps> = ({
   onDeleteEvent,
   showAvailability = true
 }) => {
-  console.log('EventListView: Rendering with events:', events);
+  console.log('EventListView: Rendering with events:', events.length);
 
   const formatEventTime = (start: Date, end: Date) => {
     try {
@@ -63,77 +63,96 @@ const EventListView: React.FC<EventListViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {events.map((event) => (
-        <Card key={event.id} className="w-full">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <CardTitle className="text-lg">{event.title}</CardTitle>
-                {event.description && (
-                  <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                )}
-              </div>
-              <div className="flex gap-2 ml-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEditEvent(event)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDeleteEvent(event)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-sm">
-                  {formatEventTime(event.start, event.end)}
-                </span>
-              </div>
-              
-              {event.location && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{event.location}</span>
+      {events.map((event) => {
+        console.log('EventListView: Rendering event:', {
+          id: event.id,
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          eventType: event.eventType
+        });
+
+        return (
+          <Card key={event.id} className="w-full">
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <CardTitle className="text-lg">{event.title}</CardTitle>
+                  {event.description && (
+                    <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                  )}
                 </div>
-              )}
-              
-              <div className="flex items-center gap-2">
-                <Badge className={getEventTypeColor(event.eventType)}>
-                  {event.eventType}
-                </Badge>
-                
-                {event.metadata?.teacherName && (
-                  <div className="flex items-center gap-1">
-                    <User className="h-3 w-3 text-gray-500" />
-                    <span className="text-xs text-gray-600">
-                      Teacher: {event.metadata.teacherName}
-                    </span>
-                  </div>
-                )}
-                
-                {event.metadata?.studentName && (
-                  <div className="flex items-center gap-1">
-                    <User className="h-3 w-3 text-gray-500" />
-                    <span className="text-xs text-gray-600">
-                      Student: {event.metadata.studentName}
-                    </span>
-                  </div>
-                )}
+                <div className="flex gap-2 ml-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEditEvent(event)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeleteEvent(event)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    {formatEventTime(event.start, event.end)}
+                  </span>
+                </div>
+                
+                {event.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">{event.location}</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className={getEventTypeColor(event.eventType || 'general')}>
+                    {event.eventType || 'general'}
+                  </Badge>
+                  
+                  {event.metadata?.teacherName && (
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-600">
+                        Teacher: {event.metadata.teacherName}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {event.metadata?.studentName && (
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-600">
+                        Student: {event.metadata.studentName}
+                      </span>
+                    </div>
+                  )}
+
+                  {event.userId && (
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3 text-gray-500" />
+                      <span className="text-xs text-gray-600">
+                        User ID: {event.userId.substring(0, 8)}...
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };

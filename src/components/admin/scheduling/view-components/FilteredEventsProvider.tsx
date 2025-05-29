@@ -67,45 +67,10 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       return;
     }
     
-    // Define default roles based on filterType
-    let defaultRoles: string[] = [];
-    
-    // Set appropriate default roles for each filter type when no specific IDs are selected
-    if ((filterIds && filterIds.length === 0) || !filterIds) {
-      switch(filterType) {
-        case 'teacher':
-          defaultRoles = ['teacher'];
-          break;
-        case 'admin':
-          defaultRoles = ['admin', 'superadmin'];
-          break;
-        case 'staff':
-          defaultRoles = ['teacher', 'admin', 'superadmin'];
-          break;
-        default:
-          defaultRoles = [];
-      }
-    }
-    
-    // Combine filterId and filterIds
-    const allIds: string[] = [];
-    if (filterId) allIds.push(filterId);
-    if (filterIds && Array.isArray(filterIds)) allIds.push(...filterIds);
-    
-    // Log filter application with more detail
-    console.log(`==== FILTERED EVENTS PROVIDER ====`);
-    console.log(`Applying ${filterType || 'null'} filter with ${allIds.length} IDs and default roles:`, defaultRoles);
-    
-    // Apply the filter
-    applyFilter({
-      filterType,
-      ids: allIds,
-      defaultRoles,
-      setEvents,
-      setAvailabilities,
-      convertAvailabilityMap,
-      refreshEvents
-    });
+    // For list view, we should still show all events if no specific filter is applied
+    // The filtering should happen at the UI level, not at the data fetching level
+    console.log("FilteredEventsProvider: Filters detected but showing all events for list view");
+    refreshEvents();
     
   }, [filterType, filterId, JSON.stringify(filterIds), setEvents, setAvailabilities, refreshEvents]);
 
