@@ -29,6 +29,33 @@ const DayRow: React.FC<DayRowProps> = ({
   const isExpanded = expandedDays.includes(day.index);
   const daySlots = timeSlotsByDay[day.index] || [];
 
+  // Calculate counts from time slots
+  const calculateCounts = (timeSlots: TimeSlot[]) => {
+    let availableCount = 0;
+    let bookedCount = 0;
+    let expiredCount = 0;
+
+    timeSlots.forEach(slot => {
+      slot.items.forEach(item => {
+        switch (item.status) {
+          case 'available':
+            availableCount++;
+            break;
+          case 'booked':
+            bookedCount++;
+            break;
+          case 'expired':
+            expiredCount++;
+            break;
+        }
+      });
+    });
+
+    return { availableCount, bookedCount, expiredCount };
+  };
+
+  const counts = calculateCounts(daySlots);
+
   return (
     <div className="border-b">
       <div className="grid grid-cols-[120px_1fr] min-h-[60px]">
@@ -57,7 +84,7 @@ const DayRow: React.FC<DayRowProps> = ({
               onCreateEvent={onCreateEvent}
             />
           ) : (
-            <DayStatusBadges timeSlots={daySlots} />
+            <DayStatusBadges counts={counts} />
           )}
         </div>
       </div>
