@@ -1,61 +1,59 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { CalendarViewMode } from '../types';
-import { Calendar, Columns, ListFilter, CalendarClock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { EventListViewComponent } from './EventListViewComponent';
+import { WeekViewComponent } from './WeekViewComponent';
+import { DayViewComponent } from './DayViewComponent';
+import { MonthViewComponent } from './MonthViewComponent';
+import { LegacyViewComponent } from './LegacyViewComponent';
+import { CalendarEvent } from '../context/calendarTypes';
 
 interface ViewSelectorProps {
-  activeView: CalendarViewMode;
-  onViewChange: (view: CalendarViewMode) => void;
-  className?: string;
+  currentView: string;
+  onEditEvent: (event: CalendarEvent) => void;
+  onDeleteEvent: (event: CalendarEvent) => void;
+  onCreateEvent?: () => void;
+  showAvailability?: boolean;
+  // Add filter props to pass through to views
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterId?: string | null;
+  filterIds?: string[];
+  filters?: { users: string[]; courses: string[]; skills: string[] };
 }
 
-const ViewSelector: React.FC<ViewSelectorProps> = ({
-  activeView,
-  onViewChange,
-  className
+export const ViewSelector: React.FC<ViewSelectorProps> = ({
+  currentView,
+  onEditEvent,
+  onDeleteEvent,
+  onCreateEvent,
+  showAvailability = true,
+  filterType,
+  filterId,
+  filterIds,
+  filters
 }) => {
-  return (
-    <div className={cn("flex items-center space-x-1 bg-muted rounded-md p-1", className)}>
-      <Button
-        variant={activeView === 'day' ? "secondary" : "ghost"}
-        size="sm"
-        onClick={() => onViewChange('day')}
-        className="px-2.5"
-      >
-        <Calendar className="h-4 w-4 mr-1" />
-        Day
-      </Button>
-      <Button
-        variant={activeView === 'week' ? "secondary" : "ghost"}
-        size="sm"
-        onClick={() => onViewChange('week')}
-        className="px-2.5"
-      >
-        <Columns className="h-4 w-4 mr-1" />
-        Week
-      </Button>
-      <Button
-        variant={activeView === 'list' ? "secondary" : "ghost"}
-        size="sm"
-        onClick={() => onViewChange('list')}
-        className="px-2.5"
-      >
-        <ListFilter className="h-4 w-4 mr-1" />
-        List
-      </Button>
-      <Button
-        variant={activeView === 'legacy' ? "secondary" : "ghost"}
-        size="sm"
-        onClick={() => onViewChange('legacy')}
-        className="px-2.5"
-      >
-        <CalendarClock className="h-4 w-4 mr-1" />
-        Legacy
-      </Button>
-    </div>
-  );
-};
+  const viewProps = {
+    onEditEvent,
+    onDeleteEvent,
+    onCreateEvent,
+    showAvailability,
+    filterType,
+    filterId,
+    filterIds,
+    filters
+  };
 
-export default ViewSelector;
+  switch (currentView) {
+    case 'list':
+      return <EventListViewComponent {...viewProps} />;
+    case 'week':
+      return <WeekViewComponent {...viewProps} />;
+    case 'day':
+      return <DayViewComponent {...viewProps} />;
+    case 'month':
+      return <MonthViewComponent {...viewProps} />;
+    case 'legacy':
+      return <LegacyViewComponent {...viewProps} />;
+    default:
+      return <WeekViewComponent {...viewProps} />;
+  }
+};

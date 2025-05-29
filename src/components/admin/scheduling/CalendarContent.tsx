@@ -1,42 +1,81 @@
 
-import React from 'react';
-import CalendarMainContent from './components/CalendarMainContent';
+import React, { useState } from 'react';
+import { CalendarHeader } from './CalendarHeader';
+import { ViewSelector } from './view-components/ViewSelector';
+import { CreateEventDialog } from './CreateEventDialog';
+import { EventFormDialog } from './EventFormDialog';
+import { DeleteEventDialog } from './dialogs/DeleteEventDialog';
+import { CalendarEvent } from './context/calendarTypes';
+import { useCalendar } from './context/CalendarContext';
 
 interface CalendarContentProps {
-  hasAdminAccess?: boolean;
-  userId?: string;
-  roleFilter?: string[];
-  title?: string;
-  description?: string;
-  initialFilterType?: 'role' | 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
-  showFilterTabs?: boolean;
-  showAvailability?: boolean;
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterId?: string | null;
+  filterIds?: string[];
+  filters?: { users: string[]; courses: string[]; skills: string[] };
 }
 
-const CalendarContent: React.FC<CalendarContentProps> = ({
-  hasAdminAccess = false,
-  userId,
-  roleFilter,
-  title,
-  description,
-  initialFilterType = null,
-  showFilterTabs = true,
-  showAvailability = true
+export const CalendarContent: React.FC<CalendarContentProps> = ({
+  filterType,
+  filterId,
+  filterIds,
+  filters
 }) => {
+  const { currentView } = useCalendar();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState<CalendarEvent | null>(null);
+
+  const handleEditEvent = (event: CalendarEvent) => {
+    setEditingEvent(event);
+  };
+
+  const handleDeleteEvent = (event: CalendarEvent) => {
+    setDeletingEvent(event);
+  };
+
+  const handleCreateEvent = () => {
+    setIsCreateDialogOpen(true);
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <CalendarMainContent 
-        hasAdminAccess={hasAdminAccess}
-        userId={userId}
-        roleFilter={roleFilter}
-        title={title}
-        description={description}
-        initialFilterType={initialFilterType}
-        showFilterTabs={showFilterTabs}
-        showAvailability={showAvailability}
+      <CalendarHeader onCreateEvent={handleCreateEvent} />
+      
+      <div className="flex-1 overflow-hidden">
+        <ViewSelector
+          currentView={currentView}
+          onEditEvent={handleEditEvent}
+          onDeleteEvent={handleDeleteEvent}
+          onCreateEvent={handleCreateEvent}
+          showAvailability={true}
+          filterType={filterType}
+          filterId={filterId}
+          filterIds={filterIds}
+          filters={filters}
+        />
+      </div>
+
+      <CreateEventDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
+
+      <EventFormDialog
+        event={editingEvent}
+        open={!!editingEvent}
+        onOpenChange={(open) => {
+          if (!open) setEditingEvent(null);
+        }}
+      />
+
+      <DeleteEventDialog
+        event={deletingEvent}
+        open={!!deletingEvent}
+        onOpenChange={(open) => {
+          if (!open) setDeletingEvent(null);
+        }}
       />
     </div>
   );
 };
-
-export default CalendarContent;
