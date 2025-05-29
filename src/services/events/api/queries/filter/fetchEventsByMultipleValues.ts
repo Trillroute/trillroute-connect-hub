@@ -8,42 +8,46 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
   try {
     console.log(`Fetching events by ${columnName} in [${values.join(', ')}]`);
     
-    // Explicitly type everything to avoid complex type inference
-    let data: any = null;
-    let error: any = null;
+    // Use the most basic approach possible to avoid type inference issues
+    let queryResult: any;
     
     // Handle different filter types
     if (columnName === 'user_id') {
-      const result = await supabase
+      queryResult = await supabase
         .from('user_events')
         .select('*')
         .in('user_id', values)
         .order('start_time', { ascending: true });
-      data = result.data;
-      error = result.error;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
-      // For metadata-based filtering with multiple values, we need to use OR conditions
-      // This is more complex, so we'll fetch all events and filter in JavaScript
-      const allEventsResult = await supabase
+      // For metadata-based filtering with multiple values, fetch all events and filter in JavaScript
+      queryResult = await supabase
         .from('user_events')
         .select('*')
         .order('start_time', { ascending: true });
 
-      if (allEventsResult.error) {
-        console.error(`Error fetching events for ${columnName} filtering:`, allEventsResult.error);
+      const error = queryResult.error;
+      const allData = queryResult.data;
+
+      if (error) {
+        console.error(`Error fetching events for ${columnName} filtering:`, error);
         return [];
       }
 
       // Filter events where metadata contains any of the specified values
       const filteredData: any[] = [];
-      const allData = allEventsResult.data || [];
       
-      for (const event of allData) {
-        if (!event || !event.metadata || typeof event.metadata !== 'object') continue;
-        
-        const metadataValue = event.metadata[columnName];
-        if (metadataValue && values.includes(metadataValue)) {
-          filteredData.push(event);
+      if (allData && Array.isArray(allData)) {
+        for (let i = 0; i < allData.length; i++) {
+          const event = allData[i];
+          if (!event) continue;
+          
+          const metadata = event.metadata;
+          if (!metadata || typeof metadata !== 'object') continue;
+          
+          const metadataValue = metadata[columnName];
+          if (metadataValue && values.includes(metadataValue)) {
+            filteredData.push(event);
+          }
         }
       }
 
@@ -52,12 +56,13 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       // Transform the filtered data
       const events: any[] = [];
       
-      for (const event of filteredData) {
+      for (let i = 0; i < filteredData.length; i++) {
+        const event = filteredData[i];
         if (!event) continue;
         
         const transformedEvent: any = {};
         
-        // Add properties one by one to avoid complex object spreading
+        // Basic properties
         transformedEvent.id = event.id;
         transformedEvent.title = event.title;
         transformedEvent.description = event.description;
@@ -73,13 +78,17 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         transformedEvent.created_at = event.created_at;
         transformedEvent.updated_at = event.updated_at;
 
-        // Add location and color separately
-        if (event.metadata && typeof event.metadata === 'object') {
-          if ('location' in event.metadata) {
-            transformedEvent.location = String(event.metadata.location);
+        // Handle metadata properties
+        const metadata = event.metadata;
+        if (metadata && typeof metadata === 'object') {
+          const location = metadata.location;
+          const color = metadata.color;
+          
+          if (location) {
+            transformedEvent.location = String(location);
           }
-          if ('color' in event.metadata) {
-            transformedEvent.color = String(event.metadata.color);
+          if (color) {
+            transformedEvent.color = String(color);
           }
         }
 
@@ -92,6 +101,10 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       return [];
     }
 
+    // Extract data and error without destructuring
+    const error = queryResult.error;
+    const data = queryResult.data;
+
     if (error) {
       console.error(`Error fetching events by ${columnName}:`, error);
       return [];
@@ -99,19 +112,24 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
 
     console.log(`Found ${data?.length || 0} events for ${columnName} in [${values.join(', ')}]`);
     
-    // Simplify the data transformation to avoid deep type inference
-    if (!data || !Array.isArray(data)) {
+    // Check if we have valid data
+    if (!data) {
+      return [];
+    }
+
+    if (!Array.isArray(data)) {
       return [];
     }
 
     const events: any[] = [];
     
-    for (const event of data) {
+    for (let i = 0; i < data.length; i++) {
+      const event = data[i];
       if (!event) continue;
       
       const transformedEvent: any = {};
       
-      // Add properties one by one to avoid complex object spreading
+      // Basic properties
       transformedEvent.id = event.id;
       transformedEvent.title = event.title;
       transformedEvent.description = event.description;
@@ -127,13 +145,17 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       transformedEvent.created_at = event.created_at;
       transformedEvent.updated_at = event.updated_at;
 
-      // Add location and color separately
-      if (event.metadata && typeof event.metadata === 'object') {
-        if ('location' in event.metadata) {
-          transformedEvent.location = String(event.metadata.location);
+      // Handle metadata properties
+      const metadata = event.metadata;
+      if (metadata && typeof metadata === 'object') {
+        const location = metadata.location;
+        const color = metadata.color;
+        
+        if (location) {
+          transformedEvent.location = String(location);
         }
-        if ('color' in event.metadata) {
-          transformedEvent.color = String(event.metadata.color);
+        if (color) {
+          transformedEvent.color = String(color);
         }
       }
 
