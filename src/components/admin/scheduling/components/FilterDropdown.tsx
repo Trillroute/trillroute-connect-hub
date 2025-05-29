@@ -20,14 +20,23 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
   // Ensure selectedFilters is always an array
   const safeSelectedFilters = Array.isArray(selectedFilters) ? selectedFilters : [];
   
+  console.log('FilterDropdown rendering with:', {
+    filterType,
+    optionsCount: filterOptions.length,
+    selectedCount: safeSelectedFilters.length,
+    isLoading
+  });
+  
   return (
-    <MultiSelect 
-      options={filterOptions} 
-      selected={safeSelectedFilters} 
-      onChange={onChange} 
-      placeholder={`Select ${filterType}(s)${isLoading ? ' (Loading...)' : ''}`} 
-      className="w-full bg-white" 
-    />
+    <div className="w-full">
+      <MultiSelect 
+        options={filterOptions} 
+        selected={safeSelectedFilters} 
+        onChange={onChange} 
+        placeholder={`Select ${filterType}(s)${isLoading ? ' (Loading...)' : ''}`} 
+        className="w-full bg-white" 
+      />
+    </div>
   );
 };
 

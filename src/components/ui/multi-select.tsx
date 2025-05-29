@@ -61,15 +61,19 @@ export function MultiSelect({
   }, []);
 
   const handleSelect = (value: string) => {
-    if (safeSelected.includes(value)) {
-      onChange(safeSelected.filter(item => item !== value));
-    } else {
-      onChange([...safeSelected, value]);
-    }
+    console.log('MultiSelect: Selecting value:', value);
+    const newSelected = safeSelected.includes(value)
+      ? safeSelected.filter(item => item !== value)
+      : [...safeSelected, value];
+    
+    console.log('MultiSelect: New selection:', newSelected);
+    onChange(newSelected);
   };
 
   const handleRemove = (value: string) => {
-    onChange(safeSelected.filter(item => item !== value));
+    console.log('MultiSelect: Removing value:', value);
+    const newSelected = safeSelected.filter(item => item !== value);
+    onChange(newSelected);
   };
 
   return (
@@ -81,7 +85,7 @@ export function MultiSelect({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-between border border-input bg-white px-3 py-2 h-auto min-h-[40px] text-left",
+              "w-full justify-between border border-input bg-white px-3 py-2 h-auto min-h-[40px] text-left hover:bg-white",
               className,
             )}
             onClick={() => setOpen(!open)}
@@ -121,7 +125,7 @@ export function MultiSelect({
             <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0 bg-white" align="start">
+        <PopoverContent className="w-full p-0 bg-white border border-gray-200 shadow-lg z-50" align="start">
           <div className="max-h-[300px] overflow-auto p-1">
             {safeOptions.length > 0 ? (
               safeOptions.map((option) => (

@@ -42,23 +42,26 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     });
   }, [filterType, selectedFilter, selectedFilters, showFilterTypeTabs, filterOptions]);
 
-  // Reset selected filters when filter type changes, but don't reset to empty
-  // This allows default behavior of showing all users when no specific selection is made
+  // Reset selected filters when filter type changes
   useEffect(() => {
+    console.log('FilterSelector: Filter type changed, clearing selections');
     setSelectedFilter(null);
     setSelectedFilters([]);
   }, [filterType, setSelectedFilter, setSelectedFilters]);
 
   const handleMultiSelectChange = (selected: string[]) => {
-    console.log("MultiSelect selection changed:", selected);
+    console.log("FilterSelector: MultiSelect selection changed:", selected);
     
     // Ensure selected is an array
     const safeSelected = Array.isArray(selected) ? selected : [];
     
+    // Update the multi-select state
     setSelectedFilters(safeSelected);
     
     // Also update the single selection state for backward compatibility
     setSelectedFilter(safeSelected.length > 0 ? safeSelected[0] : null);
+    
+    console.log("FilterSelector: Updated selectedFilters to:", safeSelected);
   };
 
   return (
@@ -73,13 +76,15 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
 
       {/* Secondary filter dropdown with multi-select - always show this when a filter type is selected */}
       {filterType && (
-        <FilterDropdown
-          filterOptions={filterOptions}
-          selectedFilters={selectedFilters}
-          isLoading={isLoading}
-          filterType={filterType}
-          onChange={handleMultiSelectChange}
-        />
+        <div className="w-full">
+          <FilterDropdown
+            filterOptions={filterOptions}
+            selectedFilters={selectedFilters}
+            isLoading={isLoading}
+            filterType={filterType}
+            onChange={handleMultiSelectChange}
+          />
+        </div>
       )}
     </div>
   );
