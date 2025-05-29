@@ -69,18 +69,20 @@ export function filterAvailability(
     return availabilityArray;
   }
 
-  // Special case: if no filterIds are provided but filterType is set, 
-  // show all availabilities for that role (don't filter them)
-  const shouldShowAllForType = filterIds && filterIds.length === 0 && filterType && 
-    (filterType === 'teacher' || filterType === 'admin' || filterType === 'staff');
+  // Special case: if filterType is teacher/admin/staff but no filterIds are provided, 
+  // show all availabilities for that role (don't filter them out)
+  const shouldShowAllForType = filterType && 
+    (filterType === 'teacher' || filterType === 'admin' || filterType === 'staff') &&
+    (!filterIds || filterIds.length === 0) &&
+    (!filters.users || filters.users.length === 0);
+    
+  if (shouldShowAllForType) {
+    console.log(`Showing all availability slots for filterType: ${filterType}`);
+    return availabilityArray;
+  }
     
   // Filter availabilities based on user filters
   const filtered = availabilityArray.filter(avail => {
-    // If we should show all for the selected filter type, don't filter by user IDs
-    if (shouldShowAllForType) {
-      return true;
-    }
-    
     // If specific users are selected, check if this availability belongs to one of them
     if (filters.users && filters.users.length > 0 && avail.userId && !filters.users.includes(avail.userId)) {
       return false;
