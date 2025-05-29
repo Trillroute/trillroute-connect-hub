@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { CalendarEvent } from './types';
 import { Form } from '@/components/ui/form';
-import { FormLabel } from '@/components/ui/form';
-import EventColorPicker from './EventColorPicker';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourses } from '@/hooks/useCourses';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
@@ -39,7 +37,7 @@ const EventForm: React.FC<EventFormProps> = ({
   submitLabel = 'Save Event'
 }) => {
   const { role } = useAuth();
-  const [selectedColor, setSelectedColor] = useState(initialData?.color || '#4285F4');
+  const [selectedColor] = useState(initialData?.color || '#4285F4');
   const form = useForm<Omit<CalendarEvent, 'id'>>({
     defaultValues: {
       title: initialData?.title || '',
@@ -111,14 +109,6 @@ const EventForm: React.FC<EventFormProps> = ({
         />
         
         <EventTimeFields form={form} />
-        
-        <div className="space-y-2">
-          <FormLabel>Color</FormLabel>
-          <EventColorPicker
-            selectedColor={selectedColor}
-            onColorSelect={setSelectedColor}
-          />
-        </div>
         
         <EventFormActions 
           onCancel={onCancel} 
