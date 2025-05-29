@@ -1,6 +1,6 @@
 
 import { FilterEventsProps, FilterType } from './types/eventTypes';
-import { getColumnNameFromFilterType } from './utils/filterUtils';
+import { getColumnNameFromFilterType, usesMetadataFiltering, usesDirectUserFiltering } from './utils/filterUtils';
 import { 
   fetchAllEvents, 
   fetchEventsBySingleValue, 
@@ -22,6 +22,34 @@ export async function fetchEventsByFilter(props: FilterEventsProps) {
       return await fetchAllEvents();
     }
     
+    // Handle filtering by IDs
+    if (filterIds.length === 0) {
+      return await fetchAllEvents();
+    }
+    
+    // For teacher and student filters, we need to handle both user_id and metadata filtering
+    if (filterType === 'teacher' || filterType === 'student') {
+      // Fetch events where the user is the owner (user_id matches)
+      const userEvents = await fetchUserEvents(filterIds);
+      
+      // Also fetch events where they appear in metadata (for cross-user events like teacher-student classes)
+      const metadataColumnName = getColumnNameFromFilterType(filterType);
+      const metadataEvents = metadataColumnName ? (
+        filterIds.length === 1 
+          ? await fetchEventsBySingleValue(metadataColumnName, filterIds[0])
+          : await fetchEventsByMultipleValues(metadataColumnName, filterIds)
+      ) : [];
+      
+      // Combine and deduplicate events
+      const allEvents = [...userEvents, ...metadataEvents];
+      const uniqueEvents = allEvents.filter((event, index, self) => 
+        index === self.findIndex(e => e.id === event.id)
+      );
+      
+      console.log(`Found ${uniqueEvents.length} total events for ${filterType} filter (${userEvents.length} user events + ${metadataEvents.length} metadata events)`);
+      return uniqueEvents;
+    }
+    
     // Map filter type to column name
     const columnName = getColumnNameFromFilterType(filterType);
     
@@ -30,14 +58,22 @@ export async function fetchEventsByFilter(props: FilterEventsProps) {
       return await fetchAllEvents();
     }
     
-    // Handle filtering by IDs
-    if (filterIds.length === 0) {
-      return await fetchAllEvents();
-    } else if (filterIds.length === 1) {
-      return await fetchEventsBySingleValue(columnName, filterIds[0]);
-    } else {
-      return await fetchEventsByMultipleValues(columnName, filterIds);
+    // Handle direct user filtering (admin, staff)
+    if (usesDirectUserFiltering(filterType)) {
+      return await fetchUserEvents(filterIds);
     }
+    
+    // Handle metadata filtering (course, skill)
+    if (usesMetadataFiltering(filterType)) {
+      if (filterIds.length === 1) {
+        return await fetchEventsBySingleValue(columnName, filterIds[0]);
+      } else {
+        return await fetchEventsByMultipleValues(columnName, filterIds);
+      }
+    }
+    
+    // Fallback to all events
+    return await fetchAllEvents();
     
   } catch (error) {
     console.error('Exception fetching filtered events:', error);
