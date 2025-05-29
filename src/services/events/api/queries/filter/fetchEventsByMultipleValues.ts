@@ -13,24 +13,30 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
     // Handle different filter types
     if (columnName === 'user_id') {
       // For user_id, get both events they own AND events where they appear in metadata
-      const ownEventsQuery = supabase.from('user_events').select('*').in('user_id', values);
       
-      // Build OR conditions for metadata filtering
-      const metadataConditions = values.map(value => 
-        `metadata->>teacherId.eq.${value},metadata->>studentId.eq.${value}`
-      ).join(',');
-      
-      const metadataEventsQuery = supabase.from('user_events').select('*').or(metadataConditions);
-      
-      const [ownEventsResult, metadataEventsResult] = await Promise.all([
-        ownEventsQuery.order('start_time', { ascending: true }),
-        metadataEventsQuery.order('start_time', { ascending: true })
-      ]);
+      // First query: events they own
+      const ownEventsResult = await supabase
+        .from('user_events')
+        .select('*')
+        .in('user_id', values)
+        .order('start_time', { ascending: true });
       
       if (ownEventsResult.error) {
         console.error(`Error fetching own events:`, ownEventsResult.error);
         return [];
       }
+      
+      // Second query: events where they appear in metadata
+      // Build OR conditions for metadata filtering
+      const metadataConditions = values.map(value => 
+        `metadata->>teacherId.eq.${value},metadata->>studentId.eq.${value}`
+      ).join(',');
+      
+      const metadataEventsResult = await supabase
+        .from('user_events')
+        .select('*')
+        .or(metadataConditions)
+        .order('start_time', { ascending: true });
       
       if (metadataEventsResult.error) {
         console.error(`Error fetching metadata events:`, metadataEventsResult.error);
@@ -46,7 +52,10 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       allEvents = uniqueEvents;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering with multiple values, fetch all events and filter in JavaScript
-      const result = await supabase.from('user_events').select('*').order('start_time', { ascending: true });
+      const result = await supabase
+        .from('user_events')
+        .select('*')
+        .order('start_time', { ascending: true });
       
       if (result.error) {
         console.error(`Error fetching events for ${columnName} filtering:`, result.error);

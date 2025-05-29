@@ -13,18 +13,25 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
     // Handle different filter types
     if (columnName === 'user_id') {
       // For user_id, get both events they own AND events where they appear in metadata
-      const ownEventsQuery = supabase.from('user_events').select('*').eq('user_id', value);
-      const metadataEventsQuery = supabase.from('user_events').select('*').or(`metadata->>teacherId.eq.${value},metadata->>studentId.eq.${value}`);
       
-      const [ownEventsResult, metadataEventsResult] = await Promise.all([
-        ownEventsQuery.order('start_time', { ascending: true }),
-        metadataEventsQuery.order('start_time', { ascending: true })
-      ]);
+      // First query: events they own
+      const ownEventsResult = await supabase
+        .from('user_events')
+        .select('*')
+        .eq('user_id', value)
+        .order('start_time', { ascending: true });
       
       if (ownEventsResult.error) {
         console.error(`Error fetching own events:`, ownEventsResult.error);
         return [];
       }
+      
+      // Second query: events where they appear in metadata
+      const metadataEventsResult = await supabase
+        .from('user_events')
+        .select('*')
+        .or(`metadata->>teacherId.eq.${value},metadata->>studentId.eq.${value}`)
+        .order('start_time', { ascending: true });
       
       if (metadataEventsResult.error) {
         console.error(`Error fetching metadata events:`, metadataEventsResult.error);
@@ -40,7 +47,11 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
       allEvents = uniqueEvents;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering, use the metadata column
-      const result = await supabase.from('user_events').select('*').eq(`metadata->${columnName}`, value).order('start_time', { ascending: true });
+      const result = await supabase
+        .from('user_events')
+        .select('*')
+        .eq(`metadata->${columnName}`, value)
+        .order('start_time', { ascending: true });
       
       if (result.error) {
         console.error(`Error fetching events by ${columnName}:`, result.error);
