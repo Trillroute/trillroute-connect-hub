@@ -7,11 +7,12 @@ import { CalendarEvent } from './context/calendarTypes';
 import { DayViewComponent } from './view-components/DayViewComponent';
 import { WeekViewComponent } from './view-components/WeekViewComponent';
 import { EventListViewComponent } from './view-components/EventListViewComponent';
+import { MonthViewComponent } from './view-components/MonthViewComponent';
 import { LegacyViewComponent } from './view-components/LegacyViewComponent';
 import { useCalendar } from './context/CalendarContext';
 
 interface CalendarViewRendererProps {
-  viewMode: 'day' | 'week' | 'list' | 'legacy';
+  viewMode: 'day' | 'week' | 'month' | 'list' | 'legacy';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -57,11 +58,19 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
           onDeleteEvent={onDeleteEvent}
         />
       );
+    case 'month':
+      return (
+        <MonthViewComponent 
+          onDateClick={onDateClick}
+          onCreateEvent={onCreateEvent}
+        />
+      );
     case 'list':
       return (
         <EventListViewComponent 
           onEditEvent={onEditEvent} 
           onDeleteEvent={onDeleteEvent}
+          onCreateEvent={onCreateEvent}
           showAvailability={showAvailability}
         />
       );

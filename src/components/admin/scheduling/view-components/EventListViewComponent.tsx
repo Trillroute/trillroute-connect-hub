@@ -8,12 +8,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface EventListViewComponentProps {
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
+  onCreateEvent?: () => void;
   showAvailability?: boolean;
 }
 
 export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   onEditEvent,
   onDeleteEvent,
+  onCreateEvent,
   showAvailability = true
 }) => {
   const { events } = useCalendar();
@@ -56,6 +58,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
               events={displayEvents}
               onEditEvent={onEditEvent} 
               onDeleteEvent={onDeleteEvent}
+              onCreateEvent={onCreateEvent}
               showAvailability={showAvailability}
             />
           </div>

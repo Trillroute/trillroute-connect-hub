@@ -4,14 +4,19 @@ import MonthView from '../MonthView';
 
 interface MonthViewComponentProps {
   onDateClick: (date: Date) => void;
+  onCreateEvent?: () => void;
 }
 
 export const MonthViewComponent: React.FC<MonthViewComponentProps> = ({
-  onDateClick
+  onDateClick,
+  onCreateEvent
 }) => {
   return (
     <div className="h-full overflow-auto">
-      <MonthView onDateClick={onDateClick} />
+      <MonthView 
+        onDateClick={onDateClick}
+        onCreateEvent={onCreateEvent}
+      />
     </div>
   );
 };
