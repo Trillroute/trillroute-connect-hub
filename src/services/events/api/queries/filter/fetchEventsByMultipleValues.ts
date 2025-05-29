@@ -25,8 +25,8 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         .select('*')
         .order('start_time', { ascending: true });
 
-      const error = queryResult.error;
-      const allData = queryResult.data;
+      const error = queryResult?.error;
+      const allData = queryResult?.data;
 
       if (error) {
         console.error(`Error fetching events for ${columnName} filtering:`, error);
@@ -60,7 +60,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         const event = filteredData[i];
         if (!event) continue;
         
-        const transformedEvent = {};
+        const transformedEvent: any = {};
         
         // Basic properties
         transformedEvent.id = event.id;
@@ -101,9 +101,9 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       return [];
     }
 
-    // Extract data and error without destructuring
-    const error = queryResult.error;
-    const data = queryResult.data;
+    // Extract data and error without destructuring to avoid type issues
+    const error = queryResult?.error;
+    const data = queryResult?.data;
 
     if (error) {
       console.error(`Error fetching events by ${columnName}:`, error);
@@ -127,7 +127,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       const event = data[i];
       if (!event) continue;
       
-      const transformedEvent = {};
+      const transformedEvent: any = {};
       
       // Basic properties
       transformedEvent.id = event.id;

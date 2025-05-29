@@ -30,9 +30,9 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
       return [];
     }
 
-    // Extract data and error without destructuring
-    const error = queryResult.error;
-    const data = queryResult.data;
+    // Extract data and error without destructuring to avoid type issues
+    const error = queryResult?.error;
+    const data = queryResult?.data;
 
     if (error) {
       console.error(`Error fetching events by ${columnName}:`, error);
@@ -57,8 +57,8 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
       const event = data[i];
       if (!event) continue;
       
-      // Create transformed event object with basic assignments
-      const transformedEvent = {};
+      // Create transformed event object with explicit any type
+      const transformedEvent: any = {};
       
       // Basic properties
       transformedEvent.id = event.id;
