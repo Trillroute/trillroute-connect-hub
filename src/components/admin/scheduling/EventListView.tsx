@@ -40,18 +40,31 @@ const EventListView: React.FC<EventListViewProps> = ({
     }
   };
 
-  const getEventTypeColor = (event: CalendarEvent) => {
+  // Use the same color scheme as EventColorPicker and other views
+  const getEventColor = (event: CalendarEvent) => {
     // Check if it's a trial class
     const isTrialClass = event.title?.toLowerCase().includes('trial') || 
                         event.description?.toLowerCase().includes('trial') ||
                         event.eventType?.toLowerCase().includes('trial');
     
     if (isTrialClass) {
-      return 'bg-orange-500'; // Orange for trial classes
+      return '#F97316'; // Orange for trial classes
     }
-    
-    // Default to green for regular classes/sessions
-    return 'bg-green-500'; // Green for regular sessions
+
+    // Check event type for other categories
+    const eventType = event.eventType?.toLowerCase();
+    switch (eventType) {
+      case 'break':
+        return '#3B82F6'; // Blue for breaks
+      case 'office':
+        return '#8B5CF6'; // Purple for office
+      case 'meeting':
+        return '#F59E0B'; // Yellow for meetings
+      case 'qc':
+        return '#EC4899'; // Pink for QC
+      default:
+        return '#10B981'; // Green for regular sessions
+    }
   };
 
   const getEventTypeBackgroundClass = (event: CalendarEvent) => {
@@ -63,9 +76,21 @@ const EventListView: React.FC<EventListViewProps> = ({
     if (isTrialClass) {
       return 'bg-orange-100 border-orange-300 text-orange-800';
     }
-    
-    // Default to green for regular classes/sessions
-    return 'bg-green-100 border-green-300 text-green-800';
+
+    // Check event type for other categories
+    const eventType = event.eventType?.toLowerCase();
+    switch (eventType) {
+      case 'break':
+        return 'bg-blue-100 border-blue-300 text-blue-800';
+      case 'office':
+        return 'bg-purple-100 border-purple-300 text-purple-800';
+      case 'meeting':
+        return 'bg-yellow-100 border-yellow-300 text-yellow-800';
+      case 'qc':
+        return 'bg-pink-100 border-pink-300 text-pink-800';
+      default:
+        return 'bg-green-100 border-green-300 text-green-800';
+    }
   };
 
   if (events.length === 0) {
@@ -104,11 +129,14 @@ const EventListView: React.FC<EventListViewProps> = ({
           eventType: event.eventType
         });
 
+        const eventColor = getEventColor(event);
+
         return (
           <Card 
             key={event.id} 
             className="w-full cursor-pointer hover:shadow-md transition-shadow duration-200"
             onClick={() => onEditEvent(event)}
+            style={{ borderLeftColor: eventColor, borderLeftWidth: '4px' }}
           >
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
