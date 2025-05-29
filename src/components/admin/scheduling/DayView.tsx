@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useCalendar } from './context/CalendarContext';
 import { getHourCells } from './calendarUtils';
@@ -9,6 +8,7 @@ import DayHeader from './day-view/DayHeader';
 import CalendarEventComponent from './day-view/CalendarEvent';
 import AvailabilitySlot from './day-view/AvailabilitySlot';
 import { processAvailabilities, filterTodayEvents, isTimeAvailable } from './day-view/dayViewUtils';
+import { handleAvailabilitySlotClick } from './utils/availabilitySlotHandlers';
 
 interface DayViewProps {
   onCreateEvent?: () => void;
@@ -101,6 +101,18 @@ const DayView: React.FC<DayViewProps> = ({
   
   const handleAvailabilityClick = (slot: AvailabilitySlotType) => {
     if (onCreateEvent) {
+      // First use the shared handler to store availability information
+      handleAvailabilitySlotClick({
+        dayOfWeek: currentDate.getDay(),
+        startHour: slot.startHour,
+        startMinute: slot.startMinute,
+        endHour: slot.endHour,
+        endMinute: slot.endMinute,
+        userId: slot.userId,
+        userName: slot.userName || 'Instructor',
+        category: slot.category
+      });
+      
       // Store slot data in session storage for the create event dialog to use
       const newEventDate = new Date(currentDate);
       newEventDate.setHours(slot.startHour, slot.startMinute, 0, 0);

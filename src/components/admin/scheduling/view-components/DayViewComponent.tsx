@@ -7,10 +7,16 @@ import { CalendarEvent } from '../context/calendarTypes';
 
 interface DayViewComponentProps {
   showAvailability?: boolean;
+  onCreateEvent?: () => void;
+  onEditEvent?: (event: CalendarEvent) => void;
+  onDeleteEvent?: (event: CalendarEvent) => void;
 }
 
 export const DayViewComponent: React.FC<DayViewComponentProps> = ({
-  showAvailability = true
+  showAvailability = true,
+  onCreateEvent,
+  onEditEvent,
+  onDeleteEvent
 }) => {
   const { 
     currentDate, 
@@ -27,7 +33,9 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
     : [];
   
   const handleCreateEventClick = () => {
-    if (handleCreateEvent) {
+    if (onCreateEvent) {
+      onCreateEvent();
+    } else if (handleCreateEvent) {
       const newEvent: Omit<CalendarEvent, 'id'> = {
         title: 'New Event',
         description: '',
@@ -40,13 +48,17 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
   };
   
   const handleEditEventClick = (event: CalendarEvent) => {
-    if (handleUpdateEvent) {
+    if (onEditEvent) {
+      onEditEvent(event);
+    } else if (handleUpdateEvent) {
       handleUpdateEvent(event.id, event);
     }
   };
   
   const handleDeleteEventClick = (event: CalendarEvent) => {
-    if (handleDeleteEvent) {
+    if (onDeleteEvent) {
+      onDeleteEvent(event);
+    } else if (handleDeleteEvent) {
       handleDeleteEvent(event.id);
     }
   };

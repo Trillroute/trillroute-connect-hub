@@ -3,13 +3,20 @@ import React, { useMemo } from 'react';
 import WeekView from '../WeekView';
 import { useCalendar } from '../context/CalendarContext';
 import { AvailabilitySlot } from '../week-view/weekViewUtils';
+import { CalendarEvent } from '../context/calendarTypes';
 
 interface WeekViewComponentProps {
   showAvailability?: boolean;
+  onCreateEvent?: () => void;
+  onEditEvent?: (event: CalendarEvent) => void;
+  onDeleteEvent?: (event: CalendarEvent) => void;
 }
 
 export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
-  showAvailability = true
+  showAvailability = true,
+  onCreateEvent,
+  onEditEvent,
+  onDeleteEvent
 }) => {
   const { currentDate, events, availabilities } = useCalendar();
   
@@ -58,7 +65,7 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
   
   return (
     <WeekView 
-      onCreateEvent={undefined}
+      onCreateEvent={onCreateEvent}
     />
   );
 };

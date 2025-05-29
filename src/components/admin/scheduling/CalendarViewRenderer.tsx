@@ -40,9 +40,23 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
   // All views will use the filtered events from the CalendarContext
   switch (viewMode) {
     case 'day':
-      return <DayViewComponent showAvailability={showAvailability} />;
+      return (
+        <DayViewComponent 
+          showAvailability={showAvailability}
+          onCreateEvent={onCreateEvent}
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
+        />
+      );
     case 'week':
-      return <WeekViewComponent showAvailability={showAvailability} />;
+      return (
+        <WeekViewComponent 
+          showAvailability={showAvailability}
+          onCreateEvent={onCreateEvent}
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
+        />
+      );
     case 'list':
       return (
         <EventListViewComponent 
@@ -60,7 +74,14 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
         />
       );
     default:
-      return <DayViewComponent showAvailability={showAvailability} />;
+      return (
+        <DayViewComponent 
+          showAvailability={showAvailability}
+          onCreateEvent={onCreateEvent}
+          onEditEvent={onEditEvent}
+          onDeleteEvent={onDeleteEvent}
+        />
+      );
   }
 };
 
