@@ -11,13 +11,22 @@ interface EventListViewComponentProps {
   onDeleteEvent: (event: CalendarEvent) => void;
   onCreateEvent?: () => void;
   showAvailability?: boolean;
+  // Add filter props to match other views
+  filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
+  filterId?: string | null;
+  filterIds?: string[];
+  filters?: { users: string[]; courses: string[]; skills: string[] };
 }
 
 export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   onEditEvent,
   onDeleteEvent,
   onCreateEvent,
-  showAvailability = true
+  showAvailability = true,
+  filterType,
+  filterId,
+  filterIds = [],
+  filters = { users: [], courses: [], skills: [] }
 }) => {
   const { events, availabilities } = useCalendar();
   
@@ -25,6 +34,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   console.log('Raw events from context:', events?.length || 0);
   console.log('Raw availabilities from context:', availabilities ? Object.keys(availabilities).length : 0);
   console.log('showAvailability prop:', showAvailability);
+  console.log('Filter props:', { filterType, filterId, filterIds, filters });
   console.log('Full availabilities object:', availabilities);
   
   // Log individual availability entries
@@ -39,9 +49,14 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
     });
   }
   
+  // Use the same filtering logic as other views
   const { filteredEvents, filteredAvailability } = useFilteredEvents({
     events,
-    availabilities
+    availabilities,
+    filters,
+    filterType,
+    filterId,
+    filterIds
   });
   
   console.log('After useFilteredEvents:');
@@ -105,9 +120,9 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
   
   // Combine events and availability slots
   const displayEvents = useMemo(() => {
-    console.log(`Combining ${events?.length || 0} events and ${availabilityEvents.length} availability events`);
+    console.log(`Combining ${filteredEvents?.length || 0} events and ${availabilityEvents.length} availability events`);
     
-    const combined = [...(events || []), ...availabilityEvents];
+    const combined = [...(filteredEvents || []), ...availabilityEvents];
     
     // Sort all items by start date
     const sortedEvents = combined.sort((a, b) => {
@@ -123,10 +138,10 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
     })));
     
     return sortedEvents;
-  }, [events, availabilityEvents]);
+  }, [filteredEvents, availabilityEvents]);
   
   console.log(`=== Final Result: Rendering ${displayEvents.length} total items ===`);
-  console.log(`- Regular events: ${events?.length || 0}`);
+  console.log(`- Regular events: ${filteredEvents?.length || 0}`);
   console.log(`- Availability events: ${availabilityEvents.length}`);
   
   return (
@@ -140,7 +155,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
         ) : (
           <div className="space-y-2 mb-4">
             <div className="text-sm text-muted-foreground">
-              Showing {events?.length || 0} events and {availabilityEvents.length} availability slots
+              Showing {filteredEvents?.length || 0} events and {availabilityEvents.length} availability slots
             </div>
             <EventListView 
               events={displayEvents}
