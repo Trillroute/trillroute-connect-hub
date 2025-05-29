@@ -21,7 +21,7 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
   filterIds,
   filters
 }) => {
-  const { viewMode } = useCalendar();
+  const { viewMode, handleCreateEvent, handleUpdateEvent, handleDeleteEvent } = useCalendar();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<CalendarEvent | null>(null);
@@ -30,11 +30,11 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
     setEditingEvent(event);
   };
 
-  const handleDeleteEvent = (event: CalendarEvent) => {
+  const handleDeleteEventClick = (event: CalendarEvent) => {
     setDeletingEvent(event);
   };
 
-  const handleCreateEvent = () => {
+  const handleCreateEventClick = () => {
     setIsCreateDialogOpen(true);
   };
 
@@ -43,16 +43,47 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
     console.log('Date clicked:', date);
   };
 
+  const handleSaveEvent = async (eventData: Omit<CalendarEvent, 'id'>) => {
+    try {
+      await handleCreateEvent(eventData);
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
+  };
+
+  const handleUpdateEventSave = async (eventData: Omit<CalendarEvent, 'id'>) => {
+    if (editingEvent) {
+      try {
+        await handleUpdateEvent({ ...eventData, id: editingEvent.id });
+        setEditingEvent(null);
+      } catch (error) {
+        console.error('Error updating event:', error);
+      }
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingEvent) {
+      try {
+        await handleDeleteEvent(deletingEvent);
+        setDeletingEvent(null);
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <CalendarHeader onCreateEvent={handleCreateEvent} />
+      <CalendarHeader onCreateEvent={handleCreateEventClick} />
       
       <div className="flex-1 overflow-hidden">
         <ViewSelector
           currentView={viewMode}
           onEditEvent={handleEditEvent}
-          onDeleteEvent={handleDeleteEvent}
-          onCreateEvent={handleCreateEvent}
+          onDeleteEvent={handleDeleteEventClick}
+          onCreateEvent={handleCreateEventClick}
           onDateClick={handleDateClick}
           showAvailability={true}
           filterType={filterType}
@@ -65,22 +96,26 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
       <CreateEventDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+        onSave={handleSaveEvent}
       />
 
       <EventFormDialog
-        event={editingEvent}
         open={!!editingEvent}
         onOpenChange={(open) => {
           if (!open) setEditingEvent(null);
         }}
+        onSave={handleUpdateEventSave}
+        initialEvent={editingEvent ? { ...editingEvent } : undefined}
+        mode="edit"
       />
 
       <DeleteEventDialog
-        event={deletingEvent}
-        open={!!deletingEvent}
+        isOpen={!!deletingEvent}
         onOpenChange={(open) => {
           if (!open) setDeletingEvent(null);
         }}
+        selectedEvent={deletingEvent}
+        onConfirmDelete={handleConfirmDelete}
       />
     </div>
   );
