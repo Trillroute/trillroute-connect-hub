@@ -2,6 +2,23 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
+ * Simple event type to avoid complex type inference
+ */
+interface SimpleEventData {
+  id: string;
+  title: string;
+  description?: string;
+  event_type: string;
+  start_time: string;
+  end_time: string;
+  is_blocked?: boolean;
+  metadata?: any;
+  user_id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
  * Fetch events by multiple filter values
  */
 export const fetchEventsByMultipleValues = async (columnName: string, values: string[]) => {
@@ -27,7 +44,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       }
 
       // Filter events where metadata contains any of the specified values
-      const filteredData = (data || []).filter((event: any) => {
+      const filteredData = (data as SimpleEventData[] || []).filter((event) => {
         if (!event.metadata || typeof event.metadata !== 'object') return false;
         const metadataValue = (event.metadata as any)[columnName];
         return metadataValue && values.includes(metadataValue);
@@ -35,8 +52,8 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
 
       console.log(`Found ${filteredData.length} events for ${columnName} in [${values.join(', ')}]`);
       
-      // Format the data manually to avoid circular imports
-      return filteredData.map((event: any) => ({
+      // Format the data with explicit typing to avoid circular imports
+      const events = filteredData.map((event) => ({
         id: event.id,
         title: event.title,
         description: event.description,
@@ -58,6 +75,8 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         created_at: event.created_at,
         updated_at: event.updated_at
       }));
+
+      return events;
     }
     
     const { data, error } = await query.order('start_time', { ascending: true });
@@ -69,8 +88,8 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
 
     console.log(`Found ${data?.length || 0} events for ${columnName} in [${values.join(', ')}]`);
     
-    // Format the data manually to avoid circular imports
-    return (data || []).map((event: any) => ({
+    // Format the data with explicit typing to avoid circular imports
+    const events = (data as SimpleEventData[] || []).map((event) => ({
       id: event.id,
       title: event.title,
       description: event.description,
@@ -92,6 +111,8 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       created_at: event.created_at,
       updated_at: event.updated_at
     }));
+
+    return events;
   } catch (error) {
     console.error(`Exception in fetchEventsByMultipleValues for ${columnName}:`, error);
     return [];

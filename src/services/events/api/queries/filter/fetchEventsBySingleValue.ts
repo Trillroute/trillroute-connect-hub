@@ -2,6 +2,23 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
+ * Simple event type to avoid complex type inference
+ */
+interface SimpleEventData {
+  id: string;
+  title: string;
+  description?: string;
+  event_type: string;
+  start_time: string;
+  end_time: string;
+  is_blocked?: boolean;
+  metadata?: any;
+  user_id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
  * Fetch events by a single filter value
  */
 export const fetchEventsBySingleValue = async (columnName: string, value: string) => {
@@ -27,8 +44,8 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
 
     console.log(`Found ${data?.length || 0} events for ${columnName} = ${value}`);
     
-    // Format the data manually to avoid circular imports
-    return (data || []).map((event: any) => ({
+    // Format the data with explicit typing to avoid circular imports
+    const events = (data as SimpleEventData[] || []).map((event) => ({
       id: event.id,
       title: event.title,
       description: event.description,
@@ -50,6 +67,8 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
       created_at: event.created_at,
       updated_at: event.updated_at
     }));
+
+    return events;
   } catch (error) {
     console.error(`Exception in fetchEventsBySingleValue for ${columnName}:`, error);
     return [];
