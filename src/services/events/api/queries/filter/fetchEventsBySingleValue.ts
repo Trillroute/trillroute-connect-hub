@@ -59,29 +59,47 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
 
     console.log(`Found ${data?.length || 0} events for ${columnName} = ${value}`);
     
-    // Format the data with explicit typing to avoid circular imports
-    const events = (data as SimpleEventData[] || []).map((event) => ({
-      id: event.id,
-      title: event.title,
-      description: event.description,
-      eventType: event.event_type,
-      start: new Date(event.start_time),
-      end: new Date(event.end_time),
-      isBlocked: event.is_blocked || false,
-      metadata: event.metadata,
-      userId: event.user_id,
-      user_id: event.user_id,
-      start_time: event.start_time,
-      end_time: event.end_time,
-      location: (event.metadata && typeof event.metadata === 'object' && 'location' in event.metadata) 
-        ? String(event.metadata.location) 
-        : undefined,
-      color: (event.metadata && typeof event.metadata === 'object' && 'color' in event.metadata) 
-        ? String(event.metadata.color) 
-        : undefined,
-      created_at: event.created_at,
-      updated_at: event.updated_at
-    }));
+    // Simplify the data transformation to avoid deep type inference
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
+
+    const events: any[] = [];
+    
+    for (let i = 0; i < data.length; i++) {
+      const event = data[i];
+      if (!event) continue;
+      
+      // Simple object creation without complex inline transformations
+      const transformedEvent: any = {
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        eventType: event.event_type,
+        start: new Date(event.start_time),
+        end: new Date(event.end_time),
+        isBlocked: Boolean(event.is_blocked),
+        metadata: event.metadata || {},
+        userId: event.user_id,
+        user_id: event.user_id,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        created_at: event.created_at,
+        updated_at: event.updated_at
+      };
+
+      // Add location and color separately to avoid complex inline checks
+      if (event.metadata && typeof event.metadata === 'object') {
+        if ('location' in event.metadata) {
+          transformedEvent.location = String(event.metadata.location);
+        }
+        if ('color' in event.metadata) {
+          transformedEvent.color = String(event.metadata.color);
+        }
+      }
+
+      events.push(transformedEvent);
+    }
 
     return events;
   } catch (error) {
