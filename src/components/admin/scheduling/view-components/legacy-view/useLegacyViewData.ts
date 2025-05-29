@@ -78,8 +78,8 @@ export const useLegacyViewData = () => {
               userId: userId,
               userName: userData.name || 'Unknown',
               status: 'available',
-              type: slot.category || 'Regular slot',
-              color: getCategoryColor(slot.category || 'default')
+              type: slot.category || 'session', // Default to 'session' to match week view
+              color: getCategoryColor(slot.category || 'session') // Use consistent color logic
             });
           } catch (error) {
             console.error('Error processing availability slot:', error);
@@ -143,12 +143,19 @@ export const useLegacyViewData = () => {
             slotsByDay[dayOfWeek].push(timeSlot);
           }
           
+          // Determine event type and color using same logic as other views
+          const isTrialClass = event.title?.toLowerCase().includes('trial') || 
+                              event.description?.toLowerCase().includes('trial') ||
+                              event.eventType?.toLowerCase().includes('trial');
+          
+          const eventColor = isTrialClass ? '#F97316' : '#10B981'; // Orange for trial, green for regular
+          
           timeSlot.items.push({
             userId: event.userId || '',
             userName: event.title,
             status: 'booked',
-            type: event.description || 'Event',
-            color: event.color || '#4285F4'
+            type: isTrialClass ? 'trial' : 'session', // Consistent type naming
+            color: eventColor
           });
         } catch (error) {
           console.error(`Legacy View: Error processing event ${index}:`, error, event);
@@ -180,21 +187,24 @@ export const useLegacyViewData = () => {
   };
 };
 
+// Use EXACTLY the same color function as week view
 export const getCategoryColor = (category: string): string => {
   switch(category.toLowerCase()) {
-    case 'teaching':
-      return '#10B981';
-    case 'meeting':
-      return '#3B82F6';
-    case 'practice':
-      return '#F59E0B';
-    case 'performance':
-      return '#8B5CF6';
     case 'session':
-      return '#6366F1';
-    case 'expired':
-      return '#9B2C2C';
+      return '#10B981'; // green-500 - same as week view
+    case 'break':
+      return '#3B82F6'; // blue-600 - same as week view
+    case 'office':
+      return '#8B5CF6'; // purple-600 - same as week view
+    case 'meeting':
+      return '#F59E0B'; // yellow-500 - same as week view
+    case 'class setup':
+      return '#F97316'; // orange-500 - same as week view
+    case 'qc':
+      return '#EC4899'; // pink-600 - same as week view
+    case 'trial':
+      return '#F97316'; // orange-500 for trial classes
     default:
-      return '#10B981';
+      return '#10B981'; // Default to green - same as week view
   }
 };
