@@ -2,9 +2,31 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
+ * Simple event interface to avoid circular imports
+ */
+interface SimpleEvent {
+  id: string;
+  title: string;
+  description?: string;
+  eventType: string;
+  start: Date;
+  end: Date;
+  isBlocked?: boolean;
+  metadata?: any;
+  userId: string;
+  user_id: string;
+  start_time: string;
+  end_time: string;
+  location?: string;
+  color?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/**
  * Fetch events by multiple filter values
  */
-export const fetchEventsByMultipleValues = async (columnName: string, values: string[]) => {
+export const fetchEventsByMultipleValues = async (columnName: string, values: string[]): Promise<SimpleEvent[]> => {
   try {
     console.log(`Fetching events by ${columnName} in [${values.join(', ')}]`);
     
