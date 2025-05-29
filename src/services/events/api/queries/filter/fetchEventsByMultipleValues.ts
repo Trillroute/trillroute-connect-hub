@@ -8,8 +8,8 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
   try {
     console.log(`Fetching events by ${columnName} in [${values.join(', ')}]`);
     
-    // Use the most basic approach possible to avoid type inference issues
-    let queryResult;
+    // Use any type to avoid deep type inference issues
+    let queryResult: any;
     
     // Handle different filter types
     if (columnName === 'user_id') {
@@ -17,13 +17,13 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         .from('user_events')
         .select('*')
         .in('user_id', values)
-        .order('start_time', { ascending: true });
+        .order('start_time', { ascending: true }) as any;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering with multiple values, fetch all events and filter in JavaScript
       queryResult = await supabase
         .from('user_events')
         .select('*')
-        .order('start_time', { ascending: true });
+        .order('start_time', { ascending: true }) as any;
 
       const error = queryResult?.error;
       const allData = queryResult?.data;
@@ -101,7 +101,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       return [];
     }
 
-    // Extract data and error without destructuring to avoid type issues
+    // Extract data and error with any types
     const error = queryResult?.error;
     const data = queryResult?.data;
 
