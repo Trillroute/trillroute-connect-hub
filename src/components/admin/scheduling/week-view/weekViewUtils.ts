@@ -71,22 +71,19 @@ export const isTimeAvailable = (hour: number, dayIndex: number, availabilitySlot
   });
 };
 
-// Get event color - matching exactly with the colors in legacy-view/utils.ts
-export const getEventColor = (category: string): string => {
-  switch(category?.toLowerCase() || '') {
-    case 'session':
-      return '#10B981'; // green-700
-    case 'break':
-      return '#3B82F6'; // blue-600
-    case 'office':
-      return '#8B5CF6'; // purple-600
-    case 'meeting':
-      return '#F59E0B'; // yellow-500
-    case 'class setup':
-      return '#F97316'; // orange-500
-    case 'qc':
-      return '#EC4899'; // pink-600
-    default:
-      return '#10B981'; // Default to green
+// Uniform event color coding across all views
+export const getEventColor = (event?: CalendarEvent): string => {
+  if (!event) return '#10B981'; // Default green
+  
+  // Check if it's a trial class
+  const isTrialClass = event.title?.toLowerCase().includes('trial') || 
+                      event.description?.toLowerCase().includes('trial') ||
+                      event.eventType?.toLowerCase().includes('trial');
+  
+  if (isTrialClass) {
+    return '#F97316'; // Orange for trial classes
   }
+  
+  // Default to green for regular sessions
+  return '#10B981'; // Green for regular sessions
 };

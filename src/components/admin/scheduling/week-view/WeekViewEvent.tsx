@@ -22,7 +22,7 @@ const WeekViewEvent: React.FC<WeekViewEventProps> = ({
   onDelete,
   style
 }) => {
-  // Determine event color based on event type
+  // Uniform color coding across all views
   const getEventColor = (): string => {
     // Check if it's a trial class
     const isTrialClass = event.title?.toLowerCase().includes('trial') || 
@@ -33,7 +33,7 @@ const WeekViewEvent: React.FC<WeekViewEventProps> = ({
       return '#F97316'; // Orange for trial classes
     }
     
-    // Default to green for regular sessions
+    // Default to green for regular sessions/classes
     return '#10B981'; // Green for regular sessions
   };
   

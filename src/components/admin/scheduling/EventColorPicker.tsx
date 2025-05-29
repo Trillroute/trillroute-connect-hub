@@ -3,14 +3,14 @@ import React from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Using the exact same hex values as in weekViewUtils and legacy-view/utils
+// Uniform color options across all views
 const colorOptions = [
-  { name: 'Green (Session)', value: '#10B981' },  // green-700
-  { name: 'Blue (Break)', value: '#3B82F6' },     // blue-600
-  { name: 'Purple (Office)', value: '#8B5CF6' },  // purple-600
-  { name: 'Yellow (Meeting)', value: '#F59E0B' }, // yellow-500
-  { name: 'Orange (Setup)', value: '#F97316' },   // orange-500
-  { name: 'Pink (QC)', value: '#EC4899' },        // pink-600
+  { name: 'Green (Regular Sessions)', value: '#10B981' },  // Green for regular sessions
+  { name: 'Orange (Trial Classes)', value: '#F97316' },   // Orange for trial classes
+  { name: 'Blue (Break)', value: '#3B82F6' },            // Blue for breaks
+  { name: 'Purple (Office)', value: '#8B5CF6' },         // Purple for office
+  { name: 'Yellow (Meeting)', value: '#F59E0B' },        // Yellow for meetings
+  { name: 'Pink (QC)', value: '#EC4899' },               // Pink for QC
 ];
 
 interface EventColorPickerProps {
