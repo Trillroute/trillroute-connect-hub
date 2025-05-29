@@ -49,8 +49,12 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
         user_id: event.user_id,
         start_time: event.start_time,
         end_time: event.end_time,
-        location: event.metadata?.location,
-        color: event.metadata?.color,
+        location: (event.metadata && typeof event.metadata === 'object' && 'location' in event.metadata) 
+          ? String(event.metadata.location) 
+          : undefined,
+        color: (event.metadata && typeof event.metadata === 'object' && 'color' in event.metadata) 
+          ? String(event.metadata.color) 
+          : undefined,
         created_at: event.created_at,
         updated_at: event.updated_at
       }));
@@ -79,8 +83,12 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       user_id: event.user_id,
       start_time: event.start_time,
       end_time: event.end_time,
-      location: event.metadata?.location,
-      color: event.metadata?.color,
+      location: (event.metadata && typeof event.metadata === 'object' && 'location' in event.metadata) 
+        ? String(event.metadata.location) 
+        : undefined,
+      color: (event.metadata && typeof event.metadata === 'object' && 'color' in event.metadata) 
+        ? String(event.metadata.color) 
+        : undefined,
       created_at: event.created_at,
       updated_at: event.updated_at
     }));
