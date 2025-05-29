@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { enrollStudentInCourse } from '@/utils/enrollment/enrollment/enrollmentOperations';
 import { useCalendarEventCreation } from './useCalendarEventCreation';
 import { cleanupDuplicateEvents } from '@/utils/enrollment/cleanupDuplicateEvents';
+import { removeUsedAvailabilitySlot } from '@/utils/enrollment/cleanup/availabilitySlotCleanup';
 
 export function useStudentEnrollment() {
   const [loading, setLoading] = useState(false);
@@ -52,10 +53,14 @@ export function useStudentEnrollment() {
       let calendarSuccess = false;
 
       // Create calendar events based on course type
-      if (course.duration_type === 'recurring' && (course.course_type === 'solo' || course.course_type === 'duo')) {
-        // For recurring solo/duo courses, we need a teacher and availability slot
+      if (course.duration_type === 'recurring' && course.course_type === 'solo') {
+        // For recurring solo courses, we need a teacher and availability slot
         if (teacherId && additionalMetadata?.availabilitySlotId) {
-          console.log('Creating recurring events with slot data:', additionalMetadata);
+          console.log('Creating recurring events for solo course with slot data:', additionalMetadata);
+          
+          // Remove the availability slot first since it's now booked
+          await removeUsedAvailabilitySlot(additionalMetadata.availabilitySlotId);
+          
           calendarSuccess = await createRecurringEvents(
             courseId,
             studentId,
@@ -64,8 +69,23 @@ export function useStudentEnrollment() {
             course
           );
         } else {
-          console.warn('Missing teacher or availability slot for recurring course');
+          console.warn('Missing teacher or availability slot for recurring solo course');
           calendarSuccess = true; // Don't fail enrollment if calendar events fail
+        }
+      } else if (course.duration_type === 'recurring' && course.course_type === 'duo') {
+        // For recurring duo courses
+        if (teacherId && additionalMetadata?.availabilitySlotId) {
+          console.log('Creating recurring events for duo course with slot data:', additionalMetadata);
+          calendarSuccess = await createRecurringEvents(
+            courseId,
+            studentId,
+            teacherId,
+            additionalMetadata,
+            course
+          );
+        } else {
+          console.warn('Missing teacher or availability slot for recurring duo course');
+          calendarSuccess = true;
         }
       } else {
         // For one-time courses or group courses
