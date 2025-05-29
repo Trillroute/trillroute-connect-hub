@@ -29,8 +29,6 @@ export const DayViewComponent: React.FC<DayViewComponentProps> = ({
 
   return (
     <DayView
-      events={events}
-      availabilities={availabilities}
       onEditEvent={onEditEvent}
       onDeleteEvent={onDeleteEvent}
       onCreateEvent={onCreateEvent}

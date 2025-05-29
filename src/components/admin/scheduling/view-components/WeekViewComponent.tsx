@@ -30,8 +30,6 @@ export const WeekViewComponent: React.FC<WeekViewComponentProps> = ({
 
   return (
     <WeekView
-      events={events}
-      availabilities={availabilities}
       onEditEvent={onEditEvent}
       onDeleteEvent={onDeleteEvent}
       onCreateEvent={onCreateEvent}
