@@ -4,12 +4,14 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import { useCalendar } from './context/CalendarContext';
 import { CalendarEvent } from './context/calendarTypes';
 import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
 
 interface MonthViewProps {
   onDateClick: (date: Date) => void;
+  onCreateEvent?: () => void;
 }
 
-const MonthView: React.FC<MonthViewProps> = ({ onDateClick }) => {
+const MonthView: React.FC<MonthViewProps> = ({ onDateClick, onCreateEvent }) => {
   const { currentDate, events } = useCalendar();
   
   // Generate days for the month
@@ -55,6 +57,14 @@ const MonthView: React.FC<MonthViewProps> = ({ onDateClick }) => {
   
   return (
     <div className="h-full p-2">
+      {onCreateEvent && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={onCreateEvent}>
+            Create New Event
+          </Button>
+        </div>
+      )}
+      
       <div className="grid grid-cols-7 gap-1">
         {/* Day headers */}
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (

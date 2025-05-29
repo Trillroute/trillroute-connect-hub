@@ -11,6 +11,7 @@ interface EventListViewProps {
   events: CalendarEvent[];
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
+  onCreateEvent?: () => void;
   showAvailability?: boolean;
 }
 
@@ -18,6 +19,7 @@ const EventListView: React.FC<EventListViewProps> = ({
   events,
   onEditEvent,
   onDeleteEvent,
+  onCreateEvent,
   showAvailability = true
 }) => {
   console.log('EventListView: Rendering with events:', events.length);
@@ -56,12 +58,29 @@ const EventListView: React.FC<EventListViewProps> = ({
     return (
       <div className="text-center py-8 text-gray-500">
         <p>No events to display</p>
+        {onCreateEvent && (
+          <Button 
+            onClick={onCreateEvent} 
+            className="mt-4"
+            variant="outline"
+          >
+            Create New Event
+          </Button>
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      {onCreateEvent && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={onCreateEvent}>
+            Create New Event
+          </Button>
+        </div>
+      )}
+      
       {events.map((event) => {
         console.log('EventListView: Rendering event:', {
           id: event.id,
