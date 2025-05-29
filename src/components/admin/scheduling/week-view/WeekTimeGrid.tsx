@@ -88,12 +88,30 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               {weekEvents
                 .filter(event => {
                   if (!(event.start instanceof Date)) return false;
-                  const eventDay = event.start.getDay();
-                  const eventHour = event.start.getHours();
-                  const matches = eventDay === day.getDay() && eventHour === hour;
-                  if (matches) {
-                    console.log(`WeekTimeGrid: Event "${event.title}" matches day ${eventDay} hour ${eventHour}`);
-                  }
+                  
+                  // Compare the event date with the specific day from weekDays array
+                  const eventDate = new Date(event.start);
+                  const currentDay = new Date(day);
+                  
+                  // Check if it's the same day
+                  const isSameDay = eventDate.toDateString() === currentDay.toDateString();
+                  
+                  // Check if the event hour matches the current hour
+                  const eventHour = eventDate.getHours();
+                  const hourMatches = eventHour === hour;
+                  
+                  const matches = isSameDay && hourMatches;
+                  
+                  console.log(`WeekTimeGrid: Checking event "${event.title}" for day ${dayIndex} hour ${hour}:`, {
+                    eventDate: eventDate.toDateString(),
+                    currentDay: currentDay.toDateString(),
+                    eventHour,
+                    hour,
+                    isSameDay,
+                    hourMatches,
+                    matches
+                  });
+                  
                   return matches;
                 })
                 .map(event => (
@@ -120,7 +138,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
           {/* Availability slots */}
           <WeekAvailabilitySlots
             dayIndex={dayIndex}
-            availabilitySlots={availabilitySlots.filter(slot => slot.dayOfWeek === day.getDay())}
+            availabilitySlots={availabilitySlots.filter(slot => slot.dayOfWeek === dayIndex)}
             onAvailabilityClick={handleAvailabilityClick}
           />
         </div>
