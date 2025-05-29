@@ -8,49 +8,58 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
   try {
     console.log(`Fetching events by ${columnName} = ${value}`);
     
-    // Completely avoid type inference by using basic variables
-    let rawData: any = null;
-    let hasError = false;
-    let errorInfo: any = null;
+    let allEvents: any[] = [];
     
     // Handle different filter types
     if (columnName === 'user_id') {
-      const result = await supabase.from('user_events').select('*').eq('user_id', value).order('start_time', { ascending: true });
-      rawData = result.data;
-      hasError = !!result.error;
-      errorInfo = result.error;
+      // For user_id, get both events they own AND events where they appear in metadata
+      const ownEventsQuery = supabase.from('user_events').select('*').eq('user_id', value);
+      const metadataEventsQuery = supabase.from('user_events').select('*').or(`metadata->>teacherId.eq.${value},metadata->>studentId.eq.${value}`);
+      
+      const [ownEventsResult, metadataEventsResult] = await Promise.all([
+        ownEventsQuery.order('start_time', { ascending: true }),
+        metadataEventsQuery.order('start_time', { ascending: true })
+      ]);
+      
+      if (ownEventsResult.error) {
+        console.error(`Error fetching own events:`, ownEventsResult.error);
+        return [];
+      }
+      
+      if (metadataEventsResult.error) {
+        console.error(`Error fetching metadata events:`, metadataEventsResult.error);
+        return [];
+      }
+      
+      // Combine and deduplicate events
+      const combinedEvents = [...(ownEventsResult.data || []), ...(metadataEventsResult.data || [])];
+      const uniqueEvents = combinedEvents.filter((event, index, self) => 
+        index === self.findIndex(e => e.id === event.id)
+      );
+      
+      allEvents = uniqueEvents;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering, use the metadata column
       const result = await supabase.from('user_events').select('*').eq(`metadata->${columnName}`, value).order('start_time', { ascending: true });
-      rawData = result.data;
-      hasError = !!result.error;
-      errorInfo = result.error;
+      
+      if (result.error) {
+        console.error(`Error fetching events by ${columnName}:`, result.error);
+        return [];
+      }
+      
+      allEvents = result.data || [];
     } else {
       // Default case - return empty array
       return [];
     }
 
-    if (hasError) {
-      console.error(`Error fetching events by ${columnName}:`, errorInfo);
-      return [];
-    }
-
-    console.log(`Found ${rawData?.length || 0} events for ${columnName} = ${value}`);
+    console.log(`Found ${allEvents.length} events for ${columnName} = ${value}`);
     
-    // Check if we have valid data
-    if (!rawData) {
-      return [];
-    }
-
-    if (!Array.isArray(rawData)) {
-      return [];
-    }
-
+    // Transform events
     const events = [];
     
-    // Process each event individually
-    for (let i = 0; i < rawData.length; i++) {
-      const event = rawData[i];
+    for (let i = 0; i < allEvents.length; i++) {
+      const event = allEvents[i];
       if (!event) continue;
       
       // Create transformed event object with explicit properties
