@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import ContentWrapper from './ContentWrapper';
-import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
+import { FilteredCalendar } from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import FilterSelector from '@/components/admin/scheduling/components/FilterSelector';
 
@@ -41,11 +41,10 @@ const SchedulingContent: React.FC = () => {
       
       <div className="border rounded-lg bg-white overflow-hidden h-[600px]">
         <FilteredCalendar
-          title="All Events"
-          hasAdminAccess={hasAdminAccess}
           filterType={filterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | undefined}
-          filterValues={selectedFilters}
-          showFilterTabs={false}
+          filterId={selectedFilter}
+          filterIds={selectedFilters}
+          filters={{ users: [], courses: [], skills: [] }}
         />
       </div>
     </ContentWrapper>

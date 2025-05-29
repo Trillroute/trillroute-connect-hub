@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ContentWrapper from './ContentWrapper';
-import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
+import { FilteredCalendar } from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 
 const StudentCalendarContent: React.FC = () => {
@@ -15,11 +15,10 @@ const StudentCalendarContent: React.FC = () => {
     >
       <div className="h-[calc(100vh-220px)]">
         <FilteredCalendar
-          title="Student Calendar"
-          filterType="role"
-          filterValues={['student']}
-          hasAdminAccess={hasAdminAccess}
-          showAvailability={false} // Explicitly disable showing availability slots
+          filterType="student"
+          filterId={null}
+          filterIds={[]}
+          filters={{ users: [], courses: [], skills: [] }}
         />
       </div>
     </ContentWrapper>

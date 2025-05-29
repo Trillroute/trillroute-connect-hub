@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ContentWrapper from './ContentWrapper';
-import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
+import { FilteredCalendar } from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 
 const StaffCalendarContent: React.FC = () => {
@@ -15,10 +15,10 @@ const StaffCalendarContent: React.FC = () => {
     >
       <div className="h-[calc(100vh-220px)]">
         <FilteredCalendar
-          title="Staff Calendar"
-          filterType="role"
-          filterValues={['teacher', 'admin', 'superadmin']}
-          hasAdminAccess={hasAdminAccess}
+          filterType="staff"
+          filterId={null}
+          filterIds={[]}
+          filters={{ users: [], courses: [], skills: [] }}
         />
       </div>
     </ContentWrapper>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ContentWrapper from './ContentWrapper';
-import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
+import { FilteredCalendar } from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import { useCourses } from '@/hooks/useCourses';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,10 +46,10 @@ const CourseCalendarContent: React.FC = () => {
       <div className="h-[calc(100vh-280px)]">
         {selectedCourseId ? (
           <FilteredCalendar
-            title={courses.find(c => c.id === selectedCourseId)?.title || "Course Calendar"}
             filterType="course"
-            filterValues={[selectedCourseId]}
-            hasAdminAccess={hasAdminAccess}
+            filterId={selectedCourseId}
+            filterIds={[selectedCourseId]}
+            filters={{ users: [], courses: [selectedCourseId], skills: [] }}
           />
         ) : (
           <div className="flex items-center justify-center h-full border rounded-md bg-gray-50">

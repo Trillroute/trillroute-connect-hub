@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { CalendarHeader } from './CalendarHeader';
+import CalendarHeader from './CalendarHeader';
 import { ViewSelector } from './view-components/ViewSelector';
-import { CreateEventDialog } from './CreateEventDialog';
-import { EventFormDialog } from './EventFormDialog';
-import { DeleteEventDialog } from './dialogs/DeleteEventDialog';
+import CreateEventDialog from './CreateEventDialog';
+import EventFormDialog from './EventFormDialog';
+import DeleteEventDialog from './dialogs/DeleteEventDialog';
 import { CalendarEvent } from './context/calendarTypes';
 import { useCalendar } from './context/CalendarContext';
 
@@ -21,7 +21,7 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
   filterIds,
   filters
 }) => {
-  const { currentView } = useCalendar();
+  const { viewMode } = useCalendar();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<CalendarEvent | null>(null);
@@ -38,16 +38,22 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
     setIsCreateDialogOpen(true);
   };
 
+  const handleDateClick = (date: Date) => {
+    // Handle date click for month view
+    console.log('Date clicked:', date);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <CalendarHeader onCreateEvent={handleCreateEvent} />
       
       <div className="flex-1 overflow-hidden">
         <ViewSelector
-          currentView={currentView}
+          currentView={viewMode}
           onEditEvent={handleEditEvent}
           onDeleteEvent={handleDeleteEvent}
           onCreateEvent={handleCreateEvent}
+          onDateClick={handleDateClick}
           showAvailability={true}
           filterType={filterType}
           filterId={filterId}

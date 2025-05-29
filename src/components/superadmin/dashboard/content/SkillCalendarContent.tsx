@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ContentWrapper from './ContentWrapper';
-import FilteredCalendar from '@/components/admin/scheduling/FilteredCalendar';
+import { FilteredCalendar } from '@/components/admin/scheduling/FilteredCalendar';
 import { useAuth } from '@/hooks/useAuth';
 import { useSkills } from '@/hooks/useSkills';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -79,11 +79,10 @@ const SkillCalendarContent: React.FC = () => {
         {selectedSkillId ? (
           <FilteredCalendar
             key={`skill-calendar-${selectedSkillId}-${refreshKey}`}
-            title={`Calendar for ${selectedSkill?.name || "Selected"} Skill`}
             filterType="skill"
-            filterValues={selectedSkillId ? [selectedSkillId] : []}
-            hasAdminAccess={hasAdminAccess}
-            showFilterTabs={false}
+            filterId={selectedSkillId}
+            filterIds={selectedSkillId ? [selectedSkillId] : []}
+            filters={{ users: [], courses: [], skills: [selectedSkillId] }}
           />
         ) : (
           <div className="flex items-center justify-center h-full border rounded-md bg-gray-50">

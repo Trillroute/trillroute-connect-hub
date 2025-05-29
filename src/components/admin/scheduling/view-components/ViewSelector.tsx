@@ -12,6 +12,7 @@ interface ViewSelectorProps {
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
   onCreateEvent?: () => void;
+  onDateClick: (date: Date) => void;
   showAvailability?: boolean;
   // Add filter props to pass through to views
   filterType?: 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | null;
@@ -25,6 +26,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   onEditEvent,
   onDeleteEvent,
   onCreateEvent,
+  onDateClick,
   showAvailability = true,
   filterType,
   filterId,
@@ -50,7 +52,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
     case 'day':
       return <DayViewComponent {...viewProps} />;
     case 'month':
-      return <MonthViewComponent {...viewProps} />;
+      return <MonthViewComponent {...viewProps} onDateClick={onDateClick} />;
     case 'legacy':
       return <LegacyViewComponent {...viewProps} />;
     default:
