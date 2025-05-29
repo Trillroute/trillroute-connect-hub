@@ -2,23 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Simple event type to avoid complex type inference
- */
-interface SimpleEventData {
-  id: string;
-  title: string;
-  description?: string;
-  event_type: string;
-  start_time: string;
-  end_time: string;
-  is_blocked?: boolean;
-  metadata?: any;
-  user_id: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-/**
  * Fetch events by a single filter value
  */
 export const fetchEventsBySingleValue = async (columnName: string, value: string) => {
@@ -66,27 +49,28 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
 
     const events: any[] = [];
     
-    for (let i = 0; i < data.length; i++) {
-      const event = data[i];
+    // Use simple iteration instead of map to avoid type inference issues
+    for (const event of data) {
       if (!event) continue;
       
-      // Simple object creation without complex inline transformations
-      const transformedEvent: any = {
-        id: event.id,
-        title: event.title,
-        description: event.description,
-        eventType: event.event_type,
-        start: new Date(event.start_time),
-        end: new Date(event.end_time),
-        isBlocked: Boolean(event.is_blocked),
-        metadata: event.metadata || {},
-        userId: event.user_id,
-        user_id: event.user_id,
-        start_time: event.start_time,
-        end_time: event.end_time,
-        created_at: event.created_at,
-        updated_at: event.updated_at
-      };
+      // Create a simple object without complex inline transformations
+      const transformedEvent: any = {};
+      
+      // Add properties one by one to avoid complex object spreading
+      transformedEvent.id = event.id;
+      transformedEvent.title = event.title;
+      transformedEvent.description = event.description;
+      transformedEvent.eventType = event.event_type;
+      transformedEvent.start = new Date(event.start_time);
+      transformedEvent.end = new Date(event.end_time);
+      transformedEvent.isBlocked = Boolean(event.is_blocked);
+      transformedEvent.metadata = event.metadata || {};
+      transformedEvent.userId = event.user_id;
+      transformedEvent.user_id = event.user_id;
+      transformedEvent.start_time = event.start_time;
+      transformedEvent.end_time = event.end_time;
+      transformedEvent.created_at = event.created_at;
+      transformedEvent.updated_at = event.updated_at;
 
       // Add location and color separately to avoid complex inline checks
       if (event.metadata && typeof event.metadata === 'object') {

@@ -2,23 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Simple event type to avoid complex type inference
- */
-interface SimpleEventData {
-  id: string;
-  title: string;
-  description?: string;
-  event_type: string;
-  start_time: string;
-  end_time: string;
-  is_blocked?: boolean;
-  metadata?: any;
-  user_id: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-/**
  * Fetch events by multiple filter values
  */
 export const fetchEventsByMultipleValues = async (columnName: string, values: string[]) => {
@@ -55,8 +38,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       const filteredData: any[] = [];
       const allData = allEventsResult.data || [];
       
-      for (let i = 0; i < allData.length; i++) {
-        const event = allData[i];
+      for (const event of allData) {
         if (!event || !event.metadata || typeof event.metadata !== 'object') continue;
         
         const metadataValue = event.metadata[columnName];
@@ -70,26 +52,26 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       // Transform the filtered data
       const events: any[] = [];
       
-      for (let i = 0; i < filteredData.length; i++) {
-        const event = filteredData[i];
+      for (const event of filteredData) {
         if (!event) continue;
         
-        const transformedEvent: any = {
-          id: event.id,
-          title: event.title,
-          description: event.description,
-          eventType: event.event_type,
-          start: new Date(event.start_time),
-          end: new Date(event.end_time),
-          isBlocked: Boolean(event.is_blocked),
-          metadata: event.metadata || {},
-          userId: event.user_id,
-          user_id: event.user_id,
-          start_time: event.start_time,
-          end_time: event.end_time,
-          created_at: event.created_at,
-          updated_at: event.updated_at
-        };
+        const transformedEvent: any = {};
+        
+        // Add properties one by one to avoid complex object spreading
+        transformedEvent.id = event.id;
+        transformedEvent.title = event.title;
+        transformedEvent.description = event.description;
+        transformedEvent.eventType = event.event_type;
+        transformedEvent.start = new Date(event.start_time);
+        transformedEvent.end = new Date(event.end_time);
+        transformedEvent.isBlocked = Boolean(event.is_blocked);
+        transformedEvent.metadata = event.metadata || {};
+        transformedEvent.userId = event.user_id;
+        transformedEvent.user_id = event.user_id;
+        transformedEvent.start_time = event.start_time;
+        transformedEvent.end_time = event.end_time;
+        transformedEvent.created_at = event.created_at;
+        transformedEvent.updated_at = event.updated_at;
 
         // Add location and color separately
         if (event.metadata && typeof event.metadata === 'object') {
@@ -124,26 +106,26 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
 
     const events: any[] = [];
     
-    for (let i = 0; i < data.length; i++) {
-      const event = data[i];
+    for (const event of data) {
       if (!event) continue;
       
-      const transformedEvent: any = {
-        id: event.id,
-        title: event.title,
-        description: event.description,
-        eventType: event.event_type,
-        start: new Date(event.start_time),
-        end: new Date(event.end_time),
-        isBlocked: Boolean(event.is_blocked),
-        metadata: event.metadata || {},
-        userId: event.user_id,
-        user_id: event.user_id,
-        start_time: event.start_time,
-        end_time: event.end_time,
-        created_at: event.created_at,
-        updated_at: event.updated_at
-      };
+      const transformedEvent: any = {};
+      
+      // Add properties one by one to avoid complex object spreading
+      transformedEvent.id = event.id;
+      transformedEvent.title = event.title;
+      transformedEvent.description = event.description;
+      transformedEvent.eventType = event.event_type;
+      transformedEvent.start = new Date(event.start_time);
+      transformedEvent.end = new Date(event.end_time);
+      transformedEvent.isBlocked = Boolean(event.is_blocked);
+      transformedEvent.metadata = event.metadata || {};
+      transformedEvent.userId = event.user_id;
+      transformedEvent.user_id = event.user_id;
+      transformedEvent.start_time = event.start_time;
+      transformedEvent.end_time = event.end_time;
+      transformedEvent.created_at = event.created_at;
+      transformedEvent.updated_at = event.updated_at;
 
       // Add location and color separately
       if (event.metadata && typeof event.metadata === 'object') {
