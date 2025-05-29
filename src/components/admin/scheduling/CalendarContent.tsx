@@ -55,7 +55,8 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
   const handleUpdateEventSave = async (eventData: Omit<CalendarEvent, 'id'>) => {
     if (editingEvent) {
       try {
-        await handleUpdateEvent({ ...eventData, id: editingEvent.id });
+        // Fix: Pass event ID and data separately
+        await handleUpdateEvent(editingEvent.id, eventData);
         setEditingEvent(null);
       } catch (error) {
         console.error('Error updating event:', error);
@@ -66,7 +67,8 @@ export const CalendarContent: React.FC<CalendarContentProps> = ({
   const handleConfirmDelete = async () => {
     if (deletingEvent) {
       try {
-        await handleDeleteEvent(deletingEvent);
+        // Fix: Pass event ID instead of entire event object
+        await handleDeleteEvent(deletingEvent.id);
         setDeletingEvent(null);
       } catch (error) {
         console.error('Error deleting event:', error);
