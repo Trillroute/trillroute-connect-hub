@@ -9,7 +9,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
     console.log(`Fetching events by ${columnName} in [${values.join(', ')}]`);
     
     // Use the most basic approach possible to avoid type inference issues
-    let queryResult: any;
+    let queryResult;
     
     // Handle different filter types
     if (columnName === 'user_id') {
@@ -34,7 +34,7 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       }
 
       // Filter events where metadata contains any of the specified values
-      const filteredData: any[] = [];
+      const filteredData = [];
       
       if (allData && Array.isArray(allData)) {
         for (let i = 0; i < allData.length; i++) {
@@ -54,13 +54,13 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       console.log(`Found ${filteredData.length} events for ${columnName} in [${values.join(', ')}]`);
       
       // Transform the filtered data
-      const events: any[] = [];
+      const events = [];
       
       for (let i = 0; i < filteredData.length; i++) {
         const event = filteredData[i];
         if (!event) continue;
         
-        const transformedEvent: any = {};
+        const transformedEvent = {};
         
         // Basic properties
         transformedEvent.id = event.id;
@@ -121,13 +121,13 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       return [];
     }
 
-    const events: any[] = [];
+    const events = [];
     
     for (let i = 0; i < data.length; i++) {
       const event = data[i];
       if (!event) continue;
       
-      const transformedEvent: any = {};
+      const transformedEvent = {};
       
       // Basic properties
       transformedEvent.id = event.id;

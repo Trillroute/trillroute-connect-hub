@@ -9,7 +9,7 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
     console.log(`Fetching events by ${columnName} = ${value}`);
     
     // Use the most basic approach possible to avoid type inference issues
-    let queryResult: any;
+    let queryResult;
     
     // Handle different filter types
     if (columnName === 'user_id') {
@@ -50,15 +50,15 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
       return [];
     }
 
-    const events: any[] = [];
+    const events = [];
     
     // Process each event individually
     for (let i = 0; i < data.length; i++) {
       const event = data[i];
       if (!event) continue;
       
-      // Create transformed event object
-      const transformedEvent: any = {};
+      // Create transformed event object with basic assignments
+      const transformedEvent = {};
       
       // Basic properties
       transformedEvent.id = event.id;
