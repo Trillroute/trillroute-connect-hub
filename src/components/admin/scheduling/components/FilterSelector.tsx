@@ -16,7 +16,8 @@ interface FilterSelectorProps {
   setSelectedFilter: (id: string | null) => void;
   selectedFilters?: string[];
   setSelectedFilters?: (ids: string[]) => void;
-  showFilterTypeTabs?: boolean; // Prop to control filter type tabs visibility
+  showFilterTypeTabs?: boolean;
+  onFilterChange?: (filterType: string | null, filterIds: string[]) => void;
 }
 
 const FilterSelector: React.FC<FilterSelectorProps> = ({
@@ -26,7 +27,8 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
   setSelectedFilter,
   selectedFilters = [],
   setSelectedFilters = () => {},
-  showFilterTypeTabs = true // Default to true for backward compatibility
+  showFilterTypeTabs = true,
+  onFilterChange
 }) => {
   // Use our custom hook to get filter options
   const { filterOptions, isLoading } = useFilterOptions({ filterType });
@@ -47,7 +49,12 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     console.log('FilterSelector: Filter type changed, clearing selections');
     setSelectedFilter(null);
     setSelectedFilters([]);
-  }, [filterType, setSelectedFilter, setSelectedFilters]);
+    
+    // Notify parent of filter change
+    if (onFilterChange) {
+      onFilterChange(filterType, []);
+    }
+  }, [filterType, setSelectedFilter, setSelectedFilters, onFilterChange]);
 
   const handleMultiSelectChange = (selected: string[]) => {
     console.log("FilterSelector: MultiSelect selection changed:", selected);
@@ -62,6 +69,11 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     setSelectedFilter(safeSelected.length > 0 ? safeSelected[0] : null);
     
     console.log("FilterSelector: Updated selectedFilters to:", safeSelected);
+    
+    // Notify parent of filter change
+    if (onFilterChange) {
+      onFilterChange(filterType, safeSelected);
+    }
   };
 
   return (

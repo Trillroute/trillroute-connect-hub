@@ -66,6 +66,8 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
       allFilterIds.push(filterId);
     }
     
+    console.log('FilteredEventsProvider: Applying filter with IDs:', allFilterIds);
+    
     // Apply the filter using the filterUtils
     applyFilter({
       filterType,

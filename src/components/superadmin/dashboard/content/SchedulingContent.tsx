@@ -15,6 +15,12 @@ const SchedulingContent: React.FC = () => {
 
   console.log('SchedulingContent: Rendering with filterType:', filterType, 'selectedFilters:', selectedFilters);
 
+  // Handle filter changes from FilterSelector
+  const handleFilterChange = (newFilterType: string | null, newFilterIds: string[]) => {
+    console.log('SchedulingContent: Filter changed:', { newFilterType, newFilterIds });
+    // The FilterSelector already updates the state, but we can add additional logic here if needed
+  };
+
   return (
     <ContentWrapper
       title="Calendar"
@@ -28,7 +34,8 @@ const SchedulingContent: React.FC = () => {
           setSelectedFilter={setSelectedFilter}
           selectedFilters={selectedFilters}
           setSelectedFilters={setSelectedFilters}
-          showFilterTypeTabs={true} // Show the filter type tabs in this view
+          showFilterTypeTabs={true}
+          onFilterChange={handleFilterChange}
         />
       </div>
       
@@ -38,7 +45,7 @@ const SchedulingContent: React.FC = () => {
           hasAdminAccess={hasAdminAccess}
           filterType={filterType as 'course' | 'skill' | 'teacher' | 'student' | 'admin' | 'staff' | undefined}
           filterValues={selectedFilters}
-          showFilterTabs={false} // Don't show duplicate tabs here as we're using the FilterSelector above
+          showFilterTabs={false}
         />
       </div>
     </ContentWrapper>
