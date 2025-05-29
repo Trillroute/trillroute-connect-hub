@@ -47,11 +47,25 @@ const EventListView: React.FC<EventListViewProps> = ({
                         event.eventType?.toLowerCase().includes('trial');
     
     if (isTrialClass) {
-      return 'bg-orange-100 text-orange-800';
+      return 'bg-orange-500'; // Orange for trial classes
     }
     
     // Default to green for regular classes/sessions
-    return 'bg-green-100 text-green-800';
+    return 'bg-green-500'; // Green for regular sessions
+  };
+
+  const getEventTypeBackgroundClass = (event: CalendarEvent) => {
+    // Check if it's a trial class
+    const isTrialClass = event.title?.toLowerCase().includes('trial') || 
+                        event.description?.toLowerCase().includes('trial') ||
+                        event.eventType?.toLowerCase().includes('trial');
+    
+    if (isTrialClass) {
+      return 'bg-orange-100 border-orange-300 text-orange-800';
+    }
+    
+    // Default to green for regular classes/sessions
+    return 'bg-green-100 border-green-300 text-green-800';
   };
 
   if (events.length === 0) {
@@ -91,7 +105,11 @@ const EventListView: React.FC<EventListViewProps> = ({
         });
 
         return (
-          <Card key={event.id} className="w-full">
+          <Card 
+            key={event.id} 
+            className="w-full cursor-pointer hover:shadow-md transition-shadow duration-200"
+            onClick={() => onEditEvent(event)}
+          >
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -104,14 +122,20 @@ const EventListView: React.FC<EventListViewProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onEditEvent(event)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditEvent(event);
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onDeleteEvent(event)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteEvent(event);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -135,7 +159,9 @@ const EventListView: React.FC<EventListViewProps> = ({
                 )}
                 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={getEventTypeColor(event)}>
+                  <Badge 
+                    className={`${getEventTypeBackgroundClass(event)} border`}
+                  >
                     {event.eventType || 'class'}
                   </Badge>
                   
