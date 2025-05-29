@@ -45,35 +45,59 @@ const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   });
 
   useEffect(() => {
-    // Check for availability slot data in session storage
-    const availabilitySlotData = sessionStorage.getItem('availabilitySlot');
-    if (availabilitySlotData) {
-      try {
-        const slot: AvailabilitySlot = JSON.parse(availabilitySlotData);
-        
-        // Create a new date object for start time
-        const startDateTime = new Date(startDate);
-        startDateTime.setHours(slot.startHour, slot.startMinute, 0, 0);
-        
-        // Create a new date object for end time
-        const endDateTime = new Date(startDate);
-        endDateTime.setHours(slot.endHour, slot.endMinute, 0, 0);
-        
-        // Set the initial event data based on the availability slot
-        setInitialEvent({
-          title: `${slot.category} - ${slot.userName || 'Available Slot'}`,
-          description: `Created from an available time slot for ${slot.userName || 'user'}`,
-          location: '',
-          start: startDateTime,
-          end: endDateTime,
-          color: '#4CAF50' // Green color for events created from availability slots
-        });
-        
-        // Clear the session storage item
-        sessionStorage.removeItem('availabilitySlot');
-      } catch (error) {
-        console.error('Error parsing availability slot data:', error);
+    if (open) {
+      // Check for start and end time data in session storage
+      const startTimeStr = sessionStorage.getItem('newEventStartTime');
+      const endTimeStr = sessionStorage.getItem('newEventEndTime');
+      const titleStr = sessionStorage.getItem('newEventTitle');
+      
+      let eventStart = startDate;
+      let eventEnd = addMinutes(startDate, 60);
+      let eventTitle = '';
+      
+      // Use session storage times if available
+      if (startTimeStr) {
+        eventStart = new Date(startTimeStr);
+        sessionStorage.removeItem('newEventStartTime');
       }
+      
+      if (endTimeStr) {
+        eventEnd = new Date(endTimeStr);
+        sessionStorage.removeItem('newEventEndTime');
+      }
+      
+      if (titleStr) {
+        eventTitle = titleStr;
+        sessionStorage.removeItem('newEventTitle');
+      }
+      
+      // Check for availability slot data in session storage
+      const availabilitySlotData = sessionStorage.getItem('availabilitySlot');
+      if (availabilitySlotData) {
+        try {
+          const slot: AvailabilitySlot = JSON.parse(availabilitySlotData);
+          
+          // Use the slot data to override the title if not already set
+          if (!eventTitle) {
+            eventTitle = `${slot.category} - ${slot.userName || 'Available Slot'}`;
+          }
+          
+          // Clear the session storage item
+          sessionStorage.removeItem('availabilitySlot');
+        } catch (error) {
+          console.error('Error parsing availability slot data:', error);
+        }
+      }
+      
+      // Set the initial event data
+      setInitialEvent({
+        title: eventTitle,
+        description: eventTitle ? `Created from an available time slot` : '',
+        location: '',
+        start: eventStart,
+        end: eventEnd,
+        color: eventTitle ? '#4CAF50' : '#4285F4' // Green color for events created from availability slots
+      });
     }
   }, [open, startDate]);
 
