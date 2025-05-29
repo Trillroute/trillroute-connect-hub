@@ -30,7 +30,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   handleEdit,
   confirmDelete
 }) => {
-  console.log('WeekTimeGrid: Processing events for display:', events.length);
+  console.log('WeekTimeGrid: Processing filtered events for display:', events.length);
   
   // Filter events that fall within the current week
   const weekEvents = events.filter(event => {
@@ -54,7 +54,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     return isInWeek;
   });
   
-  console.log('WeekTimeGrid: Filtered week events:', weekEvents.length);
+  console.log('WeekTimeGrid: Filtered week events after date filtering:', weekEvents.length);
   weekEvents.forEach((event, index) => {
     console.log(`WeekTimeGrid: Week event ${index + 1}:`, {
       title: event.title,
@@ -96,7 +96,7 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               const matches = isSameDay && hourMatches;
               
               if (matches) {
-                console.log(`WeekTimeGrid: Found matching event "${event.title}" for day ${dayIndex} hour ${hour}`);
+                console.log(`WeekTimeGrid: Found matching filtered event "${event.title}" for day ${dayIndex} hour ${hour}`);
               }
               
               return matches;

@@ -60,17 +60,21 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
   useEffect(() => {
     console.log('FilteredEventsProvider: Effect triggered with:', { filterType, filterIds, filterId });
     
-    // If no filters are applied, use refreshEvents to get all events
-    if ((!filterType || filterType === null) && (!filterIds || filterIds.length === 0) && !filterId) {
-      console.log("FilteredEventsProvider: No filters applied, fetching all events");
-      refreshEvents();
-      return;
+    // Combine filterId and filterIds into a single array
+    const allFilterIds = [...filterIds];
+    if (filterId && !allFilterIds.includes(filterId)) {
+      allFilterIds.push(filterId);
     }
     
-    // For list view, we should still show all events if no specific filter is applied
-    // The filtering should happen at the UI level, not at the data fetching level
-    console.log("FilteredEventsProvider: Filters detected but showing all events for list view");
-    refreshEvents();
+    // Apply the filter using the filterUtils
+    applyFilter({
+      filterType,
+      ids: allFilterIds,
+      setEvents,
+      setAvailabilities,
+      convertAvailabilityMap,
+      refreshEvents
+    });
     
   }, [filterType, filterId, JSON.stringify(filterIds), setEvents, setAvailabilities, refreshEvents]);
 

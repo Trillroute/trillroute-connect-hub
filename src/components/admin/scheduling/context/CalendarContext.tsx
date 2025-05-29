@@ -107,14 +107,16 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
 
   // Debug log when events change
   useEffect(() => {
-    console.log('CalendarProvider: Events updated:', events.length, 'events');
+    console.log('CalendarProvider: Events updated in context:', events.length, 'events');
+    console.log('CalendarProvider: These events are now available to all views');
     events.forEach((event, index) => {
       console.log(`Event ${index + 1}:`, {
         id: event.id,
         title: event.title,
         start: event.start,
         end: event.end,
-        userId: event.userId || event.user_id
+        userId: event.userId || event.user_id,
+        eventType: event.eventType
       });
     });
   }, [events]);

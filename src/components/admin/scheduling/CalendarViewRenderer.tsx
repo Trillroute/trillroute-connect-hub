@@ -35,10 +35,11 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
 }) => {
   const { events } = useCalendar();
   
-  console.log(`CalendarViewRenderer: Rendering ${viewMode} view with ${events.length} events`);
-  console.log('CalendarViewRenderer: Events:', events);
+  console.log(`CalendarViewRenderer: Rendering ${viewMode} view with ${events.length} filtered events`);
+  console.log('CalendarViewRenderer: Filter state:', { filterType, filterIds });
   
   // Return appropriate calendar view based on viewMode
+  // All views will use the filtered events from the CalendarContext
   switch (viewMode) {
     case 'day':
       return <DayViewComponent showAvailability={showAvailability} />;

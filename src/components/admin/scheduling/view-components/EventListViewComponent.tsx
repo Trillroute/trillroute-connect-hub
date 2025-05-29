@@ -18,7 +18,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
 }) => {
   const { events } = useCalendar();
   
-  // For now, show all events in list view - filtering can be added later if needed
+  // Use the events from context (which are already filtered by FilteredEventsProvider)
   const displayEvents = useMemo(() => {
     console.log(`EventListViewComponent: Processing ${events.length} events for display`);
     
