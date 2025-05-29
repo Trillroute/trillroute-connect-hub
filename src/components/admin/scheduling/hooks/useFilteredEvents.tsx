@@ -20,13 +20,21 @@ export function useFilteredEvents({
   const [filteredAvailability, setFilteredAvailability] = useState<CalendarUserAvailability[]>([]);
 
   // Convert availability map to array for filtering and compatibility with calendar
-  const availabilityArray = useMemo(() => 
-    convertAvailabilityMapToArray(availabilities as UserAvailabilityMap), 
-    [availabilities]
-  );
+  const availabilityArray = useMemo(() => {
+    console.log('Converting availability map to array...');
+    const converted = convertAvailabilityMapToArray(availabilities as UserAvailabilityMap);
+    console.log(`Converted ${converted.length} availability slots from map`);
+    return converted;
+  }, [availabilities]);
 
   // Filter events whenever filters or events change
   useEffect(() => {
+    console.log('useFilteredEvents: Filtering events...');
+    console.log('- filterType:', filterType);
+    console.log('- filterId:', filterId);
+    console.log('- filterIds:', filterIds);
+    console.log('- filters:', filters);
+    
     // Create a combined filter from both the filters prop and the filterType/filterId props
     const combinedFilter = { ...filters };
     
@@ -47,19 +55,32 @@ export function useFilteredEvents({
     }
     
     const { filteredEvents: newFilteredEvents } = filterEvents(events, combinedFilter);
+    console.log(`Filtered events: ${newFilteredEvents.length} out of ${events.length}`);
     setFilteredEvents(newFilteredEvents);
   }, [events, filters, filterType, filterId, filterIds]);
 
   // Filter availabilities whenever filters or availabilities change
   useEffect(() => {
+    console.log('useFilteredEvents: Filtering availability...');
+    console.log('- availabilityArray length:', availabilityArray.length);
+    console.log('- filterType:', filterType);
+    console.log('- filterIds:', filterIds);
+    console.log('- filters:', filters);
+    
     const filteredAvailabilitySlots = filterAvailability(
       availabilityArray,
       filters, 
       filterType, 
       filterIds
     );
+    console.log(`Filtered availability: ${filteredAvailabilitySlots.length} out of ${availabilityArray.length}`);
     setFilteredAvailability(filteredAvailabilitySlots);
   }, [availabilityArray, filters, filterType, filterIds]);
+
+  console.log('useFilteredEvents returning:', {
+    filteredEvents: filteredEvents.length,
+    filteredAvailability: filteredAvailability.length
+  });
 
   return {
     filteredEvents,

@@ -57,15 +57,23 @@ export function filterAvailability(
     return [];
   }
   
-  console.log(`Filtering ${availabilityArray.length} availability slots with filterType: ${filterType}, filterIds:`, filterIds);
+  console.log(`filterAvailability: Starting with ${availabilityArray.length} availability slots`);
+  console.log('filterAvailability: filterType:', filterType);
+  console.log('filterAvailability: filterIds:', filterIds);
+  console.log('filterAvailability: filters.users:', filters.users);
+
+  // Special case: if filterType is null (meaning "All" is selected), show all availability slots
+  if (!filterType || filterType === null) {
+    console.log('filterAvailability: No filterType (showing All), returning all availability slots');
+    return availabilityArray;
+  }
 
   // If no specific filters are applied, show all availability slots
   const hasNoFilters = (!filters.users || filters.users.length === 0) && 
-                      (!filterIds || filterIds.length === 0) && 
-                      !filterType;
+                      (!filterIds || filterIds.length === 0);
   
   if (hasNoFilters) {
-    console.log('No filters applied, showing all availability slots');
+    console.log('filterAvailability: No specific filters applied, showing all availability slots');
     return availabilityArray;
   }
 
@@ -77,7 +85,7 @@ export function filterAvailability(
     (!filters.users || filters.users.length === 0);
     
   if (shouldShowAllForType) {
-    console.log(`Showing all availability slots for filterType: ${filterType}`);
+    console.log(`filterAvailability: Showing all availability slots for filterType: ${filterType}`);
     return availabilityArray;
   }
     
@@ -98,6 +106,6 @@ export function filterAvailability(
     return true;
   });
 
-  console.log(`After filtering: ${filtered.length} availability slots remain`);
+  console.log(`filterAvailability: After filtering: ${filtered.length} availability slots remain`);
   return filtered;
 }

@@ -21,26 +21,49 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
 }) => {
   const { events, availabilities } = useCalendar();
   
-  console.log('EventListViewComponent: Raw availabilities from context:', availabilities);
-  console.log('EventListViewComponent: showAvailability:', showAvailability);
+  console.log('=== EventListViewComponent Debug ===');
+  console.log('Raw events from context:', events?.length || 0);
+  console.log('Raw availabilities from context:', availabilities ? Object.keys(availabilities).length : 0);
+  console.log('showAvailability prop:', showAvailability);
+  console.log('Full availabilities object:', availabilities);
+  
+  // Log individual availability entries
+  if (availabilities) {
+    Object.entries(availabilities).forEach(([userId, userData]) => {
+      console.log(`User ${userId} (${userData.name}):`, userData.slots?.length || 0, 'slots');
+      if (userData.slots) {
+        userData.slots.forEach(slot => {
+          console.log(`  - Slot ${slot.id}: Day ${slot.dayOfWeek}, ${slot.startTime}-${slot.endTime}, Category: ${slot.category}`);
+        });
+      }
+    });
+  }
   
   const { filteredEvents, filteredAvailability } = useFilteredEvents({
     events,
     availabilities
   });
   
-  console.log('EventListViewComponent: Filtered availability:', filteredAvailability);
+  console.log('After useFilteredEvents:');
+  console.log('- filteredEvents:', filteredEvents?.length || 0);
+  console.log('- filteredAvailability:', filteredAvailability?.length || 0);
+  console.log('- filteredAvailability details:', filteredAvailability);
   
   // Convert availability slots to a format compatible with the list view
   const availabilityEvents = useMemo(() => {
-    if (!showAvailability || !filteredAvailability) {
-      console.log('EventListViewComponent: Not showing availability - showAvailability:', showAvailability, 'filteredAvailability:', filteredAvailability);
+    if (!showAvailability) {
+      console.log('showAvailability is false, returning empty array');
       return [];
     }
     
-    console.log('EventListViewComponent: Converting', filteredAvailability.length, 'availability slots to events');
+    if (!filteredAvailability || filteredAvailability.length === 0) {
+      console.log('No filteredAvailability data, returning empty array');
+      return [];
+    }
     
-    return filteredAvailability.map(slot => {
+    console.log(`Converting ${filteredAvailability.length} availability slots to events`);
+    
+    const converted = filteredAvailability.map(slot => {
       // Create a date object for the current week's slot
       const today = new Date();
       const currentWeekStart = new Date(today.setDate(today.getDate() - today.getDay()));
@@ -51,7 +74,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
       const endDate = new Date(slotDate);
       endDate.setHours(slot.endHour, slot.endMinute, 0, 0);
       
-      return {
+      const event = {
         id: `availability-${slot.id}`,
         title: `Available: ${slot.userName}`,
         description: `${slot.category} availability slot`,
@@ -65,14 +88,26 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
           isAvailability: true
         }
       } as CalendarEvent;
+      
+      console.log('Converted availability slot to event:', {
+        id: event.id,
+        title: event.title,
+        start: event.start,
+        eventType: event.eventType
+      });
+      
+      return event;
     });
+    
+    console.log(`Successfully converted ${converted.length} availability events`);
+    return converted;
   }, [filteredAvailability, showAvailability]);
   
   // Combine events and availability slots
   const displayEvents = useMemo(() => {
-    console.log(`EventListViewComponent: Processing ${events.length} events and ${availabilityEvents.length} availability slots`);
+    console.log(`Combining ${events?.length || 0} events and ${availabilityEvents.length} availability events`);
     
-    const combined = [...events, ...availabilityEvents];
+    const combined = [...(events || []), ...availabilityEvents];
     
     // Sort all items by start date
     const sortedEvents = combined.sort((a, b) => {
@@ -80,7 +115,8 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
       return new Date(a.start).getTime() - new Date(b.start).getTime();
     });
     
-    console.log('EventListViewComponent: Sorted combined events:', sortedEvents.map(e => ({
+    console.log('Final sorted combined events:', sortedEvents.map(e => ({
+      id: e.id,
       title: e.title,
       start: e.start,
       eventType: e.eventType
@@ -89,7 +125,9 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
     return sortedEvents;
   }, [events, availabilityEvents]);
   
-  console.log(`EventListViewComponent: Rendering with ${displayEvents.length} total items`);
+  console.log(`=== Final Result: Rendering ${displayEvents.length} total items ===`);
+  console.log(`- Regular events: ${events?.length || 0}`);
+  console.log(`- Availability events: ${availabilityEvents.length}`);
   
   return (
     <ScrollArea className="h-full">
@@ -102,7 +140,7 @@ export const EventListViewComponent: React.FC<EventListViewComponentProps> = ({
         ) : (
           <div className="space-y-2 mb-4">
             <div className="text-sm text-muted-foreground">
-              Showing {events.length} events and {availabilityEvents.length} availability slots
+              Showing {events?.length || 0} events and {availabilityEvents.length} availability slots
             </div>
             <EventListView 
               events={displayEvents}
