@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { formatEventData } from '../utils/eventFormatters';
 
 /**
  * Fetch events by multiple filter values
@@ -35,7 +34,26 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       });
 
       console.log(`Found ${filteredData.length} events for ${columnName} in [${values.join(', ')}]`);
-      return formatEventData(filteredData);
+      
+      // Format the data manually to avoid circular imports
+      return filteredData.map(event => ({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        eventType: event.event_type,
+        start: new Date(event.start_time),
+        end: new Date(event.end_time),
+        isBlocked: event.is_blocked || false,
+        metadata: event.metadata,
+        userId: event.user_id,
+        user_id: event.user_id,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        location: event.metadata?.location,
+        color: event.metadata?.color,
+        created_at: event.created_at,
+        updated_at: event.updated_at
+      }));
     }
     
     const { data, error } = await query.order('start_time', { ascending: true });
@@ -46,7 +64,26 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
     }
 
     console.log(`Found ${data?.length || 0} events for ${columnName} in [${values.join(', ')}]`);
-    return formatEventData(data || []);
+    
+    // Format the data manually to avoid circular imports
+    return (data || []).map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      eventType: event.event_type,
+      start: new Date(event.start_time),
+      end: new Date(event.end_time),
+      isBlocked: event.is_blocked || false,
+      metadata: event.metadata,
+      userId: event.user_id,
+      user_id: event.user_id,
+      start_time: event.start_time,
+      end_time: event.end_time,
+      location: event.metadata?.location,
+      color: event.metadata?.color,
+      created_at: event.created_at,
+      updated_at: event.updated_at
+    }));
   } catch (error) {
     console.error(`Exception in fetchEventsByMultipleValues for ${columnName}:`, error);
     return [];
