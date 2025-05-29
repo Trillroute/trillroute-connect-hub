@@ -20,7 +20,7 @@ export interface CalendarEvent {
   updated_at?: string;
 }
 
-export type CalendarViewMode = 'day' | 'week' | 'month' | 'list' | 'legacy';
+export type CalendarViewMode = 'day' | 'week' | 'list' | 'legacy';
 
 export interface CalendarFilterState {
   users: string[];

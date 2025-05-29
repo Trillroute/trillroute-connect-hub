@@ -30,7 +30,6 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   const options = Array.isArray(viewOptions) ? viewOptions : [
     { value: 'day', label: 'Day View' },
     { value: 'week', label: 'Week View' },
-    { value: 'month', label: 'Month View' },
     { value: 'list', label: 'List View' },
     { value: 'legacy', label: 'Legacy View' }
   ];

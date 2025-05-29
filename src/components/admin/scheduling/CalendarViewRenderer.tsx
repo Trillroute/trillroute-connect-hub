@@ -2,18 +2,16 @@
 import React from 'react';
 import DayView from './DayView';
 import WeekView from './WeekView';
-import MonthView from './MonthView';
 import EventListView from './EventListView';
 import { CalendarEvent } from './context/calendarTypes';
 import { DayViewComponent } from './view-components/DayViewComponent';
 import { WeekViewComponent } from './view-components/WeekViewComponent';
-import { MonthViewComponent } from './view-components/MonthViewComponent';
 import { EventListViewComponent } from './view-components/EventListViewComponent';
 import { LegacyViewComponent } from './view-components/LegacyViewComponent';
 import { useCalendar } from './context/CalendarContext';
 
 interface CalendarViewRendererProps {
-  viewMode: 'day' | 'week' | 'month' | 'list' | 'legacy';
+  viewMode: 'day' | 'week' | 'list' | 'legacy';
   onCreateEvent: () => void;
   onEditEvent: (event: CalendarEvent) => void;
   onDeleteEvent: (event: CalendarEvent) => void;
@@ -45,8 +43,6 @@ const CalendarViewRenderer: React.FC<CalendarViewRendererProps> = ({
       return <DayViewComponent showAvailability={showAvailability} />;
     case 'week':
       return <WeekViewComponent showAvailability={showAvailability} />;
-    case 'month':
-      return <MonthViewComponent onDateClick={onDateClick} />;
     case 'list':
       return (
         <EventListViewComponent 

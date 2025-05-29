@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 import { CalendarEvent, CalendarContextType, EventLayer, SelectedUser, UserAvailabilityMap } from './calendarTypes';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
@@ -54,9 +53,9 @@ export const CalendarProvider: React.FC<CalendarProviderProps> = ({
   
   // Create a wrapper for setViewMode that properly handles the type conversion
   const setViewMode = useCallback((mode: string) => {
-    // Ensure we're passing a valid CalendarViewMode
-    if (['day', 'week', 'month', 'list', 'legacy'].includes(mode)) {
-      originalSetViewMode(mode as 'day' | 'week' | 'month' | 'list' | 'legacy');
+    // Ensure we're passing a valid CalendarViewMode (removed month)
+    if (['day', 'week', 'list', 'legacy'].includes(mode)) {
+      originalSetViewMode(mode as 'day' | 'week' | 'list' | 'legacy');
     }
   }, [originalSetViewMode]);
   

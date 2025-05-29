@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CalendarViewMode } from '../types';
-import { Calendar, CalendarDays, Columns, ListFilter, CalendarClock } from 'lucide-react';
+import { Calendar, Columns, ListFilter, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ViewSelectorProps {
@@ -35,15 +35,6 @@ const ViewSelector: React.FC<ViewSelectorProps> = ({
       >
         <Columns className="h-4 w-4 mr-1" />
         Week
-      </Button>
-      <Button
-        variant={activeView === 'month' ? "secondary" : "ghost"}
-        size="sm"
-        onClick={() => onViewChange('month')}
-        className="px-2.5"
-      >
-        <CalendarDays className="h-4 w-4 mr-1" />
-        Month
       </Button>
       <Button
         variant={activeView === 'list' ? "secondary" : "ghost"}
