@@ -68,10 +68,14 @@ export const FilteredEventsProvider: React.FC<FilteredEventsProviderProps> = ({
     
     console.log('FilteredEventsProvider: Applying filter with IDs:', allFilterIds);
     
+    // For teacher filter with default values, include default roles
+    const defaultRoles = filterType === 'teacher' && allFilterIds.length === 0 ? ['teacher'] : [];
+    
     // Apply the filter using the filterUtils
     applyFilter({
       filterType,
       ids: allFilterIds,
+      defaultRoles,
       setEvents,
       setAvailabilities,
       convertAvailabilityMap,

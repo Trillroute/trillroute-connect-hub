@@ -32,6 +32,7 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
 }) => {
   // Use our custom hook to get filter options
   const { filterOptions, isLoading } = useFilterOptions({ filterType });
+  const [previousFilterType, setPreviousFilterType] = useState(filterType);
 
   // Log current state for debugging
   useEffect(() => {
@@ -44,17 +45,20 @@ const FilterSelector: React.FC<FilterSelectorProps> = ({
     });
   }, [filterType, selectedFilter, selectedFilters, showFilterTypeTabs, filterOptions]);
 
-  // Reset selected filters when filter type changes
+  // Only reset selected filters when filter type actually changes
   useEffect(() => {
-    console.log('FilterSelector: Filter type changed, clearing selections');
-    setSelectedFilter(null);
-    setSelectedFilters([]);
-    
-    // Notify parent of filter change
-    if (onFilterChange) {
-      onFilterChange(filterType, []);
+    if (filterType !== previousFilterType) {
+      console.log('FilterSelector: Filter type changed from', previousFilterType, 'to', filterType, '- clearing selections');
+      setSelectedFilter(null);
+      setSelectedFilters([]);
+      setPreviousFilterType(filterType);
+      
+      // Notify parent of filter change
+      if (onFilterChange) {
+        onFilterChange(filterType, []);
+      }
     }
-  }, [filterType, setSelectedFilter, setSelectedFilters, onFilterChange]);
+  }, [filterType, previousFilterType, setSelectedFilter, setSelectedFilters, onFilterChange]);
 
   const handleMultiSelectChange = (selected: string[]) => {
     console.log("FilterSelector: MultiSelect selection changed:", selected);
