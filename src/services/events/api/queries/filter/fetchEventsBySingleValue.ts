@@ -25,29 +25,32 @@ export const fetchEventsBySingleValue = async (columnName: string, value: string
   try {
     console.log(`Fetching events by ${columnName} = ${value}`);
     
-    // Use a simpler approach to avoid complex type inference
-    let queryResult: any;
+    // Explicitly type everything to avoid complex type inference
+    let data: any = null;
+    let error: any = null;
     
     // Handle different filter types
     if (columnName === 'user_id') {
-      queryResult = await supabase
+      const result = await supabase
         .from('user_events')
         .select('*')
         .eq('user_id', value)
         .order('start_time', { ascending: true });
+      data = result.data;
+      error = result.error;
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering, use the metadata column
-      queryResult = await supabase
+      const result = await supabase
         .from('user_events')
         .select('*')
         .eq(`metadata->${columnName}`, value)
         .order('start_time', { ascending: true });
+      data = result.data;
+      error = result.error;
     } else {
       // Default case - return empty array
       return [];
     }
-
-    const { data, error } = queryResult;
 
     if (error) {
       console.error(`Error fetching events by ${columnName}:`, error);
