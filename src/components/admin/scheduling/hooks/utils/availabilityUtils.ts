@@ -39,7 +39,8 @@ export function convertAvailabilityMapToArray(availabilities?: UserAvailabilityM
         const startParts = slot.startTime.split(':');
         const endParts = slot.endTime.split(':');
         
-        if (startParts.length !== 2 || endParts.length !== 2) {
+        // Handle both HH:mm and HH:mm:ss formats
+        if (startParts.length < 2 || endParts.length < 2) {
           console.log(`convertAvailabilityMapToArray: Invalid time format for slot ${index}`);
           return;
         }
