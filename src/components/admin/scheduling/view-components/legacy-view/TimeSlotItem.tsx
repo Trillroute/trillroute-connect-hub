@@ -53,6 +53,7 @@ const TimeSlotItem: React.FC<TimeSlotItemProps> = ({
         format(e.start, 'h:mm a') === slotTime
       );
       if (eventToEdit) {
+        console.log('TimeSlotItem: Calling onEditEvent with event:', eventToEdit);
         onEditEvent(eventToEdit);
       }
     } else if (item.status === 'available' && 
@@ -63,6 +64,8 @@ const TimeSlotItem: React.FC<TimeSlotItemProps> = ({
               item.endMinute !== undefined &&
               onCreateEvent) {
       // For available slots, prepare for event creation
+      console.log('TimeSlotItem: Handling availability slot click for:', item);
+      
       handleAvailabilitySlotClick({
         dayOfWeek: item.dayOfWeek,
         startHour: item.startHour,
@@ -74,8 +77,20 @@ const TimeSlotItem: React.FC<TimeSlotItemProps> = ({
         category: item.type
       });
       
+      console.log('TimeSlotItem: About to call onCreateEvent');
       // Trigger the create event popup
       onCreateEvent();
+      console.log('TimeSlotItem: onCreateEvent called');
+    } else {
+      console.log('TimeSlotItem: Click conditions not met', {
+        status: item.status,
+        hasTimeData: !!(item.dayOfWeek !== undefined && 
+                       item.startHour !== undefined && 
+                       item.startMinute !== undefined && 
+                       item.endHour !== undefined && 
+                       item.endMinute !== undefined),
+        hasOnCreateEvent: !!onCreateEvent
+      });
     }
   };
   

@@ -57,8 +57,9 @@ export const useLegacyViewData = () => {
           
           try {
             const [startHour, startMinute] = slot.startTime.split(':').map(Number);
-            
-            if (isNaN(startHour) || isNaN(startMinute)) return;
+            const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+
+            if (isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) return;
             
             // Format for display
             const formattedTime = formatTime(startHour, startMinute);
@@ -75,12 +76,19 @@ export const useLegacyViewData = () => {
             }
             
             // For availability slots - use light background colors (not solid colors)
+            // IMPORTANT: Include all time data needed for event creation
             timeSlot.items.push({
               userId: userId,
               userName: userData.name || 'Unknown',
               status: 'available', // This indicates it's an availability slot
               type: slot.category || 'session',
-              color: getCategoryColor(slot.category || 'session') // This will be used for light backgrounds
+              color: getCategoryColor(slot.category || 'session'), // This will be used for light backgrounds
+              // Include time data for event creation
+              dayOfWeek: slot.dayOfWeek,
+              startHour: startHour,
+              startMinute: startMinute,
+              endHour: endHour,
+              endMinute: endMinute
             });
           } catch (error) {
             console.error('Error processing availability slot:', error);

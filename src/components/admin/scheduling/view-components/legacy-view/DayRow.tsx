@@ -3,7 +3,7 @@ import React from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DayInfo, TimeSlot } from './types';
-import { CalendarEvent } from '../../types';
+import { CalendarEvent } from '../../context/calendarTypes';
 import DayTimeSlots from './DayTimeSlots';
 import DayStatusBadges from './DayStatusBadges';
 
@@ -55,6 +55,8 @@ const DayRow: React.FC<DayRowProps> = ({
   };
 
   const counts = calculateCounts(daySlots);
+
+  console.log('DayRow: Rendering with onCreateEvent:', !!onCreateEvent, 'for day:', day.name);
 
   return (
     <div className="border-b">
