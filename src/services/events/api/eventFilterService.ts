@@ -1,12 +1,10 @@
 
 import { FilterEventsProps, FilterType } from './types/eventTypes';
 import { getColumnNameFromFilterType, usesMetadataFiltering, usesDirectUserFiltering } from './utils/filterUtils';
-import { 
-  fetchAllEvents, 
-  fetchEventsBySingleValue, 
-  fetchEventsByMultipleValues,
-  fetchUserEvents
-} from './queries';
+import { fetchAllEvents } from './queries/basic/fetchAllEvents';
+import { fetchEventsBySingleValue } from './queries/filter/fetchEventsBySingleValue';
+import { fetchEventsByMultipleValues } from './queries/filter/fetchEventsByMultipleValues';
+import { fetchUserEvents } from './queries/basic/fetchUserEvents';
 
 /**
  * Main function to fetch events based on specified filter type and IDs

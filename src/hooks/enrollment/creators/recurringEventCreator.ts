@@ -93,7 +93,9 @@ export const createRecurringEvents = async (
             isRecurring: true,
             weekNumber: week + 1,
             durationMinutes: eventDurationMinutes,
-            originalSlotId: additionalMetadata.availabilitySlotId
+            originalSlotId: additionalMetadata.availabilitySlotId,
+            // Add standardized fields for filtering
+            dayOfWeek: dayOfWeek
           };
 
           const teacherEvent = {
@@ -106,7 +108,7 @@ export const createRecurringEvents = async (
             end_time: eventEndDate.toISOString(),
             metadata: {
               ...baseMetadata,
-              // Store filter-friendly values at the root level of metadata
+              // Store filter-friendly values at the root level of metadata for easy querying
               course_id: courseId,
               student_id: studentId,
               teacher_id: teacherId,
@@ -125,7 +127,7 @@ export const createRecurringEvents = async (
             end_time: eventEndDate.toISOString(),
             metadata: {
               ...baseMetadata,
-              // Store filter-friendly values at the root level of metadata
+              // Store filter-friendly values at the root level of metadata for easy querying
               course_id: courseId,
               student_id: studentId,
               teacher_id: teacherId,

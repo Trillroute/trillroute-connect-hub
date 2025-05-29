@@ -1,32 +1,36 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { CalendarEvent } from '../../types/eventTypes';
+import { formatEventData } from '../utils/eventFormatters';
 
 /**
- * Fetches events filtered by a single field value
- * @param field The field name to filter on
- * @param value The value to filter by
- * @returns Promise with the events data
+ * Fetch events by a single filter value
  */
-export const fetchEventsBySingleValue = async (
-  field: string,
-  value: string | number | boolean
-): Promise<any[]> => {
+export const fetchEventsBySingleValue = async (columnName: string, value: string): Promise<CalendarEvent[]> => {
   try {
-    // Completely bypass TypeScript type checking to avoid deep instantiation errors
-    const supabaseClient = supabase as any;
-    const { data, error } = await supabaseClient
-      .from('user_events')
-      .select('*')
-      .eq(field, value);
+    console.log(`Fetching events by ${columnName} = ${value}`);
     
+    let query = supabase.from('user_events').select('*');
+    
+    // Handle different filter types
+    if (columnName === 'user_id') {
+      query = query.eq('user_id', value);
+    } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
+      // For metadata-based filtering, use the metadata column
+      query = query.eq(`metadata->${columnName}`, value);
+    }
+    
+    const { data, error } = await query.order('start_time', { ascending: true });
+
     if (error) {
-      console.error('Error fetching events by single value:', error);
-      throw error;
+      console.error(`Error fetching events by ${columnName}:`, error);
+      return [];
     }
 
-    return data || [];
+    console.log(`Found ${data?.length || 0} events for ${columnName} = ${value}`);
+    return formatEventData(data || []);
   } catch (error) {
-    console.error('Unexpected error in fetchEventsBySingleValue:', error);
+    console.error(`Exception in fetchEventsBySingleValue for ${columnName}:`, error);
     return [];
   }
 };
