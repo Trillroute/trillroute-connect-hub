@@ -1,5 +1,5 @@
 
-import { CalendarEvent } from '../../types';
+import { CalendarEvent } from '../../context/calendarTypes';
 
 export interface LegacyViewProps {
   onCreateEvent?: () => void;
@@ -15,6 +15,12 @@ export interface TimeSlot {
     status: 'available' | 'expired' | 'booked';
     type: string;
     color: string;
+    // Optional time data for availability slots (needed for event creation)
+    dayOfWeek?: number;
+    startHour?: number;
+    startMinute?: number;
+    endHour?: number;
+    endMinute?: number;
   }>;
 }
 
