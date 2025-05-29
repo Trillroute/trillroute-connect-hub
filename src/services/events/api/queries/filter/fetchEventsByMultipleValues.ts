@@ -25,26 +25,31 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
   try {
     console.log(`Fetching events by ${columnName} in [${values.join(', ')}]`);
     
-    let query = supabase.from('user_events').select('*');
+    // Use a simpler approach to avoid complex type inference
+    let queryResult: any;
     
     // Handle different filter types
     if (columnName === 'user_id') {
-      query = query.in('user_id', values);
+      queryResult = await supabase
+        .from('user_events')
+        .select('*')
+        .in('user_id', values)
+        .order('start_time', { ascending: true });
     } else if (columnName === 'course_id' || columnName === 'skill_id' || columnName === 'teacher_id' || columnName === 'student_id') {
       // For metadata-based filtering with multiple values, we need to use OR conditions
       // This is more complex, so we'll fetch all events and filter in JavaScript
-      const { data, error } = await supabase
+      const allEventsResult = await supabase
         .from('user_events')
         .select('*')
         .order('start_time', { ascending: true });
 
-      if (error) {
-        console.error(`Error fetching events for ${columnName} filtering:`, error);
+      if (allEventsResult.error) {
+        console.error(`Error fetching events for ${columnName} filtering:`, allEventsResult.error);
         return [];
       }
 
       // Filter events where metadata contains any of the specified values
-      const filteredData = (data as SimpleEventData[] || []).filter((event) => {
+      const filteredData = (allEventsResult.data as SimpleEventData[] || []).filter((event) => {
         if (!event.metadata || typeof event.metadata !== 'object') return false;
         const metadataValue = (event.metadata as any)[columnName];
         return metadataValue && values.includes(metadataValue);
@@ -77,9 +82,12 @@ export const fetchEventsByMultipleValues = async (columnName: string, values: st
       }));
 
       return events;
+    } else {
+      // Default case - return empty array
+      return [];
     }
     
-    const { data, error } = await query.order('start_time', { ascending: true });
+    const { data, error } = queryResult;
 
     if (error) {
       console.error(`Error fetching events by ${columnName}:`, error);
