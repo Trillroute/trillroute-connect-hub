@@ -36,7 +36,7 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
       // Students see events where they are mentioned in metadata
       console.log("Student user, fetching enrolled course events");
       
-      // Get events where they are the student in metadata
+      // Get events where they are the student in metadata OR where user_id matches (for their own events)
       query = query.or(`user_id.eq.${userId},metadata->>studentId.eq.${userId}`);
     } else {
       // Default case - users only see their own events
@@ -53,6 +53,21 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
     
     console.log(`Raw data from user_events table:`, data);
     console.log(`Fetched ${data?.length || 0} events from user_events table`);
+    
+    if (data && data.length > 0) {
+      console.log('Sample event data:', data[0]);
+      data.forEach((event, index) => {
+        console.log(`Event ${index + 1}:`, {
+          id: event.id,
+          title: event.title,
+          start_time: event.start_time,
+          end_time: event.end_time,
+          event_type: event.event_type,
+          user_id: event.user_id,
+          metadata: event.metadata
+        });
+      });
+    }
     
     // Convert user_events format to CalendarEvent format with proper date parsing
     const events = data ? data.map((event) => {
@@ -98,7 +113,8 @@ export const fetchEvents = async (userId: string, role: string | null): Promise<
         start: mappedEvent.start,
         end: mappedEvent.end,
         startValid: !isNaN(mappedEvent.start.getTime()),
-        endValid: !isNaN(mappedEvent.end.getTime())
+        endValid: !isNaN(mappedEvent.end.getTime()),
+        metadata: mappedEvent.metadata
       });
       
       return mappedEvent;
