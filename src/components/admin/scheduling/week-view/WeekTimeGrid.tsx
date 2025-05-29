@@ -31,8 +31,12 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
   confirmDelete
 }) => {
   console.log('WeekTimeGrid: Processing filtered events for display:', events.length);
+  console.log('WeekTimeGrid: Week range:', {
+    start: weekDays[0]?.toISOString(),
+    end: weekDays[6]?.toISOString()
+  });
   
-  // Filter events that fall within the current week
+  // Filter events that fall within the current week with more lenient date checking
   const weekEvents = events.filter(event => {
     if (!event.start || !(event.start instanceof Date) || isNaN(event.start.getTime())) {
       console.warn('WeekTimeGrid: Invalid event start date:', event);
@@ -42,13 +46,20 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
     const eventDate = new Date(event.start);
     const weekStart = new Date(weekDays[0]);
     const weekEnd = new Date(weekDays[6]);
+    
+    // Set time boundaries more inclusively
+    weekStart.setHours(0, 0, 0, 0);
     weekEnd.setHours(23, 59, 59, 999);
     
     const isInWeek = eventDate >= weekStart && eventDate <= weekEnd;
-    console.log('WeekTimeGrid: Event', event.title, 'is in week:', isInWeek, {
+    
+    console.log('WeekTimeGrid: Event date check:', {
+      eventTitle: event.title,
       eventDate: eventDate.toISOString(),
+      eventDateOnly: eventDate.toDateString(),
       weekStart: weekStart.toISOString(),
-      weekEnd: weekEnd.toISOString()
+      weekEnd: weekEnd.toISOString(),
+      isInWeek
     });
     
     return isInWeek;
@@ -86,17 +97,30 @@ const WeekTimeGrid: React.FC<WeekTimeGridProps> = ({
               const eventDate = new Date(event.start);
               const currentDay = new Date(day);
               
-              // Check if it's the same day
-              const isSameDay = eventDate.toDateString() === currentDay.toDateString();
+              // Check if it's the same day (more robust comparison)
+              const eventDateStr = eventDate.toDateString();
+              const currentDayStr = currentDay.toDateString();
+              const isSameDay = eventDateStr === currentDayStr;
               
-              // Check if the event hour matches the current hour
+              // Check if the event hour overlaps with the current hour slot
               const eventHour = eventDate.getHours();
-              const hourMatches = eventHour === hour;
+              const eventMinute = eventDate.getMinutes();
+              
+              // Event overlaps with this hour slot if it starts during this hour
+              // or if it's a multi-hour event that spans this hour
+              const eventStartsInThisHour = eventHour === hour;
+              
+              // For longer events, check if this hour falls within the event duration
+              const eventEnd = event.end instanceof Date ? event.end : eventDate;
+              const eventEndHour = eventEnd.getHours();
+              const eventSpansThisHour = eventHour <= hour && hour < eventEndHour;
+              
+              const hourMatches = eventStartsInThisHour || eventSpansThisHour;
               
               const matches = isSameDay && hourMatches;
               
               if (matches) {
-                console.log(`WeekTimeGrid: Found matching filtered event "${event.title}" for day ${dayIndex} hour ${hour}`);
+                console.log(`WeekTimeGrid: Found matching filtered event "${event.title}" for day ${dayIndex} (${currentDayStr}) hour ${hour}`);
               }
               
               return matches;

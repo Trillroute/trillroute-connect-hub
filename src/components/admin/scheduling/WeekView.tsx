@@ -19,6 +19,13 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   
   // Add detailed logging for week view
   console.log('WeekView: Rendering with current date:', currentDate);
+  console.log('WeekView: Current date details:', {
+    date: currentDate.toISOString(),
+    dateString: currentDate.toDateString(),
+    day: currentDate.getDay(),
+    month: currentDate.getMonth(),
+    year: currentDate.getFullYear()
+  });
   console.log('WeekView: Events received from context:', events);
   console.log('WeekView: Number of events:', events.length);
   
@@ -31,7 +38,9 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
       startType: typeof event.start,
       endType: typeof event.end,
       startValid: event.start instanceof Date && !isNaN(event.start.getTime()),
-      endValid: event.end instanceof Date && !isNaN(event.end.getTime())
+      endValid: event.end instanceof Date && !isNaN(event.end.getTime()),
+      startDateString: event.start instanceof Date ? event.start.toDateString() : 'invalid',
+      startISOString: event.start instanceof Date ? event.start.toISOString() : 'invalid'
     });
   });
   
@@ -39,7 +48,10 @@ const WeekView: React.FC<WeekViewProps> = ({ onCreateEvent }) => {
   const weekDays = getWeekDays(currentDate);
   const hours = getHourCells();
 
-  console.log('WeekView: Week days:', weekDays.map(d => d.toDateString()));
+  console.log('WeekView: Week days:', weekDays.map(d => ({
+    date: d.toDateString(),
+    iso: d.toISOString()
+  })));
   console.log('WeekView: Hours:', hours);
 
   // Custom hook for week view state and handlers
