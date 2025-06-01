@@ -11,7 +11,7 @@ import { AdminNavbar } from './navbar/AdminNavbar';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, user } = useAuth();
   const location = useLocation();
 
   const isSuperAdminRoute = location.pathname.startsWith('/dashboard/superadmin') && isSuperAdmin();
@@ -19,12 +19,16 @@ const Navbar = () => {
     location.pathname.includes('/dashboard/admin') ||
     location.pathname.includes('/dashboard/superadmin') ||
     location.pathname.includes('/admin');
+  
+  // Use AdminNavbar only for actual admin routes, not student dashboard
+  const isStudentDashboard = location.pathname.includes('/dashboard/student') && user?.role === 'student';
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  if (isAdminRoute) {
+  // Only use AdminNavbar for admin/superadmin routes, not student dashboard
+  if (isAdminRoute && !isStudentDashboard) {
     return <AdminNavbar />;
   }
 
