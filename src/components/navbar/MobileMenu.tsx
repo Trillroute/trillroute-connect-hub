@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
@@ -70,7 +69,10 @@ export const MobileMenu = ({ isMenuOpen, isSuperAdminRoute, setIsMenuOpen }: Mob
           <Link
             to={dashboardOption.path}
             className="block px-4 py-2 text-base font-medium text-music-500 hover:text-music-600 hover:bg-gray-50"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={(e) => {
+              console.log('Mobile dashboard link clicked:', dashboardOption.path);
+              setIsMenuOpen(false);
+            }}
           >
             {isSuperAdmin() && <ShieldCheck className="inline-block mr-1 h-4 w-4" />}
             {dashboardOption.name}

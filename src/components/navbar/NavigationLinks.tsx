@@ -60,6 +60,10 @@ export const NavigationLinks = ({ isSuperAdminRoute }: NavigationLinksProps) => 
         <Link
           to={dashboardOption.path}
           className="inline-flex items-center px-1 pt-1 text-sm font-medium text-music-500 hover:text-music-600 transition-colors"
+          onClick={(e) => {
+            console.log('Dashboard link clicked:', dashboardOption.path);
+            // Let React Router handle the navigation
+          }}
         >
           {isSuperAdmin() && <ShieldCheck className="mr-1 h-4 w-4" />}
           {dashboardOption.name}
