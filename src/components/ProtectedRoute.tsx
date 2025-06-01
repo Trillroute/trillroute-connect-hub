@@ -37,34 +37,28 @@ const ProtectedRoute = ({
     return <>{children}</>;
   }
 
-  // Superadmin should always go to their dashboard
-  if (user.role === 'superadmin' || isSuperAdmin()) {
-    // If this is already the superadmin dashboard route, show it
-    if (requireSuperAdmin) {
-      return <>{children}</>;
-    }
-    
-    // For any other routes that aren't the superadmin dashboard, redirect to superadmin dashboard
-    if (!window.location.pathname.includes('/dashboard/superadmin')) {
-      return <Navigate to="/dashboard/superadmin" replace />;
-    }
-  }
-
-  // First check for superadmin requirement - this is a critical check
+  // Check for superadmin requirement first
   if (requireSuperAdmin && !(user.role === 'superadmin' || isSuperAdmin())) {
     console.log('[ProtectedRoute] Route requires superadmin, current role:', user.role);
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
   // Check for admin requirement
-  if (requireAdmin && user.role !== 'admin') {
+  if (requireAdmin && user.role !== 'admin' && user.role !== 'superadmin') {
     // Redirect to the appropriate dashboard based on role
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
   // Check for specific role requirement
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Redirect to the appropriate dashboard based on role
+    // For superadmin users, allow access to any role-specific routes for testing purposes
+    // unless it's explicitly restricted
+    if (user.role === 'superadmin' || isSuperAdmin()) {
+      console.log('[ProtectedRoute] Superadmin accessing route for role:', allowedRoles);
+      return <>{children}</>;
+    }
+    
+    // For non-superadmin users, redirect to their appropriate dashboard
     return <Navigate to={`/dashboard/${user.role}`} replace />;
   }
 
