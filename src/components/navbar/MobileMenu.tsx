@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +13,7 @@ interface MobileMenuProps {
 
 export const MobileMenu = ({ isMenuOpen, isSuperAdminRoute, setIsMenuOpen }: MobileMenuProps) => {
   const { user, logout, isSuperAdmin, role } = useAuth();
+  const location = useLocation();
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -25,16 +27,31 @@ export const MobileMenu = ({ isMenuOpen, isSuperAdminRoute, setIsMenuOpen }: Mob
       return null;
     }
 
+    // If user is already on their dashboard, don't show the same dashboard link
+    const currentPath = location.pathname;
+    
     if (isSuperAdmin()) {
+      if (currentPath === '/dashboard/superadmin') {
+        return null; // Don't show link to same page
+      }
       return { name: 'SuperAdmin Dashboard', path: '/dashboard/superadmin' };
     }
 
     switch(role) {
       case 'student':
+        if (currentPath === '/dashboard/student') {
+          return null; // Don't show link to same page
+        }
         return { name: 'Student Dashboard', path: '/dashboard/student' };
       case 'teacher':
+        if (currentPath === '/dashboard/teacher') {
+          return null; // Don't show link to same page
+        }
         return { name: 'Teacher Dashboard', path: '/dashboard/teacher' };
       case 'admin':
+        if (currentPath === '/dashboard/admin') {
+          return null; // Don't show link to same page
+        }
         return { name: 'Admin Dashboard', path: '/dashboard/admin' };
       default:
         return null;
