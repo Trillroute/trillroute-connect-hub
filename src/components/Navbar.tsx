@@ -68,6 +68,20 @@ const Navbar = () => {
                   className="h-10 w-10 rounded-full"
                 />
               </Link>
+              {/* Add navigation links for superadmin when on student dashboard */}
+              {isSuperAdmin() && location.pathname.includes('/dashboard/student') && (
+                <div className="ml-8 flex items-center space-x-6">
+                  <Link 
+                    to="/dashboard/superadmin" 
+                    className="text-sm font-medium text-gray-700 hover:text-music-500 transition-colors"
+                  >
+                    <ShieldCheck className="inline-block mr-1 h-4 w-4" />
+                    SuperAdmin Dashboard
+                  </Link>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-sm font-medium text-music-600">Student Dashboard</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center space-x-4">
               {user ? (
