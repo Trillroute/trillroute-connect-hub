@@ -8,9 +8,16 @@ export const SuperAdminNavigation = () => {
   const { isSuperAdmin } = useAuth();
   const location = useLocation();
 
+  console.log('SuperAdminNavigation - isSuperAdmin():', isSuperAdmin());
+  console.log('SuperAdminNavigation - location.pathname:', location.pathname);
+  console.log('SuperAdminNavigation - includes /dashboard/student:', location.pathname.includes('/dashboard/student'));
+
   if (!isSuperAdmin() || !location.pathname.includes('/dashboard/student')) {
+    console.log('SuperAdminNavigation - not rendering because conditions not met');
     return null;
   }
+
+  console.log('SuperAdminNavigation - rendering navigation');
 
   return (
     <div className="ml-8 flex items-center space-x-6">
@@ -25,6 +32,10 @@ export const SuperAdminNavigation = () => {
       <Link 
         to="/dashboard/student" 
         className="text-sm font-medium text-music-600 hover:text-music-700 transition-colors"
+        onClick={(e) => {
+          console.log('Student Dashboard link clicked');
+          // Don't prevent default - let React Router handle it
+        }}
       >
         Student Dashboard
       </Link>
