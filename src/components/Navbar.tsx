@@ -1,13 +1,17 @@
+
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { NavbarLogo } from './navbar/NavbarLogo';
+import { NavigationLinks } from './navbar/NavigationLinks';
+import { UserActions } from './navbar/UserActions';
+import { MobileMenu } from './navbar/MobileMenu';
+import { MobileMenuToggle } from './navbar/MobileMenuToggle';
+import { AdminNavbar } from './navbar/AdminNavbar';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout, role, isSuperAdmin } = useAuth();
+  const { isSuperAdmin } = useAuth();
   const location = useLocation();
 
   const isSuperAdminRoute = location.pathname.startsWith('/dashboard/superadmin') && isSuperAdmin();
@@ -16,115 +20,12 @@ const Navbar = () => {
     location.pathname.includes('/dashboard/superadmin') ||
     location.pathname.includes('/admin');
 
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Courses', path: '/courses' },
-  ].filter(() => !isSuperAdminRoute);
-
-  const dashboardLink = () => {
-    if (!user) return null;
-
-    if (isSuperAdmin() && isSuperAdminRoute) {
-      return null;
-    }
-
-    if (isSuperAdmin()) {
-      return { name: 'SuperAdmin Dashboard', path: '/dashboard/superadmin' };
-    }
-
-    switch(role) {
-      case 'student':
-        return { name: 'Student Dashboard', path: '/dashboard/student' };
-      case 'teacher':
-        return { name: 'Teacher Dashboard', path: '/dashboard/teacher' };
-      case 'admin':
-        return { name: 'Admin Dashboard', path: '/dashboard/admin' };
-      default:
-        return null;
-    }
-  };
-
-  const dashboardOption = dashboardLink();
-
-  const getUserInitials = () => {
-    if (!user) return '';
-    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
-  };
-
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   if (isAdminRoute) {
-    return (
-      <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm w-full">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0">
-                <img 
-                  src="https://static.wixstatic.com/media/7ce495_06a8ff028073430581ba22c033ab586f~mv2.jpg" 
-                  alt="Trillroute Logo" 
-                  className="h-10 w-10 rounded-full"
-                />
-              </Link>
-              {/* Add navigation links for superadmin when on student dashboard */}
-              {isSuperAdmin() && location.pathname.includes('/dashboard/student') && (
-                <div className="ml-8 flex items-center space-x-6">
-                  <Link 
-                    to="/dashboard/superadmin" 
-                    className="text-sm font-medium text-gray-700 hover:text-music-500 transition-colors"
-                  >
-                    <ShieldCheck className="inline-block mr-1 h-4 w-4" />
-                    SuperAdmin Dashboard
-                  </Link>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-sm font-medium text-music-600">Student Dashboard</span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <div className="flex items-center space-x-4">
-                  <Link to="/profile" className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-music-500">
-                    <Avatar className="h-8 w-8 border border-gray-200">
-                      {user.profilePhoto ? (
-                        <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
-                      ) : (
-                        <AvatarFallback className="bg-music-100 text-music-600">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <span>Profile</span>
-                  </Link>
-                  <Button
-                    variant="outline"
-                    onClick={logout}
-                    className="border-music-300 text-music-500 hover:bg-music-50"
-                  >
-                    Logout
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <Link to="/auth/login">
-                    <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-                      Login
-                    </Button>
-                  </Link>
-                  <Link to="/auth/register">
-                    <Button className="bg-music-500 text-white hover:bg-music-600">
-                      Register
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-    );
+    return <AdminNavbar />;
   }
 
   return (
@@ -132,159 +33,20 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0">
-              <img 
-                src="https://static.wixstatic.com/media/7ce495_06a8ff028073430581ba22c033ab586f~mv2.jpg" 
-                alt="Trillroute Logo" 
-                className="h-10 w-10 rounded-full"
-              />
-            </Link>
+            <NavbarLogo />
           </div>
-          {!isSuperAdminRoute && (
-          <div className="hidden md:flex md:space-x-8 absolute left-1/2 transform -translate-x-1/2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-700 hover:text-music-500 transition-colors"
-              >
-                {link.name}
-              </Link>
-            ))}
-            {dashboardOption && (
-              <Link
-                to={dashboardOption.path}
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-music-500 hover:text-music-600 transition-colors"
-              >
-                {isSuperAdmin() && <ShieldCheck className="mr-1 h-4 w-4" />}
-                {dashboardOption.name}
-              </Link>
-            )}
-          </div>
-          )}
+          <NavigationLinks isSuperAdminRoute={isSuperAdminRoute} />
           <div className="hidden md:flex md:items-center md:space-x-4">
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Link to="/profile" className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-music-500">
-                  <Avatar className="h-8 w-8 border border-gray-200">
-                    {user.profilePhoto ? (
-                      <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
-                    ) : (
-                      <AvatarFallback className="bg-music-100 text-music-600">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <span>Profile</span>
-                </Link>
-                <Button
-                  variant="outline"
-                  onClick={logout}
-                  className="border-music-300 text-music-500 hover:bg-music-50"
-                >
-                  Logout
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/auth/login">
-                  <Button variant="outline" className="border-music-300 text-music-500 hover:bg-music-50">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/auth/register">
-                  <Button className="bg-music-500 text-white hover:bg-music-600">
-                    Register
-                  </Button>
-                </Link>
-              </div>
-            )}
+            <UserActions />
           </div>
-          <div className="flex items-center md:hidden absolute right-4">
-            <button
-              onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-music-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-music-500"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
-            </button>
-          </div>
+          <MobileMenuToggle isMenuOpen={isMenuOpen} toggleMenu={toggleMenu} />
         </div>
       </div>
-      {!isSuperAdminRoute && (
-        <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-          <div className="pt-2 pb-3 space-y-1 flex flex-col items-center">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            {dashboardOption && (
-              <Link
-                to={dashboardOption.path}
-                className="block px-4 py-2 text-base font-medium text-music-500 hover:text-music-600 hover:bg-gray-50"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {isSuperAdmin() && <ShieldCheck className="inline-block mr-1 h-4 w-4" />}
-                {dashboardOption.name}
-              </Link>
-            )}
-          </div>
-          <div className="pt-4 pb-3 border-t border-gray-200 flex flex-col items-center">
-            {user ? (
-              <div className="space-y-1 w-full text-center">
-                <Link
-                  to="/profile"
-                  className="flex items-center justify-center px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Avatar className="h-8 w-8 mr-2 border border-gray-200">
-                    {user.profilePhoto ? (
-                      <AvatarImage src={user.profilePhoto} alt={`${user.firstName} ${user.lastName}`} />
-                    ) : (
-                      <AvatarFallback className="bg-music-100 text-music-600">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  Profile
-                </Link>
-                <button
-                  onClick={() => {
-                    logout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="block w-full text-center px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-1 w-full text-center">
-                <Link
-                  to="/auth/login"
-                  className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/auth/register"
-                  className="block px-4 py-2 text-base font-medium text-gray-700 hover:text-music-500 hover:bg-gray-50"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Register
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <MobileMenu 
+        isMenuOpen={isMenuOpen} 
+        isSuperAdminRoute={isSuperAdminRoute} 
+        setIsMenuOpen={setIsMenuOpen} 
+      />
     </nav>
   );
 };
