@@ -22,7 +22,12 @@ export const SuperAdminNavigation = () => {
         SuperAdmin Dashboard
       </Link>
       <span className="text-gray-400">•</span>
-      <span className="text-sm font-medium text-music-600">Student Dashboard</span>
+      <Link 
+        to="/dashboard/student" 
+        className="text-sm font-medium text-music-600 hover:text-music-700 transition-colors"
+      >
+        Student Dashboard
+      </Link>
     </div>
   );
 };
